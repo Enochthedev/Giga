@@ -60,13 +60,22 @@ module.exports = {
   },
   overrides: [
     {
+      // TypeScript files - simplified configuration
+      files: ['**/*.ts'],
+      rules: {
+        'no-unused-vars': 'off', // TypeScript handles this
+        'no-undef': 'off', // TypeScript handles this
+        'import/order': 'off', // Can cause issues with TypeScript imports
+      },
+    },
+    {
       // Test files
       files: ['**/*.test.ts', '**/*.spec.ts', '**/__tests__/**/*.ts'],
       env: {
         jest: true,
       },
       rules: {
-        'no-unused-vars': 'off',
+        '@typescript-eslint/no-unused-vars': 'off',
         'security/detect-object-injection': 'off',
       },
     },
@@ -75,6 +84,7 @@ module.exports = {
       files: ['*.config.js', '*.config.ts', '.eslintrc.js'],
       rules: {
         'no-undef': 'off',
+        '@typescript-eslint/no-var-requires': 'off',
       },
     },
     {
