@@ -1,0 +1,64 @@
+[
+  {
+    "description": "Customer registration",
+    "request": {
+      "email": "newcustomer@example.com",
+      "password": "securePassword123!",
+      "firstName": "Jane",
+      "lastName": "Doe",
+      "phone": "+1234567895",
+      "roles": ["CUSTOMER"],
+      "acceptTerms": true
+    },
+    "expectedResponse": {
+      "success": true,
+      "data": {
+        "user": {
+          "id": "clr123newcustomer",
+          "email": "newcustomer@example.com",
+          "firstName": "Jane",
+          "lastName": "Doe",
+          "roles": ["CUSTOMER"],
+          "activeRole": "CUSTOMER",
+          "avatar": null
+        },
+        "tokens": {
+          "accessToken": "eyJhbGciOiJIUzI1NiIs...",
+          "refreshToken": "abc123def456...",
+          "expiresIn": 900
+        }
+      }
+    }
+  },
+  {
+    "description": "Multi-role vendor registration",
+    "request": {
+      "email": "newvendor@example.com",
+      "password": "vendorPass456!",
+      "firstName": "Robert",
+      "lastName": "Brown",
+      "phone": "+1234567896",
+      "roles": ["CUSTOMER", "VENDOR"],
+      "acceptTerms": true
+    },
+    "expectedResponse": {
+      "success": true,
+      "data": {
+        "user": {
+          "id": "clr123newvendor",
+          "email": "newvendor@example.com",
+          "firstName": "Robert",
+          "lastName": "Brown",
+          "roles": ["CUSTOMER", "VENDOR"],
+          "activeRole": "CUSTOMER",
+          "avatar": null
+        },
+        "tokens": {
+          "accessToken": "eyJhbGciOiJIUzI1NiIs...",
+          "refreshToken": "def456ghi789...",
+          "expiresIn": 900
+        }
+      }
+    }
+  }
+]

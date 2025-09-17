@@ -1,0 +1,59 @@
+[
+  {
+    "description": "Update user profile",
+    "request": {
+      "firstName": "John",
+      "lastName": "Smith",
+      "phone": "+1234567890",
+      "avatar": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150"
+    },
+    "expectedResponse": {
+      "success": true,
+      "data": {
+        "id": "clr123customer",
+        "email": "john.customer@example.com",
+        "firstName": "John",
+        "lastName": "Smith",
+        "phone": "+1234567890",
+        "avatar": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150",
+        "updatedAt": "2024-01-15T10:30:00.000Z"
+      },
+      "message": "Profile updated successfully",
+      "timestamp": "2024-01-15T10:30:00.000Z"
+    }
+  },
+  {
+    "description": "Change password",
+    "request": {
+      "currentPassword": "oldPassword123",
+      "newPassword": "newSecurePassword456!"
+    },
+    "expectedResponse": {
+      "success": true,
+      "message": "Password changed successfully. Please log in again.",
+      "timestamp": "2024-01-15T10:30:00.000Z"
+    }
+  },
+  {
+    "description": "Send email verification",
+    "request": {},
+    "expectedResponse": {
+      "success": true,
+      "message": "Verification email sent successfully",
+      "devToken": "abc123def456ghi789...",
+      "devUrl": "http://localhost:3000/verify-email?token=abc123def456ghi789...",
+      "timestamp": "2024-01-15T10:30:00.000Z"
+    }
+  },
+  {
+    "description": "Verify email",
+    "request": {
+      "token": "abc123def456ghi789..."
+    },
+    "expectedResponse": {
+      "success": true,
+      "message": "Email verified successfully",
+      "timestamp": "2024-01-15T10:30:00.000Z"
+    }
+  }
+]

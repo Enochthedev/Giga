@@ -1,0 +1,64 @@
+[
+  {
+    "id": "clr123order1",
+    "customerId": "clr123customer",
+    "vendorId": "clr123vendor",
+    "status": "delivered",
+    "items": [
+      {
+        "id": "clr123orderitem1",
+        "productId": "clr123product1",
+        "quantity": 1,
+        "price": 999.99
+      }
+    ],
+    "subtotal": 999.99,
+    "tax": 79.99,
+    "shipping": 0.0,
+    "total": 1079.98,
+    "shippingAddress": {
+      "name": "John Smith",
+      "address": "123 Main Street, Apt 4B",
+      "city": "New York",
+      "country": "USA",
+      "phone": "+1234567890"
+    },
+    "paymentMethod": "card",
+    "paymentStatus": "paid",
+    "trackingNumber": "1Z999AA1234567890",
+    "estimatedDelivery": "2024-01-18T17:00:00.000Z",
+    "createdAt": "2024-01-15T10:30:00.000Z",
+    "updatedAt": "2024-01-16T14:20:00.000Z"
+  },
+  {
+    "id": "clr123order2",
+    "customerId": "clr123multirole",
+    "vendorId": "clr123multirole",
+    "status": "processing",
+    "items": [
+      {
+        "id": "clr123orderitem2",
+        "productId": "clr123product3",
+        "quantity": 2,
+        "price": 149.99
+      }
+    ],
+    "subtotal": 299.98,
+    "tax": 24.0,
+    "shipping": 9.99,
+    "total": 333.97,
+    "shippingAddress": {
+      "name": "Alex Rodriguez",
+      "address": "456 Oak Avenue",
+      "city": "Los Angeles",
+      "country": "USA",
+      "phone": "+1234567894"
+    },
+    "paymentMethod": "card",
+    "paymentStatus": "paid",
+    "trackingNumber": null,
+    "estimatedDelivery": "2024-01-20T17:00:00.000Z",
+    "createdAt": "2024-01-16T09:15:00.000Z",
+    "updatedAt": "2024-01-16T09:15:00.000Z"
+  }
+]

@@ -1,0 +1,144 @@
+[
+  {
+    "description": "Get shopping cart",
+    "request": {},
+    "expectedResponse": {
+      "success": true,
+      "data": {
+        "id": "cart_clr123customer",
+        "customerId": "clr123customer",
+        "items": [
+          {
+            "id": "item_1642248000_abc123",
+            "productId": "clr123product1",
+            "quantity": 2,
+            "price": 999.99,
+            "addedAt": "2024-01-15T10:30:00.000Z",
+            "product": {
+              "id": "clr123product1",
+              "name": "iPhone 15 Pro",
+              "price": 999.99,
+              "images": ["https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=500"],
+              "isActive": true
+            },
+            "available": true
+          }
+        ],
+        "subtotal": 1999.98,
+        "tax": 159.99,
+        "total": 2159.97,
+        "updatedAt": "2024-01-15T10:30:00.000Z"
+      },
+      "timestamp": "2024-01-15T10:30:00.000Z"
+    }
+  },
+  {
+    "description": "Add item to cart",
+    "request": {
+      "productId": "clr123product1",
+      "quantity": 1
+    },
+    "expectedResponse": {
+      "success": true,
+      "data": {
+        "cart": {
+          "id": "cart_clr123customer",
+          "customerId": "clr123customer",
+          "items": [
+            {
+              "id": "item_1642248000_abc123",
+              "productId": "clr123product1",
+              "quantity": 1,
+              "price": 999.99,
+              "addedAt": "2024-01-15T10:30:00.000Z"
+            }
+          ],
+          "subtotal": 999.99,
+          "tax": 79.99,
+          "total": 1079.98,
+          "updatedAt": "2024-01-15T10:30:00.000Z"
+        },
+        "addedItem": {
+          "productId": "clr123product1",
+          "quantity": 1,
+          "productName": "iPhone 15 Pro"
+        }
+      },
+      "message": "Item added to cart successfully",
+      "timestamp": "2024-01-15T10:30:00.000Z"
+    }
+  },
+  {
+    "description": "Update cart item quantity",
+    "request": {
+      "quantity": 3
+    },
+    "expectedResponse": {
+      "success": true,
+      "data": {
+        "id": "cart_clr123customer",
+        "customerId": "clr123customer",
+        "items": [
+          {
+            "id": "item_1642248000_abc123",
+            "productId": "clr123product1",
+            "quantity": 3,
+            "price": 999.99,
+            "addedAt": "2024-01-15T10:30:00.000Z"
+          }
+        ],
+        "subtotal": 2999.97,
+        "tax": 239.99,
+        "total": 3239.96,
+        "updatedAt": "2024-01-15T10:30:00.000Z"
+      },
+      "message": "Cart item updated successfully",
+      "timestamp": "2024-01-15T10:30:00.000Z"
+    }
+  },
+  {
+    "description": "Remove item from cart",
+    "request": {},
+    "expectedResponse": {
+      "success": true,
+      "data": {
+        "cart": {
+          "id": "cart_clr123customer",
+          "customerId": "clr123customer",
+          "items": [],
+          "subtotal": 0,
+          "tax": 0,
+          "total": 0,
+          "updatedAt": "2024-01-15T10:30:00.000Z"
+        },
+        "removedItem": {
+          "id": "item_1642248000_abc123",
+          "productId": "clr123product1",
+          "quantity": 1,
+          "price": 999.99,
+          "addedAt": "2024-01-15T10:30:00.000Z"
+        }
+      },
+      "message": "Item removed from cart successfully",
+      "timestamp": "2024-01-15T10:30:00.000Z"
+    }
+  },
+  {
+    "description": "Clear entire cart",
+    "request": {},
+    "expectedResponse": {
+      "success": true,
+      "data": {
+        "id": "cart_clr123customer",
+        "customerId": "clr123customer",
+        "items": [],
+        "subtotal": 0,
+        "tax": 0,
+        "total": 0,
+        "updatedAt": "2024-01-15T10:30:00.000Z"
+      },
+      "message": "Cart cleared successfully",
+      "timestamp": "2024-01-15T10:30:00.000Z"
+    }
+  }
+]
