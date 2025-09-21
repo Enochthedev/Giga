@@ -1,7 +1,15 @@
 import { PrismaClient } from '@prisma/client';
 import jwt from 'jsonwebtoken';
 import request from 'supertest';
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+} from 'vitest';
 import { app } from '../app';
 
 const prisma = new PrismaClient();
@@ -62,7 +70,12 @@ describe('Advanced Admin User Management', () => {
 
     // Generate admin token
     adminToken = jwt.sign(
-      { sub: adminUserId, email: 'admin@test.com', roles: ['ADMIN', 'CUSTOMER'], activeRole: 'ADMIN' },
+      {
+        sub: adminUserId,
+        email: 'admin@test.com',
+        roles: ['ADMIN', 'CUSTOMER'],
+        activeRole: 'ADMIN',
+      },
       process.env.JWT_SECRET || 'test-secret',
       { expiresIn: '1h' }
     );
@@ -81,7 +94,7 @@ describe('Advanced Admin User Management', () => {
       // First deactivate the test user
       await prisma.user.update({
         where: { id: testUserId },
-        data: { isActive: false }
+        data: { isActive: false },
       });
 
       const response = await request(app)
@@ -89,7 +102,7 @@ describe('Advanced Admin User Management', () => {
         .set('Authorization', `Bearer ${adminToken}`)
         .send({
           userIds: [testUserId],
-          action: 'activate'
+          action: 'activate',
         });
 
       expect(response.status).toBe(200);
@@ -102,7 +115,7 @@ describe('Advanced Admin User Management', () => {
 
       // Verify audit log was created
       const auditLog = await prisma.auditLog.findFirst({
-        where: { action: 'BULK_UPDATE_USERS', adminUserId }
+        where: { action: 'BULK_UPDATE_USERS', adminUserId },
       });
       expect(auditLog).toBeTruthy();
     });
@@ -113,7 +126,7 @@ describe('Advanced Admin User Management', () => {
         .set('Authorization', `Bearer ${adminToken}`)
         .send({
           userIds: [testUserId],
-          action: 'verify_email'
+          action: 'verify_email',
         });
 
       expect(response.status).toBe(200);
@@ -133,8 +146,8 @@ describe('Advanced Admin User Management', () => {
           action: 'update_fields',
           data: {
             isPhoneVerified: true,
-            isActive: true
-          }
+            isActive: true,
+          },
         });
 
       expect(response.status).toBe(200);
@@ -154,12 +167,14 @@ describe('Advanced Admin User Management', () => {
         .set('Authorization', `Bearer ${adminToken}`)
         .send({
           userIds,
-          action: 'activate'
+          action: 'activate',
         });
 
       expect(response.status).toBe(400);
       expect(response.body.success).toBe(false);
-      expect(response.body.error).toContain('Cannot update more than 100 users');
+      expect(response.body.error).toContain(
+        'Cannot update more than 100 users'
+      );
     });
   });
 
@@ -176,7 +191,7 @@ describe('Advanced Admin User Management', () => {
             phone: '+1234567890',
             isEmailVerified: true,
             isPhoneVerified: false,
-            activeRole: 'CUSTOMER'
+            activeRole: 'CUSTOMER',
           },
           {
             email: 'jane.smith@example.com',
@@ -187,9 +202,9 @@ describe('Advanced Admin User Management', () => {
             isEmailVerified: false,
             isPhoneVerified: true,
             isActive: false,
-            activeRole: 'CUSTOMER'
-          }
-        ]
+            activeRole: 'CUSTOMER',
+          },
+        ],
       });
     });
 
@@ -197,9 +212,9 @@ describe('Advanced Admin User Management', () => {
       await prisma.user.deleteMany({
         where: {
           email: {
-            in: ['john.doe@example.com', 'jane.smith@example.com']
-          }
-        }
+            in: ['john.doe@example.com', 'jane.smith@example.com'],
+          },
+        },
       });
     });
 
@@ -211,7 +226,9 @@ describe('Advanced Admin User Management', () => {
 
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
-      expect(response.body.data.users.some((u: any) => u.firstName === 'John')).toBe(true);
+      expect(
+        response.body.data.users.some((u: any) => u.firstName === 'John')
+      ).toBe(true);
     });
 
     it('should search users by email', async () => {
@@ -222,7 +239,11 @@ describe('Advanced Admin User Management', () => {
 
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
-      expect(response.body.data.users.some((u: any) => u.email.includes('jane.smith'))).toBe(true);
+      expect(
+        response.body.data.users.some((u: any) =>
+          u.email.includes('jane.smith')
+        )
+      ).toBe(true);
     });
 
     it('should filter by email verification status', async () => {
@@ -233,7 +254,9 @@ describe('Advanced Admin User Management', () => {
 
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
-      expect(response.body.data.users.every((u: any) => u.isEmailVerified === true)).toBe(true);
+      expect(
+        response.body.data.users.every((u: any) => u.isEmailVerified === true)
+      ).toBe(true);
     });
 
     it('should filter by phone verification status', async () => {
@@ -244,7 +267,9 @@ describe('Advanced Admin User Management', () => {
 
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
-      expect(response.body.data.users.every((u: any) => u.isPhoneVerified === true)).toBe(true);
+      expect(
+        response.body.data.users.every((u: any) => u.isPhoneVerified === true)
+      ).toBe(true);
     });
 
     it('should filter by user status', async () => {
@@ -255,7 +280,9 @@ describe('Advanced Admin User Management', () => {
 
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
-      expect(response.body.data.users.every((u: any) => u.isActive === false)).toBe(true);
+      expect(
+        response.body.data.users.every((u: any) => u.isActive === false)
+      ).toBe(true);
     });
 
     it('should sort users by different fields', async () => {
@@ -273,7 +300,9 @@ describe('Advanced Admin User Management', () => {
     });
 
     it('should filter by date range', async () => {
-      const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      const yesterday = new Date(
+        Date.now() - 24 * 60 * 60 * 1000
+      ).toISOString();
       const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
 
       const response = await request(app)
@@ -281,7 +310,7 @@ describe('Advanced Admin User Management', () => {
         .set('Authorization', `Bearer ${adminToken}`)
         .query({
           createdAfter: yesterday,
-          createdBefore: tomorrow
+          createdBefore: tomorrow,
         });
 
       expect(response.status).toBe(200);
@@ -303,22 +332,24 @@ describe('Advanced Admin User Management', () => {
       // Verify role was assigned
       const userRoles = await prisma.userRole.findMany({
         where: { userId: testUserId },
-        include: { role: true }
+        include: { role: true },
       });
       expect(userRoles.some(ur => ur.role.name === 'VENDOR')).toBe(true);
 
       // Verify audit log
       const auditLog = await prisma.auditLog.findFirst({
-        where: { action: 'ASSIGN_USER_ROLE', targetUserId: testUserId }
+        where: { action: 'ASSIGN_USER_ROLE', targetUserId: testUserId },
       });
       expect(auditLog).toBeTruthy();
     });
 
     it('should remove role from user', async () => {
       // First assign a role
-      const vendorRole = await prisma.role.findUnique({ where: { name: 'VENDOR' } });
+      const vendorRole = await prisma.role.findUnique({
+        where: { name: 'VENDOR' },
+      });
       await prisma.userRole.create({
-        data: { userId: testUserId, roleId: vendorRole!.id }
+        data: { userId: testUserId, roleId: vendorRole!.id },
       });
 
       const response = await request(app)
@@ -332,7 +363,7 @@ describe('Advanced Admin User Management', () => {
       // Verify role was removed
       const userRoles = await prisma.userRole.findMany({
         where: { userId: testUserId },
-        include: { role: true }
+        include: { role: true },
       });
       expect(userRoles.some(ur => ur.role.name === 'VENDOR')).toBe(false);
     });
@@ -370,16 +401,16 @@ describe('Advanced Admin User Management', () => {
             adminUserId,
             targetUserId: testUserId,
             details: { viewedUserId: testUserId },
-            ipAddress: '127.0.0.1'
+            ipAddress: '127.0.0.1',
           },
           {
             action: 'UPDATE_USER_STATUS',
             adminUserId,
             targetUserId: testUserId,
             details: { previousStatus: false, newStatus: true },
-            ipAddress: '127.0.0.1'
-          }
-        ]
+            ipAddress: '127.0.0.1',
+          },
+        ],
       });
     });
 
@@ -402,9 +433,11 @@ describe('Advanced Admin User Management', () => {
 
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
-      expect(response.body.data.activity.auditLogs.every((log: any) =>
-        log.action.includes('VIEW_USER')
-      )).toBe(true);
+      expect(
+        response.body.data.activity.auditLogs.every((log: any) =>
+          log.action.includes('VIEW_USER')
+        )
+      ).toBe(true);
     });
 
     it('should get system audit logs', async () => {
@@ -426,13 +459,17 @@ describe('Advanced Admin User Management', () => {
 
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
-      expect(response.body.data.auditLogs.every((log: any) =>
-        log.adminUser.id === adminUserId
-      )).toBe(true);
+      expect(
+        response.body.data.auditLogs.every(
+          (log: any) => log.adminUser.id === adminUserId
+        )
+      ).toBe(true);
     });
 
     it('should filter audit logs by date range', async () => {
-      const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      const yesterday = new Date(
+        Date.now() - 24 * 60 * 60 * 1000
+      ).toISOString();
       const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
 
       const response = await request(app)
@@ -440,7 +477,7 @@ describe('Advanced Admin User Management', () => {
         .set('Authorization', `Bearer ${adminToken}`)
         .query({
           startDate: yesterday,
-          endDate: tomorrow
+          endDate: tomorrow,
         });
 
       expect(response.status).toBe(200);
@@ -484,16 +521,20 @@ describe('Advanced Admin User Management', () => {
         .set('Authorization', `Bearer ${adminToken}`)
         .query({
           format: 'json',
-          filters
+          filters,
         });
 
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
-      expect(response.body.data.users.every((u: any) => u.isActive === true)).toBe(true);
+      expect(
+        response.body.data.users.every((u: any) => u.isActive === true)
+      ).toBe(true);
     });
 
     it('should generate audit report as JSON', async () => {
-      const startDate = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      const startDate = new Date(
+        Date.now() - 24 * 60 * 60 * 1000
+      ).toISOString();
       const endDate = new Date().toISOString();
 
       const response = await request(app)
@@ -502,7 +543,7 @@ describe('Advanced Admin User Management', () => {
         .query({
           startDate,
           endDate,
-          format: 'json'
+          format: 'json',
         });
 
       expect(response.status).toBe(200);
@@ -514,7 +555,9 @@ describe('Advanced Admin User Management', () => {
     });
 
     it('should generate audit report as CSV', async () => {
-      const startDate = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      const startDate = new Date(
+        Date.now() - 24 * 60 * 60 * 1000
+      ).toISOString();
       const endDate = new Date().toISOString();
 
       const response = await request(app)
@@ -523,7 +566,7 @@ describe('Advanced Admin User Management', () => {
         .query({
           startDate,
           endDate,
-          format: 'csv'
+          format: 'csv',
         });
 
       expect(response.status).toBe(200);
@@ -552,7 +595,9 @@ describe('Advanced Admin User Management', () => {
 
       expect(response.status).toBe(400);
       expect(response.body.success).toBe(false);
-      expect(response.body.error).toContain('startDate and endDate are required');
+      expect(response.body.error).toContain(
+        'startDate and endDate are required'
+      );
     });
   });
 
@@ -562,7 +607,12 @@ describe('Advanced Admin User Management', () => {
     beforeAll(() => {
       // Create customer token
       customerToken = jwt.sign(
-        { sub: testUserId, email: 'test@test.com', roles: ['CUSTOMER'], activeRole: 'CUSTOMER' },
+        {
+          sub: testUserId,
+          email: 'test@test.com',
+          roles: ['CUSTOMER'],
+          activeRole: 'CUSTOMER',
+        },
         process.env.JWT_SECRET || 'test-secret',
         { expiresIn: '1h' }
       );
@@ -578,8 +628,7 @@ describe('Advanced Admin User Management', () => {
     });
 
     it('should deny access without authentication', async () => {
-      const response = await request(app)
-        .get('/api/v1/users');
+      const response = await request(app).get('/api/v1/users');
 
       expect(response.status).toBe(401);
       expect(response.body.success).toBe(false);
@@ -596,7 +645,7 @@ describe('Advanced Admin User Management', () => {
       expect(finalLogCount).toBe(initialLogCount + 1);
 
       const latestLog = await prisma.auditLog.findFirst({
-        orderBy: { createdAt: 'desc' }
+        orderBy: { createdAt: 'desc' },
       });
       expect(latestLog?.action).toBe('VIEW_USER');
       expect(latestLog?.adminUserId).toBe(adminUserId);

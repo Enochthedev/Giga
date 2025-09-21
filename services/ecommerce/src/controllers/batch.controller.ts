@@ -3,49 +3,74 @@ import { z } from 'zod';
 import { cacheService } from '../services/cache.service';
 import { CartService } from '../services/cart.service';
 import { InventoryService } from '../services/inventory.service';
-import { ResponseOptimizationService, responseOptimizationService } from '../services/response-optimization.service';
+import {
+  ResponseOptimizationService,
+  responseOptimizationService,
+} from '../services/response-optimization.service';
 
 // Validation schemas
 const BatchCartUpdateSchema = z.object({
-  items: z.array(z.object({
-    productId: z.string(),
-    quantity: z.number().min(0),
-    action: z.enum(['add', 'update', 'remove']).optional().default('update'),
-  })).min(1).max(50),
-  options: z.object({
-    validateInventory: z.boolean().optional().default(true),
-    continueOnError: z.boolean().optional().default(false),
-    returnDetails: z.boolean().optional().default(true),
-  }).optional(),
+  items: z
+    .array(
+      z.object({
+        productId: z.string(),
+        quantity: z.number().min(0),
+        action: z
+          .enum(['add', 'update', 'remove'])
+          .optional()
+          .default('update'),
+      })
+    )
+    .min(1)
+    .max(50),
+  options: z
+    .object({
+      validateInventory: z.boolean().optional().default(true),
+      continueOnError: z.boolean().optional().default(false),
+      returnDetails: z.boolean().optional().default(true),
+    })
+    .optional(),
 });
 
 const BatchInventoryUpdateSchema = z.object({
-  items: z.array(z.object({
-    productId: z.string(),
-    quantity: z.number().min(0),
-    operation: z.enum(['set', 'increment', 'decrement']).optional().default('set'),
-  })).min(1).max(100),
-  options: z.object({
-    validateOnly: z.boolean().optional().default(false),
-    notifyVendors: z.boolean().optional().default(true),
-    updateCache: z.boolean().optional().default(true),
-  }).optional(),
+  items: z
+    .array(
+      z.object({
+        productId: z.string(),
+        quantity: z.number().min(0),
+        operation: z
+          .enum(['set', 'increment', 'decrement'])
+          .optional()
+          .default('set'),
+      })
+    )
+    .min(1)
+    .max(100),
+  options: z
+    .object({
+      validateOnly: z.boolean().optional().default(false),
+      notifyVendors: z.boolean().optional().default(true),
+      updateCache: z.boolean().optional().default(true),
+    })
+    .optional(),
 });
 
 const BatchProductCacheSchema = z.object({
   productIds: z.array(z.string()).min(1).max(100),
-  options: z.object({
-    forceRefresh: z.boolean().optional().default(false),
-    includePricing: z.boolean().optional().default(true),
-    includeInventory: z.boolean().optional().default(true),
-  }).optional(),
+  options: z
+    .object({
+      forceRefresh: z.boolean().optional().default(false),
+      includePricing: z.boolean().optional().default(true),
+      includeInventory: z.boolean().optional().default(true),
+    })
+    .optional(),
 });
 
 export class BatchController {
   constructor(
     private cartService: CartService,
     private inventoryService: InventoryService
-  ) { }
+  ) {}
 
   /**
    * Batch cart operations - add, update, or remove multiple items
@@ -54,21 +79,28 @@ export class BatchController {
     try {
       const customerId = req.user?.id;
       if (!customerId) {
-        return res.status(401).json(
-          ResponseOptimizationService.createErrorResponse('Authentication required', 401)
-        );
+        return res
+          .status(401)
+          .json(
+            ResponseOptimizationService.createErrorResponse(
+              'Authentication required',
+              401
+            )
+          );
       }
 
       // Validate request
       const validation = BatchCartUpdateSchema.safeParse(req.body);
       if (!validation.success) {
-        return res.status(400).json(
-          ResponseOptimizationService.createErrorResponse(
-            'Invalid request data',
-            400,
-            validation.error.errors
-          )
-        );
+        return res
+          .status(400)
+          .json(
+            ResponseOptimizationService.createErrorResponse(
+              'Invalid request data',
+              400,
+              validation.error.errors
+            )
+          );
       }
 
       const { items, options } = validation.data;
@@ -78,35 +110,57 @@ export class BatchController {
       // Process batch operations
       const results = await responseOptimizationService.handleBatchOperation(
         items,
-        async (item) => {
+        async item => {
           try {
             switch (item.action) {
               case 'add': {
-                return await this.cartService.addItem(customerId, item.productId, item.quantity);
+                return await this.cartService.addItem(
+                  customerId,
+                  item.productId,
+                  item.quantity
+                );
               }
               case 'update': {
                 // Find the cart item ID first
                 const cart = await this.cartService.getCart(customerId);
-                const cartItem = cart.items.find(ci => ci.productId === item.productId);
+                const cartItem = cart.items.find(
+                  ci => ci.productId === item.productId
+                );
                 if (!cartItem) {
-                  throw new Error(`Product ${item.productId} not found in cart`);
+                  throw new Error(
+                    `Product ${item.productId} not found in cart`
+                  );
                 }
-                return await this.cartService.updateItemQuantity(customerId, cartItem.id, item.quantity);
+                return await this.cartService.updateItemQuantity(
+                  customerId,
+                  cartItem.id,
+                  item.quantity
+                );
               }
               case 'remove': {
-                const cartForRemoval = await this.cartService.getCart(customerId);
-                const itemToRemove = cartForRemoval.items.find(ci => ci.productId === item.productId);
+                const cartForRemoval =
+                  await this.cartService.getCart(customerId);
+                const itemToRemove = cartForRemoval.items.find(
+                  ci => ci.productId === item.productId
+                );
                 if (!itemToRemove) {
-                  throw new Error(`Product ${item.productId} not found in cart`);
+                  throw new Error(
+                    `Product ${item.productId} not found in cart`
+                  );
                 }
-                return await this.cartService.removeItem(customerId, itemToRemove.id);
+                return await this.cartService.removeItem(
+                  customerId,
+                  itemToRemove.id
+                );
               }
               default:
                 throw new Error(`Unknown action: ${item.action}`);
             }
           } catch (error) {
             if (!continueOnError) throw error;
-            return { error: error instanceof Error ? error.message : 'Unknown error' };
+            return {
+              error: error instanceof Error ? error.message : 'Unknown error',
+            };
           }
         },
         {
@@ -141,12 +195,14 @@ export class BatchController {
       res.json(response);
     } catch (error) {
       console.error('Batch cart operations error:', error);
-      res.status(500).json(
-        ResponseOptimizationService.createErrorResponse(
-          'Failed to process batch cart operations',
-          500
-        )
-      );
+      res
+        .status(500)
+        .json(
+          ResponseOptimizationService.createErrorResponse(
+            'Failed to process batch cart operations',
+            500
+          )
+        );
     }
   }
 
@@ -158,21 +214,28 @@ export class BatchController {
       // Check vendor permissions
       const vendorId = (req.user as any)?.vendorId;
       if (!vendorId) {
-        return res.status(403).json(
-          ResponseOptimizationService.createErrorResponse('Vendor access required', 403)
-        );
+        return res
+          .status(403)
+          .json(
+            ResponseOptimizationService.createErrorResponse(
+              'Vendor access required',
+              403
+            )
+          );
       }
 
       // Validate request
       const validation = BatchInventoryUpdateSchema.safeParse(req.body);
       if (!validation.success) {
-        return res.status(400).json(
-          ResponseOptimizationService.createErrorResponse(
-            'Invalid request data',
-            400,
-            validation.error.errors
-          )
-        );
+        return res
+          .status(400)
+          .json(
+            ResponseOptimizationService.createErrorResponse(
+              'Invalid request data',
+              400,
+              validation.error.errors
+            )
+          );
       }
 
       const { items, options } = validation.data;
@@ -182,11 +245,16 @@ export class BatchController {
       if (validateOnly) {
         // Validation mode - check if operations are valid without executing
         const validationResults = await Promise.all(
-          items.map(async (item) => {
+          items.map(async item => {
             try {
-              const currentStatus = await this.inventoryService.getInventoryStatus(item.productId);
+              const currentStatus =
+                await this.inventoryService.getInventoryStatus(item.productId);
               if (!currentStatus) {
-                return { productId: item.productId, valid: false, error: 'Product not found' };
+                return {
+                  productId: item.productId,
+                  valid: false,
+                  error: 'Product not found',
+                };
               }
 
               // Check if product belongs to vendor
@@ -196,7 +264,11 @@ export class BatchController {
               });
 
               if (!product || product.vendorId !== vendorId) {
-                return { productId: item.productId, valid: false, error: 'Product not owned by vendor' };
+                return {
+                  productId: item.productId,
+                  valid: false,
+                  error: 'Product not owned by vendor',
+                };
               }
 
               return { productId: item.productId, valid: true };
@@ -227,7 +299,7 @@ export class BatchController {
       // Execute batch inventory updates
       const results = await responseOptimizationService.handleBatchOperation(
         items,
-        async (item) => {
+        async item => {
           // Verify product ownership
           const product = await req.prisma.product.findUnique({
             where: { id: item.productId },
@@ -235,13 +307,19 @@ export class BatchController {
           });
 
           if (!product || product.vendorId !== vendorId) {
-            throw new Error(`Product ${item.productId} not found or not owned by vendor`);
+            throw new Error(
+              `Product ${item.productId} not found or not owned by vendor`
+            );
           }
 
           // Get current inventory
-          const currentStatus = await this.inventoryService.getInventoryStatus(item.productId);
+          const currentStatus = await this.inventoryService.getInventoryStatus(
+            item.productId
+          );
           if (!currentStatus) {
-            throw new Error(`Inventory not found for product ${item.productId}`);
+            throw new Error(
+              `Inventory not found for product ${item.productId}`
+            );
           }
 
           let newQuantity: number;
@@ -253,14 +331,20 @@ export class BatchController {
               newQuantity = currentStatus.availableQuantity + item.quantity;
               break;
             case 'decrement':
-              newQuantity = Math.max(0, currentStatus.availableQuantity - item.quantity);
+              newQuantity = Math.max(
+                0,
+                currentStatus.availableQuantity - item.quantity
+              );
               break;
             default:
               throw new Error(`Unknown operation: ${item.operation}`);
           }
 
           // Update inventory
-          await this.inventoryService.updateInventory(item.productId, newQuantity);
+          await this.inventoryService.updateInventory(
+            item.productId,
+            newQuantity
+          );
 
           // Invalidate cache if requested
           if (updateCache) {
@@ -297,12 +381,14 @@ export class BatchController {
       });
     } catch (error) {
       console.error('Batch inventory updates error:', error);
-      res.status(500).json(
-        ResponseOptimizationService.createErrorResponse(
-          'Failed to process batch inventory updates',
-          500
-        )
-      );
+      res
+        .status(500)
+        .json(
+          ResponseOptimizationService.createErrorResponse(
+            'Failed to process batch inventory updates',
+            500
+          )
+        );
     }
   }
 
@@ -314,13 +400,15 @@ export class BatchController {
       // Validate request
       const validation = BatchProductCacheSchema.safeParse(req.body);
       if (!validation.success) {
-        return res.status(400).json(
-          ResponseOptimizationService.createErrorResponse(
-            'Invalid request data',
-            400,
-            validation.error.errors
-          )
-        );
+        return res
+          .status(400)
+          .json(
+            ResponseOptimizationService.createErrorResponse(
+              'Invalid request data',
+              400,
+              validation.error.errors
+            )
+          );
       }
 
       const { productIds, options } = validation.data;
@@ -330,7 +418,7 @@ export class BatchController {
       // Process batch cache operations
       const results = await responseOptimizationService.handleBatchOperation(
         productIds,
-        async (productId) => {
+        async productId => {
           try {
             // Get product data
             const product = await req.prisma.product.findUnique({
@@ -371,7 +459,9 @@ export class BatchController {
               includedInventory: includeInventory && !!product.inventory,
             };
           } catch (error) {
-            throw new Error(`Failed to cache product ${productId}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+            throw new Error(
+              `Failed to cache product ${productId}: ${error instanceof Error ? error.message : 'Unknown error'}`
+            );
           }
         },
         {
@@ -395,12 +485,14 @@ export class BatchController {
       });
     } catch (error) {
       console.error('Batch cache refresh error:', error);
-      res.status(500).json(
-        ResponseOptimizationService.createErrorResponse(
-          'Failed to process batch cache refresh',
-          500
-        )
-      );
+      res
+        .status(500)
+        .json(
+          ResponseOptimizationService.createErrorResponse(
+            'Failed to process batch cache refresh',
+            500
+          )
+        );
     }
   }
 
@@ -412,20 +504,30 @@ export class BatchController {
       const { queries } = req.body;
 
       if (!Array.isArray(queries) || queries.length === 0) {
-        return res.status(400).json(
-          ResponseOptimizationService.createErrorResponse('Queries array is required', 400)
-        );
+        return res
+          .status(400)
+          .json(
+            ResponseOptimizationService.createErrorResponse(
+              'Queries array is required',
+              400
+            )
+          );
       }
 
       if (queries.length > 10) {
-        return res.status(400).json(
-          ResponseOptimizationService.createErrorResponse('Maximum 10 queries allowed', 400)
-        );
+        return res
+          .status(400)
+          .json(
+            ResponseOptimizationService.createErrorResponse(
+              'Maximum 10 queries allowed',
+              400
+            )
+          );
       }
 
       const results = await responseOptimizationService.handleBatchOperation(
         queries,
-        async (query) => {
+        async query => {
           const {
             search,
             category,
@@ -437,7 +539,8 @@ export class BatchController {
           } = query;
 
           // Try cache first
-          const cachedResults = await cacheService.getCachedSearchResults(query);
+          const cachedResults =
+            await cacheService.getCachedSearchResults(query);
           if (cachedResults) {
             return { query, results: cachedResults, cached: true };
           }
@@ -508,12 +611,14 @@ export class BatchController {
       });
     } catch (error) {
       console.error('Batch search error:', error);
-      res.status(500).json(
-        ResponseOptimizationService.createErrorResponse(
-          'Failed to process batch search',
-          500
-        )
-      );
+      res
+        .status(500)
+        .json(
+          ResponseOptimizationService.createErrorResponse(
+            'Failed to process batch search',
+            500
+          )
+        );
     }
   }
 
@@ -543,12 +648,14 @@ export class BatchController {
       });
     } catch (error) {
       console.error('Get batch status error:', error);
-      res.status(500).json(
-        ResponseOptimizationService.createErrorResponse(
-          'Failed to get batch status',
-          500
-        )
-      );
+      res
+        .status(500)
+        .json(
+          ResponseOptimizationService.createErrorResponse(
+            'Failed to get batch status',
+            500
+          )
+        );
     }
   }
 }

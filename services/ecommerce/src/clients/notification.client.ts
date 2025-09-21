@@ -101,7 +101,8 @@ export interface NotificationServiceClient {
 }
 
 export class HttpNotificationServiceClient
-  implements NotificationServiceClient {
+  implements NotificationServiceClient
+{
   private client: AxiosInstance;
   private retryConfig: RetryConfig;
   private circuitBreakerConfig: CircuitBreakerConfig;
@@ -290,7 +291,7 @@ export class HttpNotificationServiceClient
       if (!response.data.success || !response.data.data) {
         throw new Error(
           response.data.error?.message ||
-          'Failed to send order cancellation notification'
+            'Failed to send order cancellation notification'
         );
       }
 
@@ -321,7 +322,7 @@ export class HttpNotificationServiceClient
       if (!response.data.success || !response.data.data) {
         throw new Error(
           response.data.error?.message ||
-          'Failed to send vendor order status update'
+            'Failed to send vendor order status update'
         );
       }
 
@@ -419,7 +420,7 @@ export class HttpNotificationServiceClient
       if (!response.data.success || !response.data.data) {
         throw new Error(
           response.data.error?.message ||
-          'Failed to send vendor order completion notification'
+            'Failed to send vendor order completion notification'
         );
       }
 

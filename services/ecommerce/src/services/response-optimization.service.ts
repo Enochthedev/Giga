@@ -98,7 +98,10 @@ export class ResponseOptimizationService {
       }
 
       // Set cache headers for cacheable responses
-      const cacheControl = req.query.cache === 'false' ? 'no-cache' : `public, max-age=${this.config.cacheMaxAge}`;
+      const cacheControl =
+        req.query.cache === 'false'
+          ? 'no-cache'
+          : `public, max-age=${this.config.cacheMaxAge}`;
       res.set('Cache-Control', cacheControl);
 
       // Add ETag for conditional requests
@@ -171,7 +174,10 @@ export class ResponseOptimizationService {
     if (include) {
       for (const [key, value] of Object.entries(include)) {
         if (result[key] && typeof value === 'object' && value !== null) {
-          result[key] = this.selectFields(result[key], value as FieldSelectionOptions);
+          result[key] = this.selectFields(
+            result[key],
+            value as FieldSelectionOptions
+          );
         }
       }
     }
@@ -220,7 +226,10 @@ export class ResponseOptimizationService {
       concurrency?: number;
       onProgress?: (completed: number, total: number) => void;
     } = {}
-  ): Promise<{ results: R[]; errors: Array<{ index: number; error: string }> }> {
+  ): Promise<{
+    results: R[];
+    errors: Array<{ index: number; error: string }>;
+  }> {
     const {
       batchSize = this.config.maxBatchSize,
       concurrency = 5,
@@ -228,7 +237,9 @@ export class ResponseOptimizationService {
     } = options;
 
     if (items.length > this.config.maxBatchSize) {
-      throw new Error(`Batch size exceeds maximum allowed (${this.config.maxBatchSize})`);
+      throw new Error(
+        `Batch size exceeds maximum allowed (${this.config.maxBatchSize})`
+      );
     }
 
     const results: R[] = [];
@@ -247,7 +258,8 @@ export class ResponseOptimizationService {
           if (onProgress) onProgress(completed, items.length);
           return { success: true, result, index: globalIndex };
         } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+          const errorMessage =
+            error instanceof Error ? error.message : 'Unknown error';
           errors.push({ index: globalIndex, error: errorMessage });
           completed++;
           if (onProgress) onProgress(completed, items.length);
@@ -256,7 +268,9 @@ export class ResponseOptimizationService {
       });
 
       // Process batch with concurrency control
-      const semaphore = new Array(Math.min(concurrency, batch.length)).fill(null);
+      const semaphore = new Array(Math.min(concurrency, batch.length)).fill(
+        null
+      );
       await Promise.all(
         semaphore.map(async (_, semIndex) => {
           for (let j = semIndex; j < batchPromises.length; j += concurrency) {
@@ -271,12 +285,15 @@ export class ResponseOptimizationService {
   }
 
   // Response transformation utilities
-  static transformResponse(data: any, transformations: {
-    renameFields?: Record<string, string>;
-    formatDates?: boolean;
-    formatNumbers?: { decimals?: number; currency?: string };
-    addMetadata?: boolean;
-  }): any {
+  static transformResponse(
+    data: any,
+    transformations: {
+      renameFields?: Record<string, string>;
+      formatDates?: boolean;
+      formatNumbers?: { decimals?: number; currency?: string };
+      addMetadata?: boolean;
+    }
+  ): any {
     if (!data || typeof data !== 'object') {
       return data;
     }
@@ -289,7 +306,9 @@ export class ResponseOptimizationService {
 
     // Rename fields
     if (transformations.renameFields) {
-      for (const [oldName, newName] of Object.entries(transformations.renameFields)) {
+      for (const [oldName, newName] of Object.entries(
+        transformations.renameFields
+      )) {
         if (result[oldName] !== undefined) {
           result[newName] = result[oldName];
           delete result[oldName];
@@ -300,7 +319,10 @@ export class ResponseOptimizationService {
     // Format dates
     if (transformations.formatDates) {
       for (const [key, value] of Object.entries(result)) {
-        if (value instanceof Date || (typeof value === 'string' && !isNaN(Date.parse(value)))) {
+        if (
+          value instanceof Date ||
+          (typeof value === 'string' && !isNaN(Date.parse(value)))
+        ) {
           result[key] = new Date(value).toISOString();
         }
       }
@@ -311,7 +333,12 @@ export class ResponseOptimizationService {
       const { decimals, currency } = transformations.formatNumbers;
       for (const [key, value] of Object.entries(result)) {
         if (typeof value === 'number') {
-          if (currency && (key.includes('price') || key.includes('total') || key.includes('amount'))) {
+          if (
+            currency &&
+            (key.includes('price') ||
+              key.includes('total') ||
+              key.includes('amount'))
+          ) {
             result[key] = new Intl.NumberFormat('en-US', {
               style: 'currency',
               currency: currency,
@@ -382,11 +409,13 @@ export class ResponseOptimizationService {
   static createBatchValidationSchema<T>(itemSchema: z.ZodSchema<T>) {
     return z.object({
       items: z.array(itemSchema).min(1).max(100),
-      options: z.object({
-        validateOnly: z.boolean().optional(),
-        continueOnError: z.boolean().optional(),
-        returnDetails: z.boolean().optional(),
-      }).optional(),
+      options: z
+        .object({
+          validateOnly: z.boolean().optional(),
+          continueOnError: z.boolean().optional(),
+          returnDetails: z.boolean().optional(),
+        })
+        .optional(),
     });
   }
 
@@ -405,18 +434,23 @@ export class ResponseOptimizationService {
 
       // Validate batch size
       if (req.body.items && req.body.items.length > this.config.maxBatchSize) {
-        return res.status(400).json(
-          ResponseOptimizationService.createErrorResponse(
-            `Batch size exceeds maximum allowed (${this.config.maxBatchSize})`,
-            400
-          )
-        );
+        return res
+          .status(400)
+          .json(
+            ResponseOptimizationService.createErrorResponse(
+              `Batch size exceeds maximum allowed (${this.config.maxBatchSize})`,
+              400
+            )
+          );
       }
 
       // Add batch processing utilities to request
       (req as any).batchProcessor = {
-        process: (items: any[], operation: (item: any) => Promise<any>, options?: any) =>
-          this.handleBatchOperation(items, operation, options),
+        process: (
+          items: any[],
+          operation: (item: any) => Promise<any>,
+          options?: any
+        ) => this.handleBatchOperation(items, operation, options),
       };
 
       next();
@@ -439,7 +473,9 @@ export class ResponseOptimizationService {
 
         // Log slow responses
         if (responseTime > 1000) {
-          console.warn(`Slow response: ${req.method} ${req.path} took ${responseTime}ms`);
+          console.warn(
+            `Slow response: ${req.method} ${req.path} took ${responseTime}ms`
+          );
         }
 
         return originalJson.call(this, data);
@@ -468,7 +504,10 @@ export class ResponseOptimizationService {
         }
 
         // Handle XML export
-        if (acceptHeader.includes('application/xml') || req.query.format === 'xml') {
+        if (
+          acceptHeader.includes('application/xml') ||
+          req.query.format === 'xml'
+        ) {
           const xml = ResponseOptimizationService.convertToXML(data);
           res.set('Content-Type', 'application/xml');
           return res.send(xml);
@@ -496,7 +535,10 @@ export class ResponseOptimizationService {
       const values = headers.map(header => {
         const value = row[header];
         // Escape commas and quotes in CSV
-        if (typeof value === 'string' && (value.includes(',') || value.includes('"'))) {
+        if (
+          typeof value === 'string' &&
+          (value.includes(',') || value.includes('"'))
+        ) {
           return `"${value.replace(/"/g, '""')}"`;
         }
         return value;
@@ -515,7 +557,9 @@ export class ResponseOptimizationService {
 
       if (typeof value === 'object') {
         if (Array.isArray(value)) {
-          return value.map(item => convertValue(item, key.slice(0, -1))).join('');
+          return value
+            .map(item => convertValue(item, key.slice(0, -1)))
+            .join('');
         } else {
           const inner = Object.entries(value)
             .map(([k, v]) => convertValue(v, k))

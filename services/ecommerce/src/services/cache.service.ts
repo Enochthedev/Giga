@@ -40,7 +40,11 @@ export class CacheService {
 
   // Product caching strategies
   async cacheProduct(productId: string, productData: any): Promise<void> {
-    await redisService.cacheProduct(productId, productData, this.config.productTTL);
+    await redisService.cacheProduct(
+      productId,
+      productData,
+      this.config.productTTL
+    );
   }
 
   // eslint-disable-next-line require-await
@@ -53,7 +57,10 @@ export class CacheService {
     await redisService.cacheProducts(products, this.config.productTTL);
   }
 
-  async invalidateProduct(productId: string, strategy?: CacheInvalidationStrategy): Promise<void> {
+  async invalidateProduct(
+    productId: string,
+    strategy?: CacheInvalidationStrategy
+  ): Promise<void> {
     const tags = [`product:${productId}`];
 
     if (strategy?.immediate !== false) {
@@ -69,7 +76,10 @@ export class CacheService {
     await redisService.invalidateByTags([`vendor:${vendorId}`]);
   }
 
-  async invalidateProductsByCategory(category: string, subcategory?: string): Promise<void> {
+  async invalidateProductsByCategory(
+    category: string,
+    subcategory?: string
+  ): Promise<void> {
     const tags = [`category:${category}`];
     if (subcategory) {
       tags.push(`subcategory:${subcategory}`);
@@ -79,7 +89,11 @@ export class CacheService {
 
   // Search result caching with intelligent invalidation
   async cacheSearchResults(query: any, results: any): Promise<void> {
-    await redisService.cacheSearchResults(query, results, this.config.searchTTL);
+    await redisService.cacheSearchResults(
+      query,
+      results,
+      this.config.searchTTL
+    );
   }
 
   // eslint-disable-next-line require-await
@@ -87,7 +101,11 @@ export class CacheService {
     return redisService.getCachedSearchResults(query);
   }
 
-  async invalidateSearchResults(filters?: { category?: string; brand?: string; subcategory?: string }): Promise<void> {
+  async invalidateSearchResults(filters?: {
+    category?: string;
+    brand?: string;
+    subcategory?: string;
+  }): Promise<void> {
     const tags = ['search'];
 
     if (filters?.category) tags.push(`category:${filters.category}`);
@@ -125,12 +143,27 @@ export class CacheService {
     return redisService.getCachedOrder(orderId);
   }
 
-  async cacheUserOrders(customerId: string, orders: any[], page: number, limit: number): Promise<void> {
-    await redisService.cacheUserOrders(customerId, orders, page, limit, this.config.orderTTL);
+  async cacheUserOrders(
+    customerId: string,
+    orders: any[],
+    page: number,
+    limit: number
+  ): Promise<void> {
+    await redisService.cacheUserOrders(
+      customerId,
+      orders,
+      page,
+      limit,
+      this.config.orderTTL
+    );
   }
 
   // eslint-disable-next-line require-await
-  async getCachedUserOrders(customerId: string, page: number, limit: number): Promise<any | null> {
+  async getCachedUserOrders(
+    customerId: string,
+    page: number,
+    limit: number
+  ): Promise<any | null> {
     return redisService.getCachedUserOrders(customerId, page, limit);
   }
 
@@ -144,7 +177,11 @@ export class CacheService {
 
   // Inventory caching
   async cacheInventoryStatus(productId: string, status: any): Promise<void> {
-    await redisService.cacheInventoryStatus(productId, status, this.config.inventoryTTL);
+    await redisService.cacheInventoryStatus(
+      productId,
+      status,
+      this.config.inventoryTTL
+    );
   }
 
   // eslint-disable-next-line require-await
@@ -186,7 +223,11 @@ export class CacheService {
 
   // Analytics caching
   async cacheVendorAnalytics(vendorId: string, analytics: any): Promise<void> {
-    await redisService.cacheVendorAnalytics(vendorId, analytics, this.config.analyticsTTL);
+    await redisService.cacheVendorAnalytics(
+      vendorId,
+      analytics,
+      this.config.analyticsTTL
+    );
   }
 
   // eslint-disable-next-line require-await
@@ -199,7 +240,9 @@ export class CacheService {
   }
 
   // Cache warming strategies
-  async warmCache(strategy: 'products' | 'search' | 'categories' | 'all'): Promise<void> {
+  async warmCache(
+    strategy: 'products' | 'search' | 'categories' | 'all'
+  ): Promise<void> {
     switch (strategy) {
       case 'products':
         await this.warmProductCache();
@@ -264,9 +307,14 @@ export class CacheService {
       try {
         await redisService.invalidateByTags(tags);
         this.invalidationQueue.delete(key);
-        console.log(`Delayed invalidation completed for tags: ${tags.join(', ')}`);
+        console.log(
+          `Delayed invalidation completed for tags: ${tags.join(', ')}`
+        );
       } catch (error) {
-        console.error(`Error in delayed invalidation for tags ${tags.join(', ')}:`, error);
+        console.error(
+          `Error in delayed invalidation for tags ${tags.join(', ')}:`,
+          error
+        );
       }
     }, delaySeconds * 1000);
 
@@ -320,11 +368,13 @@ export class CacheService {
   }
 
   // Bulk operations for better performance
-  async bulkInvalidate(operations: Array<{
-    type: 'product' | 'search' | 'cart' | 'order' | 'inventory';
-    id?: string;
-    tags?: string[];
-  }>): Promise<void> {
+  async bulkInvalidate(
+    operations: Array<{
+      type: 'product' | 'search' | 'cart' | 'order' | 'inventory';
+      id?: string;
+      tags?: string[];
+    }>
+  ): Promise<void> {
     const allTags = new Set<string>();
 
     for (const op of operations) {
@@ -370,7 +420,9 @@ export class CacheService {
       // Clear any pending invalidation timeouts that are no longer needed
       this.invalidationQueue.clear();
 
-      console.log(`Cache maintenance completed: ${cleanedEntries} entries cleaned`);
+      console.log(
+        `Cache maintenance completed: ${cleanedEntries} entries cleaned`
+      );
     } catch (error) {
       const errorMsg = `Cache maintenance error: ${error instanceof Error ? error.message : 'Unknown error'}`;
       errors.push(errorMsg);

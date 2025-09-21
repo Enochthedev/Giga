@@ -36,14 +36,20 @@ const mockPrisma = {
 };
 
 // Mock request and response
-const mockRequest = (body: any = {}, params: any = {}, query: any = {}, user: any = { sub: 'admin-id' }) => ({
-  body,
-  params,
-  query,
-  user,
-  prisma: mockPrisma,
-  ip: '127.0.0.1',
-}) as unknown as Request;
+const mockRequest = (
+  body: any = {},
+  params: any = {},
+  query: any = {},
+  user: any = { sub: 'admin-id' }
+) =>
+  ({
+    body,
+    params,
+    query,
+    user,
+    prisma: mockPrisma,
+    ip: '127.0.0.1',
+  }) as unknown as Request;
 
 const mockResponse = () => {
   const res = {} as Response;
@@ -85,12 +91,16 @@ describe('UserController - Advanced Admin Features', () => {
       mockPrisma.user.findMany.mockResolvedValue(mockUsers);
       mockPrisma.user.count.mockResolvedValue(1);
 
-      const req = mockRequest({}, {}, {
-        search: 'john',
-        emailVerified: 'true',
-        sortBy: 'email',
-        sortOrder: 'asc'
-      });
+      const req = mockRequest(
+        {},
+        {},
+        {
+          search: 'john',
+          emailVerified: 'true',
+          sortBy: 'email',
+          sortOrder: 'asc',
+        }
+      );
       const res = mockResponse();
 
       await userController.listUsers(req, res);
@@ -141,11 +151,15 @@ describe('UserController - Advanced Admin Features', () => {
     });
 
     it('should filter users by date range', async () => {
-      const req = mockRequest({}, {}, {
-        createdAfter: '2023-01-01',
-        createdBefore: '2023-12-31',
-        lastLoginAfter: '2023-06-01',
-      });
+      const req = mockRequest(
+        {},
+        {},
+        {
+          createdAfter: '2023-01-01',
+          createdBefore: '2023-12-31',
+          lastLoginAfter: '2023-06-01',
+        }
+      );
       const res = mockResponse();
 
       mockPrisma.user.findMany.mockResolvedValue([]);
@@ -267,7 +281,8 @@ describe('UserController - Advanced Admin Features', () => {
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.json).toHaveBeenCalledWith({
         success: false,
-        error: 'Invalid action. Supported actions: activate, deactivate, verify_email, verify_phone, update_fields',
+        error:
+          'Invalid action. Supported actions: activate, deactivate, verify_email, verify_phone, update_fields',
         timestamp: expect.any(String),
       });
     });
@@ -508,7 +523,9 @@ describe('UserController - Advanced Admin Features', () => {
         'Content-Disposition',
         expect.stringContaining('attachment; filename="users-export-')
       );
-      expect(res.send).toHaveBeenCalledWith(expect.stringContaining('id,email,firstName'));
+      expect(res.send).toHaveBeenCalledWith(
+        expect.stringContaining('id,email,firstName')
+      );
     });
 
     it('should reject invalid export format', async () => {
@@ -590,7 +607,7 @@ describe('UserController - Advanced Admin Features', () => {
 
   describe('audit logging', () => {
     it('should log admin actions', async () => {
-      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => { });
+      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
       const mockUser = {
         id: 'user1',

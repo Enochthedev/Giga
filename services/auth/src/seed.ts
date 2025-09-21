@@ -35,7 +35,7 @@ async function main() {
       update: {},
       create: {
         name: permissionName,
-        description: `Permission to ${permissionName.replace(':', ' ')}`
+        description: `Permission to ${permissionName.replace(':', ' ')}`,
       },
     });
     console.log(`✓ Permission ${permissionName} created/updated`);
@@ -45,7 +45,7 @@ async function main() {
 }
 
 main()
-  .catch((e) => {
+  .catch(e => {
     console.error('❌ Error seeding database:', e);
     process.exit(1);
   })

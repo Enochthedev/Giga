@@ -14,7 +14,7 @@ export const mockAuthMiddleware = () => {
         email: 'test@example.com',
         roles: ['CUSTOMER'],
         activeRole: 'CUSTOMER',
-        vendorId: undefined
+        vendorId: undefined,
       };
       next();
     },
@@ -22,7 +22,7 @@ export const mockAuthMiddleware = () => {
       if (!req.user?.vendorId) {
         return res.status(403).json({
           success: false,
-          error: 'Vendor access required'
+          error: 'Vendor access required',
         });
       }
       next();
@@ -31,20 +31,21 @@ export const mockAuthMiddleware = () => {
       if (req.user?.activeRole !== 'ADMIN') {
         return res.status(403).json({
           success: false,
-          error: 'Admin access required'
+          error: 'Admin access required',
         });
       }
       next();
     },
-    requireRole: (allowedRoles: string[]) => (req: any, res: any, next: any) => {
-      if (!req.user || !allowedRoles.includes(req.user.activeRole)) {
-        return res.status(403).json({
-          success: false,
-          error: `Access denied. Required roles: ${allowedRoles.join(', ')}`
-        });
-      }
-      next();
-    }
+    requireRole:
+      (allowedRoles: string[]) => (req: any, res: any, next: any) => {
+        if (!req.user || !allowedRoles.includes(req.user.activeRole)) {
+          return res.status(403).json({
+            success: false,
+            error: `Access denied. Required roles: ${allowedRoles.join(', ')}`,
+          });
+        }
+        next();
+      },
   }));
 };
 
@@ -60,7 +61,7 @@ export const mockSessionMiddleware = () => {
         customerId: 'test-customer-123',
         createdAt: new Date(),
         expiresAt: new Date(Date.now() + 86400000), // 24 hours
-        data: {}
+        data: {},
       };
       next();
     },
@@ -69,10 +70,10 @@ export const mockSessionMiddleware = () => {
       req.user = {
         id: 'test-customer-123',
         email: 'test@example.com',
-        role: 'CUSTOMER'
+        role: 'CUSTOMER',
       };
       next();
-    }
+    },
   }));
 };
 
@@ -88,18 +89,25 @@ export const mockServiceClients = () => {
         email: 'test@example.com',
         name: 'Test Customer',
         role: 'CUSTOMER',
-        permissions: ['read:cart', 'write:cart', 'read:orders', 'write:orders']
+        permissions: ['read:cart', 'write:cart', 'read:orders', 'write:orders'],
       }),
       getUserInfo: vi.fn().mockResolvedValue({
         id: 'test-customer-123',
         email: 'test@example.com',
         name: 'Test Customer',
         role: 'CUSTOMER',
-        permissions: ['read:cart', 'write:cart', 'read:orders', 'write:orders']
+        permissions: ['read:cart', 'write:cart', 'read:orders', 'write:orders'],
       }),
-      getUserPermissions: vi.fn().mockResolvedValue(['read:cart', 'write:cart', 'read:orders', 'write:orders']),
-      healthCheck: vi.fn().mockResolvedValue(true)
-    }))
+      getUserPermissions: vi
+        .fn()
+        .mockResolvedValue([
+          'read:cart',
+          'write:cart',
+          'read:orders',
+          'write:orders',
+        ]),
+      healthCheck: vi.fn().mockResolvedValue(true),
+    })),
   }));
 
   // Mock payment service client
@@ -110,23 +118,25 @@ export const mockServiceClients = () => {
         clientSecret: 'pi_test_123_secret',
         status: 'requires_confirmation',
         amount: 11799,
-        currency: 'usd'
+        currency: 'usd',
       }),
       confirmPayment: vi.fn().mockResolvedValue({
         success: true,
         paymentIntentId: 'pi_test_123',
-        status: 'succeeded'
+        status: 'succeeded',
       }),
       refundPayment: vi.fn().mockResolvedValue({
         success: true,
         refundId: 'rf_test_123',
-        amount: 11799
+        amount: 11799,
       }),
-      getPaymentMethods: vi.fn().mockResolvedValue([
-        { id: 'pm_test_123', type: 'card', last4: '4242' }
-      ]),
-      healthCheck: vi.fn().mockResolvedValue(true)
-    }))
+      getPaymentMethods: vi
+        .fn()
+        .mockResolvedValue([
+          { id: 'pm_test_123', type: 'card', last4: '4242' },
+        ]),
+      healthCheck: vi.fn().mockResolvedValue(true),
+    })),
   }));
 
   // Mock notification service client
@@ -136,8 +146,8 @@ export const mockServiceClients = () => {
       sendOrderStatusUpdate: vi.fn().mockResolvedValue(undefined),
       sendVendorOrderNotification: vi.fn().mockResolvedValue(undefined),
       sendInventoryAlert: vi.fn().mockResolvedValue(undefined),
-      healthCheck: vi.fn().mockResolvedValue(true)
-    }))
+      healthCheck: vi.fn().mockResolvedValue(true),
+    })),
   }));
 };
 
@@ -160,8 +170,8 @@ export const mockRedisService = () => {
       ping: vi.fn().mockResolvedValue('PONG'),
       quit: vi.fn().mockResolvedValue('OK'),
       disconnect: vi.fn().mockResolvedValue(undefined),
-      isReady: true
-    }
+      isReady: true,
+    },
   }));
 };
 
@@ -187,7 +197,7 @@ export const mockVendorUser = () => {
         email: 'vendor@example.com',
         roles: ['VENDOR'],
         activeRole: 'VENDOR',
-        vendorId: 'test-vendor-123'
+        vendorId: 'test-vendor-123',
       };
       next();
     },
@@ -195,7 +205,7 @@ export const mockVendorUser = () => {
       if (!req.user?.vendorId) {
         return res.status(403).json({
           success: false,
-          error: 'Vendor access required'
+          error: 'Vendor access required',
         });
       }
       next();
@@ -204,20 +214,21 @@ export const mockVendorUser = () => {
       if (req.user?.activeRole !== 'ADMIN') {
         return res.status(403).json({
           success: false,
-          error: 'Admin access required'
+          error: 'Admin access required',
         });
       }
       next();
     },
-    requireRole: (allowedRoles: string[]) => (req: any, res: any, next: any) => {
-      if (!req.user || !allowedRoles.includes(req.user.activeRole)) {
-        return res.status(403).json({
-          success: false,
-          error: `Access denied. Required roles: ${allowedRoles.join(', ')}`
-        });
-      }
-      next();
-    }
+    requireRole:
+      (allowedRoles: string[]) => (req: any, res: any, next: any) => {
+        if (!req.user || !allowedRoles.includes(req.user.activeRole)) {
+          return res.status(403).json({
+            success: false,
+            error: `Access denied. Required roles: ${allowedRoles.join(', ')}`,
+          });
+        }
+        next();
+      },
   }));
 };
 
@@ -233,7 +244,7 @@ export const mockAdminUser = () => {
         email: 'admin@example.com',
         roles: ['ADMIN'],
         activeRole: 'ADMIN',
-        vendorId: undefined
+        vendorId: undefined,
       };
       next();
     },
@@ -241,7 +252,7 @@ export const mockAdminUser = () => {
       if (!req.user?.vendorId) {
         return res.status(403).json({
           success: false,
-          error: 'Vendor access required'
+          error: 'Vendor access required',
         });
       }
       next();
@@ -250,19 +261,20 @@ export const mockAdminUser = () => {
       if (req.user?.activeRole !== 'ADMIN') {
         return res.status(403).json({
           success: false,
-          error: 'Admin access required'
+          error: 'Admin access required',
         });
       }
       next();
     },
-    requireRole: (allowedRoles: string[]) => (req: any, res: any, next: any) => {
-      if (!req.user || !allowedRoles.includes(req.user.activeRole)) {
-        return res.status(403).json({
-          success: false,
-          error: `Access denied. Required roles: ${allowedRoles.join(', ')}`
-        });
-      }
-      next();
-    }
+    requireRole:
+      (allowedRoles: string[]) => (req: any, res: any, next: any) => {
+        if (!req.user || !allowedRoles.includes(req.user.activeRole)) {
+          return res.status(403).json({
+            success: false,
+            error: `Access denied. Required roles: ${allowedRoles.join(', ')}`,
+          });
+        }
+        next();
+      },
   }));
 };

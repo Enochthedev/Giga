@@ -62,10 +62,7 @@ module.exports = {
     {
       // TypeScript files
       files: ['**/*.ts'],
-      extends: [
-        'eslint:recommended',
-        'prettier',
-      ],
+      extends: ['eslint:recommended', 'prettier'],
       parser: '@typescript-eslint/parser',
       parserOptions: {
         ecmaVersion: 2022,
@@ -80,7 +77,10 @@ module.exports = {
         'no-use-before-define': 'off',
 
         // Enable TypeScript-specific rules
-        '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+        '@typescript-eslint/no-unused-vars': [
+          'error',
+          { argsIgnorePattern: '^_' },
+        ],
         '@typescript-eslint/no-explicit-any': 'warn',
         '@typescript-eslint/explicit-function-return-type': 'off',
         '@typescript-eslint/explicit-module-boundary-types': 'off',

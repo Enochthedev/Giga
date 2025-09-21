@@ -22,9 +22,9 @@ export class DatabaseOptimizationService {
     queries: Array<{ query: string; duration: number; timestamp: Date }>;
     slowQueries: Array<{ query: string; duration: number; timestamp: Date }>;
   } = {
-      queries: [],
-      slowQueries: [],
-    };
+    queries: [],
+    slowQueries: [],
+  };
 
   constructor(prisma: PrismaClient, config?: Partial<QueryOptimizationConfig>) {
     this.prisma = prisma;
@@ -62,7 +62,9 @@ export class DatabaseOptimizationService {
         // Track slow queries
         if (duration > this.config.slowQueryThreshold) {
           this.queryMetrics.slowQueries.push(queryInfo);
-          console.warn(`Slow query detected: ${queryInfo.query} took ${duration}ms`);
+          console.warn(
+            `Slow query detected: ${queryInfo.query} took ${duration}ms`
+          );
 
           // Keep only last 100 slow queries
           if (this.queryMetrics.slowQueries.length > 100) {
@@ -254,7 +256,9 @@ export class DatabaseOptimizationService {
 
     const hasMore = orders.length > limit;
     const resultOrders = hasMore ? orders.slice(0, limit) : orders;
-    const nextCursor = hasMore ? resultOrders[resultOrders.length - 1].id : undefined;
+    const nextCursor = hasMore
+      ? resultOrders[resultOrders.length - 1].id
+      : undefined;
 
     return {
       orders: resultOrders,
@@ -356,7 +360,9 @@ export class DatabaseOptimizationService {
 
     const hasMore = orders.length > limit;
     const resultOrders = hasMore ? orders.slice(0, limit) : orders;
-    const nextCursor = hasMore ? resultOrders[resultOrders.length - 1].id : undefined;
+    const nextCursor = hasMore
+      ? resultOrders[resultOrders.length - 1].id
+      : undefined;
 
     return {
       orders: resultOrders,
@@ -366,7 +372,9 @@ export class DatabaseOptimizationService {
   }
 
   // Batch operations for better performance
-  async batchUpdateInventory(updates: Array<{ productId: string; quantity: number }>): Promise<void> {
+  async batchUpdateInventory(
+    updates: Array<{ productId: string; quantity: number }>
+  ): Promise<void> {
     // Use transaction for consistency
     await this.prisma.$transaction(
       updates.map(update =>
@@ -378,13 +386,15 @@ export class DatabaseOptimizationService {
     );
   }
 
-  async batchCreateOrderItems(orderItems: Array<{
-    orderId?: string;
-    vendorOrderId?: string;
-    productId: string;
-    quantity: number;
-    price: number;
-  }>): Promise<void> {
+  async batchCreateOrderItems(
+    orderItems: Array<{
+      orderId?: string;
+      vendorOrderId?: string;
+      productId: string;
+      quantity: number;
+      price: number;
+    }>
+  ): Promise<void> {
     await this.prisma.orderItem.createMany({
       data: orderItems,
     });
@@ -397,7 +407,13 @@ export class DatabaseOptimizationService {
 
     try {
       // Get table sizes and row counts
-      const tables = ['products', 'orders', 'order_items', 'vendor_orders', 'product_inventory'];
+      const tables = [
+        'products',
+        'orders',
+        'order_items',
+        'vendor_orders',
+        'product_inventory',
+      ];
 
       for (const table of tables) {
         const count = await this.prisma.$queryRaw`
@@ -418,31 +434,43 @@ export class DatabaseOptimizationService {
 
     // Analyze slow queries
     if (this.queryMetrics.slowQueries.length > 0) {
-      const slowQueryTypes = this.queryMetrics.slowQueries.reduce((acc, query) => {
-        acc[query.query] = (acc[query.query] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>);
+      const slowQueryTypes = this.queryMetrics.slowQueries.reduce(
+        (acc, query) => {
+          acc[query.query] = (acc[query.query] || 0) + 1;
+          return acc;
+        },
+        {} as Record<string, number>
+      );
 
       Object.entries(slowQueryTypes).forEach(([query, count]) => {
         if (count > 5) {
-          recommendations.push(`Consider optimizing ${query} - appears ${count} times in slow queries`);
+          recommendations.push(
+            `Consider optimizing ${query} - appears ${count} times in slow queries`
+          );
         }
       });
     }
 
     // Check for missing indexes based on query patterns
-    const frequentQueries = this.queryMetrics.queries.reduce((acc, query) => {
-      acc[query.query] = (acc[query.query] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
+    const frequentQueries = this.queryMetrics.queries.reduce(
+      (acc, query) => {
+        acc[query.query] = (acc[query.query] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>
+    );
 
     Object.entries(frequentQueries).forEach(([query, count]) => {
       if (count > 100) {
         if (query.includes('product.findMany')) {
-          recommendations.push('Consider adding composite indexes for product search queries');
+          recommendations.push(
+            'Consider adding composite indexes for product search queries'
+          );
         }
         if (query.includes('order.findMany')) {
-          recommendations.push('Consider adding composite indexes for order queries');
+          recommendations.push(
+            'Consider adding composite indexes for order queries'
+          );
         }
       }
     });
@@ -455,9 +483,11 @@ export class DatabaseOptimizationService {
   getMetrics(): DatabaseMetrics {
     const totalQueries = this.queryMetrics.queries.length;
     const slowQueries = this.queryMetrics.slowQueries.length;
-    const averageQueryTime = totalQueries > 0
-      ? this.queryMetrics.queries.reduce((sum, q) => sum + q.duration, 0) / totalQueries
-      : 0;
+    const averageQueryTime =
+      totalQueries > 0
+        ? this.queryMetrics.queries.reduce((sum, q) => sum + q.duration, 0) /
+          totalQueries
+        : 0;
 
     return {
       totalQueries,
@@ -501,6 +531,9 @@ export class DatabaseOptimizationService {
 }
 
 // Export singleton instance
-export const createDatabaseOptimizationService = (prisma: PrismaClient, config?: Partial<QueryOptimizationConfig>) => {
+export const createDatabaseOptimizationService = (
+  prisma: PrismaClient,
+  config?: Partial<QueryOptimizationConfig>
+) => {
   return new DatabaseOptimizationService(prisma, config);
 };

@@ -5,9 +5,11 @@ import { EmailService } from '../services/email.service';
 vi.mock('crypto', () => ({
   default: {
     randomBytes: vi.fn(() => ({
-      toString: vi.fn(() => 'a1b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef123456')
-    }))
-  }
+      toString: vi.fn(
+        () => 'a1b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef123456'
+      ),
+    })),
+  },
 }));
 
 describe('EmailService', () => {
@@ -21,7 +23,9 @@ describe('EmailService', () => {
     it('should generate a valid hex token', () => {
       const token = emailService.generateVerificationToken();
 
-      expect(token).toBe('a1b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef123456');
+      expect(token).toBe(
+        'a1b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef123456'
+      );
       expect(token.length).toBe(64);
     });
   });
@@ -31,7 +35,9 @@ describe('EmailService', () => {
       const token = 'test-token-123';
       const url = emailService.createVerificationUrl(token);
 
-      expect(url).toBe('http://localhost:3000/verify-email?token=test-token-123');
+      expect(url).toBe(
+        'http://localhost:3000/verify-email?token=test-token-123'
+      );
     });
   });
 
@@ -41,7 +47,7 @@ describe('EmailService', () => {
         email: 'test@example.com',
         firstName: 'John',
         verificationToken: 'test-token',
-        verificationUrl: 'http://localhost:3000/verify-email?token=test-token'
+        verificationUrl: 'http://localhost:3000/verify-email?token=test-token',
       };
 
       const template = emailService.createVerificationEmailTemplate(data);
@@ -58,7 +64,7 @@ describe('EmailService', () => {
         email: 'test@example.com',
         firstName: 'Jane',
         verificationToken: 'test-token',
-        verificationUrl: 'http://localhost:3000/verify-email?token=test-token'
+        verificationUrl: 'http://localhost:3000/verify-email?token=test-token',
       };
 
       const template = emailService.createVerificationEmailTemplate(data);
@@ -72,13 +78,13 @@ describe('EmailService', () => {
 
   describe('sendVerificationEmail', () => {
     it('should log email sending attempt', async () => {
-      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => { });
+      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
       const data = {
         email: 'test@example.com',
         firstName: 'John',
         verificationToken: 'test-token',
-        verificationUrl: 'http://localhost:3000/verify-email?token=test-token'
+        verificationUrl: 'http://localhost:3000/verify-email?token=test-token',
       };
 
       await emailService.sendVerificationEmail(data);
@@ -88,7 +94,8 @@ describe('EmailService', () => {
         expect.objectContaining({
           to: 'test@example.com',
           subject: 'Verify Your Email Address',
-          verificationUrl: 'http://localhost:3000/verify-email?token=test-token'
+          verificationUrl:
+            'http://localhost:3000/verify-email?token=test-token',
         })
       );
 
@@ -98,7 +105,7 @@ describe('EmailService', () => {
 
   describe('sendWelcomeEmail', () => {
     it('should log welcome email sending attempt', async () => {
-      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => { });
+      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
       await emailService.sendWelcomeEmail('test@example.com', 'John');
 
@@ -106,7 +113,7 @@ describe('EmailService', () => {
         '📧 Welcome Email Sent:',
         expect.objectContaining({
           to: 'test@example.com',
-          subject: 'Welcome to Our Platform!'
+          subject: 'Welcome to Our Platform!',
         })
       );
 

@@ -6,10 +6,10 @@ export interface PaymentIntent {
   id: string;
   clientSecret: string;
   status:
-  | 'requires_payment_method'
-  | 'requires_confirmation'
-  | 'succeeded'
-  | 'canceled';
+    | 'requires_payment_method'
+    | 'requires_confirmation'
+    | 'succeeded'
+    | 'canceled';
   amount: number;
   currency: string;
   customerId: string;

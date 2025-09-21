@@ -21,7 +21,6 @@ export class AuthController {
         lastName,
         phone,
         roles = ['CUSTOMER'],
-
       } = req.body;
 
       // Enhanced password validation
@@ -32,7 +31,7 @@ export class AuthController {
           email: email,
           errors: passwordValidation.errors,
           strengthScore: PasswordValidator.getStrengthScore(password),
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
 
         return res.status(400).json({
@@ -47,8 +46,8 @@ export class AuthController {
               'Contains uppercase and lowercase letters',
               'Contains at least one number',
               'Contains at least one special character',
-              'Does not contain common patterns or personal information'
-            ]
+              'Does not contain common patterns or personal information',
+            ],
           },
           timestamp: new Date().toISOString(),
         });
@@ -134,7 +133,8 @@ export class AuthController {
           },
         });
 
-        const verificationUrl = this.emailService.createVerificationUrl(verificationToken);
+        const verificationUrl =
+          this.emailService.createVerificationUrl(verificationToken);
         await this.emailService.sendVerificationEmail({
           email: user.email,
           firstName: user.firstName,
@@ -142,7 +142,10 @@ export class AuthController {
           verificationUrl,
         });
       } catch (emailError) {
-        console.error('Failed to send verification email during registration:', emailError);
+        console.error(
+          'Failed to send verification email during registration:',
+          emailError
+        );
         // Don't fail registration if email sending fails
       }
 
@@ -199,7 +202,7 @@ export class AuthController {
           email: email,
           reason: !user ? 'user_not_found' : 'user_inactive',
           userAgent: req.headers['user-agent'],
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
 
         return res.status(401).json({
@@ -219,7 +222,7 @@ export class AuthController {
           userId: user.id,
           email: email,
           userAgent: req.headers['user-agent'],
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
 
         return res.status(401).json({
@@ -243,7 +246,7 @@ export class AuthController {
         email: user.email,
         roles: user.roles.map((ur: any) => ur.role.name),
         userAgent: req.headers['user-agent'],
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
 
       // Generate tokens using enhanced JWT service
@@ -508,7 +511,9 @@ export class AuthController {
       }
 
       // Format phone number for consistent storage
-      const formattedPhone = phone ? this.smsService.formatPhoneNumber(phone) : undefined;
+      const formattedPhone = phone
+        ? this.smsService.formatPhoneNumber(phone)
+        : undefined;
 
       const updateData: any = {
         ...(firstName && { firstName }),
@@ -529,8 +534,14 @@ export class AuthController {
         // Log security event
         console.log('Phone number changed, verification reset:', {
           userId: req.user.sub,
-          oldPhone: currentUser.phone?.replace(/(\+\d{1,3})\d+(\d{4})/, '$1****$2'),
-          newPhone: formattedPhone?.replace(/(\+\d{1,3})\d+(\d{4})/, '$1****$2'),
+          oldPhone: currentUser.phone?.replace(
+            /(\+\d{1,3})\d+(\d{4})/,
+            '$1****$2'
+          ),
+          newPhone: formattedPhone?.replace(
+            /(\+\d{1,3})\d+(\d{4})/,
+            '$1****$2'
+          ),
           timestamp: new Date().toISOString(),
         });
       }
@@ -568,7 +579,8 @@ export class AuthController {
 
       // Add warning if phone verification was reset
       if (isPhoneChanging) {
-        responseData.message = 'Profile updated successfully. Phone verification has been reset due to phone number change.';
+        responseData.message =
+          'Profile updated successfully. Phone verification has been reset due to phone number change.';
         responseData.data.phoneVerificationReset = true;
       }
 
@@ -601,12 +613,15 @@ export class AuthController {
       const passwordValidation = PasswordValidator.validate(newPassword);
       if (!passwordValidation.isValid) {
         // Log security event for monitoring
-        console.warn(`Weak password change attempt from user ${req.user.sub}:`, {
-          userId: req.user.sub,
-          errors: passwordValidation.errors,
-          strengthScore: PasswordValidator.getStrengthScore(newPassword),
-          timestamp: new Date().toISOString()
-        });
+        console.warn(
+          `Weak password change attempt from user ${req.user.sub}:`,
+          {
+            userId: req.user.sub,
+            errors: passwordValidation.errors,
+            strengthScore: PasswordValidator.getStrengthScore(newPassword),
+            timestamp: new Date().toISOString(),
+          }
+        );
 
         return res.status(400).json({
           success: false,
@@ -621,8 +636,8 @@ export class AuthController {
               'Contains at least one number',
               'Contains at least one special character',
               'Does not contain common patterns or personal information',
-              'Must be different from current password'
-            ]
+              'Must be different from current password',
+            ],
           },
           timestamp: new Date().toISOString(),
         });
@@ -643,7 +658,10 @@ export class AuthController {
       }
 
       // Verify current password
-      const isValidPassword = await bcrypt.compare(currentPassword, user.passwordHash);
+      const isValidPassword = await bcrypt.compare(
+        currentPassword,
+        user.passwordHash
+      );
       if (!isValidPassword) {
         return res.status(400).json({
           success: false,
@@ -832,9 +850,12 @@ export class AuthController {
         return res.status(429).json({
           success: false,
           error: 'Verification email already sent',
-          message: 'Please check your email or wait before requesting another verification email',
+          message:
+            'Please check your email or wait before requesting another verification email',
           code: 'VERIFICATION_EMAIL_ALREADY_SENT',
-          retryAfter: Math.ceil((existingToken.expiresAt.getTime() - Date.now()) / 1000),
+          retryAfter: Math.ceil(
+            (existingToken.expiresAt.getTime() - Date.now()) / 1000
+          ),
           timestamp: new Date().toISOString(),
         });
       }
@@ -853,7 +874,8 @@ export class AuthController {
       });
 
       // Send verification email
-      const verificationUrl = this.emailService.createVerificationUrl(verificationToken);
+      const verificationUrl =
+        this.emailService.createVerificationUrl(verificationToken);
       await this.emailService.sendVerificationEmail({
         email: user.email,
         firstName: user.firstName,
@@ -997,7 +1019,8 @@ export class AuthController {
         // Don't reveal if user exists for security
         return res.json({
           success: true,
-          message: 'If the email exists in our system, a verification email has been sent',
+          message:
+            'If the email exists in our system, a verification email has been sent',
           timestamp: new Date().toISOString(),
         });
       }
@@ -1023,9 +1046,12 @@ export class AuthController {
         return res.status(429).json({
           success: false,
           error: 'Verification email already sent recently',
-          message: 'Please check your email or wait before requesting another verification email',
+          message:
+            'Please check your email or wait before requesting another verification email',
           code: 'VERIFICATION_EMAIL_RATE_LIMITED',
-          retryAfter: Math.ceil((existingToken.expiresAt.getTime() - Date.now()) / 1000),
+          retryAfter: Math.ceil(
+            (existingToken.expiresAt.getTime() - Date.now()) / 1000
+          ),
           timestamp: new Date().toISOString(),
         });
       }
@@ -1052,7 +1078,8 @@ export class AuthController {
       });
 
       // Send verification email
-      const verificationUrl = this.emailService.createVerificationUrl(verificationToken);
+      const verificationUrl =
+        this.emailService.createVerificationUrl(verificationToken);
       await this.emailService.sendVerificationEmail({
         email: user.email,
         firstName: user.firstName,
@@ -1109,7 +1136,8 @@ export class AuthController {
         return res.status(400).json({
           success: false,
           error: 'Phone number not set',
-          message: 'Please add a phone number to your profile before requesting verification',
+          message:
+            'Please add a phone number to your profile before requesting verification',
           code: 'PHONE_NUMBER_NOT_SET',
           details: {
             updateProfileEndpoint: '/api/v1/auth/profile',
@@ -1148,7 +1176,9 @@ export class AuthController {
       });
 
       if (existingCode) {
-        const retryAfter = Math.ceil((existingCode.expiresAt.getTime() - Date.now()) / 1000);
+        const retryAfter = Math.ceil(
+          (existingCode.expiresAt.getTime() - Date.now()) / 1000
+        );
         return res.status(429).json({
           success: false,
           error: 'Verification code already sent',
@@ -1304,7 +1334,10 @@ export class AuthController {
       // Log security event
       console.log('Phone verification successful:', {
         userId: codeRecord.userId,
-        phone: codeRecord.user.phone?.replace(/(\+\d{1,3})\d+(\d{4})/, '$1****$2'),
+        phone: codeRecord.user.phone?.replace(
+          /(\+\d{1,3})\d+(\d{4})/,
+          '$1****$2'
+        ),
         timestamp: new Date().toISOString(),
       });
 
@@ -1320,7 +1353,10 @@ export class AuthController {
         success: true,
         message: 'Phone verified successfully',
         data: {
-          phone: codeRecord.user.phone?.replace(/(\+\d{1,3})\d+(\d{4})/, '$1****$2'),
+          phone: codeRecord.user.phone?.replace(
+            /(\+\d{1,3})\d+(\d{4})/,
+            '$1****$2'
+          ),
           isPhoneVerified: true,
         },
         timestamp: new Date().toISOString(),
@@ -1373,7 +1409,8 @@ export class AuthController {
         // Don't reveal if phone exists for security
         return res.json({
           success: true,
-          message: 'If the phone number exists in our system, a verification code has been sent',
+          message:
+            'If the phone number exists in our system, a verification code has been sent',
           timestamp: new Date().toISOString(),
         });
       }
@@ -1396,7 +1433,9 @@ export class AuthController {
       });
 
       if (existingCode) {
-        const retryAfter = Math.ceil((existingCode.expiresAt.getTime() - Date.now()) / 1000);
+        const retryAfter = Math.ceil(
+          (existingCode.expiresAt.getTime() - Date.now()) / 1000
+        );
         return res.status(429).json({
           success: false,
           error: 'Verification code already sent recently',

@@ -53,7 +53,7 @@ export class OrderService {
     private authServiceClient: HttpAuthServiceClient,
     private paymentServiceClient: HttpPaymentServiceClient,
     private notificationServiceClient: HttpNotificationServiceClient
-  ) { }
+  ) {}
 
   /**
    * Create order from cart with multi-vendor support
@@ -1423,19 +1423,19 @@ export class OrderService {
       );
 
       const orderNotificationData: OrderNotificationData & { reason?: string } =
-      {
-        orderId: order.id,
-        customerEmail: customer.email,
-        customerName: customer.name,
-        orderTotal: order.total,
-        orderItems: order.items.map(item => ({
-          productName: item.product?.name || 'Unknown Product',
-          quantity: item.quantity,
-          price: item.price,
-        })),
-        shippingAddress: order.shippingAddress,
-        reason,
-      };
+        {
+          orderId: order.id,
+          customerEmail: customer.email,
+          customerName: customer.name,
+          orderTotal: order.total,
+          orderItems: order.items.map(item => ({
+            productName: item.product?.name || 'Unknown Product',
+            quantity: item.quantity,
+            price: item.price,
+          })),
+          shippingAddress: order.shippingAddress,
+          reason,
+        };
 
       await this.notificationServiceClient.sendOrderCancellation(
         orderNotificationData

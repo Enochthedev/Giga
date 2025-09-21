@@ -97,21 +97,33 @@ export class ValidationError extends AppError {
     field?: string,
     correlationId?: string
   ) {
-    super(ErrorType.VALIDATION_ERROR, message, 400, details, field, 'VALIDATION_FAILED', correlationId);
+    super(
+      ErrorType.VALIDATION_ERROR,
+      message,
+      400,
+      details,
+      field,
+      'VALIDATION_FAILED',
+      correlationId
+    );
   }
 }
 
 export class NotFoundError extends AppError {
-  constructor(
-    resource: string,
-    identifier?: string,
-    correlationId?: string
-  ) {
+  constructor(resource: string, identifier?: string, correlationId?: string) {
     const message = identifier
       ? `${resource} with identifier '${identifier}' not found`
       : `${resource} not found`;
 
-    super(ErrorType.NOT_FOUND, message, 404, { resource, identifier }, undefined, 'RESOURCE_NOT_FOUND', correlationId);
+    super(
+      ErrorType.NOT_FOUND,
+      message,
+      404,
+      { resource, identifier },
+      undefined,
+      'RESOURCE_NOT_FOUND',
+      correlationId
+    );
   }
 }
 
@@ -157,35 +169,48 @@ export class UnauthorizedError extends AppError {
     message: string = 'Authentication required',
     correlationId?: string
   ) {
-    super(ErrorType.UNAUTHORIZED, message, 401, undefined, undefined, 'UNAUTHORIZED', correlationId);
+    super(
+      ErrorType.UNAUTHORIZED,
+      message,
+      401,
+      undefined,
+      undefined,
+      'UNAUTHORIZED',
+      correlationId
+    );
   }
 }
 
 export class ForbiddenError extends AppError {
-  constructor(
-    message: string = 'Access forbidden',
-    correlationId?: string
-  ) {
-    super(ErrorType.FORBIDDEN, message, 403, undefined, undefined, 'FORBIDDEN', correlationId);
+  constructor(message: string = 'Access forbidden', correlationId?: string) {
+    super(
+      ErrorType.FORBIDDEN,
+      message,
+      403,
+      undefined,
+      undefined,
+      'FORBIDDEN',
+      correlationId
+    );
   }
 }
 
 export class ConflictError extends AppError {
-  constructor(
-    message: string,
-    details?: any,
-    correlationId?: string
-  ) {
-    super(ErrorType.CONFLICT, message, 409, details, undefined, 'CONFLICT', correlationId);
+  constructor(message: string, details?: any, correlationId?: string) {
+    super(
+      ErrorType.CONFLICT,
+      message,
+      409,
+      details,
+      undefined,
+      'CONFLICT',
+      correlationId
+    );
   }
 }
 
 export class ServiceUnavailableError extends AppError {
-  constructor(
-    serviceName: string,
-    operation?: string,
-    correlationId?: string
-  ) {
+  constructor(serviceName: string, operation?: string, correlationId?: string) {
     const message = operation
       ? `${serviceName} service unavailable for operation: ${operation}`
       : `${serviceName} service unavailable`;
@@ -203,11 +228,7 @@ export class ServiceUnavailableError extends AppError {
 }
 
 export class RateLimitError extends AppError {
-  constructor(
-    limit: number,
-    windowMs: number,
-    correlationId?: string
-  ) {
+  constructor(limit: number, windowMs: number, correlationId?: string) {
     super(
       ErrorType.RATE_LIMIT_EXCEEDED,
       `Rate limit exceeded. Maximum ${limit} requests per ${windowMs}ms`,

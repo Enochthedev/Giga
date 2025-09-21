@@ -22,7 +22,9 @@ export class PasswordValidator {
 
     // Length validation
     if (password.length < this.MIN_LENGTH) {
-      errors.push(`Password must be at least ${this.MIN_LENGTH} characters long`);
+      errors.push(
+        `Password must be at least ${this.MIN_LENGTH} characters long`
+      );
     }
 
     if (password.length > this.MAX_LENGTH) {
@@ -43,28 +45,40 @@ export class PasswordValidator {
     }
 
     if (!/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>?]/.test(password)) {
-      errors.push('Password must contain at least one special character (!@#$%^&*()_+-=[]{}|;:,.<>?)');
+      errors.push(
+        'Password must contain at least one special character (!@#$%^&*()_+-=[]{}|;:,.<>?)'
+      );
     }
 
     // Advanced security checks
     if (this.isCommonPassword(password)) {
-      errors.push('Password is too common. Please choose a more unique password');
+      errors.push(
+        'Password is too common. Please choose a more unique password'
+      );
     }
 
     if (this.hasSequentialChars(password)) {
-      errors.push('Password should not contain sequential characters (e.g., 123, abc, qwerty)');
+      errors.push(
+        'Password should not contain sequential characters (e.g., 123, abc, qwerty)'
+      );
     }
 
     if (this.hasRepeatedChars(password)) {
-      errors.push('Password should not contain more than 2 consecutive identical characters');
+      errors.push(
+        'Password should not contain more than 2 consecutive identical characters'
+      );
     }
 
     if (this.hasKeyboardPatterns(password)) {
-      errors.push('Password should not contain keyboard patterns (e.g., qwerty, asdf)');
+      errors.push(
+        'Password should not contain keyboard patterns (e.g., qwerty, asdf)'
+      );
     }
 
     if (this.hasPersonalInfoPatterns(password)) {
-      errors.push('Password should not contain common personal information patterns');
+      errors.push(
+        'Password should not contain common personal information patterns'
+      );
     }
 
     // Check for null bytes or control characters
@@ -80,7 +94,7 @@ export class PasswordValidator {
 
     return {
       isValid: errors.length === 0,
-      errors
+      errors,
     };
   }
 
@@ -89,9 +103,25 @@ export class PasswordValidator {
    */
   private static isCommonPassword(password: string): boolean {
     const commonPasswords = [
-      'password', '123456', '123456789', 'qwerty', 'abc123', 'password123',
-      'admin', 'letmein', 'welcome', 'monkey', '1234567890', 'password1',
-      'qwerty123', 'admin123', 'root', 'toor', 'pass', 'test', 'guest'
+      'password',
+      '123456',
+      '123456789',
+      'qwerty',
+      'abc123',
+      'password123',
+      'admin',
+      'letmein',
+      'welcome',
+      'monkey',
+      '1234567890',
+      'password1',
+      'qwerty123',
+      'admin123',
+      'root',
+      'toor',
+      'pass',
+      'test',
+      'guest',
     ];
 
     return commonPasswords.includes(password.toLowerCase());
@@ -101,12 +131,21 @@ export class PasswordValidator {
    * Checks for sequential characters
    */
   private static hasSequentialChars(password: string): boolean {
-    const sequences = ['0123456789', 'abcdefghijklmnopqrstuvwxyz', 'qwertyuiop', 'asdfghjkl', 'zxcvbnm'];
+    const sequences = [
+      '0123456789',
+      'abcdefghijklmnopqrstuvwxyz',
+      'qwertyuiop',
+      'asdfghjkl',
+      'zxcvbnm',
+    ];
 
     for (const seq of sequences) {
       for (let i = 0; i <= seq.length - 3; i++) {
         const subseq = seq.substring(i, i + 3);
-        if (password.toLowerCase().includes(subseq) || password.toLowerCase().includes(subseq.split('').reverse().join(''))) {
+        if (
+          password.toLowerCase().includes(subseq) ||
+          password.toLowerCase().includes(subseq.split('').reverse().join(''))
+        ) {
           return true;
         }
       }
@@ -129,7 +168,10 @@ export class PasswordValidator {
     // Check for patterns like "AAA" or "aaa" (case-insensitive)
     const lowerPassword = password.toLowerCase();
     for (let i = 0; i < lowerPassword.length - 2; i++) {
-      if (lowerPassword[i] === lowerPassword[i + 1] && lowerPassword[i] === lowerPassword[i + 2]) {
+      if (
+        lowerPassword[i] === lowerPassword[i + 1] &&
+        lowerPassword[i] === lowerPassword[i + 2]
+      ) {
         return true;
       }
     }
@@ -142,9 +184,12 @@ export class PasswordValidator {
    */
   private static hasKeyboardPatterns(password: string): boolean {
     const keyboardPatterns = [
-      'qwertyuiop', 'asdfghjkl', 'zxcvbnm',
+      'qwertyuiop',
+      'asdfghjkl',
+      'zxcvbnm',
       'qwertyuiopasdfghjklzxcvbnm',
-      '1234567890', '0987654321'
+      '1234567890',
+      '0987654321',
     ];
 
     const lowerPassword = password.toLowerCase();
@@ -152,7 +197,10 @@ export class PasswordValidator {
     for (const pattern of keyboardPatterns) {
       for (let i = 0; i <= pattern.length - 4; i++) {
         const subPattern = pattern.substring(i, i + 4);
-        if (lowerPassword.includes(subPattern) || lowerPassword.includes(subPattern.split('').reverse().join(''))) {
+        if (
+          lowerPassword.includes(subPattern) ||
+          lowerPassword.includes(subPattern.split('').reverse().join(''))
+        ) {
           return true;
         }
       }
@@ -301,15 +349,20 @@ export class JWTSecurity {
   /**
    * Validates JWT secret strength
    */
-  static validateSecretStrength(secret: string): { isValid: boolean; errors: string[] } {
+  static validateSecretStrength(secret: string): {
+    isValid: boolean;
+    errors: string[];
+  } {
     const errors: string[] = [];
 
     if (!secret || secret.length < 32) {
       errors.push('JWT secret must be at least 32 characters long');
     }
 
-    if (secret === 'your-super-secret-jwt-key-change-in-production' ||
-      secret === 'your-super-secret-jwt-key-change-in-production-please') {
+    if (
+      secret === 'your-super-secret-jwt-key-change-in-production' ||
+      secret === 'your-super-secret-jwt-key-change-in-production-please'
+    ) {
       errors.push('JWT secret must not use default development values');
     }
 
@@ -319,14 +372,17 @@ export class JWTSecurity {
 
     return {
       isValid: errors.length === 0,
-      errors
+      errors,
     };
   }
 
   /**
    * Creates JWT payload with security headers
    */
-  static createSecurePayload(user: any, additionalClaims: Record<string, any> = {}): Record<string, any> {
+  static createSecurePayload(
+    user: any,
+    additionalClaims: Record<string, any> = {}
+  ): Record<string, any> {
     const now = Math.floor(Date.now() / 1000);
 
     return {
@@ -336,14 +392,17 @@ export class JWTSecurity {
       activeRole: user.activeRole,
       iat: now,
       jti: crypto.randomUUID(), // JWT ID for tracking
-      ...additionalClaims
+      ...additionalClaims,
     };
   }
 
   /**
    * Validates token claims for security
    */
-  static validateTokenClaims(payload: any): { isValid: boolean; errors: string[] } {
+  static validateTokenClaims(payload: any): {
+    isValid: boolean;
+    errors: string[];
+  } {
     const errors: string[] = [];
 
     if (!payload.sub) {
@@ -364,13 +423,14 @@ export class JWTSecurity {
 
     // Check token age
     const tokenAge = Date.now() / 1000 - payload.iat;
-    if (tokenAge > 24 * 60 * 60) { // 24 hours
+    if (tokenAge > 24 * 60 * 60) {
+      // 24 hours
       errors.push('Token is too old');
     }
 
     return {
       isValid: errors.length === 0,
-      errors
+      errors,
     };
   }
 }
@@ -389,7 +449,7 @@ export class RequestValidator {
     if (contentLength > maxSize) {
       return {
         isValid: false,
-        error: 'Request payload too large'
+        error: 'Request payload too large',
       };
     }
 
@@ -399,13 +459,16 @@ export class RequestValidator {
   /**
    * Validates content type
    */
-  static validateContentType(req: any, allowedTypes: string[] = ['application/json']): { isValid: boolean; error?: string } {
+  static validateContentType(
+    req: any,
+    allowedTypes: string[] = ['application/json']
+  ): { isValid: boolean; error?: string } {
     const contentType = req.headers['content-type'];
 
     if (!contentType) {
       return {
         isValid: false,
-        error: 'Content-Type header is required'
+        error: 'Content-Type header is required',
       };
     }
 
@@ -414,7 +477,7 @@ export class RequestValidator {
     if (!isAllowed) {
       return {
         isValid: false,
-        error: `Content-Type must be one of: ${allowedTypes.join(', ')}`
+        error: `Content-Type must be one of: ${allowedTypes.join(', ')}`,
       };
     }
 
@@ -424,17 +487,24 @@ export class RequestValidator {
   /**
    * Validates request security aspects
    */
-  static validateRequestSecurity(req: any): { isValid: boolean; error?: string } {
+  static validateRequestSecurity(req: any): {
+    isValid: boolean;
+    error?: string;
+  } {
     // Check for suspicious headers
     const suspiciousHeaders = ['x-forwarded-host', 'x-forwarded-proto'];
     for (const header of suspiciousHeaders) {
       const value = req.headers[header];
       if (value && typeof value === 'string') {
         // Check for header injection attempts
-        if (value.includes('\n') || value.includes('\r') || value.includes('\0')) {
+        if (
+          value.includes('\n') ||
+          value.includes('\r') ||
+          value.includes('\0')
+        ) {
           return {
             isValid: false,
-            error: 'Suspicious header content detected'
+            error: 'Suspicious header content detected',
           };
         }
       }
@@ -445,14 +515,14 @@ export class RequestValidator {
     if (!userAgent) {
       return {
         isValid: false,
-        error: 'User-Agent header is required'
+        error: 'User-Agent header is required',
       };
     }
 
     if (userAgent.length > 500) {
       return {
         isValid: false,
-        error: 'User-Agent header too long'
+        error: 'User-Agent header too long',
       };
     }
 
@@ -466,12 +536,14 @@ export class RequestValidator {
       /wget/i,
       /python/i,
       /java/i,
-      /go-http/i
+      /go-http/i,
     ];
 
     // Allow legitimate bots but log them
     if (suspiciousPatterns.some(pattern => pattern.test(userAgent))) {
-      console.warn(`Suspicious User-Agent detected: ${userAgent} from IP: ${req.clientIp}`);
+      console.warn(
+        `Suspicious User-Agent detected: ${userAgent} from IP: ${req.clientIp}`
+      );
     }
 
     // Check request method
@@ -479,7 +551,7 @@ export class RequestValidator {
     if (!allowedMethods.includes(req.method)) {
       return {
         isValid: false,
-        error: `HTTP method ${req.method} not allowed`
+        error: `HTTP method ${req.method} not allowed`,
       };
     }
 
@@ -490,37 +562,44 @@ export class RequestValidator {
 /**
  * Enhanced Zod schemas with security validation
  */
-export const securePasswordSchema = z.string()
+export const securePasswordSchema = z
+  .string()
   .min(8, 'Password must be at least 8 characters long')
   .max(128, 'Password must not exceed 128 characters')
-  .refine((password) => {
-    const validation = PasswordValidator.validate(password);
-    return validation.isValid;
-  }, (password) => {
-    const validation = PasswordValidator.validate(password);
-    return { message: validation.errors.join(', ') };
-  });
+  .refine(
+    password => {
+      const validation = PasswordValidator.validate(password);
+      return validation.isValid;
+    },
+    password => {
+      const validation = PasswordValidator.validate(password);
+      return { message: validation.errors.join(', ') };
+    }
+  );
 
-export const secureEmailSchema = z.string()
+export const secureEmailSchema = z
+  .string()
   .email('Invalid email format')
   .max(254, 'Email address too long')
   .transform(InputSanitizer.sanitizeEmail)
-  .refine((email) => {
+  .refine(email => {
     // Additional email validation
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     return emailRegex.test(email);
   }, 'Invalid email format');
 
-export const secureNameSchema = z.string()
+export const secureNameSchema = z
+  .string()
   .min(1, 'Name is required')
   .max(50, 'Name too long')
   .transform(InputSanitizer.sanitizeName)
-  .refine((name) => name.length > 0, 'Name cannot be empty after sanitization');
+  .refine(name => name.length > 0, 'Name cannot be empty after sanitization');
 
-export const securePhoneSchema = z.string()
+export const securePhoneSchema = z
+  .string()
   .optional()
-  .transform((phone) => phone ? InputSanitizer.sanitizePhone(phone) : undefined)
-  .refine((phone) => {
+  .transform(phone => (phone ? InputSanitizer.sanitizePhone(phone) : undefined))
+  .refine(phone => {
     if (!phone) return true;
     const phoneRegex = /^[+]?[1-9][\d]{0,15}$/;
     return phoneRegex.test(phone.replace(/[\s\-()]/g, ''));

@@ -3,7 +3,11 @@ import { NextFunction, Request, Response } from 'express';
 /**
  * Middleware to require phone verification for certain endpoints
  */
-export const requirePhoneVerification = (req: Request, res: Response, next: NextFunction) => {
+export const requirePhoneVerification = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     if (!req.user) {
       return res.status(401).json({
@@ -44,7 +48,11 @@ export const requirePhoneVerification = (req: Request, res: Response, next: Next
 /**
  * Middleware to check phone verification status and add warning if not verified
  */
-export const checkPhoneVerificationStatus = (req: Request, res: Response, next: NextFunction) => {
+export const checkPhoneVerificationStatus = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     if (!req.user) {
       return next();
@@ -53,7 +61,10 @@ export const checkPhoneVerificationStatus = (req: Request, res: Response, next: 
     // Add verification status to response headers for client awareness
     if (!req.user.isPhoneVerified && req.user.phone) {
       res.setHeader('X-Phone-Verification-Required', 'true');
-      res.setHeader('X-Phone-Verification-Endpoint', '/api/v1/auth/send-phone-verification');
+      res.setHeader(
+        'X-Phone-Verification-Endpoint',
+        '/api/v1/auth/send-phone-verification'
+      );
     }
 
     next();
@@ -66,7 +77,11 @@ export const checkPhoneVerificationStatus = (req: Request, res: Response, next: 
 /**
  * Middleware to require phone number to be set before verification
  */
-export const requirePhoneNumber = (req: Request, res: Response, next: NextFunction) => {
+export const requirePhoneNumber = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     if (!req.user) {
       return res.status(401).json({
@@ -82,7 +97,8 @@ export const requirePhoneNumber = (req: Request, res: Response, next: NextFuncti
       return res.status(400).json({
         success: false,
         error: 'Phone number required',
-        message: 'Please add a phone number to your profile before requesting verification',
+        message:
+          'Please add a phone number to your profile before requesting verification',
         code: 'PHONE_NUMBER_REQUIRED',
         details: {
           updateProfileEndpoint: '/api/v1/auth/profile',

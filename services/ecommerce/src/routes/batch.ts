@@ -105,7 +105,11 @@ router.use(responseOptimizationService.contentNegotiationMiddleware());
  *       401:
  *         description: Authentication required
  */
-router.post('/cart', authMiddleware, batchController.batchCartOperations.bind(batchController));
+router.post(
+  '/cart',
+  authMiddleware,
+  batchController.batchCartOperations.bind(batchController)
+);
 
 /**
  * @swagger
@@ -163,7 +167,11 @@ router.post('/cart', authMiddleware, batchController.batchCartOperations.bind(ba
  *       403:
  *         description: Vendor access required
  */
-router.post('/inventory', authMiddleware, batchController.batchInventoryUpdates.bind(batchController));
+router.post(
+  '/inventory',
+  authMiddleware,
+  batchController.batchInventoryUpdates.bind(batchController)
+);
 
 /**
  * @swagger
@@ -204,7 +212,10 @@ router.post('/inventory', authMiddleware, batchController.batchInventoryUpdates.
  *       400:
  *         description: Invalid request data
  */
-router.post('/cache/refresh', batchController.batchCacheRefresh.bind(batchController));
+router.post(
+  '/cache/refresh',
+  batchController.batchCacheRefresh.bind(batchController)
+);
 
 /**
  * @swagger
@@ -338,6 +349,9 @@ router.post('/search', batchController.batchSearch.bind(batchController));
  *       404:
  *         description: Batch operation not found
  */
-router.get('/status/:batchId', batchController.getBatchStatus.bind(batchController));
+router.get(
+  '/status/:batchId',
+  batchController.getBatchStatus.bind(batchController)
+);
 
 export default router;

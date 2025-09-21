@@ -81,7 +81,8 @@ export class PaginationService {
   } {
     const hasMore = results.length > limit;
     const data = hasMore ? results.slice(0, limit) : results;
-    const nextCursor = hasMore && data.length > 0 ? data[data.length - 1][sortBy] : undefined;
+    const nextCursor =
+      hasMore && data.length > 0 ? data[data.length - 1][sortBy] : undefined;
 
     return {
       data,
@@ -144,7 +145,11 @@ export class PaginationService {
     const { skip, take, page, limit } = this.createOffsetPagination(options);
 
     // Execute queries in parallel for better performance
-    const promises: [Promise<T[]>, Promise<number>, Promise<Record<string, any>> | undefined] = [
+    const promises: [
+      Promise<T[]>,
+      Promise<number>,
+      Promise<Record<string, any>> | undefined,
+    ] = [
       queryFn({ where, skip, take, ...options }),
       countFn(where),
       facetFn ? facetFn(where) : undefined,
@@ -152,7 +157,12 @@ export class PaginationService {
 
     const [data, total, facets] = await Promise.all(promises);
 
-    const pagination = this.createPaginatedResponse(data, total, page, limit).pagination;
+    const pagination = this.createPaginatedResponse(
+      data,
+      total,
+      page,
+      limit
+    ).pagination;
 
     return {
       data,
@@ -227,7 +237,13 @@ export class PaginationService {
     orderBy: any;
     take: number;
   } {
-    const { lastId, lastValue, sortBy, sortOrder = 'desc', limit = 20 } = options;
+    const {
+      lastId,
+      lastValue,
+      sortBy,
+      sortOrder = 'desc',
+      limit = 20,
+    } = options;
 
     const where: any = {};
     const orderBy: any = { [sortBy]: sortOrder };
@@ -341,7 +357,10 @@ export class PaginationService {
     last?: string;
   } {
     const createUrl = (page: number) => {
-      const params = new URLSearchParams({ ...queryParams, page: page.toString() });
+      const params = new URLSearchParams({
+        ...queryParams,
+        page: page.toString(),
+      });
       return `${baseUrl}?${params.toString()}`;
     };
 

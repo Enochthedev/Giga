@@ -1,4 +1,8 @@
-import { GracefulDegradation, HttpClient, HttpClientFactory } from '../lib/http-client';
+import {
+  GracefulDegradation,
+  HttpClient,
+  HttpClientFactory,
+} from '../lib/http-client';
 import { RetryConfigurations } from '../lib/retry';
 import type { ServiceResponse } from './types';
 
@@ -51,10 +55,9 @@ export class HttpAuthServiceClient implements AuthServiceClient {
   }
 
   async validateToken(token: string): Promise<UserInfo> {
-    const response = await this.client.post<UserInfo>(
-      '/api/v1/auth/validate',
-      { token }
-    );
+    const response = await this.client.post<UserInfo>('/api/v1/auth/validate', {
+      token,
+    });
 
     if (!response.success || !response.data) {
       throw new Error(
@@ -66,9 +69,7 @@ export class HttpAuthServiceClient implements AuthServiceClient {
   }
 
   async getUserInfo(userId: string): Promise<UserInfo> {
-    const response = await this.client.get<UserInfo>(
-      `/api/v1/users/${userId}`
-    );
+    const response = await this.client.get<UserInfo>(`/api/v1/users/${userId}`);
 
     if (!response.success || !response.data) {
       throw new Error(
@@ -103,10 +104,10 @@ export class HttpAuthServiceClient implements AuthServiceClient {
   async refreshToken(
     refreshToken: string
   ): Promise<{ accessToken: string; refreshToken: string }> {
-    const response = await this.client.post<{ accessToken: string; refreshToken: string }>(
-      '/api/v1/auth/refresh',
-      { refreshToken }
-    );
+    const response = await this.client.post<{
+      accessToken: string;
+      refreshToken: string;
+    }>('/api/v1/auth/refresh', { refreshToken });
 
     if (!response.success || !response.data) {
       throw new Error(response.error?.error.message || 'Token refresh failed');
@@ -139,10 +140,9 @@ export class HttpAuthServiceClient implements AuthServiceClient {
   }
 
   async getUsersByIds(userIds: string[]): Promise<UserInfo[]> {
-    const response = await this.client.post<UserInfo[]>(
-      '/api/v1/users/batch',
-      { userIds }
-    );
+    const response = await this.client.post<UserInfo[]>('/api/v1/users/batch', {
+      userIds,
+    });
 
     if (!response.success || !response.data) {
       throw new Error(response.error?.error.message || 'Failed to get users');

@@ -57,9 +57,22 @@ class RedisService {
     }
   }
 
-  private updateMetrics(operation: 'hit' | 'miss' | 'set' | 'delete' | 'error', responseTime?: number) {
+  private updateMetrics(
+    operation: 'hit' | 'miss' | 'set' | 'delete' | 'error',
+    responseTime?: number
+  ) {
     this.metrics.totalRequests++;
-    this.metrics[operation === 'hit' ? 'hits' : operation === 'miss' ? 'misses' : operation === 'set' ? 'sets' : operation === 'delete' ? 'deletes' : 'errors']++;
+    this.metrics[
+      operation === 'hit'
+        ? 'hits'
+        : operation === 'miss'
+          ? 'misses'
+          : operation === 'set'
+            ? 'sets'
+            : operation === 'delete'
+              ? 'deletes'
+              : 'errors'
+    ]++;
 
     if (responseTime !== undefined) {
       this.responseTimes.push(responseTime);
@@ -67,10 +80,13 @@ class RedisService {
       if (this.responseTimes.length > 1000) {
         this.responseTimes.shift();
       }
-      this.metrics.avgResponseTime = this.responseTimes.reduce((a, b) => a + b, 0) / this.responseTimes.length;
+      this.metrics.avgResponseTime =
+        this.responseTimes.reduce((a, b) => a + b, 0) /
+        this.responseTimes.length;
     }
 
-    this.metrics.hitRate = this.metrics.hits / (this.metrics.hits + this.metrics.misses) || 0;
+    this.metrics.hitRate =
+      this.metrics.hits / (this.metrics.hits + this.metrics.misses) || 0;
   }
 
   async set(key: string, value: string, ttlSeconds?: number) {
@@ -123,7 +139,13 @@ class RedisService {
   }
 
   // Advanced caching methods with TTL-based invalidation
-  async setWithMetadata<T>(key: string, data: T, ttlSeconds: number, tags?: string[], version?: string): Promise<void> {
+  async setWithMetadata<T>(
+    key: string,
+    data: T,
+    ttlSeconds: number,
+    tags?: string[],
+    version?: string
+  ): Promise<void> {
     const entry: CacheEntry<T> = {
       data,
       timestamp: Date.now(),
@@ -240,7 +262,11 @@ class RedisService {
   // Enhanced product caching with TTL-based invalidation
   async cacheProduct(productId: string, productData: any, ttlSeconds = 3600) {
     const key = `product:${productId}`;
-    const tags = ['product', `vendor:${productData.vendorId}`, `category:${productData.category}`];
+    const tags = [
+      'product',
+      `vendor:${productData.vendorId}`,
+      `category:${productData.category}`,
+    ];
     if (productData.subcategory) {
       tags.push(`subcategory:${productData.subcategory}`);
     }
@@ -248,7 +274,13 @@ class RedisService {
       tags.push(`brand:${productData.brand}`);
     }
 
-    await this.setWithMetadata(key, productData, ttlSeconds, tags, productData.updatedAt);
+    await this.setWithMetadata(
+      key,
+      productData,
+      ttlSeconds,
+      tags,
+      productData.updatedAt
+    );
   }
 
   async getCachedProduct(productId: string) {
@@ -263,7 +295,11 @@ class RedisService {
 
     for (const product of products) {
       const key = `product:${product.id}`;
-      const tags = ['product', `vendor:${product.vendorId}`, `category:${product.category}`];
+      const tags = [
+        'product',
+        `vendor:${product.vendorId}`,
+        `category:${product.category}`,
+      ];
       if (product.subcategory) {
         tags.push(`subcategory:${product.subcategory}`);
       }
@@ -271,7 +307,9 @@ class RedisService {
         tags.push(`brand:${product.brand}`);
       }
 
-      pipeline.push(this.setWithMetadata(key, product, ttlSeconds, tags, product.updatedAt));
+      pipeline.push(
+        this.setWithMetadata(key, product, ttlSeconds, tags, product.updatedAt)
+      );
     }
 
     await Promise.all(pipeline);
@@ -285,8 +323,10 @@ class RedisService {
 
     // Add category/brand tags if present in query
     if (typeof query === 'object' && query) {
-      if ((query as any).category) tags.push(`category:${(query as any).category}`);
-      if ((query as any).subcategory) tags.push(`subcategory:${(query as any).subcategory}`);
+      if ((query as any).category)
+        tags.push(`category:${(query as any).category}`);
+      if ((query as any).subcategory)
+        tags.push(`subcategory:${(query as any).subcategory}`);
       if ((query as any).brand) tags.push(`brand:${(query as any).brand}`);
     }
 
@@ -358,7 +398,13 @@ class RedisService {
   }
 
   // User order history caching
-  async cacheUserOrders(customerId: string, orders: any[], page: number, limit: number, ttlSeconds = 1800) {
+  async cacheUserOrders(
+    customerId: string,
+    orders: any[],
+    page: number,
+    limit: number,
+    ttlSeconds = 1800
+  ) {
     const key = `orders:user:${customerId}:${page}:${limit}`;
     const tags = ['order', `customer:${customerId}`];
     await this.setWithMetadata(key, orders, ttlSeconds, tags);
@@ -371,7 +417,11 @@ class RedisService {
   }
 
   // Vendor analytics caching
-  async cacheVendorAnalytics(vendorId: string, analytics: any, ttlSeconds = 1800) {
+  async cacheVendorAnalytics(
+    vendorId: string,
+    analytics: any,
+    ttlSeconds = 1800
+  ) {
     const key = `analytics:vendor:${vendorId}`;
     const tags = ['analytics', `vendor:${vendorId}`];
     await this.setWithMetadata(key, analytics, ttlSeconds, tags);
@@ -398,13 +448,16 @@ class RedisService {
     }
   }
 
-  async subscribeToCartUpdates(userId: string, callback: (cartData: unknown) => void): Promise<void> {
+  async subscribeToCartUpdates(
+    userId: string,
+    callback: (cartData: unknown) => void
+  ): Promise<void> {
     try {
       if (!this.client) await this.connect();
       const subscriber = this.client!.duplicate();
       await subscriber.connect();
 
-      await subscriber.subscribe(`cart:updates:${userId}`, (message) => {
+      await subscriber.subscribe(`cart:updates:${userId}`, message => {
         try {
           const update = JSON.parse(message);
           callback(update.cartData);
@@ -442,7 +495,8 @@ class RedisService {
 
       for (const key of keys) {
         const ttl = await this.client!.ttl(key);
-        if (ttl === -1) { // No expiration set
+        if (ttl === -1) {
+          // No expiration set
           // Check if it's an old entry that should expire
           const entry = await this.getWithMetadata(key);
           if (entry && entry.timestamp) {

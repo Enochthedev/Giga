@@ -36,8 +36,13 @@ export class OptimizedOrderService {
     const { page = 1, limit = 20, cursor } = filters;
 
     // Try to get cached results first
-    if (!cursor && page <= 3) { // Cache first 3 pages
-      const cachedOrders = await cacheService.getCachedUserOrders(customerId, page, limit);
+    if (!cursor && page <= 3) {
+      // Cache first 3 pages
+      const cachedOrders = await cacheService.getCachedUserOrders(
+        customerId,
+        page,
+        limit
+      );
       if (cachedOrders) {
         return cachedOrders;
       }
@@ -67,13 +72,16 @@ export class OptimizedOrderService {
   ): Promise<PaginatedResult<any>> {
     const { cursor, limit = 20 } = filters;
 
-    const result = await this.dbOptimization.getOrderHistoryOptimized(customerId, {
-      status: filters.status,
-      dateFrom: filters.dateFrom,
-      dateTo: filters.dateTo,
-      cursor,
-      limit,
-    });
+    const result = await this.dbOptimization.getOrderHistoryOptimized(
+      customerId,
+      {
+        status: filters.status,
+        dateFrom: filters.dateFrom,
+        dateTo: filters.dateTo,
+        cursor,
+        limit,
+      }
+    );
 
     return PaginationService.createCursorPaginatedResponse(
       result.orders,
@@ -87,8 +95,16 @@ export class OptimizedOrderService {
     customerId: string,
     filters: OptimizedOrderFilters
   ): Promise<PaginatedResult<any>> {
-    const { page = 1, limit = 20, sortBy = 'createdAt', sortOrder = 'desc' } = filters;
-    const { skip, take } = PaginationService.createOffsetPagination({ page, limit });
+    const {
+      page = 1,
+      limit = 20,
+      sortBy = 'createdAt',
+      sortOrder = 'desc',
+    } = filters;
+    const { skip, take } = PaginationService.createOffsetPagination({
+      page,
+      limit,
+    });
 
     const where: any = { customerId };
 
@@ -141,7 +157,12 @@ export class OptimizedOrderService {
       this.prisma.order.count({ where }),
     ]);
 
-    return PaginationService.createPaginatedResponse(orders, total, page, limit);
+    return PaginationService.createPaginatedResponse(
+      orders,
+      total,
+      page,
+      limit
+    );
   }
 
   /**
@@ -170,13 +191,16 @@ export class OptimizedOrderService {
   ): Promise<PaginatedResult<any>> {
     const { cursor, limit = 20 } = filters;
 
-    const result = await this.dbOptimization.getVendorOrdersOptimized(vendorId, {
-      status: filters.status,
-      dateFrom: filters.dateFrom,
-      dateTo: filters.dateTo,
-      cursor,
-      limit,
-    });
+    const result = await this.dbOptimization.getVendorOrdersOptimized(
+      vendorId,
+      {
+        status: filters.status,
+        dateFrom: filters.dateFrom,
+        dateTo: filters.dateTo,
+        cursor,
+        limit,
+      }
+    );
 
     return PaginationService.createCursorPaginatedResponse(
       result.orders,
@@ -190,8 +214,16 @@ export class OptimizedOrderService {
     vendorId: string,
     filters: OptimizedOrderFilters
   ): Promise<PaginatedResult<any>> {
-    const { page = 1, limit = 20, sortBy = 'createdAt', sortOrder = 'desc' } = filters;
-    const { skip, take } = PaginationService.createOffsetPagination({ page, limit });
+    const {
+      page = 1,
+      limit = 20,
+      sortBy = 'createdAt',
+      sortOrder = 'desc',
+    } = filters;
+    const { skip, take } = PaginationService.createOffsetPagination({
+      page,
+      limit,
+    });
 
     const where: any = { vendorId };
 
@@ -246,7 +278,12 @@ export class OptimizedOrderService {
       this.prisma.vendorOrder.count({ where }),
     ]);
 
-    return PaginationService.createPaginatedResponse(orders, total, page, limit);
+    return PaginationService.createPaginatedResponse(
+      orders,
+      total,
+      page,
+      limit
+    );
   }
 
   /**
@@ -258,8 +295,12 @@ export class OptimizedOrderService {
     dateRange: { from: Date; to: Date }
   ): Promise<any[]> {
     // Try to get cached analytics
-    const cachedAnalytics = await cacheService.getCachedVendorAnalytics(vendorId);
-    if (cachedAnalytics && this.isAnalyticsCacheFresh(cachedAnalytics, dateRange)) {
+    const cachedAnalytics =
+      await cacheService.getCachedVendorAnalytics(vendorId);
+    if (
+      cachedAnalytics &&
+      this.isAnalyticsCacheFresh(cachedAnalytics, dateRange)
+    ) {
       return cachedAnalytics;
     }
 
@@ -276,7 +317,10 @@ export class OptimizedOrderService {
     return analytics;
   }
 
-  private isAnalyticsCacheFresh(cachedData: any, _dateRange: { from: Date; to: Date }): boolean {
+  private isAnalyticsCacheFresh(
+    cachedData: any,
+    _dateRange: { from: Date; to: Date }
+  ): boolean {
     // Simple freshness check - in production, this would be more sophisticated
     const cacheAge = Date.now() - new Date(cachedData.cachedAt || 0).getTime();
     const maxAge = 30 * 60 * 1000; // 30 minutes
@@ -286,11 +330,13 @@ export class OptimizedOrderService {
   /**
    * Batch update order statuses for better performance
    */
-  async batchUpdateOrderStatuses(updates: Array<{
-    orderId: string;
-    status: string;
-    trackingNumber?: string;
-  }>): Promise<{ updated: number; errors: string[] }> {
+  async batchUpdateOrderStatuses(
+    updates: Array<{
+      orderId: string;
+      status: string;
+      trackingNumber?: string;
+    }>
+  ): Promise<{ updated: number; errors: string[] }> {
     const errors: string[] = [];
     let updated = 0;
 
@@ -333,12 +379,17 @@ export class OptimizedOrderService {
 
       // Invalidate caches
       await Promise.all([
-        ...Array.from(customerIds).map(id => cacheService.invalidateUserOrders(id)),
-        ...Array.from(vendorIds).map(id => cacheService.invalidateVendorOrders(id)),
+        ...Array.from(customerIds).map(id =>
+          cacheService.invalidateUserOrders(id)
+        ),
+        ...Array.from(vendorIds).map(id =>
+          cacheService.invalidateVendorOrders(id)
+        ),
       ]);
-
     } catch (error) {
-      errors.push(`Batch update failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      errors.push(
+        `Batch update failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
 
     return { updated, errors };
@@ -347,17 +398,24 @@ export class OptimizedOrderService {
   /**
    * Get order statistics with caching
    */
-  async getOrderStatistics(filters: {
-    vendorId?: string;
-    customerId?: string;
-    dateFrom?: Date;
-    dateTo?: Date;
-  } = {}): Promise<{
+  async getOrderStatistics(
+    filters: {
+      vendorId?: string;
+      customerId?: string;
+      dateFrom?: Date;
+      dateTo?: Date;
+    } = {}
+  ): Promise<{
     totalOrders: number;
     totalRevenue: number;
     averageOrderValue: number;
     ordersByStatus: Record<string, number>;
-    topProducts: Array<{ productId: string; productName: string; totalSold: number; revenue: number }>;
+    topProducts: Array<{
+      productId: string;
+      productName: string;
+      totalSold: number;
+      revenue: number;
+    }>;
   }> {
     const where: any = {};
 
@@ -378,33 +436,32 @@ export class OptimizedOrderService {
     }
 
     // Execute optimized aggregation queries
-    const [
-      totalOrders,
-      orderStats,
-      statusCounts,
-      topProducts,
-    ] = await Promise.all([
-      this.prisma.order.count({ where }),
-      this.prisma.order.aggregate({
-        where,
-        _sum: { total: true },
-        _avg: { total: true },
-      }),
-      this.prisma.order.groupBy({
-        by: ['status'],
-        where,
-        _count: { id: true },
-      }),
-      this.getTopProductsOptimized(where, 10),
-    ]);
+    const [totalOrders, orderStats, statusCounts, topProducts] =
+      await Promise.all([
+        this.prisma.order.count({ where }),
+        this.prisma.order.aggregate({
+          where,
+          _sum: { total: true },
+          _avg: { total: true },
+        }),
+        this.prisma.order.groupBy({
+          by: ['status'],
+          where,
+          _count: { id: true },
+        }),
+        this.getTopProductsOptimized(where, 10),
+      ]);
 
     const totalRevenue = orderStats._sum.total || 0;
     const averageOrderValue = orderStats._avg.total || 0;
 
-    const ordersByStatus = statusCounts.reduce((acc, item) => {
-      acc[item.status] = item._count.id;
-      return acc;
-    }, {} as Record<string, number>);
+    const ordersByStatus = statusCounts.reduce(
+      (acc, item) => {
+        acc[item.status] = item._count.id;
+        return acc;
+      },
+      {} as Record<string, number>
+    );
 
     return {
       totalOrders,
@@ -418,9 +475,16 @@ export class OptimizedOrderService {
   private async getTopProductsOptimized(
     orderWhere: any,
     limit: number
-  ): Promise<Array<{ productId: string; productName: string; totalSold: number; revenue: number }>> {
+  ): Promise<
+    Array<{
+      productId: string;
+      productName: string;
+      totalSold: number;
+      revenue: number;
+    }>
+  > {
     // Use raw query for better performance on complex aggregations
-    const topProducts = await this.prisma.$queryRaw`
+    const topProducts = (await this.prisma.$queryRaw`
       SELECT 
         oi.product_id as "productId",
         p.name as "productName",
@@ -435,7 +499,7 @@ export class OptimizedOrderService {
       GROUP BY oi.product_id, p.name
       ORDER BY revenue DESC
       LIMIT ${limit}
-    ` as any[];
+    `) as any[];
 
     return topProducts.map(item => ({
       productId: item.productId,
@@ -483,15 +547,18 @@ export class OptimizedOrderService {
       // Perform cache maintenance
       const cacheResult = await cacheService.performMaintenance();
       if (cacheResult.cleanedEntries > 0) {
-        optimizationsApplied.push(`Cleaned ${cacheResult.cleanedEntries} expired cache entries`);
+        optimizationsApplied.push(
+          `Cleaned ${cacheResult.cleanedEntries} expired cache entries`
+        );
       }
       errors.push(...cacheResult.errors);
 
       // Reset metrics for fresh monitoring
       this.dbOptimization.resetMetrics();
-
     } catch (error) {
-      errors.push(`Performance optimization error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      errors.push(
+        `Performance optimization error: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
 
     return { optimizationsApplied, errors };

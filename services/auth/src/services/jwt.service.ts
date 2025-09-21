@@ -31,12 +31,15 @@ export class JWTService {
   /**
    * Generates a secure access token
    */
-  public generateAccessToken(user: any, additionalClaims: Record<string, any> = {}): string {
+  public generateAccessToken(
+    user: any,
+    additionalClaims: Record<string, any> = {}
+  ): string {
     const payload = JWTSecurity.createSecurePayload(user, {
       type: 'access',
       keyVersion: this.getKeyVersion(),
       sessionId: crypto.randomUUID(), // Add session tracking
-      ...additionalClaims
+      ...additionalClaims,
     });
 
     return jwt.sign(payload, this.currentSecret, {
@@ -70,13 +73,15 @@ export class JWTService {
         const decoded = jwt.verify(token, this.currentSecret, {
           algorithms: ['HS256'],
           issuer: 'auth-service',
-          audience: 'platform-users'
+          audience: 'platform-users',
         });
 
         // Validate token claims
         const validation = JWTSecurity.validateTokenClaims(decoded);
         if (!validation.isValid) {
-          throw new Error(`Invalid token claims: ${validation.errors.join(', ')}`);
+          throw new Error(
+            `Invalid token claims: ${validation.errors.join(', ')}`
+          );
         }
 
         return decoded;
@@ -86,13 +91,15 @@ export class JWTService {
           const decoded = jwt.verify(token, this.previousSecret, {
             algorithms: ['HS256'],
             issuer: 'auth-service',
-            audience: 'platform-users'
+            audience: 'platform-users',
           });
 
           // Validate token claims
           const validation = JWTSecurity.validateTokenClaims(decoded);
           if (!validation.isValid) {
-            throw new Error(`Invalid token claims: ${validation.errors.join(', ')}`);
+            throw new Error(
+              `Invalid token claims: ${validation.errors.join(', ')}`
+            );
           }
 
           // Mark token for refresh since it's using old key
@@ -150,7 +157,9 @@ export class JWTService {
     let secret = process.env.JWT_SECRET;
 
     if (!secret) {
-      console.warn('JWT_SECRET not found in environment, generating secure secret');
+      console.warn(
+        'JWT_SECRET not found in environment, generating secure secret'
+      );
       secret = JWTSecurity.generateSecureSecret();
     }
 
@@ -175,7 +184,10 @@ export class JWTService {
    */
   private startKeyRotation(): void {
     // Only enable key rotation in production or when explicitly enabled
-    if (process.env.NODE_ENV !== 'production' && !process.env.ENABLE_KEY_ROTATION) {
+    if (
+      process.env.NODE_ENV !== 'production' &&
+      !process.env.ENABLE_KEY_ROTATION
+    ) {
       console.log('JWT key rotation disabled in development mode');
       return;
     }
@@ -197,17 +209,21 @@ export class JWTService {
     this.lastRotation = Date.now();
 
     // Clear previous secret after grace period (1 hour)
-    setTimeout(() => {
-      this.previousSecret = undefined;
-      console.log('Previous JWT key cleared');
-    }, 60 * 60 * 1000);
+    setTimeout(
+      () => {
+        this.previousSecret = undefined;
+        console.log('Previous JWT key cleared');
+      },
+      60 * 60 * 1000
+    );
   }
 
   /**
    * Gets current key version for tracking
    */
   private getKeyVersion(): string {
-    return crypto.createHash('sha256')
+    return crypto
+      .createHash('sha256')
       .update(this.currentSecret)
       .digest('hex')
       .substring(0, 8);
@@ -232,7 +248,7 @@ export class JWTService {
       return {
         header: decoded?.header,
         payload: decoded?.payload,
-        isBlacklisted: this.isTokenBlacklisted(token)
+        isBlacklisted: this.isTokenBlacklisted(token),
       };
     } catch {
       return null;
@@ -259,7 +275,9 @@ export class JWTService {
       keyVersion: this.getKeyVersion(),
       lastRotation: new Date(this.lastRotation).toISOString(),
       blacklistedTokensCount: this.blacklistedTokens.size,
-      keyRotationEnabled: process.env.NODE_ENV === 'production' || !!process.env.ENABLE_KEY_ROTATION
+      keyRotationEnabled:
+        process.env.NODE_ENV === 'production' ||
+        !!process.env.ENABLE_KEY_ROTATION,
     };
   }
 }

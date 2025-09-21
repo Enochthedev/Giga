@@ -45,12 +45,14 @@ export function validate(schemas: ValidationOptions) {
         //   value: 'received' in err ? err.received : undefined,
         // }));
 
-        next(new ValidationError(
-          'Request validation failed',
-          undefined,
-          undefined,
-          req.correlationId
-        ));
+        next(
+          new ValidationError(
+            'Request validation failed',
+            undefined,
+            undefined,
+            req.correlationId
+          )
+        );
       } else {
         next(error);
       }
@@ -64,7 +66,7 @@ export const cspMiddleware = helmet.contentSecurityPolicy({
     defaultSrc: ["'self'"],
     styleSrc: ["'self'", "'unsafe-inline'"],
     scriptSrc: ["'self'"],
-    imgSrc: ["'self'", "data:", "https:"],
+    imgSrc: ["'self'", 'data:', 'https:'],
     connectSrc: ["'self'"],
     fontSrc: ["'self'"],
     objectSrc: ["'none'"],
@@ -226,12 +228,14 @@ export function validateRequestSize(maxSize: number = 10 * 1024 * 1024) {
     const contentLength = parseInt(req.headers['content-length'] || '0', 10);
 
     if (contentLength > maxSize) {
-      return next(new ValidationError(
-        `Request too large. Maximum size is ${maxSize} bytes`,
-        undefined,
-        'request',
-        req.correlationId
-      ));
+      return next(
+        new ValidationError(
+          `Request too large. Maximum size is ${maxSize} bytes`,
+          undefined,
+          'request',
+          req.correlationId
+        )
+      );
     }
 
     next();
@@ -275,11 +279,7 @@ export function validateDateRange(
 
 export function validatePagination(page?: number, limit?: number): void {
   if (page && page < 1) {
-    throw new ValidationError(
-      'Page must be greater than 0',
-      { page },
-      'page'
-    );
+    throw new ValidationError('Page must be greater than 0', { page }, 'page');
   }
 
   if (limit && (limit < 1 || limit > 100)) {

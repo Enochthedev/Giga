@@ -65,7 +65,14 @@ const options = {
         },
         RegisterRequest: {
           type: 'object',
-          required: ['email', 'password', 'firstName', 'lastName', 'roles', 'acceptTerms'],
+          required: [
+            'email',
+            'password',
+            'firstName',
+            'lastName',
+            'roles',
+            'acceptTerms',
+          ],
           properties: {
             email: {
               type: 'string',
@@ -182,7 +189,8 @@ const options = {
             token: {
               type: 'string',
               description: 'Email verification token received via email',
-              example: 'a1b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef123456',
+              example:
+                'a1b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef123456',
             },
           },
         },
@@ -224,7 +232,8 @@ const options = {
                 expiresAt: {
                   type: 'string',
                   format: 'date-time',
-                  description: 'Token expiration time (for send verification responses)',
+                  description:
+                    'Token expiration time (for send verification responses)',
                 },
               },
             },
@@ -284,12 +293,14 @@ const options = {
                 expiresAt: {
                   type: 'string',
                   format: 'date-time',
-                  description: 'Code expiration time (for send verification responses)',
+                  description:
+                    'Code expiration time (for send verification responses)',
                 },
                 codeLength: {
                   type: 'number',
                   example: 6,
-                  description: 'Length of verification code (for send verification responses)',
+                  description:
+                    'Length of verification code (for send verification responses)',
                 },
               },
             },
@@ -340,7 +351,7 @@ const options = {
             },
             businessName: {
               type: 'string',
-              example: 'John\'s Electronics Store',
+              example: "John's Electronics Store",
             },
             businessType: {
               type: 'string',
@@ -447,7 +458,7 @@ const options = {
                 },
                 longitude: {
                   type: 'number',
-                  example: -74.0060,
+                  example: -74.006,
                 },
                 address: {
                   type: 'string',

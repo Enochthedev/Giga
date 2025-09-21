@@ -13,7 +13,7 @@ export interface SMSTemplate {
 export class SMSService {
   private static instance: SMSService;
 
-  private constructor() { }
+  private constructor() {}
 
   static getInstance(): SMSService {
     if (!SMSService.instance) {
@@ -29,7 +29,7 @@ export class SMSService {
     // Generate cryptographically secure random 6-digit code
     const randomBytes = crypto.randomBytes(4);
     const randomNumber = randomBytes.readUInt32BE(0);
-    const code = (randomNumber % 900000 + 100000).toString();
+    const code = ((randomNumber % 900000) + 100000).toString();
     return code;
   }
 
@@ -57,7 +57,7 @@ export class SMSService {
         to: data.phone,
         message: template.message,
         code: data.verificationCode,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
 
       // Simulate SMS service delay
@@ -68,7 +68,6 @@ export class SMSService {
       //   to: data.phone,
       //   message: template.message
       // });
-
     } catch (error) {
       console.error('Failed to send verification SMS:', error);
       throw new Error('Failed to send verification SMS');
@@ -83,12 +82,11 @@ export class SMSService {
       console.log('🔒 Security Alert SMS Sent:', {
         to: phone,
         message,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
 
       // Simulate async operation
       await new Promise(resolve => setTimeout(resolve, 100));
-
     } catch (error) {
       console.error('Failed to send security alert SMS:', error);
       // Don't throw error for security alert failure
@@ -106,7 +104,7 @@ export class SMSService {
     if (cleanPhone.length < 10 || cleanPhone.length > 15) {
       return {
         isValid: false,
-        error: 'Phone number must be between 10 and 15 digits'
+        error: 'Phone number must be between 10 and 15 digits',
       };
     }
 
@@ -125,7 +123,7 @@ export class SMSService {
       /^\+?61[2-9]\d{8}$/, // Australia
       /^\+?55[1-9]\d{8,10}$/, // Brazil
       /^\+?7[3-9]\d{9}$/, // Russia
-      /^\+?[1-9]\d{7,14}$/ // Generic international format
+      /^\+?[1-9]\d{7,14}$/, // Generic international format
     ];
 
     const isValidFormat = validPatterns.some(pattern => pattern.test(phone));
@@ -133,7 +131,7 @@ export class SMSService {
     if (!isValidFormat) {
       return {
         isValid: false,
-        error: 'Invalid phone number format'
+        error: 'Invalid phone number format',
       };
     }
 

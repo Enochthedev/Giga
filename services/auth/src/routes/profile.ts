@@ -12,7 +12,7 @@ import {
   updateProfileRatingSchema,
   updateProfileVerificationSchema,
   updateVendorProfileSchema,
-  validate
+  validate,
 } from '../middleware/validation.middleware';
 
 const router: Router = Router();
@@ -57,7 +57,12 @@ const profileController = new ProfileController();
  *       401:
  *         description: Unauthorized
  */
-router.get('/complete', apiRateLimit, authenticateToken, profileController.getCompleteProfile.bind(profileController));
+router.get(
+  '/complete',
+  apiRateLimit,
+  authenticateToken,
+  profileController.getCompleteProfile.bind(profileController)
+);
 
 /**
  * @swagger
@@ -82,7 +87,13 @@ router.get('/complete', apiRateLimit, authenticateToken, profileController.getCo
  *       403:
  *         description: Access denied. Customer role required.
  */
-router.put('/customer', apiRateLimit, authenticateToken, validate(updateCustomerProfileSchema), profileController.updateCustomerProfile.bind(profileController));
+router.put(
+  '/customer',
+  apiRateLimit,
+  authenticateToken,
+  validate(updateCustomerProfileSchema),
+  profileController.updateCustomerProfile.bind(profileController)
+);
 
 /**
  * @swagger
@@ -122,7 +133,13 @@ router.put('/customer', apiRateLimit, authenticateToken, validate(updateCustomer
  *       403:
  *         description: Access denied. Vendor role required.
  */
-router.put('/vendor', apiRateLimit, authenticateToken, validate(updateVendorProfileSchema), profileController.updateVendorProfile.bind(profileController));
+router.put(
+  '/vendor',
+  apiRateLimit,
+  authenticateToken,
+  validate(updateVendorProfileSchema),
+  profileController.updateVendorProfile.bind(profileController)
+);
 
 /**
  * @swagger
@@ -182,7 +199,13 @@ router.put('/vendor', apiRateLimit, authenticateToken, validate(updateVendorProf
  *       403:
  *         description: Access denied. Driver role required.
  */
-router.put('/driver', apiRateLimit, authenticateToken, validate(updateDriverProfileSchema), profileController.updateDriverProfile.bind(profileController));
+router.put(
+  '/driver',
+  apiRateLimit,
+  authenticateToken,
+  validate(updateDriverProfileSchema),
+  profileController.updateDriverProfile.bind(profileController)
+);
 
 /**
  * @swagger
@@ -222,7 +245,13 @@ router.put('/driver', apiRateLimit, authenticateToken, validate(updateDriverProf
  *       403:
  *         description: Access denied. Host role required.
  */
-router.put('/host', apiRateLimit, authenticateToken, validate(updateHostProfileSchema), profileController.updateHostProfile.bind(profileController));
+router.put(
+  '/host',
+  apiRateLimit,
+  authenticateToken,
+  validate(updateHostProfileSchema),
+  profileController.updateHostProfile.bind(profileController)
+);
 
 /**
  * @swagger
@@ -253,7 +282,13 @@ router.put('/host', apiRateLimit, authenticateToken, validate(updateHostProfileS
  *       403:
  *         description: Access denied. Advertiser role required.
  */
-router.put('/advertiser', apiRateLimit, authenticateToken, validate(updateAdvertiserProfileSchema), profileController.updateAdvertiserProfile.bind(profileController));
+router.put(
+  '/advertiser',
+  apiRateLimit,
+  authenticateToken,
+  validate(updateAdvertiserProfileSchema),
+  profileController.updateAdvertiserProfile.bind(profileController)
+);
 
 /**
  * @swagger
@@ -294,7 +329,13 @@ router.put('/advertiser', apiRateLimit, authenticateToken, validate(updateAdvert
  *       403:
  *         description: Access denied. Customer role required.
  */
-router.post('/customer/addresses', apiRateLimit, authenticateToken, validate(addAddressSchema), profileController.addCustomerAddress.bind(profileController));
+router.post(
+  '/customer/addresses',
+  apiRateLimit,
+  authenticateToken,
+  validate(addAddressSchema),
+  profileController.addCustomerAddress.bind(profileController)
+);
 
 /**
  * @swagger
@@ -337,7 +378,13 @@ router.post('/customer/addresses', apiRateLimit, authenticateToken, validate(add
  *       404:
  *         description: Address not found or access denied
  */
-router.put('/customer/addresses/:addressId', apiRateLimit, authenticateToken, validate(updateAddressSchema), profileController.updateCustomerAddress.bind(profileController));
+router.put(
+  '/customer/addresses/:addressId',
+  apiRateLimit,
+  authenticateToken,
+  validate(updateAddressSchema),
+  profileController.updateCustomerAddress.bind(profileController)
+);
 
 /**
  * @swagger
@@ -360,7 +407,12 @@ router.put('/customer/addresses/:addressId', apiRateLimit, authenticateToken, va
  *       404:
  *         description: Address not found or access denied
  */
-router.delete('/customer/addresses/:addressId', apiRateLimit, authenticateToken, profileController.deleteCustomerAddress.bind(profileController));
+router.delete(
+  '/customer/addresses/:addressId',
+  apiRateLimit,
+  authenticateToken,
+  profileController.deleteCustomerAddress.bind(profileController)
+);
 
 /**
  * @swagger
@@ -398,7 +450,12 @@ router.delete('/customer/addresses/:addressId', apiRateLimit, authenticateToken,
  *       403:
  *         description: Access denied. Required role not found.
  */
-router.get('/:role/stats', apiRateLimit, authenticateToken, profileController.getProfileStats.bind(profileController));
+router.get(
+  '/:role/stats',
+  apiRateLimit,
+  authenticateToken,
+  profileController.getProfileStats.bind(profileController)
+);
 
 /**
  * @swagger
@@ -432,7 +489,13 @@ router.get('/:role/stats', apiRateLimit, authenticateToken, profileController.ge
  *       403:
  *         description: Access denied. Admin role required.
  */
-router.put('/admin/verify', apiRateLimit, authenticateToken, validate(updateProfileVerificationSchema), profileController.updateProfileVerification.bind(profileController));
+router.put(
+  '/admin/verify',
+  apiRateLimit,
+  authenticateToken,
+  validate(updateProfileVerificationSchema),
+  profileController.updateProfileVerification.bind(profileController)
+);
 
 /**
  * @swagger
@@ -468,6 +531,12 @@ router.put('/admin/verify', apiRateLimit, authenticateToken, validate(updateProf
  *       400:
  *         description: Invalid rating value or role
  */
-router.put('/rating', apiRateLimit, authenticateToken, validate(updateProfileRatingSchema), profileController.updateProfileRating.bind(profileController));
+router.put(
+  '/rating',
+  apiRateLimit,
+  authenticateToken,
+  validate(updateProfileRatingSchema),
+  profileController.updateProfileRating.bind(profileController)
+);
 
 export { router as profileRoutes };

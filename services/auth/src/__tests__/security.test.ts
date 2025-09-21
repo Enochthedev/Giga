@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { InputSanitizer, JWTSecurity, PasswordValidator } from '../utils/security.utils';
+import {
+  InputSanitizer,
+  JWTSecurity,
+  PasswordValidator,
+} from '../utils/security.utils';
 
 describe('Security Utils', () => {
   describe('PasswordValidator', () => {
@@ -32,7 +36,9 @@ describe('Security Utils', () => {
       const result = PasswordValidator.validate(sequentialPassword);
 
       expect(result.isValid).toBe(false);
-      expect(result.errors.some(error => error.includes('sequential'))).toBe(true);
+      expect(result.errors.some(error => error.includes('sequential'))).toBe(
+        true
+      );
     });
 
     it('should reject passwords with repeated characters', () => {
@@ -40,7 +46,11 @@ describe('Security Utils', () => {
       const result = PasswordValidator.validate(repeatedPassword);
 
       expect(result.isValid).toBe(false);
-      expect(result.errors.some(error => error.includes('consecutive') || error.includes('identical'))).toBe(true);
+      expect(
+        result.errors.some(
+          error => error.includes('consecutive') || error.includes('identical')
+        )
+      ).toBe(true);
     });
 
     it('should calculate password strength score', () => {
@@ -108,7 +118,8 @@ describe('Security Utils', () => {
 
       const strongValidation = JWTSecurity.validateSecretStrength(strongSecret);
       const weakValidation = JWTSecurity.validateSecretStrength(weakSecret);
-      const defaultValidation = JWTSecurity.validateSecretStrength(defaultSecret);
+      const defaultValidation =
+        JWTSecurity.validateSecretStrength(defaultSecret);
 
       expect(strongValidation.isValid).toBe(true);
       expect(weakValidation.isValid).toBe(false);
@@ -120,7 +131,7 @@ describe('Security Utils', () => {
         id: 'user123',
         email: 'test@example.com',
         roles: [{ role: { name: 'CUSTOMER' } }],
-        activeRole: 'CUSTOMER'
+        activeRole: 'CUSTOMER',
       };
 
       const payload = JWTSecurity.createSecurePayload(user);
@@ -138,11 +149,11 @@ describe('Security Utils', () => {
         sub: 'user123',
         email: 'test@example.com',
         iat: Math.floor(Date.now() / 1000),
-        jti: 'jwt-id-123'
+        jti: 'jwt-id-123',
       };
 
       const invalidPayload = {
-        sub: 'user123'
+        sub: 'user123',
         // Missing required claims
       };
 
@@ -163,7 +174,7 @@ describe('Security Integration', () => {
       email: '  TEST@EXAMPLE.COM<script>  ',
       password: 'MyStr0ng!P@ssw0rd',
       firstName: 'John<script>alert("xss")</script>',
-      lastName: 'Doe'
+      lastName: 'Doe',
     };
 
     // Sanitize inputs

@@ -21,9 +21,12 @@ export class CleanupService {
    */
   startAutomaticCleanup(): void {
     // Run cleanup every hour
-    this.cleanupInterval = setInterval(() => {
-      this.cleanupExpiredTokens();
-    }, 60 * 60 * 1000);
+    this.cleanupInterval = setInterval(
+      () => {
+        this.cleanupExpiredTokens();
+      },
+      60 * 60 * 1000
+    );
 
     console.log('🧹 Automatic token cleanup started (runs every hour)');
   }
@@ -53,12 +56,17 @@ export class CleanupService {
       });
 
       if (result.count > 0) {
-        console.log(`🧹 Cleaned up ${result.count} expired email verification tokens`);
+        console.log(
+          `🧹 Cleaned up ${result.count} expired email verification tokens`
+        );
       }
 
       return result.count;
     } catch (error) {
-      console.error('Error cleaning up expired email verification tokens:', error);
+      console.error(
+        'Error cleaning up expired email verification tokens:',
+        error
+      );
       return 0;
     }
   }
@@ -101,7 +109,9 @@ export class CleanupService {
       });
 
       if (result.count > 0) {
-        console.log(`🧹 Cleaned up ${result.count} expired password reset tokens`);
+        console.log(
+          `🧹 Cleaned up ${result.count} expired password reset tokens`
+        );
       }
 
       return result.count;
@@ -125,12 +135,17 @@ export class CleanupService {
       });
 
       if (result.count > 0) {
-        console.log(`🧹 Cleaned up ${result.count} expired phone verification codes`);
+        console.log(
+          `🧹 Cleaned up ${result.count} expired phone verification codes`
+        );
       }
 
       return result.count;
     } catch (error) {
-      console.error('Error cleaning up expired phone verification codes:', error);
+      console.error(
+        'Error cleaning up expired phone verification codes:',
+        error
+      );
       return 0;
     }
   }
@@ -155,10 +170,16 @@ export class CleanupService {
       this.cleanupExpiredPhoneVerificationCodes(),
     ]);
 
-    const totalDeleted = emailTokensDeleted + refreshTokensDeleted + passwordResetTokensDeleted + phoneCodesDeleted;
+    const totalDeleted =
+      emailTokensDeleted +
+      refreshTokensDeleted +
+      passwordResetTokensDeleted +
+      phoneCodesDeleted;
     const duration = Date.now() - startTime;
 
-    console.log(`🧹 Token cleanup completed in ${duration}ms. Total tokens cleaned: ${totalDeleted}`);
+    console.log(
+      `🧹 Token cleanup completed in ${duration}ms. Total tokens cleaned: ${totalDeleted}`
+    );
   }
 
   /**
@@ -194,7 +215,11 @@ export class CleanupService {
         }),
       ]);
 
-      const totalExpired = expiredEmailTokens + expiredRefreshTokens + expiredPasswordResetTokens + expiredPhoneCodes;
+      const totalExpired =
+        expiredEmailTokens +
+        expiredRefreshTokens +
+        expiredPasswordResetTokens +
+        expiredPhoneCodes;
 
       return {
         expiredEmailTokens,

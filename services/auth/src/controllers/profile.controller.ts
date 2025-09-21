@@ -1,5 +1,8 @@
 import { Request, Response } from 'express';
-import { ProfileService, ProfileValidationError } from '../services/profile.service';
+import {
+  ProfileService,
+  ProfileValidationError,
+} from '../services/profile.service';
 
 export class ProfileController {
   private profileService = ProfileService.getInstance();
@@ -47,7 +50,7 @@ export class ProfileController {
           roles: userWithProfiles.roles.map((ur: any) => ur.role.name),
           lastLoginAt: userWithProfiles.lastLoginAt,
         },
-        profiles: {}
+        profiles: {},
       };
 
       // Add role-specific profiles
@@ -57,7 +60,7 @@ export class ProfileController {
           preferences: userWithProfiles.customerProfile.preferences,
           addresses: userWithProfiles.customerProfile.addresses,
           createdAt: userWithProfiles.customerProfile.createdAt,
-          updatedAt: userWithProfiles.customerProfile.updatedAt
+          updatedAt: userWithProfiles.customerProfile.updatedAt,
         };
       }
 
@@ -75,7 +78,7 @@ export class ProfileController {
           rating: userWithProfiles.vendorProfile.rating,
           totalSales: userWithProfiles.vendorProfile.totalSales,
           createdAt: userWithProfiles.vendorProfile.createdAt,
-          updatedAt: userWithProfiles.vendorProfile.updatedAt
+          updatedAt: userWithProfiles.vendorProfile.updatedAt,
         };
       }
 
@@ -91,7 +94,7 @@ export class ProfileController {
           isVerified: userWithProfiles.driverProfile.isVerified,
           subscriptionTier: userWithProfiles.driverProfile.subscriptionTier,
           createdAt: userWithProfiles.driverProfile.createdAt,
-          updatedAt: userWithProfiles.driverProfile.updatedAt
+          updatedAt: userWithProfiles.driverProfile.updatedAt,
         };
       }
 
@@ -107,7 +110,7 @@ export class ProfileController {
           responseRate: userWithProfiles.hostProfile.responseRate,
           responseTime: userWithProfiles.hostProfile.responseTime,
           createdAt: userWithProfiles.hostProfile.createdAt,
-          updatedAt: userWithProfiles.hostProfile.updatedAt
+          updatedAt: userWithProfiles.hostProfile.updatedAt,
         };
       }
 
@@ -120,7 +123,7 @@ export class ProfileController {
           totalSpend: userWithProfiles.advertiserProfile.totalSpend,
           isVerified: userWithProfiles.advertiserProfile.isVerified,
           createdAt: userWithProfiles.advertiserProfile.createdAt,
-          updatedAt: userWithProfiles.advertiserProfile.updatedAt
+          updatedAt: userWithProfiles.advertiserProfile.updatedAt,
         };
       }
 
@@ -159,12 +162,14 @@ export class ProfileController {
         where: { id: req.user.sub },
         include: {
           roles: {
-            include: { role: true }
-          }
-        }
+            include: { role: true },
+          },
+        },
       });
 
-      const hasCustomerRole = user?.roles.some((ur: any) => ur.role.name === 'CUSTOMER');
+      const hasCustomerRole = user?.roles.some(
+        (ur: any) => ur.role.name === 'CUSTOMER'
+      );
       if (!hasCustomerRole) {
         return res.status(403).json({
           success: false,
@@ -183,7 +188,7 @@ export class ProfileController {
       res.json({
         success: true,
         data: {
-          profile: updatedProfile
+          profile: updatedProfile,
         },
         message: 'Customer profile updated successfully',
         timestamp: new Date().toISOString(),
@@ -238,7 +243,7 @@ export class ProfileController {
       res.json({
         success: true,
         data: {
-          profile: updatedProfile
+          profile: updatedProfile,
         },
         message: 'Vendor profile updated successfully',
         timestamp: new Date().toISOString(),
@@ -304,7 +309,7 @@ export class ProfileController {
       res.json({
         success: true,
         data: {
-          profile: updatedProfile
+          profile: updatedProfile,
         },
         message: 'Driver profile updated successfully',
         timestamp: new Date().toISOString(),
@@ -370,7 +375,7 @@ export class ProfileController {
       res.json({
         success: true,
         data: {
-          profile: updatedProfile
+          profile: updatedProfile,
         },
         message: 'Host profile updated successfully',
         timestamp: new Date().toISOString(),
@@ -436,7 +441,7 @@ export class ProfileController {
       res.json({
         success: true,
         data: {
-          profile: updatedProfile
+          profile: updatedProfile,
         },
         message: 'Advertiser profile updated successfully',
         timestamp: new Date().toISOString(),
@@ -482,12 +487,14 @@ export class ProfileController {
         where: { id: req.user.sub },
         include: {
           roles: {
-            include: { role: true }
-          }
-        }
+            include: { role: true },
+          },
+        },
       });
 
-      const hasCustomerRole = user?.roles.some((ur: any) => ur.role.name === 'CUSTOMER');
+      const hasCustomerRole = user?.roles.some(
+        (ur: any) => ur.role.name === 'CUSTOMER'
+      );
       if (!hasCustomerRole) {
         return res.status(403).json({
           success: false,
@@ -506,7 +513,7 @@ export class ProfileController {
       res.status(201).json({
         success: true,
         data: {
-          address
+          address,
         },
         message: 'Address added successfully',
         timestamp: new Date().toISOString(),
@@ -514,7 +521,10 @@ export class ProfileController {
     } catch (error) {
       console.error('Add customer address error:', error);
 
-      if (error instanceof Error && error.message === 'Customer profile not found') {
+      if (
+        error instanceof Error &&
+        error.message === 'Customer profile not found'
+      ) {
         return res.status(404).json({
           success: false,
           error: 'Customer profile not found',
@@ -558,7 +568,7 @@ export class ProfileController {
       res.json({
         success: true,
         data: {
-          address
+          address,
         },
         message: 'Address updated successfully',
         timestamp: new Date().toISOString(),
@@ -566,7 +576,10 @@ export class ProfileController {
     } catch (error) {
       console.error('Update customer address error:', error);
 
-      if (error instanceof Error && error.message === 'Address not found or access denied') {
+      if (
+        error instanceof Error &&
+        error.message === 'Address not found or access denied'
+      ) {
         return res.status(404).json({
           success: false,
           error: 'Address not found or access denied',
@@ -614,7 +627,10 @@ export class ProfileController {
     } catch (error) {
       console.error('Delete customer address error:', error);
 
-      if (error instanceof Error && error.message === 'Address not found or access denied') {
+      if (
+        error instanceof Error &&
+        error.message === 'Address not found or access denied'
+      ) {
         return res.status(404).json({
           success: false,
           error: 'Address not found or access denied',
@@ -677,16 +693,28 @@ export class ProfileController {
       let stats;
       switch (role) {
         case 'vendor':
-          stats = await this.profileService.getVendorStats(req.prisma, req.user.sub);
+          stats = await this.profileService.getVendorStats(
+            req.prisma,
+            req.user.sub
+          );
           break;
         case 'driver':
-          stats = await this.profileService.getDriverStats(req.prisma, req.user.sub);
+          stats = await this.profileService.getDriverStats(
+            req.prisma,
+            req.user.sub
+          );
           break;
         case 'host':
-          stats = await this.profileService.getHostStats(req.prisma, req.user.sub);
+          stats = await this.profileService.getHostStats(
+            req.prisma,
+            req.user.sub
+          );
           break;
         case 'advertiser':
-          stats = await this.profileService.getAdvertiserStats(req.prisma, req.user.sub);
+          stats = await this.profileService.getAdvertiserStats(
+            req.prisma,
+            req.user.sub
+          );
           break;
       }
 
@@ -694,7 +722,7 @@ export class ProfileController {
         success: true,
         data: {
           role,
-          stats
+          stats,
         },
         timestamp: new Date().toISOString(),
       });
@@ -751,18 +779,19 @@ export class ProfileController {
 
       const { userId, role, isVerified } = req.body;
 
-      const updatedProfile = await this.profileService.updateProfileVerification(
-        req.prisma,
-        userId,
-        role,
-        isVerified,
-        req.user.sub
-      );
+      const updatedProfile =
+        await this.profileService.updateProfileVerification(
+          req.prisma,
+          userId,
+          role,
+          isVerified,
+          req.user.sub
+        );
 
       res.json({
         success: true,
         data: {
-          profile: updatedProfile
+          profile: updatedProfile,
         },
         message: `${role} profile verification updated successfully`,
         timestamp: new Date().toISOString(),
@@ -819,7 +848,7 @@ export class ProfileController {
       res.json({
         success: true,
         data: {
-          profile: updatedProfile
+          profile: updatedProfile,
         },
         message: `${role} profile rating updated successfully`,
         timestamp: new Date().toISOString(),

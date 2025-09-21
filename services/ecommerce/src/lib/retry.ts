@@ -22,7 +22,9 @@ export class RetryError extends Error {
     public readonly metrics: RetryMetrics,
     public readonly serviceName?: string
   ) {
-    super(`Retry failed after ${metrics.totalAttempts} attempts: ${originalError.message}`);
+    super(
+      `Retry failed after ${metrics.totalAttempts} attempts: ${originalError.message}`
+    );
     this.name = 'RetryError';
   }
 }
@@ -36,7 +38,11 @@ export class RetryManager {
     jitter: true,
     retryCondition: (error: any) => {
       // Retry on network errors, timeouts, and 5xx status codes
-      if (error.code === 'ECONNRESET' || error.code === 'ENOTFOUND' || error.code === 'ETIMEDOUT') {
+      if (
+        error.code === 'ECONNRESET' ||
+        error.code === 'ENOTFOUND' ||
+        error.code === 'ETIMEDOUT'
+      ) {
         return true;
       }
 
@@ -90,7 +96,10 @@ export class RetryManager {
         }
 
         // Check if we should retry this error
-        if (finalOptions.retryCondition && !finalOptions.retryCondition(error)) {
+        if (
+          finalOptions.retryCondition &&
+          !finalOptions.retryCondition(error)
+        ) {
           break;
         }
 
@@ -106,12 +115,15 @@ export class RetryManager {
         metrics.totalDelay += delay;
 
         // Log retry attempt
-        console.warn(`Retry attempt ${attempt + 1}/${finalOptions.maxRetries + 1} for ${serviceName || 'operation'} after ${delay}ms delay`, {
-          error: error instanceof Error ? error.message : 'Unknown error',
-          attempt: attempt + 1,
-          delay,
-          serviceName,
-        });
+        console.warn(
+          `Retry attempt ${attempt + 1}/${finalOptions.maxRetries + 1} for ${serviceName || 'operation'} after ${delay}ms delay`,
+          {
+            error: error instanceof Error ? error.message : 'Unknown error',
+            attempt: attempt + 1,
+            delay,
+            serviceName,
+          }
+        );
 
         await RetryManager.sleep(delay);
       }

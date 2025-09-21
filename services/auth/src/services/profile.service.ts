@@ -39,7 +39,10 @@ interface AdvertiserProfileUpdateData {
 
 // Business logic validation errors
 export class ProfileValidationError extends Error {
-  constructor(message: string, public field?: string) {
+  constructor(
+    message: string,
+    public field?: string
+  ) {
     super(message);
     this.name = 'ProfileValidationError';
   }
@@ -71,7 +74,7 @@ interface AddressUpdateData {
 export class ProfileService {
   private static instance: ProfileService;
 
-  private constructor() { }
+  private constructor() {}
 
   static getInstance(): ProfileService {
     if (!ProfileService.instance) {
@@ -83,7 +86,11 @@ export class ProfileService {
   /**
    * Create all necessary profiles for user roles with enhanced initialization
    */
-  async createProfilesForRoles(prisma: PrismaClient, userId: string, roles: RoleName[]): Promise<void> {
+  async createProfilesForRoles(
+    prisma: PrismaClient,
+    userId: string,
+    roles: RoleName[]
+  ): Promise<void> {
     const profileCreationPromises = [];
 
     for (const role of roles) {
@@ -100,15 +107,15 @@ export class ProfileService {
                   notifications: {
                     email: true,
                     sms: false,
-                    push: true
+                    push: true,
                   },
                   privacy: {
                     shareLocation: false,
-                    shareProfile: true
-                  }
-                }
+                    shareProfile: true,
+                  },
+                },
               },
-              update: {}
+              update: {},
             })
           );
           break;
@@ -125,9 +132,9 @@ export class ProfileService {
                 commissionRate: 0.15,
                 isVerified: false,
                 totalSales: 0,
-                rating: null
+                rating: null,
               },
-              update: {}
+              update: {},
             })
           );
           break;
@@ -141,16 +148,16 @@ export class ProfileService {
                 licenseNumber: '',
                 vehicleInfo: {
                   verified: false,
-                  documents: []
+                  documents: [],
                 },
                 isOnline: false,
                 totalRides: 0,
                 isVerified: false,
                 subscriptionTier: 'BASIC',
                 rating: null,
-                currentLocation: null as any
+                currentLocation: null as any,
               },
-              update: {}
+              update: {},
             })
           );
           break;
@@ -166,9 +173,9 @@ export class ProfileService {
                 subscriptionTier: 'BASIC',
                 rating: null,
                 responseRate: null,
-                responseTime: null
+                responseTime: null,
               },
-              update: {}
+              update: {},
             })
           );
           break;
@@ -182,9 +189,9 @@ export class ProfileService {
                 companyName: '',
                 industry: '',
                 totalSpend: 0,
-                isVerified: false
+                isVerified: false,
               },
-              update: {}
+              update: {},
             })
           );
           break;
@@ -203,44 +210,52 @@ export class ProfileService {
       include: {
         roles: {
           include: {
-            role: true
-          }
+            role: true,
+          },
         },
         customerProfile: {
           include: {
-            addresses: true
-          }
+            addresses: true,
+          },
         },
         vendorProfile: true,
         driverProfile: true,
         hostProfile: true,
-        advertiserProfile: true
-      }
+        advertiserProfile: true,
+      },
     });
   }
 
   /**
    * Update customer profile
    */
-  updateCustomerProfile(prisma: PrismaClient, userId: string, data: CustomerProfileUpdateData) {
+  updateCustomerProfile(
+    prisma: PrismaClient,
+    userId: string,
+    data: CustomerProfileUpdateData
+  ) {
     return prisma.customerProfile.update({
       where: { userId },
       data: {
-        preferences: data.preferences
+        preferences: data.preferences,
       },
       include: {
-        addresses: true
-      }
+        addresses: true,
+      },
     });
   }
 
   /**
    * Update vendor profile with enhanced business logic
    */
-  async updateVendorProfile(prisma: PrismaClient, userId: string, data: VendorProfileUpdateData) {
+  async updateVendorProfile(
+    prisma: PrismaClient,
+    userId: string,
+    data: VendorProfileUpdateData
+  ) {
     // Get current profile to validate business rules
     const currentProfile = await prisma.vendorProfile.findUnique({
-      where: { userId }
+      where: { userId },
     });
 
     if (!currentProfile) {
@@ -252,19 +267,25 @@ export class ProfileService {
     // Business name validation
     if (data.businessName !== undefined) {
       if (data.businessName.trim().length === 0) {
-        throw new ProfileValidationError('Business name cannot be empty', 'businessName');
+        throw new ProfileValidationError(
+          'Business name cannot be empty',
+          'businessName'
+        );
       }
 
       // Check for duplicate business names (optional business rule)
       const existingBusiness = await prisma.vendorProfile.findFirst({
         where: {
           businessName: data.businessName,
-          userId: { not: userId }
-        }
+          userId: { not: userId },
+        },
       });
 
       if (existingBusiness) {
-        throw new ProfileValidationError('Business name already exists', 'businessName');
+        throw new ProfileValidationError(
+          'Business name already exists',
+          'businessName'
+        );
       }
 
       updateData.businessName = data.businessName;
@@ -273,13 +294,23 @@ export class ProfileService {
     // Business type validation
     if (data.businessType !== undefined) {
       const validBusinessTypes = [
-        'Electronics', 'Clothing', 'Food & Beverage', 'Health & Beauty',
-        'Home & Garden', 'Sports & Outdoors', 'Books & Media', 'Automotive',
-        'Services', 'Other'
+        'Electronics',
+        'Clothing',
+        'Food & Beverage',
+        'Health & Beauty',
+        'Home & Garden',
+        'Sports & Outdoors',
+        'Books & Media',
+        'Automotive',
+        'Services',
+        'Other',
       ];
 
       if (!validBusinessTypes.includes(data.businessType)) {
-        throw new ProfileValidationError('Invalid business type', 'businessType');
+        throw new ProfileValidationError(
+          'Invalid business type',
+          'businessType'
+        );
       }
 
       updateData.businessType = data.businessType;
@@ -303,9 +334,14 @@ export class ProfileService {
     // Subscription tier validation with business rules
     if (data.subscriptionTier !== undefined) {
       // Check if downgrade is allowed
-      if (currentProfile.subscriptionTier === 'ENTERPRISE' && data.subscriptionTier !== 'ENTERPRISE') {
+      if (
+        currentProfile.subscriptionTier === 'ENTERPRISE' &&
+        data.subscriptionTier !== 'ENTERPRISE'
+      ) {
         // Could add business rules here, e.g., check if they have active enterprise features
-        console.warn(`Vendor ${userId} downgrading from ENTERPRISE to ${data.subscriptionTier}`);
+        console.warn(
+          `Vendor ${userId} downgrading from ENTERPRISE to ${data.subscriptionTier}`
+        );
       }
 
       updateData.subscriptionTier = data.subscriptionTier;
@@ -313,17 +349,21 @@ export class ProfileService {
 
     return prisma.vendorProfile.update({
       where: { userId },
-      data: updateData
+      data: updateData,
     });
   }
 
   /**
    * Update driver profile with enhanced business logic
    */
-  async updateDriverProfile(prisma: PrismaClient, userId: string, data: DriverProfileUpdateData) {
+  async updateDriverProfile(
+    prisma: PrismaClient,
+    userId: string,
+    data: DriverProfileUpdateData
+  ) {
     // Get current profile to validate business rules
     const currentProfile = await prisma.driverProfile.findUnique({
-      where: { userId }
+      where: { userId },
     });
 
     if (!currentProfile) {
@@ -335,19 +375,25 @@ export class ProfileService {
     // License number validation
     if (data.licenseNumber !== undefined) {
       if (data.licenseNumber.trim().length === 0) {
-        throw new ProfileValidationError('License number cannot be empty', 'licenseNumber');
+        throw new ProfileValidationError(
+          'License number cannot be empty',
+          'licenseNumber'
+        );
       }
 
       // Check for duplicate license numbers
       const existingLicense = await prisma.driverProfile.findFirst({
         where: {
           licenseNumber: data.licenseNumber,
-          userId: { not: userId }
-        }
+          userId: { not: userId },
+        },
       });
 
       if (existingLicense) {
-        throw new ProfileValidationError('License number already registered', 'licenseNumber');
+        throw new ProfileValidationError(
+          'License number already registered',
+          'licenseNumber'
+        );
       }
 
       updateData.licenseNumber = data.licenseNumber;
@@ -361,7 +407,10 @@ export class ProfileService {
       if (vehicleInfo.make && vehicleInfo.model && vehicleInfo.year) {
         const currentYear = new Date().getFullYear();
         if (vehicleInfo.year < 1900 || vehicleInfo.year > currentYear + 1) {
-          throw new ProfileValidationError('Invalid vehicle year', 'vehicleInfo.year');
+          throw new ProfileValidationError(
+            'Invalid vehicle year',
+            'vehicleInfo.year'
+          );
         }
       }
 
@@ -370,7 +419,7 @@ export class ProfileService {
       updateData.vehicleInfo = {
         ...currentVehicleInfo,
         ...vehicleInfo,
-        lastUpdated: new Date().toISOString()
+        lastUpdated: new Date().toISOString(),
       };
     }
 
@@ -378,12 +427,19 @@ export class ProfileService {
     if (data.isOnline !== undefined) {
       // Business rule: Can only go online if verified and has complete vehicle info
       if (data.isOnline && !currentProfile.isVerified) {
-        throw new ProfileValidationError('Cannot go online without driver verification', 'isOnline');
+        throw new ProfileValidationError(
+          'Cannot go online without driver verification',
+          'isOnline'
+        );
       }
 
-      const vehicleInfo = (updateData.vehicleInfo || currentProfile.vehicleInfo) as any;
+      const vehicleInfo = (updateData.vehicleInfo ||
+        currentProfile.vehicleInfo) as any;
       if (data.isOnline && (!vehicleInfo?.make || !vehicleInfo?.model)) {
-        throw new ProfileValidationError('Cannot go online without complete vehicle information', 'isOnline');
+        throw new ProfileValidationError(
+          'Cannot go online without complete vehicle information',
+          'isOnline'
+        );
       }
 
       updateData.isOnline = data.isOnline;
@@ -398,15 +454,21 @@ export class ProfileService {
 
         // Validate coordinates
         if (location.latitude < -90 || location.latitude > 90) {
-          throw new ProfileValidationError('Invalid latitude', 'currentLocation.latitude');
+          throw new ProfileValidationError(
+            'Invalid latitude',
+            'currentLocation.latitude'
+          );
         }
         if (location.longitude < -180 || location.longitude > 180) {
-          throw new ProfileValidationError('Invalid longitude', 'currentLocation.longitude');
+          throw new ProfileValidationError(
+            'Invalid longitude',
+            'currentLocation.longitude'
+          );
         }
 
         updateData.currentLocation = {
           ...location,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         };
       }
     }
@@ -418,17 +480,21 @@ export class ProfileService {
 
     return prisma.driverProfile.update({
       where: { userId },
-      data: updateData as Prisma.DriverProfileUpdateInput
+      data: updateData as Prisma.DriverProfileUpdateInput,
     });
   }
 
   /**
    * Update host profile with enhanced business logic
    */
-  async updateHostProfile(prisma: PrismaClient, userId: string, data: HostProfileUpdateData) {
+  async updateHostProfile(
+    prisma: PrismaClient,
+    userId: string,
+    data: HostProfileUpdateData
+  ) {
     // Get current profile to validate business rules
     const currentProfile = await prisma.hostProfile.findUnique({
-      where: { userId }
+      where: { userId },
     });
 
     if (!currentProfile) {
@@ -450,15 +516,22 @@ export class ProfileService {
     // Response rate validation
     if (data.responseRate !== undefined) {
       if (data.responseRate < 0 || data.responseRate > 100) {
-        throw new ProfileValidationError('Response rate must be between 0 and 100', 'responseRate');
+        throw new ProfileValidationError(
+          'Response rate must be between 0 and 100',
+          'responseRate'
+        );
       }
       updateData.responseRate = data.responseRate;
     }
 
     // Response time validation (in minutes)
     if (data.responseTime !== undefined) {
-      if (data.responseTime < 1 || data.responseTime > 1440) { // 1 minute to 24 hours
-        throw new ProfileValidationError('Response time must be between 1 and 1440 minutes', 'responseTime');
+      if (data.responseTime < 1 || data.responseTime > 1440) {
+        // 1 minute to 24 hours
+        throw new ProfileValidationError(
+          'Response time must be between 1 and 1440 minutes',
+          'responseTime'
+        );
       }
       updateData.responseTime = data.responseTime;
     }
@@ -466,7 +539,10 @@ export class ProfileService {
     // Subscription tier validation with business rules
     if (data.subscriptionTier !== undefined) {
       // Check if downgrade is allowed based on current bookings
-      if (currentProfile.subscriptionTier === 'PRO' && data.subscriptionTier === 'BASIC') {
+      if (
+        currentProfile.subscriptionTier === 'PRO' &&
+        data.subscriptionTier === 'BASIC'
+      ) {
         // Could add business rules here, e.g., check active bookings
         console.warn(`Host ${userId} downgrading from PRO to BASIC`);
       }
@@ -476,17 +552,21 @@ export class ProfileService {
 
     return prisma.hostProfile.update({
       where: { userId },
-      data: updateData
+      data: updateData,
     });
   }
 
   /**
    * Update advertiser profile with enhanced business logic
    */
-  async updateAdvertiserProfile(prisma: PrismaClient, userId: string, data: AdvertiserProfileUpdateData) {
+  async updateAdvertiserProfile(
+    prisma: PrismaClient,
+    userId: string,
+    data: AdvertiserProfileUpdateData
+  ) {
     // Get current profile to validate business rules
     const currentProfile = await prisma.advertiserProfile.findUnique({
-      where: { userId }
+      where: { userId },
     });
 
     if (!currentProfile) {
@@ -498,19 +578,25 @@ export class ProfileService {
     // Company name validation
     if (data.companyName !== undefined) {
       if (data.companyName.trim().length === 0) {
-        throw new ProfileValidationError('Company name cannot be empty', 'companyName');
+        throw new ProfileValidationError(
+          'Company name cannot be empty',
+          'companyName'
+        );
       }
 
       // Check for duplicate company names (optional business rule)
       const existingCompany = await prisma.advertiserProfile.findFirst({
         where: {
           companyName: data.companyName,
-          userId: { not: userId }
-        }
+          userId: { not: userId },
+        },
       });
 
       if (existingCompany) {
-        throw new ProfileValidationError('Company name already exists', 'companyName');
+        throw new ProfileValidationError(
+          'Company name already exists',
+          'companyName'
+        );
       }
 
       updateData.companyName = data.companyName;
@@ -519,10 +605,22 @@ export class ProfileService {
     // Industry validation
     if (data.industry !== undefined) {
       const validIndustries = [
-        'Technology', 'Healthcare', 'Finance', 'Education', 'Retail',
-        'Manufacturing', 'Real Estate', 'Entertainment', 'Travel',
-        'Food & Beverage', 'Automotive', 'Fashion', 'Sports',
-        'Non-Profit', 'Government', 'Other'
+        'Technology',
+        'Healthcare',
+        'Finance',
+        'Education',
+        'Retail',
+        'Manufacturing',
+        'Real Estate',
+        'Entertainment',
+        'Travel',
+        'Food & Beverage',
+        'Automotive',
+        'Fashion',
+        'Sports',
+        'Non-Profit',
+        'Government',
+        'Other',
       ];
 
       if (!validIndustries.includes(data.industry)) {
@@ -539,17 +637,21 @@ export class ProfileService {
 
     return prisma.advertiserProfile.update({
       where: { userId },
-      data: updateData
+      data: updateData,
     });
   }
 
   /**
    * Add address to customer profile
    */
-  async addCustomerAddress(prisma: PrismaClient, userId: string, addressData: AddressCreateData) {
+  async addCustomerAddress(
+    prisma: PrismaClient,
+    userId: string,
+    addressData: AddressCreateData
+  ) {
     // Get customer profile
     const customerProfile = await prisma.customerProfile.findUnique({
-      where: { userId }
+      where: { userId },
     });
 
     if (!customerProfile) {
@@ -561,7 +663,7 @@ export class ProfileService {
       // Remove default from other addresses
       await prisma.address.updateMany({
         where: { customerProfileId: customerProfile.id },
-        data: { isDefault: false }
+        data: { isDefault: false },
       });
     }
 
@@ -572,23 +674,28 @@ export class ProfileService {
         address: addressData.address,
         city: addressData.city,
         country: addressData.country,
-        isDefault: addressData.isDefault ?? false
-      }
+        isDefault: addressData.isDefault ?? false,
+      },
     });
   }
 
   /**
    * Update customer address
    */
-  async updateCustomerAddress(prisma: PrismaClient, userId: string, addressId: string, addressData: AddressUpdateData) {
+  async updateCustomerAddress(
+    prisma: PrismaClient,
+    userId: string,
+    addressId: string,
+    addressData: AddressUpdateData
+  ) {
     // Verify the address belongs to the user
     const address = await prisma.address.findFirst({
       where: {
         id: addressId,
         customerProfile: {
-          userId: userId
-        }
-      }
+          userId: userId,
+        },
+      },
     });
 
     if (!address) {
@@ -600,11 +707,11 @@ export class ProfileService {
       await prisma.address.updateMany({
         where: {
           customerProfile: {
-            userId: userId
+            userId: userId,
           },
-          id: { not: addressId }
+          id: { not: addressId },
         },
-        data: { isDefault: false }
+        data: { isDefault: false },
       });
     }
 
@@ -615,23 +722,27 @@ export class ProfileService {
         address: addressData.address,
         city: addressData.city,
         country: addressData.country,
-        isDefault: addressData.isDefault
-      }
+        isDefault: addressData.isDefault,
+      },
     });
   }
 
   /**
    * Delete customer address
    */
-  async deleteCustomerAddress(prisma: PrismaClient, userId: string, addressId: string) {
+  async deleteCustomerAddress(
+    prisma: PrismaClient,
+    userId: string,
+    addressId: string
+  ) {
     // Verify the address belongs to the user
     const address = await prisma.address.findFirst({
       where: {
         id: addressId,
         customerProfile: {
-          userId: userId
-        }
-      }
+          userId: userId,
+        },
+      },
     });
 
     if (!address) {
@@ -639,28 +750,32 @@ export class ProfileService {
     }
 
     return prisma.address.delete({
-      where: { id: addressId }
+      where: { id: addressId },
     });
   }
 
   /**
    * Verify user has specific role
    */
-  async verifyUserRole(prisma: PrismaClient, userId: string, requiredRole: RoleName): Promise<boolean> {
+  async verifyUserRole(
+    prisma: PrismaClient,
+    userId: string,
+    requiredRole: RoleName
+  ): Promise<boolean> {
     const user = await prisma.user.findUnique({
       where: { id: userId },
       include: {
         roles: {
-          include: { role: true }
-        }
-      }
+          include: { role: true },
+        },
+      },
     });
 
     if (!user) {
       return false;
     }
 
-    return user.roles.some((ur: unknown) => ur.role.name === requiredRole);
+    return user.roles.some((ur: any) => ur.role.name === requiredRole);
   }
 
   /**
@@ -668,7 +783,7 @@ export class ProfileService {
    */
   async getVendorStats(prisma: PrismaClient, userId: string) {
     const profile = await prisma.vendorProfile.findUnique({
-      where: { userId }
+      where: { userId },
     });
 
     if (!profile) {
@@ -692,7 +807,7 @@ export class ProfileService {
    */
   async getDriverStats(prisma: PrismaClient, userId: string) {
     const profile = await prisma.driverProfile.findUnique({
-      where: { userId }
+      where: { userId },
     });
 
     if (!profile) {
@@ -716,7 +831,7 @@ export class ProfileService {
    */
   async getHostStats(prisma: PrismaClient, userId: string) {
     const profile = await prisma.hostProfile.findUnique({
-      where: { userId }
+      where: { userId },
     });
 
     if (!profile) {
@@ -741,7 +856,7 @@ export class ProfileService {
    */
   async getAdvertiserStats(prisma: PrismaClient, userId: string) {
     const profile = await prisma.advertiserProfile.findUnique({
-      where: { userId }
+      where: { userId },
     });
 
     if (!profile) {
@@ -775,25 +890,25 @@ export class ProfileService {
       case 'VENDOR':
         return prisma.vendorProfile.update({
           where: { userId },
-          data: { isVerified }
+          data: { isVerified },
         });
 
       case 'DRIVER':
         return prisma.driverProfile.update({
           where: { userId },
-          data: { isVerified }
+          data: { isVerified },
         });
 
       case 'HOST':
         return prisma.hostProfile.update({
           where: { userId },
-          data: { isVerified }
+          data: { isVerified },
         });
 
       case 'ADVERTISER':
         return prisma.advertiserProfile.update({
           where: { userId },
-          data: { isVerified }
+          data: { isVerified },
         });
 
       default:
@@ -818,19 +933,19 @@ export class ProfileService {
       case 'VENDOR':
         return prisma.vendorProfile.update({
           where: { userId },
-          data: { rating }
+          data: { rating },
         });
 
       case 'DRIVER':
         return prisma.driverProfile.update({
           where: { userId },
-          data: { rating }
+          data: { rating },
         });
 
       case 'HOST':
         return prisma.hostProfile.update({
           where: { userId },
-          data: { rating }
+          data: { rating },
         });
 
       default:

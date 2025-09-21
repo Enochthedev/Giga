@@ -6,7 +6,11 @@ const jwtService = JWTService.getInstance();
 /**
  * Enhanced authentication middleware with comprehensive security
  */
-export const authenticateToken = async (req: Request, res: Response, next: NextFunction) => {
+export const authenticateToken = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
@@ -150,7 +154,7 @@ export const requireRole = (roles: string[]) => {
         details: {
           requiredRoles: roles,
           userRoles: userRoles,
-          activeRole: activeRole
+          activeRole: activeRole,
         },
         timestamp: new Date().toISOString(),
       });
@@ -163,7 +167,11 @@ export const requireRole = (roles: string[]) => {
 /**
  * Admin-only access middleware
  */
-export const requireAdmin = (req: Request, res: Response, next: NextFunction) => {
+export const requireAdmin = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   return requireRole(['ADMIN'])(req, res, next);
 };
 
@@ -198,7 +206,11 @@ export const requireActiveRole = (role: string) => {
 /**
  * Optional authentication middleware (doesn't fail if no token)
  */
-export const optionalAuth = (req: Request, res: Response, next: NextFunction) => {
+export const optionalAuth = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
 
@@ -220,7 +232,11 @@ export const optionalAuth = (req: Request, res: Response, next: NextFunction) =>
 /**
  * Token validation middleware (for debugging/monitoring)
  */
-export const validateTokenHealth = (req: Request, res: Response, next: NextFunction) => {
+export const validateTokenHealth = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
 

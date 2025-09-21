@@ -33,12 +33,12 @@ export interface SagaContext {
   compensationData: Record<string, any>;
   currentStep: number;
   status:
-  | 'PENDING'
-  | 'EXECUTING'
-  | 'COMPLETED'
-  | 'FAILED'
-  | 'COMPENSATING'
-  | 'COMPENSATED';
+    | 'PENDING'
+    | 'EXECUTING'
+    | 'COMPLETED'
+    | 'FAILED'
+    | 'COMPENSATING'
+    | 'COMPENSATED';
   error?: string;
   createdAt: Date;
   updatedAt: Date;
@@ -83,7 +83,7 @@ export class OrderSagaOrchestrator {
     private authServiceClient: HttpAuthServiceClient,
     private paymentServiceClient: HttpPaymentServiceClient,
     private notificationServiceClient: HttpNotificationServiceClient
-  ) { }
+  ) {}
 
   /**
    * Execute order creation saga with full transaction coordination

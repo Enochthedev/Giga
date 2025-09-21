@@ -1,7 +1,12 @@
 import { Router } from 'express';
 import { UserController } from '../controllers/user.controller';
 import { authenticateToken, requireRole } from '../middleware/auth.middleware';
-import { assignUserRoleSchema, bulkUpdateUsersSchema, removeUserRoleSchema, validate } from '../middleware/validation.middleware';
+import {
+  assignUserRoleSchema,
+  bulkUpdateUsersSchema,
+  removeUserRoleSchema,
+  validate,
+} from '../middleware/validation.middleware';
 
 const router: Router = Router();
 const userController = new UserController();
@@ -28,7 +33,12 @@ const userController = new UserController();
  *       403:
  *         description: Insufficient permissions
  */
-router.get('/:id', authenticateToken, requireRole(['ADMIN']), userController.getUserById.bind(userController));
+router.get(
+  '/:id',
+  authenticateToken,
+  requireRole(['ADMIN']),
+  userController.getUserById.bind(userController)
+);
 
 /**
  * @swagger
@@ -66,7 +76,12 @@ router.get('/:id', authenticateToken, requireRole(['ADMIN']), userController.get
  *       200:
  *         description: Users retrieved successfully
  */
-router.get('/', authenticateToken, requireRole(['ADMIN']), userController.listUsers.bind(userController));
+router.get(
+  '/',
+  authenticateToken,
+  requireRole(['ADMIN']),
+  userController.listUsers.bind(userController)
+);
 
 /**
  * @swagger
@@ -96,7 +111,12 @@ router.get('/', authenticateToken, requireRole(['ADMIN']), userController.listUs
  *       200:
  *         description: User status updated successfully
  */
-router.patch('/:id/status', authenticateToken, requireRole(['ADMIN']), userController.updateUserStatus.bind(userController));
+router.patch(
+  '/:id/status',
+  authenticateToken,
+  requireRole(['ADMIN']),
+  userController.updateUserStatus.bind(userController)
+);
 
 /**
  * @swagger
@@ -129,7 +149,13 @@ router.patch('/:id/status', authenticateToken, requireRole(['ADMIN']), userContr
  *       200:
  *         description: Bulk update completed successfully
  */
-router.post('/bulk-update', authenticateToken, requireRole(['ADMIN']), validate(bulkUpdateUsersSchema), userController.bulkUpdateUsers.bind(userController));
+router.post(
+  '/bulk-update',
+  authenticateToken,
+  requireRole(['ADMIN']),
+  validate(bulkUpdateUsersSchema),
+  userController.bulkUpdateUsers.bind(userController)
+);
 
 /**
  * @swagger
@@ -160,7 +186,13 @@ router.post('/bulk-update', authenticateToken, requireRole(['ADMIN']), validate(
  *       200:
  *         description: Role assigned successfully
  */
-router.post('/:id/roles', authenticateToken, requireRole(['ADMIN']), validate(assignUserRoleSchema), userController.assignUserRole.bind(userController));
+router.post(
+  '/:id/roles',
+  authenticateToken,
+  requireRole(['ADMIN']),
+  validate(assignUserRoleSchema),
+  userController.assignUserRole.bind(userController)
+);
 
 /**
  * @swagger
@@ -191,7 +223,13 @@ router.post('/:id/roles', authenticateToken, requireRole(['ADMIN']), validate(as
  *       200:
  *         description: Role removed successfully
  */
-router.delete('/:id/roles', authenticateToken, requireRole(['ADMIN']), validate(removeUserRoleSchema), userController.removeUserRole.bind(userController));
+router.delete(
+  '/:id/roles',
+  authenticateToken,
+  requireRole(['ADMIN']),
+  validate(removeUserRoleSchema),
+  userController.removeUserRole.bind(userController)
+);
 
 /**
  * @swagger
@@ -217,7 +255,12 @@ router.delete('/:id/roles', authenticateToken, requireRole(['ADMIN']), validate(
  *       200:
  *         description: Users data exported successfully
  */
-router.get('/export', authenticateToken, requireRole(['ADMIN']), userController.exportUsers.bind(userController));
+router.get(
+  '/export',
+  authenticateToken,
+  requireRole(['ADMIN']),
+  userController.exportUsers.bind(userController)
+);
 
 /**
  * @swagger
@@ -255,7 +298,12 @@ router.get('/export', authenticateToken, requireRole(['ADMIN']), userController.
  *       200:
  *         description: User activity retrieved successfully
  */
-router.get('/:id/activity', authenticateToken, requireRole(['ADMIN']), userController.getUserActivity.bind(userController));
+router.get(
+  '/:id/activity',
+  authenticateToken,
+  requireRole(['ADMIN']),
+  userController.getUserActivity.bind(userController)
+);
 
 /**
  * @swagger
@@ -315,7 +363,12 @@ router.get('/:id/activity', authenticateToken, requireRole(['ADMIN']), userContr
  *       200:
  *         description: Audit logs retrieved successfully
  */
-router.get('/audit-logs', authenticateToken, requireRole(['ADMIN']), userController.getAuditLogs.bind(userController));
+router.get(
+  '/audit-logs',
+  authenticateToken,
+  requireRole(['ADMIN']),
+  userController.getAuditLogs.bind(userController)
+);
 
 /**
  * @swagger
@@ -358,7 +411,12 @@ router.get('/audit-logs', authenticateToken, requireRole(['ADMIN']), userControl
  *       200:
  *         description: Audit report generated successfully
  */
-router.get('/audit-report', authenticateToken, requireRole(['ADMIN']), userController.getAuditReport.bind(userController));
+router.get(
+  '/audit-report',
+  authenticateToken,
+  requireRole(['ADMIN']),
+  userController.getAuditReport.bind(userController)
+);
 
 /**
  * @swagger
@@ -392,6 +450,11 @@ router.get('/audit-report', authenticateToken, requireRole(['ADMIN']), userContr
  *       200:
  *         description: User statistics retrieved successfully
  */
-router.get('/stats', authenticateToken, requireRole(['ADMIN']), userController.getUserStats.bind(userController));
+router.get(
+  '/stats',
+  authenticateToken,
+  requireRole(['ADMIN']),
+  userController.getUserStats.bind(userController)
+);
 
 export { router as userRoutes };

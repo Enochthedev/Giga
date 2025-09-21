@@ -64,7 +64,9 @@ describe('Phone Verification - SMS Service Only', () => {
       it('should format phone numbers correctly', () => {
         expect(smsService.formatPhoneNumber('1234567890')).toBe('+11234567890');
         expect(smsService.formatPhoneNumber('+1234567890')).toBe('+1234567890');
-        expect(smsService.formatPhoneNumber('(123) 456-7890')).toBe('+11234567890');
+        expect(smsService.formatPhoneNumber('(123) 456-7890')).toBe(
+          '+11234567890'
+        );
       });
     });
 
@@ -84,7 +86,9 @@ describe('Phone Verification - SMS Service Only', () => {
 
     describe('sendVerificationSMS', () => {
       it('should mock SMS sending successfully', async () => {
-        const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => { });
+        const consoleSpy = vi
+          .spyOn(console, 'log')
+          .mockImplementation(() => {});
 
         await smsService.sendVerificationSMS({
           phone: '+1234567890',
@@ -106,9 +110,14 @@ describe('Phone Verification - SMS Service Only', () => {
 
     describe('sendSecurityAlert', () => {
       it('should mock security alert SMS successfully', async () => {
-        const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => { });
+        const consoleSpy = vi
+          .spyOn(console, 'log')
+          .mockImplementation(() => {});
 
-        await smsService.sendSecurityAlert('+1234567890', 'Test security alert');
+        await smsService.sendSecurityAlert(
+          '+1234567890',
+          'Test security alert'
+        );
 
         expect(consoleSpy).toHaveBeenCalledWith(
           '🔒 Security Alert SMS Sent:',

@@ -1,6 +1,14 @@
 import { PrismaClient } from '@prisma/client';
 import request from 'supertest';
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+} from 'vitest';
 import { app } from '../app';
 import { JWTService } from '../services/jwt.service';
 
@@ -14,7 +22,7 @@ describe('Profile Management', () => {
   beforeAll(async () => {
     // Clean up any existing test data
     await prisma.user.deleteMany({
-      where: { email: 'profiletest@example.com' }
+      where: { email: 'profiletest@example.com' },
     });
   });
 
@@ -22,7 +30,7 @@ describe('Profile Management', () => {
     // Clean up test data
     if (testUser) {
       await prisma.user.delete({
-        where: { id: testUser.id }
+        where: { id: testUser.id },
       });
     }
     await prisma.$disconnect();
@@ -38,7 +46,7 @@ describe('Profile Management', () => {
         firstName: 'Profile',
         lastName: 'Test',
         roles: ['CUSTOMER', 'VENDOR', 'DRIVER'],
-        acceptTerms: true
+        acceptTerms: true,
       });
 
     expect(response.status).toBe(201);
@@ -49,11 +57,13 @@ describe('Profile Management', () => {
   afterEach(async () => {
     // Clean up after each test
     if (testUser) {
-      await prisma.user.delete({
-        where: { id: testUser.id }
-      }).catch(() => {
-        // Ignore errors if user already deleted
-      });
+      await prisma.user
+        .delete({
+          where: { id: testUser.id },
+        })
+        .catch(() => {
+          // Ignore errors if user already deleted
+        });
     }
   });
 
@@ -73,8 +83,7 @@ describe('Profile Management', () => {
     });
 
     it('should require authentication', async () => {
-      const response = await request(app)
-        .get('/api/v1/profiles/complete');
+      const response = await request(app).get('/api/v1/profiles/complete');
 
       expect(response.status).toBe(401);
     });
@@ -85,7 +94,7 @@ describe('Profile Management', () => {
       const preferences = {
         language: 'en',
         currency: 'USD',
-        notifications: true
+        notifications: true,
       };
 
       const response = await request(app)
@@ -108,7 +117,7 @@ describe('Profile Management', () => {
           firstName: 'No',
           lastName: 'Customer',
           roles: ['VENDOR'],
-          acceptTerms: true
+          acceptTerms: true,
         });
 
       const token = userResponse.body.data.tokens.accessToken;
@@ -123,7 +132,7 @@ describe('Profile Management', () => {
 
       // Clean up
       await prisma.user.delete({
-        where: { email: 'nocustomer@example.com' }
+        where: { email: 'nocustomer@example.com' },
       });
     });
   });
@@ -134,7 +143,7 @@ describe('Profile Management', () => {
         businessName: 'Test Electronics Store',
         businessType: 'Electronics',
         description: 'A test electronics store',
-        subscriptionTier: 'PRO' as const
+        subscriptionTier: 'PRO' as const,
       };
 
       const response = await request(app)
@@ -144,8 +153,12 @@ describe('Profile Management', () => {
 
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
-      expect(response.body.data.profile.businessName).toBe(vendorData.businessName);
-      expect(response.body.data.profile.subscriptionTier).toBe(vendorData.subscriptionTier);
+      expect(response.body.data.profile.businessName).toBe(
+        vendorData.businessName
+      );
+      expect(response.body.data.profile.subscriptionTier).toBe(
+        vendorData.subscriptionTier
+      );
     });
 
     it('should reject duplicate business name', async () => {
@@ -158,7 +171,7 @@ describe('Profile Management', () => {
           firstName: 'Other',
           lastName: 'Vendor',
           roles: ['VENDOR'],
-          acceptTerms: true
+          acceptTerms: true,
         });
 
       const otherToken = otherUserResponse.body.data.tokens.accessToken;
@@ -181,7 +194,7 @@ describe('Profile Management', () => {
 
       // Clean up
       await prisma.user.delete({
-        where: { email: 'othervendor@example.com' }
+        where: { email: 'othervendor@example.com' },
       });
     });
 
@@ -206,8 +219,8 @@ describe('Profile Management', () => {
           model: 'Camry',
           year: 2020,
           color: 'Blue',
-          type: 'CAR'
-        }
+          type: 'CAR',
+        },
       };
 
       const response = await request(app)
@@ -217,7 +230,9 @@ describe('Profile Management', () => {
 
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
-      expect(response.body.data.profile.licenseNumber).toBe(driverData.licenseNumber);
+      expect(response.body.data.profile.licenseNumber).toBe(
+        driverData.licenseNumber
+      );
     });
 
     it('should reject duplicate license number', async () => {
@@ -236,7 +251,7 @@ describe('Profile Management', () => {
           firstName: 'Other',
           lastName: 'Driver',
           roles: ['DRIVER'],
-          acceptTerms: true
+          acceptTerms: true,
         });
 
       const otherToken = otherUserResponse.body.data.tokens.accessToken;
@@ -253,7 +268,7 @@ describe('Profile Management', () => {
 
       // Clean up
       await prisma.user.delete({
-        where: { email: 'otherdriver@example.com' }
+        where: { email: 'otherdriver@example.com' },
       });
     });
 
@@ -276,7 +291,7 @@ describe('Profile Management', () => {
         address: '123 Main Street',
         city: 'New York',
         country: 'United States',
-        isDefault: true
+        isDefault: true,
       };
 
       const response = await request(app)
@@ -299,7 +314,7 @@ describe('Profile Management', () => {
           label: 'Work',
           address: '456 Business Ave',
           city: 'New York',
-          country: 'United States'
+          country: 'United States',
         });
 
       const addressId = addResponse.body.data.address.id;
@@ -308,7 +323,7 @@ describe('Profile Management', () => {
       const updateData = {
         label: 'Office',
         address: '456 Business Avenue',
-        isDefault: true
+        isDefault: true,
       };
 
       const response = await request(app)
@@ -331,7 +346,7 @@ describe('Profile Management', () => {
           label: 'Temp',
           address: '789 Temp Street',
           city: 'New York',
-          country: 'United States'
+          country: 'United States',
         });
 
       const addressId = addResponse.body.data.address.id;
@@ -396,7 +411,7 @@ describe('Profile Management', () => {
     it('should update vendor profile rating', async () => {
       const ratingData = {
         role: 'VENDOR',
-        rating: 4.5
+        rating: 4.5,
       };
 
       const response = await request(app)
@@ -412,7 +427,7 @@ describe('Profile Management', () => {
     it('should reject invalid rating value', async () => {
       const ratingData = {
         role: 'VENDOR',
-        rating: 6.0 // Invalid: exceeds maximum
+        rating: 6.0, // Invalid: exceeds maximum
       };
 
       const response = await request(app)
@@ -426,7 +441,7 @@ describe('Profile Management', () => {
     it('should reject invalid role for rating', async () => {
       const ratingData = {
         role: 'CUSTOMER', // Invalid: customers don't have ratings
-        rating: 4.0
+        rating: 4.0,
       };
 
       const response = await request(app)
@@ -449,7 +464,7 @@ describe('Profile Management', () => {
           firstName: 'Host',
           lastName: 'User',
           roles: ['HOST'],
-          acceptTerms: true
+          acceptTerms: true,
         });
 
       const hostToken = hostUserResponse.body.data.tokens.accessToken;
@@ -458,7 +473,7 @@ describe('Profile Management', () => {
         businessName: 'Cozy Apartments',
         description: 'Beautiful apartments in the city center',
         responseRate: 95.5,
-        responseTime: 30 // 30 minutes
+        responseTime: 30, // 30 minutes
       };
 
       const response = await request(app)
@@ -468,13 +483,19 @@ describe('Profile Management', () => {
 
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
-      expect(response.body.data.profile.businessName).toBe(hostData.businessName);
-      expect(response.body.data.profile.responseRate).toBe(hostData.responseRate);
-      expect(response.body.data.profile.responseTime).toBe(hostData.responseTime);
+      expect(response.body.data.profile.businessName).toBe(
+        hostData.businessName
+      );
+      expect(response.body.data.profile.responseRate).toBe(
+        hostData.responseRate
+      );
+      expect(response.body.data.profile.responseTime).toBe(
+        hostData.responseTime
+      );
 
       // Clean up
       await prisma.user.delete({
-        where: { email: 'hostuser@example.com' }
+        where: { email: 'hostuser@example.com' },
       });
     });
 
@@ -488,15 +509,16 @@ describe('Profile Management', () => {
           firstName: 'Advertiser',
           lastName: 'User',
           roles: ['ADVERTISER'],
-          acceptTerms: true
+          acceptTerms: true,
         });
 
-      const advertiserToken = advertiserUserResponse.body.data.tokens.accessToken;
+      const advertiserToken =
+        advertiserUserResponse.body.data.tokens.accessToken;
 
       const advertiserData = {
         companyName: 'Tech Innovations Inc',
         industry: 'Technology',
-        website: 'https://techinnovations.com'
+        website: 'https://techinnovations.com',
       };
 
       const response = await request(app)
@@ -506,12 +528,14 @@ describe('Profile Management', () => {
 
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
-      expect(response.body.data.profile.companyName).toBe(advertiserData.companyName);
+      expect(response.body.data.profile.companyName).toBe(
+        advertiserData.companyName
+      );
       expect(response.body.data.profile.industry).toBe(advertiserData.industry);
 
       // Clean up
       await prisma.user.delete({
-        where: { email: 'advertiser@example.com' }
+        where: { email: 'advertiser@example.com' },
       });
     });
   });

@@ -23,7 +23,7 @@ const UpdateCartItemSchema = z.object({
 });
 
 export class CartController {
-  constructor(private cartService: CartService) { }
+  constructor(private cartService: CartService) {}
 
   /**
    * GET /api/v1/cart - Get current user shopping cart with product enrichment

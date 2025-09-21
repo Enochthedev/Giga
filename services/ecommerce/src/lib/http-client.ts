@@ -1,6 +1,15 @@
-import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
+import axios, {
+  AxiosError,
+  AxiosInstance,
+  AxiosRequestConfig,
+  AxiosResponse,
+} from 'axios';
 import { ServiceError } from '../types/errors';
-import { CircuitBreaker, CircuitBreakerError, CircuitBreakerRegistry } from './circuit-breaker';
+import {
+  CircuitBreaker,
+  CircuitBreakerError,
+  CircuitBreakerRegistry,
+} from './circuit-breaker';
 import { RetryManager, RetryOptions } from './retry';
 
 // Extend axios types to include metadata
@@ -76,17 +85,22 @@ export class HttpClient {
     const registry = CircuitBreakerRegistry.getInstance();
     this.circuitBreaker = registry.getCircuitBreaker(
       this.serviceName,
-      options.circuitBreakerOptions ? {
-        failureThreshold: options.circuitBreakerOptions.failureThreshold || 5,
-        resetTimeout: options.circuitBreakerOptions.resetTimeout || 60000,
-        monitoringPeriod: options.circuitBreakerOptions.monitoringPeriod || 10000,
-        successThreshold: options.circuitBreakerOptions.successThreshold || 2,
-      } : undefined
+      options.circuitBreakerOptions
+        ? {
+            failureThreshold:
+              options.circuitBreakerOptions.failureThreshold || 5,
+            resetTimeout: options.circuitBreakerOptions.resetTimeout || 60000,
+            monitoringPeriod:
+              options.circuitBreakerOptions.monitoringPeriod || 10000,
+            successThreshold:
+              options.circuitBreakerOptions.successThreshold || 2,
+          }
+        : undefined
     );
 
     // Setup request interceptor
     this.axiosInstance.interceptors.request.use(
-      (config) => {
+      config => {
         // Add correlation ID if available
         const correlationId = this.getCorrelationId();
         if (correlationId) {
@@ -100,12 +114,12 @@ export class HttpClient {
 
         return config;
       },
-      (error) => Promise.reject(error)
+      error => Promise.reject(error)
     );
 
     // Setup response interceptor
     this.axiosInstance.interceptors.response.use(
-      (response) => {
+      response => {
         // Calculate response time
         const startTime = response.config.metadata?.startTime;
         if (startTime) {
@@ -116,7 +130,7 @@ export class HttpClient {
 
         return response;
       },
-      (error) => {
+      error => {
         // Calculate response time for errors too
         const startTime = error.config?.metadata?.startTime;
         if (startTime) {
@@ -136,7 +150,10 @@ export class HttpClient {
     config?: AxiosRequestConfig,
     retryOptions?: Partial<RetryOptions>
   ): Promise<ServiceResponse<T>> {
-    return this.executeRequest(() => this.axiosInstance.get(url, config), retryOptions);
+    return this.executeRequest(
+      () => this.axiosInstance.get(url, config),
+      retryOptions
+    );
   }
 
   // eslint-disable-next-line require-await
@@ -146,7 +163,10 @@ export class HttpClient {
     config?: AxiosRequestConfig,
     retryOptions?: Partial<RetryOptions>
   ): Promise<ServiceResponse<T>> {
-    return this.executeRequest(() => this.axiosInstance.post(url, data, config), retryOptions);
+    return this.executeRequest(
+      () => this.axiosInstance.post(url, data, config),
+      retryOptions
+    );
   }
 
   // eslint-disable-next-line require-await
@@ -156,7 +176,10 @@ export class HttpClient {
     config?: AxiosRequestConfig,
     retryOptions?: Partial<RetryOptions>
   ): Promise<ServiceResponse<T>> {
-    return this.executeRequest(() => this.axiosInstance.put(url, data, config), retryOptions);
+    return this.executeRequest(
+      () => this.axiosInstance.put(url, data, config),
+      retryOptions
+    );
   }
 
   // eslint-disable-next-line require-await
@@ -166,7 +189,10 @@ export class HttpClient {
     config?: AxiosRequestConfig,
     retryOptions?: Partial<RetryOptions>
   ): Promise<ServiceResponse<T>> {
-    return this.executeRequest(() => this.axiosInstance.patch(url, data, config), retryOptions);
+    return this.executeRequest(
+      () => this.axiosInstance.patch(url, data, config),
+      retryOptions
+    );
   }
 
   // eslint-disable-next-line require-await
@@ -175,7 +201,10 @@ export class HttpClient {
     config?: AxiosRequestConfig,
     retryOptions?: Partial<RetryOptions>
   ): Promise<ServiceResponse<T>> {
-    return this.executeRequest(() => this.axiosInstance.delete(url, config), retryOptions);
+    return this.executeRequest(
+      () => this.axiosInstance.delete(url, config),
+      retryOptions
+    );
   }
 
   private async executeRequest<T>(
@@ -283,7 +312,8 @@ export class HttpClient {
         message: error.message || 'An unknown error occurred',
         details: {
           name: error.name,
-          stack: process.env.NODE_ENV !== 'production' ? error.stack : undefined,
+          stack:
+            process.env.NODE_ENV !== 'production' ? error.stack : undefined,
         },
       },
       timestamp: new Date().toISOString(),
@@ -372,7 +402,10 @@ export class HttpClientFactory {
     return this.clients.get(key)!;
   }
 
-  static getClient(serviceName: string, baseURL?: string): HttpClient | undefined {
+  static getClient(
+    serviceName: string,
+    baseURL?: string
+  ): HttpClient | undefined {
     const key = baseURL ? `${serviceName}-${baseURL}` : serviceName;
 
     // If no baseURL provided, find the first client for the service
@@ -413,10 +446,13 @@ export class GracefulDegradation {
     try {
       return primaryOperation();
     } catch (error) {
-      console.warn(`Primary operation failed for ${serviceName}, using fallback`, {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        serviceName,
-      });
+      console.warn(
+        `Primary operation failed for ${serviceName}, using fallback`,
+        {
+          error: error instanceof Error ? error.message : 'Unknown error',
+          serviceName,
+        }
+      );
 
       return fallbackOperation();
     }

@@ -32,7 +32,8 @@ export class ProductController {
       };
 
       // Try to get cached results with enhanced caching
-      const cachedResults = await cacheService.getCachedSearchResults(queryParams);
+      const cachedResults =
+        await cacheService.getCachedSearchResults(queryParams);
       if (cachedResults) {
         return res.json({
           success: true,

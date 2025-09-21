@@ -6,9 +6,16 @@ const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const phonePattern = /^\+?[\d\s\-()]{10,}$/;
 
 // Base schemas
-export const ObjectIdSchema = z.string().regex(objectIdPattern, 'Invalid ID format');
-export const EmailSchema = z.string().regex(emailPattern, 'Invalid email format');
-export const PhoneSchema = z.string().regex(phonePattern, 'Invalid phone format').optional();
+export const ObjectIdSchema = z
+  .string()
+  .regex(objectIdPattern, 'Invalid ID format');
+export const EmailSchema = z
+  .string()
+  .regex(emailPattern, 'Invalid email format');
+export const PhoneSchema = z
+  .string()
+  .regex(phonePattern, 'Invalid phone format')
+  .optional();
 
 // Pagination schema
 export const PaginationSchema = z.object({
@@ -23,19 +30,33 @@ export const AddressSchema = z.object({
   street: z.string().min(1, 'Street is required').max(255, 'Street too long'),
   city: z.string().min(1, 'City is required').max(100, 'City too long'),
   state: z.string().min(1, 'State is required').max(100, 'State too long'),
-  postalCode: z.string().min(1, 'Postal code is required').max(20, 'Postal code too long'),
-  country: z.string().min(1, 'Country is required').max(100, 'Country too long'),
+  postalCode: z
+    .string()
+    .min(1, 'Postal code is required')
+    .max(20, 'Postal code too long'),
+  country: z
+    .string()
+    .min(1, 'Country is required')
+    .max(100, 'Country too long'),
   isDefault: z.boolean().default(false),
 });
 
 // Cart validation schemas
 export const AddToCartSchema = z.object({
   productId: ObjectIdSchema,
-  quantity: z.number().int().min(1, 'Quantity must be at least 1').max(999, 'Quantity too large'),
+  quantity: z
+    .number()
+    .int()
+    .min(1, 'Quantity must be at least 1')
+    .max(999, 'Quantity too large'),
 });
 
 export const UpdateCartItemSchema = z.object({
-  quantity: z.number().int().min(1, 'Quantity must be at least 1').max(999, 'Quantity too large'),
+  quantity: z
+    .number()
+    .int()
+    .min(1, 'Quantity must be at least 1')
+    .max(999, 'Quantity too large'),
 });
 
 export const CartItemParamsSchema = z.object({
@@ -54,38 +75,71 @@ export const OrderParamsSchema = z.object({
 });
 
 export const UpdateOrderStatusSchema = z.object({
-  status: z.enum(['PENDING', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED', 'REFUNDED']),
+  status: z.enum([
+    'PENDING',
+    'CONFIRMED',
+    'PROCESSING',
+    'SHIPPED',
+    'DELIVERED',
+    'CANCELLED',
+    'REFUNDED',
+  ]),
   trackingNumber: z.string().max(100, 'Tracking number too long').optional(),
   notes: z.string().max(500, 'Notes too long').optional(),
 });
 
-export const OrderFiltersSchema = z.object({
-  status: z.enum(['PENDING', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED', 'REFUNDED']).optional(),
-  dateFrom: z.string().datetime().optional(),
-  dateTo: z.string().datetime().optional(),
-  vendorId: ObjectIdSchema.optional(),
-}).merge(PaginationSchema);
+export const OrderFiltersSchema = z
+  .object({
+    status: z
+      .enum([
+        'PENDING',
+        'CONFIRMED',
+        'PROCESSING',
+        'SHIPPED',
+        'DELIVERED',
+        'CANCELLED',
+        'REFUNDED',
+      ])
+      .optional(),
+    dateFrom: z.string().datetime().optional(),
+    dateTo: z.string().datetime().optional(),
+    vendorId: ObjectIdSchema.optional(),
+  })
+  .merge(PaginationSchema);
 
 // Product validation schemas
 export const ProductParamsSchema = z.object({
   productId: ObjectIdSchema,
 });
 
-export const ProductFiltersSchema = z.object({
-  category: z.string().max(100).optional(),
-  vendorId: ObjectIdSchema.optional(),
-  minPrice: z.coerce.number().min(0).optional(),
-  maxPrice: z.coerce.number().min(0).optional(),
-  inStock: z.coerce.boolean().optional(),
-  search: z.string().max(255).optional(),
-}).merge(PaginationSchema);
+export const ProductFiltersSchema = z
+  .object({
+    category: z.string().max(100).optional(),
+    vendorId: ObjectIdSchema.optional(),
+    minPrice: z.coerce.number().min(0).optional(),
+    maxPrice: z.coerce.number().min(0).optional(),
+    inStock: z.coerce.boolean().optional(),
+    search: z.string().max(255).optional(),
+  })
+  .merge(PaginationSchema);
 
 // Vendor validation schemas
-export const VendorOrderFiltersSchema = z.object({
-  status: z.enum(['PENDING', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED']).optional(),
-  dateFrom: z.string().datetime().optional(),
-  dateTo: z.string().datetime().optional(),
-}).merge(PaginationSchema);
+export const VendorOrderFiltersSchema = z
+  .object({
+    status: z
+      .enum([
+        'PENDING',
+        'CONFIRMED',
+        'PROCESSING',
+        'SHIPPED',
+        'DELIVERED',
+        'CANCELLED',
+      ])
+      .optional(),
+    dateFrom: z.string().datetime().optional(),
+    dateTo: z.string().datetime().optional(),
+  })
+  .merge(PaginationSchema);
 
 export const UpdateVendorOrderStatusSchema = z.object({
   status: z.enum(['CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED']),
@@ -166,14 +220,16 @@ export const SanitizedCreateOrderSchema = z.object({
   notes: createSanitizedString(undefined, 500).optional(),
 });
 
-export const SanitizedProductFiltersSchema = z.object({
-  category: createSanitizedString(undefined, 100).optional(),
-  vendorId: ObjectIdSchema.optional(),
-  minPrice: z.coerce.number().min(0).optional(),
-  maxPrice: z.coerce.number().min(0).optional(),
-  inStock: z.coerce.boolean().optional(),
-  search: SanitizedSearchSchema.optional(),
-}).merge(PaginationSchema);
+export const SanitizedProductFiltersSchema = z
+  .object({
+    category: createSanitizedString(undefined, 100).optional(),
+    vendorId: ObjectIdSchema.optional(),
+    minPrice: z.coerce.number().min(0).optional(),
+    maxPrice: z.coerce.number().min(0).optional(),
+    inStock: z.coerce.boolean().optional(),
+    search: SanitizedSearchSchema.optional(),
+  })
+  .merge(PaginationSchema);
 
 // Type exports
 export type AddToCartRequest = z.infer<typeof AddToCartSchema>;
@@ -183,7 +239,9 @@ export type UpdateOrderStatusRequest = z.infer<typeof UpdateOrderStatusSchema>;
 export type OrderFilters = z.infer<typeof OrderFiltersSchema>;
 export type ProductFilters = z.infer<typeof ProductFiltersSchema>;
 export type VendorOrderFilters = z.infer<typeof VendorOrderFiltersSchema>;
-export type UpdateVendorOrderStatusRequest = z.infer<typeof UpdateVendorOrderStatusSchema>;
+export type UpdateVendorOrderStatusRequest = z.infer<
+  typeof UpdateVendorOrderStatusSchema
+>;
 export type UpdateInventoryRequest = z.infer<typeof UpdateInventorySchema>;
 export type PaginationParams = z.infer<typeof PaginationSchema>;
 export type Address = z.infer<typeof AddressSchema>;

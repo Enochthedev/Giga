@@ -11,14 +11,14 @@ beforeAll(async () => {
   prisma = new PrismaClient({
     datasources: {
       db: {
-        url: process.env.TEST_DATABASE_URL || process.env.DATABASE_URL
-      }
-    }
+        url: process.env.TEST_DATABASE_URL || process.env.DATABASE_URL,
+      },
+    },
   });
 
   // Initialize test Redis connection
   redis = Redis.createClient({
-    url: process.env.TEST_REDIS_URL || process.env.REDIS_URL
+    url: process.env.TEST_REDIS_URL || process.env.REDIS_URL,
   });
 
   await redis.connect();

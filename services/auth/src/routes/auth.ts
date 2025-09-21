@@ -2,7 +2,11 @@ import { Router } from 'express';
 import { AuthController } from '../controllers/auth.controller';
 import { authenticateToken } from '../middleware/auth.middleware';
 import { requirePhoneNumber } from '../middleware/phoneVerification.middleware';
-import { apiRateLimit, authRateLimit, passwordRateLimit } from '../middleware/rateLimit.middleware';
+import {
+  apiRateLimit,
+  authRateLimit,
+  passwordRateLimit,
+} from '../middleware/rateLimit.middleware';
 import {
   changePasswordSchema,
   loginSchema,
@@ -15,7 +19,7 @@ import {
   updateProfileSchema,
   validate,
   verifyEmailSchema,
-  verifyPhoneSchema
+  verifyPhoneSchema,
 } from '../middleware/validation.middleware';
 
 const router: Router = Router();
@@ -39,7 +43,12 @@ const authController = new AuthController();
  *       409:
  *         description: User already exists
  */
-router.post('/register', authRateLimit, validate(registerSchema), authController.register.bind(authController));
+router.post(
+  '/register',
+  authRateLimit,
+  validate(registerSchema),
+  authController.register.bind(authController)
+);
 
 /**
  * @swagger
@@ -59,7 +68,12 @@ router.post('/register', authRateLimit, validate(registerSchema), authController
  *       401:
  *         description: Invalid credentials
  */
-router.post('/login', authRateLimit, validate(loginSchema), authController.login.bind(authController));
+router.post(
+  '/login',
+  authRateLimit,
+  validate(loginSchema),
+  authController.login.bind(authController)
+);
 
 /**
  * @swagger
@@ -83,7 +97,12 @@ router.post('/login', authRateLimit, validate(loginSchema), authController.login
  *       401:
  *         description: Invalid refresh token
  */
-router.post('/refresh', apiRateLimit, validate(refreshTokenSchema), authController.refreshToken.bind(authController));
+router.post(
+  '/refresh',
+  apiRateLimit,
+  validate(refreshTokenSchema),
+  authController.refreshToken.bind(authController)
+);
 
 /**
  * @swagger
@@ -119,7 +138,12 @@ router.post('/logout', authController.logout.bind(authController));
  *       401:
  *         description: Unauthorized
  */
-router.get('/profile', apiRateLimit, authenticateToken, authController.getProfile.bind(authController));
+router.get(
+  '/profile',
+  apiRateLimit,
+  authenticateToken,
+  authController.getProfile.bind(authController)
+);
 
 /**
  * @swagger
@@ -147,7 +171,13 @@ router.get('/profile', apiRateLimit, authenticateToken, authController.getProfil
  *       200:
  *         description: Profile updated successfully
  */
-router.put('/profile', apiRateLimit, authenticateToken, validate(updateProfileSchema), authController.updateProfile.bind(authController));
+router.put(
+  '/profile',
+  apiRateLimit,
+  authenticateToken,
+  validate(updateProfileSchema),
+  authController.updateProfile.bind(authController)
+);
 
 /**
  * @swagger
@@ -176,7 +206,13 @@ router.put('/profile', apiRateLimit, authenticateToken, validate(updateProfileSc
  *       400:
  *         description: Invalid current password
  */
-router.put('/change-password', passwordRateLimit, authenticateToken, validate(changePasswordSchema), authController.changePassword.bind(authController));
+router.put(
+  '/change-password',
+  passwordRateLimit,
+  authenticateToken,
+  validate(changePasswordSchema),
+  authController.changePassword.bind(authController)
+);
 
 /**
  * @swagger
@@ -203,7 +239,13 @@ router.put('/change-password', passwordRateLimit, authenticateToken, validate(ch
  *       403:
  *         description: User does not have this role
  */
-router.post('/switch-role', apiRateLimit, authenticateToken, validate(switchRoleSchema), authController.switchRole.bind(authController));
+router.post(
+  '/switch-role',
+  apiRateLimit,
+  authenticateToken,
+  validate(switchRoleSchema),
+  authController.switchRole.bind(authController)
+);
 
 /**
  * @swagger
@@ -221,7 +263,12 @@ router.post('/switch-role', apiRateLimit, authenticateToken, validate(switchRole
  *       429:
  *         description: Verification email already sent recently
  */
-router.post('/send-email-verification', authRateLimit, authenticateToken, authController.sendEmailVerification.bind(authController));
+router.post(
+  '/send-email-verification',
+  authRateLimit,
+  authenticateToken,
+  authController.sendEmailVerification.bind(authController)
+);
 
 /**
  * @swagger
@@ -246,7 +293,12 @@ router.post('/send-email-verification', authRateLimit, authenticateToken, authCo
  *       400:
  *         description: Invalid or expired token
  */
-router.post('/verify-email', apiRateLimit, validate(verifyEmailSchema), authController.verifyEmail.bind(authController));
+router.post(
+  '/verify-email',
+  apiRateLimit,
+  validate(verifyEmailSchema),
+  authController.verifyEmail.bind(authController)
+);
 
 /**
  * @swagger
@@ -272,7 +324,12 @@ router.post('/verify-email', apiRateLimit, validate(verifyEmailSchema), authCont
  *       429:
  *         description: Verification email already sent recently
  */
-router.post('/resend-email-verification', authRateLimit, validate(resendEmailVerificationSchema), authController.resendEmailVerification.bind(authController));
+router.post(
+  '/resend-email-verification',
+  authRateLimit,
+  validate(resendEmailVerificationSchema),
+  authController.resendEmailVerification.bind(authController)
+);
 
 /**
  * @swagger
@@ -290,7 +347,14 @@ router.post('/resend-email-verification', authRateLimit, validate(resendEmailVer
  *       429:
  *         description: Verification code already sent recently
  */
-router.post('/send-phone-verification', authRateLimit, authenticateToken, requirePhoneNumber, validate(sendPhoneVerificationSchema), authController.sendPhoneVerification.bind(authController));
+router.post(
+  '/send-phone-verification',
+  authRateLimit,
+  authenticateToken,
+  requirePhoneNumber,
+  validate(sendPhoneVerificationSchema),
+  authController.sendPhoneVerification.bind(authController)
+);
 
 /**
  * @swagger
@@ -318,7 +382,13 @@ router.post('/send-phone-verification', authRateLimit, authenticateToken, requir
  *       400:
  *         description: Invalid or expired code
  */
-router.post('/verify-phone', apiRateLimit, authenticateToken, validate(verifyPhoneSchema), authController.verifyPhone.bind(authController));
+router.post(
+  '/verify-phone',
+  apiRateLimit,
+  authenticateToken,
+  validate(verifyPhoneSchema),
+  authController.verifyPhone.bind(authController)
+);
 
 /**
  * @swagger
@@ -343,6 +413,11 @@ router.post('/verify-phone', apiRateLimit, authenticateToken, validate(verifyPho
  *       429:
  *         description: Verification code already sent recently
  */
-router.post('/resend-phone-verification', authRateLimit, validate(resendPhoneVerificationSchema), authController.resendPhoneVerification.bind(authController));
+router.post(
+  '/resend-phone-verification',
+  authRateLimit,
+  validate(resendPhoneVerificationSchema),
+  authController.resendPhoneVerification.bind(authController)
+);
 
 export { router as authRoutes };

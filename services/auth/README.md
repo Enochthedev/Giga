@@ -1,10 +1,12 @@
 # Auth Service - Express + TypeScript
 
-A complete authentication service with multi-role support, built with Express, TypeScript, Prisma, and Redis.
+A complete authentication service with multi-role support, built with Express, TypeScript, Prisma,
+and Redis.
 
 ## 🚀 Features
 
 ### Authentication & Authorization
+
 - ✅ User registration with role assignment
 - ✅ JWT-based authentication
 - ✅ Refresh token rotation
@@ -13,6 +15,7 @@ A complete authentication service with multi-role support, built with Express, T
 - ✅ Password change with security validation
 
 ### Security
+
 - ✅ Request validation with Zod schemas
 - ✅ Rate limiting on sensitive endpoints
 - ✅ Password hashing with bcrypt
@@ -20,11 +23,13 @@ A complete authentication service with multi-role support, built with Express, T
 - ✅ Role-based access control
 
 ### API Documentation
+
 - ✅ Complete Swagger/OpenAPI documentation
 - ✅ Interactive API explorer at `/docs`
 - ✅ Request/response schemas
 
 ### Infrastructure
+
 - ✅ PostgreSQL with Prisma ORM
 - ✅ Redis for session management and rate limiting
 - ✅ Docker support
@@ -33,23 +38,25 @@ A complete authentication service with multi-role support, built with Express, T
 ## 📡 API Endpoints
 
 ### Authentication (`/api/v1/auth`)
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|---------------|
-| POST | `/register` | Register new user | ❌ |
-| POST | `/login` | User login | ❌ |
-| POST | `/refresh` | Refresh access token | ❌ |
-| POST | `/logout` | User logout | ❌ |
-| GET | `/profile` | Get user profile | ✅ |
-| PUT | `/profile` | Update user profile | ✅ |
-| PUT | `/change-password` | Change password | ✅ |
-| POST | `/switch-role` | Switch active role | ✅ |
+
+| Method | Endpoint           | Description          | Auth Required |
+| ------ | ------------------ | -------------------- | ------------- |
+| POST   | `/register`        | Register new user    | ❌            |
+| POST   | `/login`           | User login           | ❌            |
+| POST   | `/refresh`         | Refresh access token | ❌            |
+| POST   | `/logout`          | User logout          | ❌            |
+| GET    | `/profile`         | Get user profile     | ✅            |
+| PUT    | `/profile`         | Update user profile  | ✅            |
+| PUT    | `/change-password` | Change password      | ✅            |
+| POST   | `/switch-role`     | Switch active role   | ✅            |
 
 ### User Management (`/api/v1/users`)
-| Method | Endpoint | Description | Auth Required | Role Required |
-|--------|----------|-------------|---------------|---------------|
-| GET | `/:id` | Get user by ID | ✅ | ADMIN |
-| GET | `/` | List users (paginated) | ✅ | ADMIN |
-| PATCH | `/:id/status` | Update user status | ✅ | ADMIN |
+
+| Method | Endpoint      | Description            | Auth Required | Role Required |
+| ------ | ------------- | ---------------------- | ------------- | ------------- |
+| GET    | `/:id`        | Get user by ID         | ✅            | ADMIN         |
+| GET    | `/`           | List users (paginated) | ✅            | ADMIN         |
+| PATCH  | `/:id/status` | Update user status     | ✅            | ADMIN         |
 
 ## 🏗️ Architecture
 
@@ -78,12 +85,14 @@ src/
 ## 🚦 Getting Started
 
 ### Prerequisites
+
 - Node.js 20+
 - PostgreSQL
 - Redis
 - pnpm
 
 ### Development
+
 ```bash
 # Install dependencies
 pnpm install
@@ -102,6 +111,7 @@ pnpm dev
 ```
 
 ### Environment Variables
+
 ```env
 DATABASE_URL=postgresql://platform_user:platform_pass@localhost:5433/auth_db
 JWT_SECRET=your-super-secret-jwt-key-change-in-production

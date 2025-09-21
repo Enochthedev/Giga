@@ -3,7 +3,11 @@ import { NextFunction, Request, Response } from 'express';
 /**
  * Middleware to require email verification for certain endpoints
  */
-export const requireEmailVerification = (req: Request, res: Response, next: NextFunction) => {
+export const requireEmailVerification = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     if (!req.user) {
       return res.status(401).json({
@@ -44,7 +48,11 @@ export const requireEmailVerification = (req: Request, res: Response, next: Next
 /**
  * Middleware to check email verification status and add warning if not verified
  */
-export const checkEmailVerificationStatus = (req: Request, res: Response, next: NextFunction) => {
+export const checkEmailVerificationStatus = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     if (!req.user) {
       return next();
@@ -53,7 +61,10 @@ export const checkEmailVerificationStatus = (req: Request, res: Response, next: 
     // Add verification status to response headers for client awareness
     if (!req.user.isEmailVerified) {
       res.setHeader('X-Email-Verification-Required', 'true');
-      res.setHeader('X-Email-Verification-Endpoint', '/api/v1/auth/send-email-verification');
+      res.setHeader(
+        'X-Email-Verification-Endpoint',
+        '/api/v1/auth/send-email-verification'
+      );
     }
 
     next();

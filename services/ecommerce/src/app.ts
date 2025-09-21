@@ -8,13 +8,13 @@ import {
   correlationIdMiddleware,
   errorHandler,
   healthCheckErrorHandler,
-  notFoundHandler
+  notFoundHandler,
 } from './middleware/error.middleware';
 import {
   cspMiddleware,
   generalRateLimit,
   sanitizeInput,
-  validateRequestSize
+  validateRequestSize,
 } from './middleware/validation.middleware';
 import batchRoutes from './routes/batch';
 import { cartRoutes } from './routes/cart';
@@ -30,10 +30,13 @@ const prisma = new PrismaClient();
 
 // Middleware
 app.use(helmet());
-app.use(cors({
-  origin: process.env.NODE_ENV === 'production' ? ['https://yourdomain.com'] : true,
-  credentials: true,
-}));
+app.use(
+  cors({
+    origin:
+      process.env.NODE_ENV === 'production' ? ['https://yourdomain.com'] : true,
+    credentials: true,
+  })
+);
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());

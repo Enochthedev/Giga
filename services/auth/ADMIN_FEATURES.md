@@ -5,6 +5,7 @@ This document describes the advanced user administration features implemented in
 ## Features Overview
 
 ### 1. Bulk User Operations
+
 - **Endpoint**: `POST /api/v1/users/bulk-update`
 - **Description**: Perform bulk operations on multiple users simultaneously
 - **Supported Actions**:
@@ -15,6 +16,7 @@ This document describes the advanced user administration features implemented in
   - `update_fields`: Update custom fields with provided data
 
 **Example Request**:
+
 ```json
 {
   "userIds": ["user1", "user2", "user3"],
@@ -23,6 +25,7 @@ This document describes the advanced user administration features implemented in
 ```
 
 **Example Custom Fields Update**:
+
 ```json
 {
   "userIds": ["user1", "user2"],
@@ -35,10 +38,12 @@ This document describes the advanced user administration features implemented in
 ```
 
 ### 2. Advanced User Filtering and Search
+
 - **Endpoint**: `GET /api/v1/users`
 - **Description**: Enhanced user listing with comprehensive filtering options
 
 **Available Filters**:
+
 - `search`: Search by name, email, or phone
 - `role`: Filter by user role
 - `status`: Filter by active/inactive status
@@ -50,11 +55,13 @@ This document describes the advanced user administration features implemented in
 - `lastLoginAfter`/`lastLoginBefore`: Login date filtering
 
 **Example Request**:
+
 ```
 GET /api/v1/users?search=john&role=VENDOR&emailVerified=true&sortBy=createdAt&sortOrder=desc
 ```
 
 ### 3. User Activity Logging and Audit Trails
+
 - **Endpoint**: `GET /api/v1/users/{id}/activity`
 - **Description**: View detailed activity logs for a specific user
 - **Features**:
@@ -64,6 +71,7 @@ GET /api/v1/users?search=john&role=VENDOR&emailVerified=true&sortBy=createdAt&so
   - Paginated results
 
 **Example Response**:
+
 ```json
 {
   "success": true,
@@ -97,10 +105,12 @@ GET /api/v1/users?search=john&role=VENDOR&emailVerified=true&sortBy=createdAt&so
 ```
 
 ### 4. System Audit Logs
+
 - **Endpoint**: `GET /api/v1/users/audit-logs`
 - **Description**: View system-wide audit logs with comprehensive filtering
 
 **Available Filters**:
+
 - `action`: Filter by action type
 - `adminUserId`: Filter by admin who performed the action
 - `targetUserId`: Filter by target user
@@ -108,6 +118,7 @@ GET /api/v1/users?search=john&role=VENDOR&emailVerified=true&sortBy=createdAt&so
 - `ipAddress`: Filter by IP address
 
 ### 5. Role Assignment and Management
+
 - **Assign Role**: `POST /api/v1/users/{id}/roles`
 - **Remove Role**: `DELETE /api/v1/users/{id}/roles`
 - **Features**:
@@ -117,6 +128,7 @@ GET /api/v1/users?search=john&role=VENDOR&emailVerified=true&sortBy=createdAt&so
   - Full audit logging
 
 **Example Role Assignment**:
+
 ```json
 {
   "role": "VENDOR"
@@ -126,6 +138,7 @@ GET /api/v1/users?search=john&role=VENDOR&emailVerified=true&sortBy=createdAt&so
 ### 6. Data Export and Reporting
 
 #### User Export
+
 - **Endpoint**: `GET /api/v1/users/export`
 - **Formats**: JSON, CSV
 - **Features**:
@@ -134,11 +147,13 @@ GET /api/v1/users?search=john&role=VENDOR&emailVerified=true&sortBy=createdAt&so
   - Comprehensive user data
 
 **Example CSV Export**:
+
 ```
 GET /api/v1/users/export?format=csv&filters={"status":"active"}
 ```
 
 #### Audit Reports
+
 - **Endpoint**: `GET /api/v1/users/audit-report`
 - **Formats**: JSON, CSV
 - **Features**:
@@ -148,11 +163,13 @@ GET /api/v1/users/export?format=csv&filters={"status":"active"}
   - Daily activity trends
 
 **Example Report Request**:
+
 ```
 GET /api/v1/users/audit-report?startDate=2024-01-01&endDate=2024-01-31&format=json
 ```
 
 #### User Statistics
+
 - **Endpoint**: `GET /api/v1/users/stats`
 - **Features**:
   - Total user counts
@@ -161,6 +178,7 @@ GET /api/v1/users/audit-report?startDate=2024-01-01&endDate=2024-01-31&format=js
   - Registration trends
 
 **Example Statistics Response**:
+
 ```json
 {
   "success": true,
@@ -175,14 +193,14 @@ GET /api/v1/users/audit-report?startDate=2024-01-01&endDate=2024-01-31&format=js
       }
     },
     "roleDistribution": [
-      {"role": "CUSTOMER", "count": 800},
-      {"role": "VENDOR", "count": 300},
-      {"role": "DRIVER", "count": 100}
+      { "role": "CUSTOMER", "count": 800 },
+      { "role": "VENDOR", "count": 300 },
+      { "role": "DRIVER", "count": 100 }
     ],
     "registrationTrends": {
       "last30Days": [
-        {"date": "2024-01-01", "registrations": 25},
-        {"date": "2024-01-02", "registrations": 30}
+        { "date": "2024-01-01", "registrations": 25 },
+        { "date": "2024-01-02", "registrations": 30 }
       ]
     }
   }
@@ -192,7 +210,9 @@ GET /api/v1/users/audit-report?startDate=2024-01-01&endDate=2024-01-31&format=js
 ## Security Features
 
 ### Audit Logging
+
 All admin actions are automatically logged with:
+
 - Action type and details
 - Admin user information
 - Target user (if applicable)
@@ -201,12 +221,14 @@ All admin actions are automatically logged with:
 - Request details
 
 ### Access Control
+
 - All endpoints require ADMIN role
 - JWT token authentication
 - Rate limiting protection
 - Input validation and sanitization
 
 ### Data Protection
+
 - Sensitive data filtering in exports
 - Audit log retention policies
 - Secure data transmission
@@ -215,6 +237,7 @@ All admin actions are automatically logged with:
 ## Database Schema
 
 ### AuditLog Model
+
 ```prisma
 model AuditLog {
   id           String   @id @default(cuid())
@@ -225,7 +248,7 @@ model AuditLog {
   ipAddress    String?  // IP address
   userAgent    String?  // User agent
   createdAt    DateTime @default(now())
-  
+
   adminUser    User     @relation("AdminAuditLogs", fields: [adminUserId], references: [id])
   targetUser   User?    @relation("TargetAuditLogs", fields: [targetUserId], references: [id])
 }
@@ -234,6 +257,7 @@ model AuditLog {
 ## Usage Examples
 
 ### Bulk User Management
+
 ```bash
 # Activate multiple users
 curl -X POST /api/v1/users/bulk-update \
@@ -255,6 +279,7 @@ curl -X POST /api/v1/users/bulk-update \
 ```
 
 ### Advanced Search
+
 ```bash
 # Search for vendors with verified emails
 curl -G /api/v1/users \
@@ -266,6 +291,7 @@ curl -G /api/v1/users \
 ```
 
 ### Export Data
+
 ```bash
 # Export active users as CSV
 curl -G /api/v1/users/export \
@@ -276,6 +302,7 @@ curl -G /api/v1/users/export \
 ```
 
 ### Generate Reports
+
 ```bash
 # Generate monthly audit report
 curl -G /api/v1/users/audit-report \
@@ -296,6 +323,7 @@ curl -G /api/v1/users/audit-report \
 ## Error Handling
 
 All endpoints return consistent error responses:
+
 ```json
 {
   "success": false,
@@ -306,6 +334,7 @@ All endpoints return consistent error responses:
 ```
 
 Common error codes:
+
 - `VALIDATION_ERROR`: Invalid input data
 - `UNAUTHORIZED`: Missing or invalid token
 - `FORBIDDEN`: Insufficient permissions

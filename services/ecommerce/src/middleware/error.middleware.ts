@@ -1,4 +1,7 @@
-import { PrismaClientKnownRequestError, PrismaClientValidationError } from '@prisma/client/runtime/library';
+import {
+  PrismaClientKnownRequestError,
+  PrismaClientValidationError,
+} from '@prisma/client/runtime/library';
 import { NextFunction, Request, Response } from 'express';
 import { ZodError } from 'zod';
 import { AppError, ErrorType } from '../types/errors';
@@ -30,7 +33,7 @@ interface LogContext {
 class ErrorLogger {
   private static instance: ErrorLogger;
 
-  private constructor() { }
+  private constructor() {}
 
   public static getInstance(): ErrorLogger {
     if (!ErrorLogger.instance) {
@@ -79,9 +82,14 @@ class ErrorLogger {
   }
 }
 
-export function correlationIdMiddleware(req: Request, res: Response, next: NextFunction): void {
-  const correlationId = req.headers['x-correlation-id'] as string ||
-    req.headers['x-request-id'] as string ||
+export function correlationIdMiddleware(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void {
+  const correlationId =
+    (req.headers['x-correlation-id'] as string) ||
+    (req.headers['x-request-id'] as string) ||
     generateCorrelationId();
 
   req.correlationId = correlationId;
@@ -157,7 +165,9 @@ export function errorHandler(
   } else if (error instanceof PrismaClientKnownRequestError) {
     // Prisma database errors
     errorResponse = handlePrismaError(error, correlationId);
-    res.status(errorResponse.error.code === 'NOT_FOUND' ? 404 : 400).json(errorResponse);
+    res
+      .status(errorResponse.error.code === 'NOT_FOUND' ? 404 : 400)
+      .json(errorResponse);
   } else if (error instanceof PrismaClientValidationError) {
     // Prisma validation errors
     errorResponse = {
@@ -179,9 +189,10 @@ export function errorHandler(
       success: false,
       error: {
         type: ErrorType.INTERNAL_ERROR,
-        message: process.env.NODE_ENV === 'production'
-          ? 'An unexpected error occurred'
-          : error.message,
+        message:
+          process.env.NODE_ENV === 'production'
+            ? 'An unexpected error occurred'
+            : error.message,
         code: 'INTERNAL_SERVER_ERROR',
         correlationId,
         service: 'ecommerce',
@@ -193,7 +204,10 @@ export function errorHandler(
   }
 }
 
-function handlePrismaError(error: PrismaClientKnownRequestError, correlationId?: string): ErrorResponse {
+function handlePrismaError(
+  error: PrismaClientKnownRequestError,
+  correlationId?: string
+): ErrorResponse {
   switch (error.code) {
     case 'P2002':
       // Unique constraint violation
@@ -260,7 +274,10 @@ function handlePrismaError(error: PrismaClientKnownRequestError, correlationId?:
         error: {
           type: ErrorType.INTERNAL_ERROR,
           message: 'Database operation failed',
-          details: process.env.NODE_ENV !== 'production' ? { code: error.code, meta: error.meta } : undefined,
+          details:
+            process.env.NODE_ENV !== 'production'
+              ? { code: error.code, meta: error.meta }
+              : undefined,
           code: 'DATABASE_ERROR',
           correlationId,
           service: 'ecommerce',
@@ -300,7 +317,10 @@ export function asyncHandler(fn: Function) {
 }
 
 // Health check error handler
-export function healthCheckErrorHandler(error: Error): { status: string; error: string } {
+export function healthCheckErrorHandler(error: Error): {
+  status: string;
+  error: string;
+} {
   const logger = ErrorLogger.getInstance();
 
   logger.logError(error, {
@@ -312,9 +332,10 @@ export function healthCheckErrorHandler(error: Error): { status: string; error: 
 
   return {
     status: 'unhealthy',
-    error: process.env.NODE_ENV === 'production'
-      ? 'Service unavailable'
-      : error.message,
+    error:
+      process.env.NODE_ENV === 'production'
+        ? 'Service unavailable'
+        : error.message,
   };
 }
 

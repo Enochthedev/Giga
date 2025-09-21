@@ -43,7 +43,7 @@ export interface ProductSummary {
 }
 
 export class CartService {
-  constructor(private prisma: PrismaClient) { }
+  constructor(private prisma: PrismaClient) {}
 
   /**
    * Get cart for a customer from Redis

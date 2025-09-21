@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { InputSanitizer, JWTSecurity, PasswordValidator, RequestValidator } from '../utils/security.utils';
+import {
+  InputSanitizer,
+  JWTSecurity,
+  PasswordValidator,
+  RequestValidator,
+} from '../utils/security.utils';
 
 describe('Enhanced Security Integration Tests', () => {
   describe('Comprehensive Password Validation', () => {
@@ -8,7 +13,9 @@ describe('Enhanced Security Integration Tests', () => {
       const result = PasswordValidator.validate(keyboardPassword);
 
       expect(result.isValid).toBe(false);
-      expect(result.errors.some(error => error.includes('keyboard'))).toBe(true);
+      expect(result.errors.some(error => error.includes('keyboard'))).toBe(
+        true
+      );
     });
 
     it('should reject passwords with personal information patterns', () => {
@@ -16,7 +23,9 @@ describe('Enhanced Security Integration Tests', () => {
       const result = PasswordValidator.validate(personalPassword);
 
       expect(result.isValid).toBe(false);
-      expect(result.errors.some(error => error.includes('personal'))).toBe(true);
+      expect(result.errors.some(error => error.includes('personal'))).toBe(
+        true
+      );
     });
 
     it('should reject passwords with control characters', () => {
@@ -53,7 +62,8 @@ describe('Enhanced Security Integration Tests', () => {
 
   describe('Enhanced Input Sanitization', () => {
     it('should sanitize complex XSS attempts', () => {
-      const maliciousInput = '<script>alert("xss")</script><iframe src="javascript:alert(1)"></iframe>Hello';
+      const maliciousInput =
+        '<script>alert("xss")</script><iframe src="javascript:alert(1)"></iframe>Hello';
       const sanitized = InputSanitizer.sanitizeString(maliciousInput);
 
       expect(sanitized).not.toContain('<script>');
@@ -63,7 +73,8 @@ describe('Enhanced Security Integration Tests', () => {
     });
 
     it('should handle nested malicious content', () => {
-      const nestedMalicious = 'Hello<script>document.write("<script>alert(1)</script>")</script>World';
+      const nestedMalicious =
+        'Hello<script>document.write("<script>alert(1)</script>")</script>World';
       const sanitized = InputSanitizer.sanitizeString(nestedMalicious);
 
       expect(sanitized).not.toContain('<script>');
@@ -73,11 +84,12 @@ describe('Enhanced Security Integration Tests', () => {
     });
 
     it('should preserve legitimate content while sanitizing', () => {
-      const legitimateContent = 'John O\'Connor - Senior Developer @ Company Inc.';
+      const legitimateContent =
+        "John O'Connor - Senior Developer @ Company Inc.";
       const sanitized = InputSanitizer.sanitizeName(legitimateContent);
 
       expect(sanitized).toContain('John');
-      expect(sanitized).toContain('O\'Connor');
+      expect(sanitized).toContain("O'Connor");
       expect(sanitized).toContain('Senior Developer');
     });
   });
@@ -97,7 +109,7 @@ describe('Enhanced Security Integration Tests', () => {
         id: 'user123',
         email: 'test@example.com',
         roles: [{ role: { name: 'CUSTOMER' } }],
-        activeRole: 'CUSTOMER'
+        activeRole: 'CUSTOMER',
       };
 
       const payload = JWTSecurity.createSecurePayload(user);
@@ -116,14 +128,14 @@ describe('Enhanced Security Integration Tests', () => {
         sub: 'user123',
         email: 'test@example.com',
         iat: Math.floor(Date.now() / 1000),
-        jti: 'jwt-id-123'
+        jti: 'jwt-id-123',
       };
 
       const oldPayload = {
         sub: 'user123',
         email: 'test@example.com',
-        iat: Math.floor(Date.now() / 1000) - (25 * 60 * 60), // 25 hours old
-        jti: 'jwt-id-123'
+        iat: Math.floor(Date.now() / 1000) - 25 * 60 * 60, // 25 hours old
+        jti: 'jwt-id-123',
       };
 
       const validValidation = JWTSecurity.validateTokenClaims(validPayload);
@@ -131,7 +143,9 @@ describe('Enhanced Security Integration Tests', () => {
 
       expect(validValidation.isValid).toBe(true);
       expect(oldValidation.isValid).toBe(false);
-      expect(oldValidation.errors.some(error => error.includes('too old'))).toBe(true);
+      expect(
+        oldValidation.errors.some(error => error.includes('too old'))
+      ).toBe(true);
     });
   });
 
@@ -139,8 +153,8 @@ describe('Enhanced Security Integration Tests', () => {
     it('should validate request size limits', () => {
       const mockReq = {
         headers: {
-          'content-length': '2097152' // 2MB
-        }
+          'content-length': '2097152', // 2MB
+        },
       };
 
       const validation = RequestValidator.validateRequestSize(mockReq);
@@ -151,8 +165,8 @@ describe('Enhanced Security Integration Tests', () => {
     it('should validate content types', () => {
       const mockReq = {
         headers: {
-          'content-type': 'text/plain'
-        }
+          'content-type': 'text/plain',
+        },
       };
 
       const validation = RequestValidator.validateContentType(mockReq);
@@ -164,10 +178,10 @@ describe('Enhanced Security Integration Tests', () => {
       const mockReq = {
         headers: {
           'user-agent': 'curl/7.68.0',
-          'content-type': 'application/json'
+          'content-type': 'application/json',
         },
         method: 'POST',
-        clientIp: '192.168.1.1'
+        clientIp: '192.168.1.1',
       };
 
       const validation = RequestValidator.validateRequestSecurity(mockReq);
@@ -177,9 +191,9 @@ describe('Enhanced Security Integration Tests', () => {
     it('should reject requests with missing required headers', () => {
       const mockReq = {
         headers: {
-          'content-type': 'application/json'
+          'content-type': 'application/json',
         },
-        method: 'POST'
+        method: 'POST',
       };
 
       const validation = RequestValidator.validateRequestSecurity(mockReq);
@@ -195,13 +209,15 @@ describe('Enhanced Security Integration Tests', () => {
         email: '  TEST@EXAMPLE.COM<script>alert("xss")</script>  ',
         password: 'Zx9#mK8$pL2@vN5!', // Strong password
         firstName: 'John<script>alert("xss")</script>',
-        lastName: 'Doe\'s',
-        phone: '+1-234-567-8900<script>'
+        lastName: "Doe's",
+        phone: '+1-234-567-8900<script>',
       };
 
       // Apply security validations and sanitization
       const sanitizedEmail = InputSanitizer.sanitizeEmail(userInput.email);
-      const sanitizedFirstName = InputSanitizer.sanitizeName(userInput.firstName);
+      const sanitizedFirstName = InputSanitizer.sanitizeName(
+        userInput.firstName
+      );
       const sanitizedLastName = InputSanitizer.sanitizeName(userInput.lastName);
       const sanitizedPhone = InputSanitizer.sanitizePhone(userInput.phone);
 
@@ -213,14 +229,14 @@ describe('Enhanced Security Integration Tests', () => {
         id: 'user123',
         email: sanitizedEmail,
         roles: [{ role: { name: 'CUSTOMER' } }],
-        activeRole: 'CUSTOMER'
+        activeRole: 'CUSTOMER',
       };
       const jwtPayload = JWTSecurity.createSecurePayload(mockUser);
 
       // Assertions
       expect(sanitizedEmail).toBe('test@example.com');
       expect(sanitizedFirstName).toBe('John');
-      expect(sanitizedLastName).toBe('Doe\'s');
+      expect(sanitizedLastName).toBe("Doe's");
       expect(sanitizedPhone).toBe('+1-234-567-8900');
       expect(passwordValidation.isValid).toBe(true);
       expect(jwtPayload.sub).toBe('user123');
@@ -234,14 +250,20 @@ describe('Enhanced Security Integration Tests', () => {
         password: 'password123', // Weak password
         firstName: '<script>document.location="http://evil.com"</script>',
         lastName: 'DROP TABLE users;--',
-        phone: 'javascript:alert(1)'
+        phone: 'javascript:alert(1)',
       };
 
       // Apply security validations
-      const sanitizedFirstName = InputSanitizer.sanitizeName(maliciousInput.firstName);
-      const sanitizedLastName = InputSanitizer.sanitizeName(maliciousInput.lastName);
+      const sanitizedFirstName = InputSanitizer.sanitizeName(
+        maliciousInput.firstName
+      );
+      const sanitizedLastName = InputSanitizer.sanitizeName(
+        maliciousInput.lastName
+      );
       const sanitizedPhone = InputSanitizer.sanitizePhone(maliciousInput.phone);
-      const passwordValidation = PasswordValidator.validate(maliciousInput.password);
+      const passwordValidation = PasswordValidator.validate(
+        maliciousInput.password
+      );
 
       // Assertions - malicious content should be removed/rejected
       expect(sanitizedFirstName).not.toContain('<script>');
@@ -250,7 +272,9 @@ describe('Enhanced Security Integration Tests', () => {
       expect(sanitizedLastName).not.toContain('--');
       expect(sanitizedPhone).not.toContain('javascript:');
       expect(passwordValidation.isValid).toBe(false);
-      expect(passwordValidation.errors.some(error => error.includes('common'))).toBe(true);
+      expect(
+        passwordValidation.errors.some(error => error.includes('common'))
+      ).toBe(true);
     });
   });
 });

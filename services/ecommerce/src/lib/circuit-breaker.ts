@@ -55,7 +55,11 @@ export class CircuitBreaker {
   async execute<T>(operation: () => Promise<T>): Promise<T> {
     if (this.state === CircuitBreakerState.OPEN) {
       if (Date.now() < this.nextAttempt) {
-        throw new CircuitBreakerError(this.serviceName, this.state, this.getMetrics());
+        throw new CircuitBreakerError(
+          this.serviceName,
+          this.state,
+          this.getMetrics()
+        );
       }
       // Transition to half-open
       this.state = CircuitBreakerState.HALF_OPEN;
@@ -81,15 +85,17 @@ export class CircuitBreaker {
 
     return new Promise<T>((resolve, reject) => {
       const timeoutId = setTimeout(() => {
-        reject(new Error(`Operation timed out after ${this.options.timeout}ms`));
+        reject(
+          new Error(`Operation timed out after ${this.options.timeout}ms`)
+        );
       }, this.options.timeout);
 
       operation()
-        .then((result) => {
+        .then(result => {
           clearTimeout(timeoutId);
           resolve(result);
         })
-        .catch((error) => {
+        .catch(error => {
           clearTimeout(timeoutId);
           reject(error);
         });
@@ -173,7 +179,7 @@ export class CircuitBreakerRegistry {
   private static instance: CircuitBreakerRegistry;
   private circuitBreakers: Map<string, CircuitBreaker> = new Map();
 
-  private constructor() { }
+  private constructor() {}
 
   public static getInstance(): CircuitBreakerRegistry {
     if (!CircuitBreakerRegistry.instance) {

@@ -19,21 +19,21 @@ const fastify = Fastify({
     transport:
       process.env.NODE_ENV !== 'production'
         ? {
-          target: 'pino-pretty',
-          options: {
-            colorize: true,
-            translateTime: 'HH:MM:ss Z',
-            ignore: 'pid,hostname',
-          },
-        }
+            target: 'pino-pretty',
+            options: {
+              colorize: true,
+              translateTime: 'HH:MM:ss Z',
+              ignore: 'pid,hostname',
+            },
+          }
         : undefined,
   },
   ajv: {
     customOptions: {
       strict: false,
-      keywords: ['example']
-    }
-  }
+      keywords: ['example'],
+    },
+  },
 });
 
 async function buildApp() {

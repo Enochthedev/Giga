@@ -6,7 +6,11 @@ import {
   handleSession,
 } from '../middleware/session.middleware';
 import { cartRateLimit, validate } from '../middleware/validation.middleware';
-import { CartItemParamsSchema, SanitizedAddToCartSchema, UpdateCartItemSchema } from '../schemas/validation.schemas';
+import {
+  CartItemParamsSchema,
+  SanitizedAddToCartSchema,
+  UpdateCartItemSchema,
+} from '../schemas/validation.schemas';
 import { CartService } from '../services/cart.service';
 
 const router = Router();
@@ -84,7 +88,9 @@ router.get('/', (req, res) => cartController.getCart(req, res));
  *       404:
  *         description: Product not found
  */
-router.post('/add', validate({ body: SanitizedAddToCartSchema }), (req, res) => cartController.addItem(req, res));
+router.post('/add', validate({ body: SanitizedAddToCartSchema }), (req, res) =>
+  cartController.addItem(req, res)
+);
 
 /**
  * @swagger
@@ -122,10 +128,11 @@ router.post('/add', validate({ body: SanitizedAddToCartSchema }), (req, res) => 
  *       404:
  *         description: Cart or item not found
  */
-router.put('/items/:itemId',
+router.put(
+  '/items/:itemId',
   validate({
     params: CartItemParamsSchema,
-    body: UpdateCartItemSchema
+    body: UpdateCartItemSchema,
   }),
   (req, res) => cartController.updateItemQuantity(req, res)
 );
@@ -151,7 +158,8 @@ router.put('/items/:itemId',
  *       404:
  *         description: Cart or item not found
  */
-router.delete('/items/:itemId',
+router.delete(
+  '/items/:itemId',
   validate({ params: CartItemParamsSchema }),
   (req, res) => cartController.removeItem(req, res)
 );

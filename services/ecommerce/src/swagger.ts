@@ -6,7 +6,8 @@ const options = {
     info: {
       title: 'Multi-Sided Platform - Ecommerce Service',
       version: '1.0.0',
-      description: 'Multi-vendor marketplace with products, orders, and vendor management',
+      description:
+        'Multi-vendor marketplace with products, orders, and vendor management',
     },
     servers: [
       {
@@ -28,7 +29,10 @@ const options = {
           properties: {
             id: { type: 'string', example: 'clr123product1' },
             name: { type: 'string', example: 'iPhone 15 Pro' },
-            description: { type: 'string', example: 'Latest iPhone with advanced features' },
+            description: {
+              type: 'string',
+              example: 'Latest iPhone with advanced features',
+            },
             price: { type: 'number', example: 999.99 },
             comparePrice: { type: 'number', example: 1099.99 },
             sku: { type: 'string', example: 'IPH15PRO-128-BLU' },
@@ -84,7 +88,14 @@ const options = {
             userId: { type: 'string', example: 'clr123user' },
             status: {
               type: 'string',
-              enum: ['PENDING', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED'],
+              enum: [
+                'PENDING',
+                'CONFIRMED',
+                'PROCESSING',
+                'SHIPPED',
+                'DELIVERED',
+                'CANCELLED',
+              ],
               example: 'PENDING',
             },
             items: {

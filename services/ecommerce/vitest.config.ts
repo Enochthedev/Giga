@@ -16,16 +16,16 @@ export default defineConfig({
         '**/*.d.ts',
         'src/seed.ts',
         'src/server.ts',
-        'src/index.ts'
-      ]
+        'src/index.ts',
+      ],
     },
     testTimeout: 10000,
-    hookTimeout: 10000
+    hookTimeout: 10000,
   },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
-      '@tests': path.resolve(__dirname, './src/__tests__')
-    }
-  }
+      '@tests': path.resolve(__dirname, './src/__tests__'),
+    },
+  },
 });

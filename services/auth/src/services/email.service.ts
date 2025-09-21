@@ -145,7 +145,7 @@ This is an automated message. Please do not reply to this email.
         to: data.email,
         subject: template.subject,
         verificationUrl: data.verificationUrl,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
 
       // Simulate email service delay
@@ -158,7 +158,6 @@ This is an automated message. Please do not reply to this email.
       //   html: template.html,
       //   text: template.text
       // });
-
     } catch (error) {
       console.error('Failed to send verification email:', error);
       throw new Error('Failed to send verification email');
@@ -183,12 +182,11 @@ This is an automated message. Please do not reply to this email.
         to: email,
         subject,
         firstName,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
 
       // Simulate async operation
       await new Promise(resolve => setTimeout(resolve, 50));
-
     } catch (error) {
       console.error('Failed to send welcome email:', error);
       // Don't throw error for welcome email failure

@@ -20,19 +20,26 @@ export class UserController {
           targetUserId,
           details,
           ipAddress,
-          userAgent
-        }
+          userAgent,
+        },
       });
 
       // Also log to console for immediate visibility
-      console.log('AUDIT LOG:', JSON.stringify({
-        action,
-        adminUserId,
-        targetUserId,
-        details,
-        ipAddress,
-        timestamp: new Date().toISOString()
-      }, null, 2));
+      console.log(
+        'AUDIT LOG:',
+        JSON.stringify(
+          {
+            action,
+            adminUserId,
+            targetUserId,
+            details,
+            ipAddress,
+            timestamp: new Date().toISOString(),
+          },
+          null,
+          2
+        )
+      );
     } catch (error) {
       console.error('Failed to log admin action:', error);
       // Don't throw error to avoid breaking the main operation
@@ -132,7 +139,7 @@ export class UserController {
         createdAfter,
         createdBefore,
         lastLoginAfter,
-        lastLoginBefore
+        lastLoginBefore,
       } = req.query;
 
       const skip = (Number(page) - 1) * Number(limit);
@@ -199,8 +206,17 @@ export class UserController {
 
       // Sorting
       const orderBy: any = {};
-      const validSortFields = ['createdAt', 'updatedAt', 'lastLoginAt', 'email', 'firstName', 'lastName'];
-      const sortField = validSortFields.includes(sortBy as string) ? sortBy as string : 'createdAt';
+      const validSortFields = [
+        'createdAt',
+        'updatedAt',
+        'lastLoginAt',
+        'email',
+        'firstName',
+        'lastName',
+      ];
+      const sortField = validSortFields.includes(sortBy as string)
+        ? (sortBy as string)
+        : 'createdAt';
       const order = sortOrder === 'asc' ? 'asc' : 'desc';
       orderBy[sortField] = order;
 
@@ -231,7 +247,7 @@ export class UserController {
           filters: { role, status, search, emailVerified, phoneVerified },
           pagination: { page, limit: take },
           resultCount: users.length,
-          totalCount: total
+          totalCount: total,
         },
         req.ip,
         req.headers['user-agent']
@@ -299,7 +315,7 @@ export class UserController {
       // Get current user state for audit log
       const currentUser = await req.prisma.user.findUnique({
         where: { id },
-        select: { isActive: true, email: true }
+        select: { isActive: true, email: true },
       });
 
       if (!currentUser) {
@@ -331,7 +347,7 @@ export class UserController {
         {
           previousStatus: currentUser.isActive,
           newStatus: isActive,
-          userEmail: currentUser.email
+          userEmail: currentUser.email,
         },
         req.ip,
         req.headers['user-agent']
@@ -411,7 +427,11 @@ export class UserController {
             });
           }
           // Only allow safe fields to be bulk updated
-          const allowedFields = ['isActive', 'isEmailVerified', 'isPhoneVerified'];
+          const allowedFields = [
+            'isActive',
+            'isEmailVerified',
+            'isPhoneVerified',
+          ];
           updateData = {};
           for (const [key, value] of Object.entries(data)) {
             if (allowedFields.includes(key)) {
@@ -424,7 +444,8 @@ export class UserController {
         default:
           return res.status(400).json({
             success: false,
-            error: 'Invalid action. Supported actions: activate, deactivate, verify_email, verify_phone, update_fields',
+            error:
+              'Invalid action. Supported actions: activate, deactivate, verify_email, verify_phone, update_fields',
             timestamp: new Date().toISOString(),
           });
       }
@@ -433,10 +454,10 @@ export class UserController {
       const result = await req.prisma.user.updateMany({
         where: {
           id: {
-            in: userIds
-          }
+            in: userIds,
+          },
         },
-        data: updateData
+        data: updateData,
       });
 
       // Log admin action
@@ -449,7 +470,7 @@ export class UserController {
           action,
           userIds,
           updateData,
-          affectedCount: result.count
+          affectedCount: result.count,
         },
         req.ip,
         req.headers['user-agent']
@@ -493,10 +514,10 @@ export class UserController {
         include: {
           roles: {
             include: {
-              role: true
-            }
-          }
-        }
+              role: true,
+            },
+          },
+        },
       });
 
       if (!user) {
@@ -519,7 +540,7 @@ export class UserController {
 
       // Get the role record
       const roleRecord = await req.prisma.role.findUnique({
-        where: { name: role }
+        where: { name: role },
       });
 
       if (!roleRecord) {
@@ -534,8 +555,8 @@ export class UserController {
       await req.prisma.userRole.create({
         data: {
           userId: id,
-          roleId: roleRecord.id
-        }
+          roleId: roleRecord.id,
+        },
       });
 
       // Create appropriate profile if needed
@@ -549,7 +570,7 @@ export class UserController {
         id,
         {
           assignedRole: role,
-          userEmail: user.email
+          userEmail: user.email,
         },
         req.ip,
         req.headers['user-agent']
@@ -598,10 +619,10 @@ export class UserController {
         include: {
           roles: {
             include: {
-              role: true
-            }
-          }
-        }
+              role: true,
+            },
+          },
+        },
       });
 
       if (!user) {
@@ -624,15 +645,15 @@ export class UserController {
       // Remove role from user
       await req.prisma.userRole.delete({
         where: {
-          id: userRole.id
-        }
+          id: userRole.id,
+        },
       });
 
       // If this was the active role, switch to CUSTOMER
       if (user.activeRole === role) {
         await req.prisma.user.update({
           where: { id },
-          data: { activeRole: 'CUSTOMER' }
+          data: { activeRole: 'CUSTOMER' },
         });
       }
 
@@ -645,7 +666,7 @@ export class UserController {
         {
           removedRole: role,
           userEmail: user.email,
-          wasActiveRole: user.activeRole === role
+          wasActiveRole: user.activeRole === role,
         },
         req.ip,
         req.headers['user-agent']
@@ -680,7 +701,8 @@ export class UserController {
 
       // Build where clause from filters
       const where: any = {};
-      const parsedFilters = typeof filters === 'string' ? JSON.parse(filters) : filters;
+      const parsedFilters =
+        typeof filters === 'string' ? JSON.parse(filters) : filters;
 
       if (parsedFilters.role) {
         where.roles = {
@@ -745,7 +767,7 @@ export class UserController {
         {
           format,
           filters: parsedFilters,
-          exportedCount: exportData.length
+          exportedCount: exportData.length,
         },
         req.ip,
         req.headers['user-agent']
@@ -757,19 +779,27 @@ export class UserController {
         const csvContent = [
           headers.join(','),
           ...exportData.map(row =>
-            headers.map(header => {
-              const value = row[header as keyof typeof row];
-              // Escape commas and quotes in CSV
-              if (typeof value === 'string' && (value.includes(',') || value.includes('"'))) {
-                return `"${value.replace(/"/g, '""')}"`;
-              }
-              return value;
-            }).join(',')
-          )
+            headers
+              .map(header => {
+                const value = row[header as keyof typeof row];
+                // Escape commas and quotes in CSV
+                if (
+                  typeof value === 'string' &&
+                  (value.includes(',') || value.includes('"'))
+                ) {
+                  return `"${value.replace(/"/g, '""')}"`;
+                }
+                return value;
+              })
+              .join(',')
+          ),
         ].join('\n');
 
         res.setHeader('Content-Type', 'text/csv');
-        res.setHeader('Content-Disposition', `attachment; filename="users-export-${new Date().toISOString().split('T')[0]}.csv"`);
+        res.setHeader(
+          'Content-Disposition',
+          `attachment; filename="users-export-${new Date().toISOString().split('T')[0]}.csv"`
+        );
         res.send(csvContent);
       } else {
         res.json({
@@ -807,7 +837,7 @@ export class UserController {
       // Check if user exists
       const user = await req.prisma.user.findUnique({
         where: { id },
-        select: { email: true, firstName: true, lastName: true }
+        select: { email: true, firstName: true, lastName: true },
       });
 
       if (!user) {
@@ -820,7 +850,7 @@ export class UserController {
 
       // Build where clause for audit logs
       const where: any = {
-        targetUserId: id
+        targetUserId: id,
       };
 
       if (action) {
@@ -839,13 +869,13 @@ export class UserController {
                 id: true,
                 email: true,
                 firstName: true,
-                lastName: true
-              }
-            }
+                lastName: true,
+              },
+            },
           },
-          orderBy: { createdAt: 'desc' }
+          orderBy: { createdAt: 'desc' },
         }),
-        req.prisma.auditLog.count({ where })
+        req.prisma.auditLog.count({ where }),
       ]);
 
       // Get user details and recent tokens
@@ -854,14 +884,14 @@ export class UserController {
         include: {
           roles: {
             include: {
-              role: true
-            }
+              role: true,
+            },
           },
           refreshTokens: {
             orderBy: { createdAt: 'desc' },
-            take: 10
-          }
-        }
+            take: 10,
+          },
+        },
       });
 
       // Log admin action
@@ -873,7 +903,7 @@ export class UserController {
         {
           userEmail: user.email,
           activityFilter: action,
-          resultCount: auditLogs.length
+          resultCount: auditLogs.length,
         },
         req.ip,
         req.headers['user-agent']
@@ -899,22 +929,23 @@ export class UserController {
               performedBy: {
                 id: log.adminUser.id,
                 email: log.adminUser.email,
-                name: `${log.adminUser.firstName} ${log.adminUser.lastName}`
+                name: `${log.adminUser.firstName} ${log.adminUser.lastName}`,
               },
               ipAddress: log.ipAddress,
-              createdAt: log.createdAt
+              createdAt: log.createdAt,
             })),
-            recentTokens: userDetails?.refreshTokens.map(token => ({
-              createdAt: token.createdAt,
-              expiresAt: token.expiresAt,
-            })) || [],
+            recentTokens:
+              userDetails?.refreshTokens.map(token => ({
+                createdAt: token.createdAt,
+                expiresAt: token.expiresAt,
+              })) || [],
           },
           pagination: {
             page: Number(page),
             limit: take,
             total: totalAuditLogs,
             pages: Math.ceil(totalAuditLogs / take),
-          }
+          },
         },
         timestamp: new Date().toISOString(),
       });
@@ -938,7 +969,7 @@ export class UserController {
         targetUserId,
         startDate,
         endDate,
-        ipAddress
+        ipAddress,
       } = req.query;
 
       const skip = (Number(page) - 1) * Number(limit);
@@ -984,21 +1015,21 @@ export class UserController {
                 id: true,
                 email: true,
                 firstName: true,
-                lastName: true
-              }
+                lastName: true,
+              },
             },
             targetUser: {
               select: {
                 id: true,
                 email: true,
                 firstName: true,
-                lastName: true
-              }
-            }
+                lastName: true,
+              },
+            },
           },
-          orderBy: { createdAt: 'desc' }
+          orderBy: { createdAt: 'desc' },
         }),
-        req.prisma.auditLog.count({ where })
+        req.prisma.auditLog.count({ where }),
       ]);
 
       // Log admin action
@@ -1008,9 +1039,16 @@ export class UserController {
         req.user!.sub,
         undefined,
         {
-          filters: { action, adminUserId, targetUserId, startDate, endDate, ipAddress },
+          filters: {
+            action,
+            adminUserId,
+            targetUserId,
+            startDate,
+            endDate,
+            ipAddress,
+          },
           resultCount: auditLogs.length,
-          totalCount: total
+          totalCount: total,
         },
         req.ip,
         req.headers['user-agent']
@@ -1023,19 +1061,23 @@ export class UserController {
             id: log.id,
             action: log.action,
             details: log.details,
-            adminUser: log.adminUser ? {
-              id: log.adminUser.id,
-              email: log.adminUser.email,
-              name: `${log.adminUser.firstName} ${log.adminUser.lastName}`
-            } : null,
-            targetUser: log.targetUser ? {
-              id: log.targetUser.id,
-              email: log.targetUser.email,
-              name: `${log.targetUser.firstName} ${log.targetUser.lastName}`
-            } : null,
+            adminUser: log.adminUser
+              ? {
+                  id: log.adminUser.id,
+                  email: log.adminUser.email,
+                  name: `${log.adminUser.firstName} ${log.adminUser.lastName}`,
+                }
+              : null,
+            targetUser: log.targetUser
+              ? {
+                  id: log.targetUser.id,
+                  email: log.targetUser.email,
+                  name: `${log.targetUser.firstName} ${log.targetUser.lastName}`,
+                }
+              : null,
             ipAddress: log.ipAddress,
             userAgent: log.userAgent,
-            createdAt: log.createdAt
+            createdAt: log.createdAt,
           })),
           pagination: {
             page: Number(page),
@@ -1049,8 +1091,8 @@ export class UserController {
             targetUserId,
             startDate,
             endDate,
-            ipAddress
-          }
+            ipAddress,
+          },
         },
         timestamp: new Date().toISOString(),
       });
@@ -1070,7 +1112,7 @@ export class UserController {
         startDate,
         endDate,
 
-        format = 'json'
+        format = 'json',
       } = req.query;
 
       if (!startDate || !endDate) {
@@ -1084,45 +1126,41 @@ export class UserController {
       const where = {
         createdAt: {
           gte: new Date(startDate as string),
-          lte: new Date(endDate as string)
-        }
+          lte: new Date(endDate as string),
+        },
       };
 
       // Get audit log statistics
-      const [
-        totalLogs,
-        actionStats,
-        adminStats,
-        dailyStats
-      ] = await Promise.all([
-        req.prisma.auditLog.count({ where }),
-        req.prisma.auditLog.groupBy({
-          by: ['action'],
-          where,
-          _count: { action: true },
-          orderBy: { _count: { action: 'desc' } }
-        }),
-        req.prisma.auditLog.groupBy({
-          by: ['adminUserId'],
-          where,
-          _count: { adminUserId: true },
-          orderBy: { _count: { adminUserId: 'desc' } }
-        }),
-        req.prisma.$queryRaw`
+      const [totalLogs, actionStats, adminStats, dailyStats] =
+        await Promise.all([
+          req.prisma.auditLog.count({ where }),
+          req.prisma.auditLog.groupBy({
+            by: ['action'],
+            where,
+            _count: { action: true },
+            orderBy: { _count: { action: 'desc' } },
+          }),
+          req.prisma.auditLog.groupBy({
+            by: ['adminUserId'],
+            where,
+            _count: { adminUserId: true },
+            orderBy: { _count: { adminUserId: 'desc' } },
+          }),
+          req.prisma.$queryRaw`
           SELECT DATE(created_at) as date, COUNT(*) as count
           FROM audit_logs
           WHERE created_at >= ${new Date(startDate as string)}
             AND created_at <= ${new Date(endDate as string)}
           GROUP BY DATE(created_at)
           ORDER BY date DESC
-        `
-      ]);
+        `,
+        ]);
 
       // Get admin user details for stats
       const adminUserIds = adminStats.map((stat: any) => stat.adminUserId);
       const adminUsers = await req.prisma.user.findMany({
         where: { id: { in: adminUserIds } },
-        select: { id: true, email: true, firstName: true, lastName: true }
+        select: { id: true, email: true, firstName: true, lastName: true },
       });
 
       const adminStatsWithDetails = adminStats.map((stat: any) => {
@@ -1131,7 +1169,7 @@ export class UserController {
           adminId: stat.adminUserId,
           adminEmail: admin?.email || 'Unknown',
           adminName: admin ? `${admin.firstName} ${admin.lastName}` : 'Unknown',
-          actionCount: stat._count.adminUserId
+          actionCount: stat._count.adminUserId,
         };
       });
 
@@ -1140,16 +1178,16 @@ export class UserController {
           totalLogs,
           dateRange: { startDate, endDate },
           generatedAt: new Date().toISOString(),
-          generatedBy: req.user!.sub
+          generatedBy: req.user!.sub,
         },
         statistics: {
           actionBreakdown: actionStats.map((stat: any) => ({
             action: stat.action,
-            count: stat._count.action
+            count: stat._count.action,
           })),
           adminActivity: adminStatsWithDetails,
-          dailyActivity: dailyStats
-        }
+          dailyActivity: dailyStats,
+        },
       };
 
       // Log admin action
@@ -1161,7 +1199,7 @@ export class UserController {
         {
           dateRange: { startDate, endDate },
           format,
-          totalLogs
+          totalLogs,
         },
         req.ip,
         req.headers['user-agent']
@@ -1171,25 +1209,34 @@ export class UserController {
         // Generate CSV report
         const csvLines = [
           'Date,Action,Admin Email,Target User,IP Address,Details',
-          ...(await req.prisma.auditLog.findMany({
-            where,
-            include: {
-              adminUser: { select: { email: true } },
-              targetUser: { select: { email: true } }
-            },
-            orderBy: { createdAt: 'desc' }
-          })).map((log: any) => [
-            log.createdAt.toISOString(),
-            log.action,
-            log.adminUser?.email || '',
-            log.targetUser?.email || '',
-            log.ipAddress || '',
-            JSON.stringify(log.details).replace(/"/g, '""')
-          ].map(field => `"${field}"`).join(','))
+          ...(
+            await req.prisma.auditLog.findMany({
+              where,
+              include: {
+                adminUser: { select: { email: true } },
+                targetUser: { select: { email: true } },
+              },
+              orderBy: { createdAt: 'desc' },
+            })
+          ).map((log: any) =>
+            [
+              log.createdAt.toISOString(),
+              log.action,
+              log.adminUser?.email || '',
+              log.targetUser?.email || '',
+              log.ipAddress || '',
+              JSON.stringify(log.details).replace(/"/g, '""'),
+            ]
+              .map(field => `"${field}"`)
+              .join(',')
+          ),
         ];
 
         res.setHeader('Content-Type', 'text/csv');
-        res.setHeader('Content-Disposition', `attachment; filename="audit-report-${startDate}-${endDate}.csv"`);
+        res.setHeader(
+          'Content-Disposition',
+          `attachment; filename="audit-report-${startDate}-${endDate}.csv"`
+        );
         res.send(csvLines.join('\n'));
       } else {
         res.json({
@@ -1210,11 +1257,7 @@ export class UserController {
 
   async getUserStats(req: Request, res: Response) {
     try {
-      const {
-        startDate,
-        endDate,
-
-      } = req.query;
+      const { startDate, endDate } = req.query;
 
       const where: any = {};
 
@@ -1235,7 +1278,7 @@ export class UserController {
         verifiedEmailUsers,
         verifiedPhoneUsers,
         roleStats,
-        recentRegistrations
+        recentRegistrations,
       ] = await Promise.all([
         req.prisma.user.count({ where }),
         req.prisma.user.count({ where: { ...where, isActive: true } }),
@@ -1243,18 +1286,18 @@ export class UserController {
         req.prisma.user.count({ where: { ...where, isPhoneVerified: true } }),
         req.prisma.userRole.groupBy({
           by: ['roleId'],
-          _count: { roleId: true }
+          _count: { roleId: true },
         }),
         req.prisma.user.findMany({
           where: {
             createdAt: {
-              gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) // Last 30 days
-            }
+              gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // Last 30 days
+            },
           },
           select: { createdAt: true },
           orderBy: { createdAt: 'desc' },
-          take: 100
-        })
+          take: 100,
+        }),
       ]);
 
       // Get role details
@@ -1263,16 +1306,19 @@ export class UserController {
         const role = roles.find(r => r.id === stat.roleId);
         return {
           role: role?.name || 'Unknown',
-          count: stat._count.roleId
+          count: stat._count.roleId,
         };
       });
 
       // Group recent registrations by day
-      const registrationsByDay = recentRegistrations.reduce((acc: any, user) => {
-        const date = user.createdAt.toISOString().split('T')[0];
-        acc[date] = (acc[date] || 0) + 1;
-        return acc;
-      }, {});
+      const registrationsByDay = recentRegistrations.reduce(
+        (acc: any, user) => {
+          const date = user.createdAt.toISOString().split('T')[0];
+          acc[date] = (acc[date] || 0) + 1;
+          return acc;
+        },
+        {}
+      );
 
       // Log admin action
       await this.logAdminAction(
@@ -1283,7 +1329,7 @@ export class UserController {
         {
           dateRange: { startDate, endDate },
           totalUsers,
-          activeUsers
+          activeUsers,
         },
         req.ip,
         req.headers['user-agent']
@@ -1299,18 +1345,26 @@ export class UserController {
             verifiedEmailUsers,
             verifiedPhoneUsers,
             verificationRates: {
-              email: totalUsers > 0 ? (verifiedEmailUsers / totalUsers * 100).toFixed(2) : 0,
-              phone: totalUsers > 0 ? (verifiedPhoneUsers / totalUsers * 100).toFixed(2) : 0
-            }
+              email:
+                totalUsers > 0
+                  ? ((verifiedEmailUsers / totalUsers) * 100).toFixed(2)
+                  : 0,
+              phone:
+                totalUsers > 0
+                  ? ((verifiedPhoneUsers / totalUsers) * 100).toFixed(2)
+                  : 0,
+            },
           },
           roleDistribution: roleStatsWithNames,
           registrationTrends: {
-            last30Days: Object.entries(registrationsByDay).map(([date, count]) => ({
-              date,
-              registrations: count
-            })).sort((a, b) => a.date.localeCompare(b.date))
+            last30Days: Object.entries(registrationsByDay)
+              .map(([date, count]) => ({
+                date,
+                registrations: count,
+              }))
+              .sort((a, b) => a.date.localeCompare(b.date)),
           },
-          generatedAt: new Date().toISOString()
+          generatedAt: new Date().toISOString(),
         },
         timestamp: new Date().toISOString(),
       });
@@ -1335,7 +1389,7 @@ export class UserController {
               userId,
               businessName: 'New Business',
               businessType: 'General',
-            }
+            },
           });
           break;
         case 'DRIVER':
@@ -1346,7 +1400,7 @@ export class UserController {
               userId,
               licenseNumber: `TEMP-${Date.now()}`,
               vehicleInfo: {},
-            }
+            },
           });
           break;
         case 'HOST':
@@ -1355,7 +1409,7 @@ export class UserController {
             update: {},
             create: {
               userId,
-            }
+            },
           });
           break;
         case 'ADVERTISER':
@@ -1366,7 +1420,7 @@ export class UserController {
               userId,
               companyName: 'New Company',
               industry: 'General',
-            }
+            },
           });
           break;
         case 'CUSTOMER':
@@ -1375,7 +1429,7 @@ export class UserController {
             update: {},
             create: {
               userId,
-            }
+            },
           });
           break;
       }

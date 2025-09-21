@@ -10,7 +10,7 @@ import {
   ipValidation,
   requestSanitization,
   requestTiming,
-  xssProtection
+  xssProtection,
 } from './middleware/security.middleware';
 import { securityValidation } from './middleware/validation.middleware';
 import { authRoutes } from './routes/auth';
@@ -27,27 +27,34 @@ const cleanupService = CleanupService.getInstance();
 cleanupService.startAutomaticCleanup();
 
 // Enhanced security middleware
-app.use(helmet({
-  contentSecurityPolicy: false, // We'll handle this with our custom middleware
-  crossOriginEmbedderPolicy: false
-}));
+app.use(
+  helmet({
+    contentSecurityPolicy: false, // We'll handle this with our custom middleware
+    crossOriginEmbedderPolicy: false,
+  })
+);
 
-app.use(cors({
-  origin: process.env.NODE_ENV === 'production' ?
-    (process.env.CORS_ORIGINS?.split(',') || ['https://yourdomain.com']) :
-    true,
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-  maxAge: 86400 // 24 hours
-}));
+app.use(
+  cors({
+    origin:
+      process.env.NODE_ENV === 'production'
+        ? process.env.CORS_ORIGINS?.split(',') || ['https://yourdomain.com']
+        : true,
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+    maxAge: 86400, // 24 hours
+  })
+);
 
 // Request size limit and JSON parsing
-app.use(express.json({
-  limit: '1mb',
-  strict: true,
-  type: 'application/json'
-}));
+app.use(
+  express.json({
+    limit: '1mb',
+    strict: true,
+    type: 'application/json',
+  })
+);
 
 // Enhanced security middleware stack
 app.use(requestTiming);
@@ -93,14 +100,21 @@ app.use('/api/v1/profiles', profileRoutes);
 app.use('/api/v1/users', userRoutes);
 
 // Global error handler
-app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
-  console.error('Error:', err);
-  res.status(err.statusCode || 500).json({
-    success: false,
-    error: err.message || 'Internal Server Error',
-    timestamp: new Date().toISOString(),
-  });
-});
+app.use(
+  (
+    err: any,
+    _req: express.Request,
+    res: express.Response,
+    _next: express.NextFunction
+  ) => {
+    console.error('Error:', err);
+    res.status(err.statusCode || 500).json({
+      success: false,
+      error: err.message || 'Internal Server Error',
+      timestamp: new Date().toISOString(),
+    });
+  }
+);
 
 // 404 handler
 app.use('*', (req, res) => {

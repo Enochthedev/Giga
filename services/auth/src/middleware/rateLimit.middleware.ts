@@ -4,7 +4,11 @@ import { redisService } from '../services/redis.service';
 /**
  * Enhanced rate limiting middleware with security features
  */
-export const rateLimit = (maxRequests = 5, windowMinutes = 15, options: RateLimitOptions = {}) => {
+export const rateLimit = (
+  maxRequests = 5,
+  windowMinutes = 15,
+  options: RateLimitOptions = {}
+) => {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
       // Get client IP with enhanced detection
@@ -19,17 +23,24 @@ export const rateLimit = (maxRequests = 5, windowMinutes = 15, options: RateLimi
       const windowSeconds = windowMinutes * 60;
 
       // Check IP-based rate limit
-      const ipCount = await redisService.incrementRateLimit(ipKey, windowSeconds);
+      const ipCount = await redisService.incrementRateLimit(
+        ipKey,
+        windowSeconds
+      );
 
       // Check user-based rate limit if authenticated
       let userCount = 0;
       if (userKey) {
-        userCount = await redisService.incrementRateLimit(userKey, windowSeconds);
+        userCount = await redisService.incrementRateLimit(
+          userKey,
+          windowSeconds
+        );
       }
 
       // Determine if rate limit is exceeded
       const ipExceeded = ipCount > maxRequests;
-      const userExceeded = userKey && userCount > (options.userMaxRequests || maxRequests * 2);
+      const userExceeded =
+        userKey && userCount > (options.userMaxRequests || maxRequests * 2);
 
       if (ipExceeded || userExceeded) {
         // Enhanced logging for security monitoring
@@ -41,12 +52,15 @@ export const rateLimit = (maxRequests = 5, windowMinutes = 15, options: RateLimi
           ipCount,
           userCount,
           userId: req.user?.sub,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
 
         // Progressive delay for repeated violations
         const violationKey = `rate_violations:${ip}`;
-        const violations = await redisService.incrementRateLimit(violationKey, 3600); // 1 hour window
+        const violations = await redisService.incrementRateLimit(
+          violationKey,
+          3600
+        ); // 1 hour window
 
         const delay = Math.min(violations * 1000, 10000); // Max 10 second delay
         if (delay > 0) {
@@ -61,7 +75,7 @@ export const rateLimit = (maxRequests = 5, windowMinutes = 15, options: RateLimi
           details: {
             limit: maxRequests,
             window: `${windowMinutes} minutes`,
-            retryAfter: windowSeconds
+            retryAfter: windowSeconds,
           },
           timestamp: new Date().toISOString(),
         });
@@ -70,8 +84,13 @@ export const rateLimit = (maxRequests = 5, windowMinutes = 15, options: RateLimi
       // Add comprehensive rate limit headers
       res.set({
         'X-RateLimit-Limit': maxRequests.toString(),
-        'X-RateLimit-Remaining': Math.max(0, maxRequests - Math.max(ipCount, userCount)).toString(),
-        'X-RateLimit-Reset': new Date(Date.now() + windowSeconds * 1000).toISOString(),
+        'X-RateLimit-Remaining': Math.max(
+          0,
+          maxRequests - Math.max(ipCount, userCount)
+        ).toString(),
+        'X-RateLimit-Reset': new Date(
+          Date.now() + windowSeconds * 1000
+        ).toISOString(),
         'X-RateLimit-Policy': `${maxRequests};w=${windowSeconds}`,
       });
 
@@ -82,7 +101,7 @@ export const rateLimit = (maxRequests = 5, windowMinutes = 15, options: RateLimi
         path: req.path,
         method: req.method,
         ip: getClientIP(req),
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
 
       // In case of Redis failure, apply basic in-memory rate limiting
@@ -100,7 +119,7 @@ export const rateLimit = (maxRequests = 5, windowMinutes = 15, options: RateLimi
  */
 export const authRateLimit = rateLimit(5, 15, {
   userMaxRequests: 10,
-  fallbackToMemory: true
+  fallbackToMemory: true,
 });
 
 /**
@@ -108,7 +127,7 @@ export const authRateLimit = rateLimit(5, 15, {
  */
 export const passwordRateLimit = rateLimit(3, 60, {
   userMaxRequests: 5,
-  fallbackToMemory: true
+  fallbackToMemory: true,
 });
 
 /**
@@ -116,7 +135,7 @@ export const passwordRateLimit = rateLimit(3, 60, {
  */
 export const apiRateLimit = rateLimit(100, 15, {
   userMaxRequests: 200,
-  fallbackToMemory: false
+  fallbackToMemory: false,
 });
 
 /**
@@ -125,12 +144,15 @@ export const apiRateLimit = rateLimit(100, 15, {
 function getClientIP(req: Request): string {
   const forwarded = req.headers['x-forwarded-for'];
   const realIp = req.headers['x-real-ip'];
-  const remoteAddress = req.connection.remoteAddress || req.socket.remoteAddress;
+  const remoteAddress =
+    req.connection.remoteAddress || req.socket.remoteAddress;
 
   let clientIp = remoteAddress || 'unknown';
 
   if (forwarded) {
-    clientIp = Array.isArray(forwarded) ? forwarded[0] : forwarded.split(',')[0];
+    clientIp = Array.isArray(forwarded)
+      ? forwarded[0]
+      : forwarded.split(',')[0];
   } else if (realIp) {
     clientIp = Array.isArray(realIp) ? realIp[0] : realIp;
   }
