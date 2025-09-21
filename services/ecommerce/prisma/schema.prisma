@@ -8,6 +8,32 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// Vendor Management
+model Vendor {
+  id          String   @id @default(cuid())
+  name        String
+  email       String   @unique
+  phone       String?
+  address     Json?
+  description String?
+  isActive    Boolean  @default(true)
+  isVerified  Boolean  @default(false)
+  rating      Float?
+  reviewCount Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relationships
+  products    Product[]
+  analytics   VendorAnalytics[]
+
+  @@index([isActive])
+  @@index([isVerified])
+  @@index([rating])
+  @@index([createdAt])
+  @@map("vendors")
+}
+
 // Product Management
 model Product {
   id          String   @id @default(cuid())
@@ -29,6 +55,7 @@ model Product {
   updatedAt   DateTime @updatedAt
 
   // Relationships
+  vendor       Vendor               @relation(fields: [vendorId], references: [id])
   inventory    ProductInventory?
   reservations InventoryReservation[]
   orderItems   OrderItem[]
@@ -274,6 +301,7 @@ model WishlistItem {
 model VendorAnalytics {
   id           String   @id @default(cuid())
   vendorId     String
+  vendor       Vendor   @relation(fields: [vendorId], references: [id])
   period       String   // 'daily', 'weekly', 'monthly'
   date         DateTime
   totalOrders  Int      @default(0)

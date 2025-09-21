@@ -120,11 +120,13 @@ class RedisService {
     }
   }
 
-  async del(key: string) {
+  async del(key: string | string[]) {
     const startTime = Date.now();
     try {
       if (!this.client) await this.connect();
-      const result = await this.client!.del(key);
+      const result = Array.isArray(key)
+        ? await this.client!.del(key)
+        : await this.client!.del(key);
       this.updateMetrics('delete', Date.now() - startTime);
       return result;
     } catch (error) {
@@ -136,6 +138,23 @@ class RedisService {
   async ping() {
     if (!this.client) await this.connect();
     return this.client!.ping();
+  }
+
+  async keys(pattern: string): Promise<string[]> {
+    if (!this.client) await this.connect();
+    return this.client!.keys(pattern);
+  }
+
+  async expire(key: string, seconds: number): Promise<boolean> {
+    if (!this.client) await this.connect();
+    return this.client!.expire(key, seconds);
+  }
+
+  async quit(): Promise<void> {
+    if (this.client) {
+      await this.client.quit();
+      this.client = null;
+    }
   }
 
   // Advanced caching methods with TTL-based invalidation

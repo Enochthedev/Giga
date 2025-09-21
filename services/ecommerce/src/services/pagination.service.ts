@@ -364,7 +364,12 @@ export class PaginationService {
       return `${baseUrl}?${params.toString()}`;
     };
 
-    const links: unknown = {};
+    const links: {
+      first?: string;
+      prev?: string;
+      next?: string;
+      last?: string;
+    } = {};
 
     if (currentPage > 1) {
       links.first = createUrl(1);

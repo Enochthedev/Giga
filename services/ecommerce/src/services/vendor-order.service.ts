@@ -613,7 +613,7 @@ export class VendorOrderService {
       orderId: vendorOrder.orderId,
       vendorId: vendorOrder.vendorId,
       status: vendorOrder.status as any,
-      items: vendorOrder.items.map((item: unknown) => ({
+      items: vendorOrder.items.map((item: any) => ({
         id: item.id,
         productId: item.productId,
         quantity: item.quantity,
