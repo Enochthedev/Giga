@@ -1,5 +1,5 @@
 import { Order } from '@platform/types';
-import { OrderStatus, PrismaClient } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 import { HttpAuthServiceClient } from '../clients/auth.client';
 import { HttpNotificationServiceClient } from '../clients/notification.client';
 import { HttpPaymentServiceClient } from '../clients/payment.client';
@@ -11,6 +11,17 @@ import {
   TransactionCoordinator,
   TransactionResult,
 } from './transaction-coordinator.service';
+
+// Define enum locally since it's not being exported properly
+enum OrderStatus {
+  PENDING = 'PENDING',
+  CONFIRMED = 'CONFIRMED',
+  PROCESSING = 'PROCESSING',
+  SHIPPED = 'SHIPPED',
+  DELIVERED = 'DELIVERED',
+  CANCELLED = 'CANCELLED',
+  REFUNDED = 'REFUNDED',
+}
 
 /**
  * Enhanced order service that uses saga pattern and distributed transactions

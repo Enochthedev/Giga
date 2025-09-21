@@ -1,7 +1,18 @@
 import { VendorOrder } from '@platform/types';
-import { OrderStatus, PrismaClient } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 import { HttpNotificationServiceClient } from '../clients/notification.client';
 import { OrderFilters, PaginatedOrders } from './order.service';
+
+// Define enum locally since it's not being exported properly
+enum OrderStatus {
+  PENDING = 'PENDING',
+  CONFIRMED = 'CONFIRMED',
+  PROCESSING = 'PROCESSING',
+  SHIPPED = 'SHIPPED',
+  DELIVERED = 'DELIVERED',
+  CANCELLED = 'CANCELLED',
+  REFUNDED = 'REFUNDED',
+}
 
 export interface VendorOrderFilters extends OrderFilters {
   vendorId?: string;
