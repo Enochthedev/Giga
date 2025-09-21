@@ -1,6 +1,6 @@
 import { Cart, CartItem } from '@platform/types';
-import { PrismaClient } from '@prisma/client';
 import { v4 as uuidv4 } from 'uuid';
+import { PrismaClient } from '../generated/prisma-client';
 import { InventoryStatus, inventoryService } from './inventory.service';
 import { redisService } from './redis.service';
 

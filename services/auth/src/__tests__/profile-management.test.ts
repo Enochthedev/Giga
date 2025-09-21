@@ -1,4 +1,3 @@
-import { PrismaClient } from '@prisma/client';
 import request from 'supertest';
 import {
   afterAll,
@@ -10,6 +9,7 @@ import {
   it,
 } from 'vitest';
 import { app } from '../app';
+import { PrismaClient } from '../generated/prisma-client';
 import { JWTService } from '../services/jwt.service';
 
 const prisma = new PrismaClient();

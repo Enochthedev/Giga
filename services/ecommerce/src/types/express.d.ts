@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '../generated/prisma-client';
 import { redisService } from '../services/redis.service';
 
 declare global {

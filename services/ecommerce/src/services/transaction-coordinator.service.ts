@@ -1,7 +1,7 @@
-import { PrismaClient } from '@prisma/client';
 import { HttpAuthServiceClient } from '../clients/auth.client';
 import { HttpNotificationServiceClient } from '../clients/notification.client';
 import { HttpPaymentServiceClient } from '../clients/payment.client';
+import { PrismaClient } from '../generated/prisma-client';
 
 /**
  * Transaction operation definition

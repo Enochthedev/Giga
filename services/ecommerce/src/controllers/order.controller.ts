@@ -4,20 +4,11 @@ import { z } from 'zod';
 import { HttpAuthServiceClient } from '../clients/auth.client';
 import { HttpNotificationServiceClient } from '../clients/notification.client';
 import { HttpPaymentServiceClient } from '../clients/payment.client';
+import { OrderStatus } from '../generated/prisma-client';
 import { CartService } from '../services/cart.service';
 import { EnhancedOrderService } from '../services/enhanced-order.service';
 import { InventoryService } from '../services/inventory.service';
 import { OrderFilters, OrderService } from '../services/order.service';
-// Define enum locally since it's not being exported properly
-enum OrderStatus {
-  PENDING = 'PENDING',
-  CONFIRMED = 'CONFIRMED',
-  PROCESSING = 'PROCESSING',
-  SHIPPED = 'SHIPPED',
-  DELIVERED = 'DELIVERED',
-  CANCELLED = 'CANCELLED',
-  REFUNDED = 'REFUNDED',
-}
 
 // Extend Request interface for user properties
 interface AuthenticatedRequest extends Request {

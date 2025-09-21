@@ -1,14 +1,4 @@
-import { Prisma, PrismaClient } from '@prisma/client';
-
-// Define the enum locally since it's not being exported properly
-enum RoleName {
-  CUSTOMER = 'CUSTOMER',
-  VENDOR = 'VENDOR',
-  DRIVER = 'DRIVER',
-  HOST = 'HOST',
-  ADVERTISER = 'ADVERTISER',
-  ADMIN = 'ADMIN',
-}
+import { Prisma, PrismaClient, RoleName } from '../generated/prisma-client';
 
 interface CustomerProfileUpdateData {
   preferences?: Prisma.InputJsonValue;

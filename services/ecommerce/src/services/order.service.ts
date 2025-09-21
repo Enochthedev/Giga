@@ -1,5 +1,4 @@
 import { Order, OrderItem, VendorOrder } from '@platform/types';
-import { PrismaClient } from '@prisma/client';
 import { v4 as uuidv4 } from 'uuid';
 import { HttpAuthServiceClient, UserInfo } from '../clients/auth.client';
 import {
@@ -8,26 +7,13 @@ import {
   VendorNotificationData,
 } from '../clients/notification.client';
 import { HttpPaymentServiceClient } from '../clients/payment.client';
+import {
+  OrderStatus,
+  PaymentStatus,
+  PrismaClient,
+} from '../generated/prisma-client';
 import { CartService } from './cart.service';
 import { InventoryService } from './inventory.service';
-
-// Define enums locally since they're not being exported properly
-enum OrderStatus {
-  PENDING = 'PENDING',
-  CONFIRMED = 'CONFIRMED',
-  PROCESSING = 'PROCESSING',
-  SHIPPED = 'SHIPPED',
-  DELIVERED = 'DELIVERED',
-  CANCELLED = 'CANCELLED',
-  REFUNDED = 'REFUNDED',
-}
-
-enum PaymentStatus {
-  PENDING = 'PENDING',
-  PAID = 'PAID',
-  FAILED = 'FAILED',
-  REFUNDED = 'REFUNDED',
-}
 
 export interface OrderFilters {
   status?: OrderStatus;

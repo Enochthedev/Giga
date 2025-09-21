@@ -1,14 +1,5 @@
 import { Request, Response } from 'express';
-
-// Define the enum locally since it's not being exported properly
-enum RoleName {
-  CUSTOMER = 'CUSTOMER',
-  VENDOR = 'VENDOR',
-  DRIVER = 'DRIVER',
-  HOST = 'HOST',
-  ADVERTISER = 'ADVERTISER',
-  ADMIN = 'ADMIN',
-}
+import { RoleName } from '../generated/prisma-client';
 
 export class UserController {
   private async logAdminAction(

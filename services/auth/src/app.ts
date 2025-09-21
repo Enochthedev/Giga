@@ -1,8 +1,8 @@
-import { PrismaClient } from '@prisma/client';
 import cors from 'cors';
 import express from 'express';
 import helmet from 'helmet';
 import * as swaggerUi from 'swagger-ui-express';
+import { PrismaClient } from './generated/prisma-client';
 import {
   advancedXSSProtection,
   comprehensiveSecurityValidation,

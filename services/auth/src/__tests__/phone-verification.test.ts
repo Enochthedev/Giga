@@ -1,4 +1,3 @@
-import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import request from 'supertest';
 import {
@@ -12,6 +11,7 @@ import {
   vi,
 } from 'vitest';
 import { app } from '../app';
+import { PrismaClient } from '../generated/prisma-client';
 import { JWTService } from '../services/jwt.service';
 import { SMSService } from '../services/sms.service';
 

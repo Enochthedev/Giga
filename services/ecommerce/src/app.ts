@@ -1,9 +1,9 @@
-import { PrismaClient } from '@prisma/client';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express from 'express';
 import helmet from 'helmet';
 import * as swaggerUi from 'swagger-ui-express';
+import { PrismaClient } from './generated/prisma-client';
 import {
   correlationIdMiddleware,
   errorHandler,

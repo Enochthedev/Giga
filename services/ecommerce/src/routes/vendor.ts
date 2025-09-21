@@ -1,7 +1,7 @@
-import { PrismaClient } from '@prisma/client';
 import { Router } from 'express';
 import { HttpNotificationServiceClient } from '../clients/notification.client';
 import { VendorController } from '../controllers/vendor.controller';
+import { PrismaClient } from '../generated/prisma-client';
 import { authMiddleware, requireVendor } from '../middleware/auth.middleware';
 import { InventoryService } from '../services/inventory.service';
 import { VendorOrderService } from '../services/vendor-order.service';

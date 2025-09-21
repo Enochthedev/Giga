@@ -1,4 +1,3 @@
-import { PrismaClient } from '@prisma/client';
 import jwt from 'jsonwebtoken';
 import request from 'supertest';
 import {
@@ -11,6 +10,7 @@ import {
   it,
 } from 'vitest';
 import { app } from '../app';
+import { PrismaClient } from '../generated/prisma-client';
 
 const prisma = new PrismaClient();
 

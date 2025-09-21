@@ -1,0 +1,274 @@
+// Auth service database schema
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma-client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String    @id @default(cuid())
+  email           String    @unique
+  phone           String?   @unique
+  passwordHash    String
+  firstName       String
+  lastName        String
+  avatar          String?
+  isEmailVerified Boolean   @default(false)
+  isPhoneVerified Boolean   @default(false)
+  isActive        Boolean   @default(true)
+  lastLoginAt     DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Multi-role relationships
+  roles      UserRole[]
+  activeRole RoleName   @default(CUSTOMER)
+
+  // Profile relationships
+  customerProfile   CustomerProfile?
+  vendorProfile     VendorProfile?
+  driverProfile     DriverProfile?
+  hostProfile       HostProfile?
+  advertiserProfile AdvertiserProfile?
+
+  // Auth tokens
+  refreshTokens           RefreshToken[]
+  emailVerificationTokens EmailVerificationToken[]
+  passwordResetTokens     PasswordResetToken[]
+  phoneVerificationCodes  PhoneVerificationCode[]
+
+  // Audit logs
+  adminAuditLogs  AuditLog[] @relation("AdminAuditLogs")
+  targetAuditLogs AuditLog[] @relation("TargetAuditLogs")
+
+  @@map("users")
+}
+
+model Role {
+  id          String       @id @default(cuid())
+  name        RoleName     @unique
+  permissions Permission[]
+  users       UserRole[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@map("roles")
+}
+
+model Permission {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  roles       Role[]
+  createdAt   DateTime @default(now())
+
+  @@map("permissions")
+}
+
+model UserRole {
+  id     String @id @default(cuid())
+  userId String
+  roleId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role   Role   @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  assignedAt DateTime @default(now())
+
+  @@unique([userId, roleId])
+  @@map("user_roles")
+}
+
+// Profile models for different roles
+model CustomerProfile {
+  id          String    @id @default(cuid())
+  userId      String    @unique
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  preferences Json?
+  addresses   Address[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("customer_profiles")
+}
+
+model VendorProfile {
+  id               String           @id @default(cuid())
+  userId           String           @unique
+  user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  businessName     String
+  businessType     String
+  description      String?
+  logo             String?
+  website          String?
+  subscriptionTier SubscriptionTier @default(BASIC)
+  commissionRate   Float            @default(0.15)
+  isVerified       Boolean          @default(false)
+  rating           Float?
+  totalSales       Float            @default(0)
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  @@map("vendor_profiles")
+}
+
+model DriverProfile {
+  id               String     @id @default(cuid())
+  userId           String     @unique
+  user             User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  licenseNumber    String     @unique
+  vehicleInfo      Json
+  isOnline         Boolean    @default(false)
+  currentLocation  Json?
+  rating           Float?
+  totalRides       Int        @default(0)
+  isVerified       Boolean    @default(false)
+  subscriptionTier DriverTier @default(BASIC)
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+
+  @@map("driver_profiles")
+}
+
+model HostProfile {
+  id               String   @id @default(cuid())
+  userId           String   @unique
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  businessName     String?
+  description      String?
+  rating           Float?
+  totalBookings    Int      @default(0)
+  isVerified       Boolean  @default(false)
+  subscriptionTier HostTier @default(BASIC)
+  responseRate     Float?
+  responseTime     Int? // in minutes
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@map("host_profiles")
+}
+
+model AdvertiserProfile {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  companyName String
+  industry    String
+  website     String?
+  totalSpend  Float    @default(0)
+  isVerified  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("advertiser_profiles")
+}
+
+model Address {
+  id                String          @id @default(cuid())
+  customerProfileId String
+  customerProfile   CustomerProfile @relation(fields: [customerProfileId], references: [id], onDelete: Cascade)
+  label             String
+  address           String
+  city              String
+  country           String
+  isDefault         Boolean         @default(false)
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  @@map("addresses")
+}
+
+// Auth tokens and verification
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@map("refresh_tokens")
+}
+
+model EmailVerificationToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@map("email_verification_tokens")
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@map("password_reset_tokens")
+}
+
+model PhoneVerificationCode {
+  id        String   @id @default(cuid())
+  code      String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@unique([userId, code])
+  @@map("phone_verification_codes")
+}
+
+// Audit logging for admin actions
+model AuditLog {
+  id           String   @id @default(cuid())
+  action       String // Action performed (e.g., 'VIEW_USER', 'UPDATE_USER_STATUS')
+  adminUserId  String // ID of admin who performed the action
+  adminUser    User     @relation("AdminAuditLogs", fields: [adminUserId], references: [id], onDelete: Cascade)
+  targetUserId String? // ID of user being acted upon (if applicable)
+  targetUser   User?    @relation("TargetAuditLogs", fields: [targetUserId], references: [id], onDelete: SetNull)
+  details      Json // Additional details about the action
+  ipAddress    String? // IP address of the admin
+  userAgent    String? // User agent of the admin
+  createdAt    DateTime @default(now())
+
+  @@index([adminUserId])
+  @@index([targetUserId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+// Enums
+enum RoleName {
+  CUSTOMER
+  VENDOR
+  DRIVER
+  HOST
+  ADVERTISER
+  ADMIN
+}
+
+enum SubscriptionTier {
+  BASIC
+  PRO
+  ENTERPRISE
+}
+
+enum DriverTier {
+  BASIC
+  PRO
+}
+
+enum HostTier {
+  BASIC
+  PRO
+}

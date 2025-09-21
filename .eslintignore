@@ -1,0 +1,29 @@
+# Generated Prisma clients
+services/auth/src/generated/
+services/ecommerce/src/generated/
+
+# Node modules
+node_modules/
+
+# Build outputs
+dist/
+build/
+
+# Environment files
+.env
+.env.local
+.env.production
+
+# Logs
+*.log
+
+# Coverage
+coverage/
+
+# IDE files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db

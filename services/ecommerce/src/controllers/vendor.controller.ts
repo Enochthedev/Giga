@@ -1,24 +1,13 @@
 import { Product } from '@platform/types';
-import { PrismaClient } from '@prisma/client';
 import { Request, Response } from 'express';
 import { z } from 'zod';
 import { HttpNotificationServiceClient } from '../clients/notification.client';
+import { OrderStatus, PrismaClient } from '../generated/prisma-client';
 import { InventoryService } from '../services/inventory.service';
 import {
   VendorOrderService,
   VendorOrderStatusUpdate,
 } from '../services/vendor-order.service';
-
-// Define enum locally since it's not being exported properly
-enum OrderStatus {
-  PENDING = 'PENDING',
-  CONFIRMED = 'CONFIRMED',
-  PROCESSING = 'PROCESSING',
-  SHIPPED = 'SHIPPED',
-  DELIVERED = 'DELIVERED',
-  CANCELLED = 'CANCELLED',
-  REFUNDED = 'REFUNDED',
-}
 
 // Define types for better type safety
 type PrismaProduct = {
@@ -324,7 +313,7 @@ export class VendorController {
       const skip = (page - 1) * limit;
 
       // Build where clause
-      const where: Record<string, any> = {
+      const where: Record<string, unknown> = {
         vendorId,
       };
 

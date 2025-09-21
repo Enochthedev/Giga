@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '../generated/prisma-client';
 import { cacheService } from './cache.service';
 import { createDatabaseOptimizationService } from './database-optimization.service';
 import { PaginatedResult, PaginationService } from './pagination.service';

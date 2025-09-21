@@ -1,8 +1,8 @@
 import { Order } from '@platform/types';
-import { PrismaClient } from '@prisma/client';
 import { HttpAuthServiceClient } from '../clients/auth.client';
 import { HttpNotificationServiceClient } from '../clients/notification.client';
 import { HttpPaymentServiceClient } from '../clients/payment.client';
+import { OrderStatus, PrismaClient } from '../generated/prisma-client';
 import { CartService } from './cart.service';
 import { InventoryService } from './inventory.service';
 import { OrderSagaOrchestrator, SagaResult } from './order-saga.service';
@@ -11,17 +11,6 @@ import {
   TransactionCoordinator,
   TransactionResult,
 } from './transaction-coordinator.service';
-
-// Define enum locally since it's not being exported properly
-enum OrderStatus {
-  PENDING = 'PENDING',
-  CONFIRMED = 'CONFIRMED',
-  PROCESSING = 'PROCESSING',
-  SHIPPED = 'SHIPPED',
-  DELIVERED = 'DELIVERED',
-  CANCELLED = 'CANCELLED',
-  REFUNDED = 'REFUNDED',
-}
 
 /**
  * Enhanced order service that uses saga pattern and distributed transactions
@@ -430,7 +419,7 @@ export class EnhancedOrderService extends OrderService {
   /**
    * Get transaction status for monitoring
    */
-  getTransactionStatus(transactionId: string): Promise<any> {
+  getTransactionStatus(transactionId: string): Promise<unknown> {
     return this.transactionCoordinator.getTransactionStatus(transactionId);
   }
 
