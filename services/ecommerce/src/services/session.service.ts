@@ -66,7 +66,10 @@ export class SessionService {
   /**
    * Update session with authenticated user
    */
-  async authenticateSession(sessionId: string, customerId: string): Promise<SessionData | null> {
+  async authenticateSession(
+    sessionId: string,
+    customerId: string
+  ): Promise<SessionData | null> {
     const session = await this.getSession(sessionId);
 
     if (!session) {
@@ -106,7 +109,9 @@ export class SessionService {
     }
 
     session.lastActivity = new Date().toISOString();
-    const ttl = session.isAnonymous ? this.ANONYMOUS_SESSION_TTL : this.SESSION_TTL;
+    const ttl = session.isAnonymous
+      ? this.ANONYMOUS_SESSION_TTL
+      : this.SESSION_TTL;
     await this.saveSession(session, ttl);
 
     return true;
@@ -141,7 +146,8 @@ export class SessionService {
             if (sessionData) {
               const session: SessionData = JSON.parse(sessionData);
               const lastActivity = new Date(session.lastActivity);
-              const hoursSinceActivity = (Date.now() - lastActivity.getTime()) / (1000 * 60 * 60);
+              const hoursSinceActivity =
+                (Date.now() - lastActivity.getTime()) / (1000 * 60 * 60);
 
               // Clean up sessions older than 48 hours
               if (hoursSinceActivity > 48) {
@@ -156,7 +162,9 @@ export class SessionService {
         }
       }
 
-      console.log(`Session cleanup completed: ${cleaned} sessions cleaned, ${errors} errors`);
+      console.log(
+        `Session cleanup completed: ${cleaned} sessions cleaned, ${errors} errors`
+      );
       return { cleaned, errors };
     } catch (error) {
       console.error('Error during session cleanup:', error);
@@ -196,11 +204,15 @@ export class SessionService {
             }
 
             const createdAt = new Date(session.createdAt);
-            const ageHours = (Date.now() - createdAt.getTime()) / (1000 * 60 * 60);
+            const ageHours =
+              (Date.now() - createdAt.getTime()) / (1000 * 60 * 60);
             totalAge += ageHours;
           }
         } catch (error) {
-          console.error(`Error processing session statistics for ${key}:`, error);
+          console.error(
+            `Error processing session statistics for ${key}:`,
+            error
+          );
         }
       }
 
@@ -224,9 +236,14 @@ export class SessionService {
   /**
    * Save session data to Redis
    */
-  private async saveSession(sessionData: SessionData, ttlSeconds?: number): Promise<void> {
+  private async saveSession(
+    sessionData: SessionData,
+    ttlSeconds?: number
+  ): Promise<void> {
     const sessionKey = `session:${sessionData.sessionId}`;
-    const ttl = ttlSeconds || (sessionData.isAnonymous ? this.ANONYMOUS_SESSION_TTL : this.SESSION_TTL);
+    const ttl =
+      ttlSeconds ||
+      (sessionData.isAnonymous ? this.ANONYMOUS_SESSION_TTL : this.SESSION_TTL);
     await redisService.set(sessionKey, JSON.stringify(sessionData), ttl);
   }
 }

@@ -1,14 +1,21 @@
 import { Router } from 'express';
 import { AuthController } from '../controllers/auth.controller';
 import { authenticateToken } from '../middleware/auth.middleware';
+import { requirePhoneNumber } from '../middleware/phoneVerification.middleware';
+import { apiRateLimit, authRateLimit, passwordRateLimit } from '../middleware/rateLimit.middleware';
 import {
   changePasswordSchema,
   loginSchema,
   refreshTokenSchema,
   registerSchema,
+  resendEmailVerificationSchema,
+  resendPhoneVerificationSchema,
+  sendPhoneVerificationSchema,
   switchRoleSchema,
   updateProfileSchema,
   validate,
+  verifyEmailSchema,
+  verifyPhoneSchema
 } from '../middleware/validation.middleware';
 
 const router: Router = Router();
@@ -32,7 +39,7 @@ const authController = new AuthController();
  *       409:
  *         description: User already exists
  */
-router.post('/register', validate(registerSchema), authController.register.bind(authController));
+router.post('/register', authRateLimit, validate(registerSchema), authController.register.bind(authController));
 
 /**
  * @swagger
@@ -52,7 +59,7 @@ router.post('/register', validate(registerSchema), authController.register.bind(
  *       401:
  *         description: Invalid credentials
  */
-router.post('/login', validate(loginSchema), authController.login.bind(authController));
+router.post('/login', authRateLimit, validate(loginSchema), authController.login.bind(authController));
 
 /**
  * @swagger
@@ -76,7 +83,7 @@ router.post('/login', validate(loginSchema), authController.login.bind(authContr
  *       401:
  *         description: Invalid refresh token
  */
-router.post('/refresh', validate(refreshTokenSchema), authController.refreshToken.bind(authController));
+router.post('/refresh', apiRateLimit, validate(refreshTokenSchema), authController.refreshToken.bind(authController));
 
 /**
  * @swagger
@@ -112,7 +119,7 @@ router.post('/logout', authController.logout.bind(authController));
  *       401:
  *         description: Unauthorized
  */
-router.get('/profile', authenticateToken, authController.getProfile.bind(authController));
+router.get('/profile', apiRateLimit, authenticateToken, authController.getProfile.bind(authController));
 
 /**
  * @swagger
@@ -140,7 +147,7 @@ router.get('/profile', authenticateToken, authController.getProfile.bind(authCon
  *       200:
  *         description: Profile updated successfully
  */
-router.put('/profile', authenticateToken, validate(updateProfileSchema), authController.updateProfile.bind(authController));
+router.put('/profile', apiRateLimit, authenticateToken, validate(updateProfileSchema), authController.updateProfile.bind(authController));
 
 /**
  * @swagger
@@ -169,7 +176,7 @@ router.put('/profile', authenticateToken, validate(updateProfileSchema), authCon
  *       400:
  *         description: Invalid current password
  */
-router.put('/change-password', authenticateToken, validate(changePasswordSchema), authController.changePassword.bind(authController));
+router.put('/change-password', passwordRateLimit, authenticateToken, validate(changePasswordSchema), authController.changePassword.bind(authController));
 
 /**
  * @swagger
@@ -196,6 +203,146 @@ router.put('/change-password', authenticateToken, validate(changePasswordSchema)
  *       403:
  *         description: User does not have this role
  */
-router.post('/switch-role', authenticateToken, validate(switchRoleSchema), authController.switchRole.bind(authController));
+router.post('/switch-role', apiRateLimit, authenticateToken, validate(switchRoleSchema), authController.switchRole.bind(authController));
+
+/**
+ * @swagger
+ * /api/v1/auth/send-email-verification:
+ *   post:
+ *     summary: Send email verification
+ *     tags: [Email Verification]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Verification email sent successfully
+ *       400:
+ *         description: Email already verified
+ *       429:
+ *         description: Verification email already sent recently
+ */
+router.post('/send-email-verification', authRateLimit, authenticateToken, authController.sendEmailVerification.bind(authController));
+
+/**
+ * @swagger
+ * /api/v1/auth/verify-email:
+ *   post:
+ *     summary: Verify email address
+ *     tags: [Email Verification]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [token]
+ *             properties:
+ *               token:
+ *                 type: string
+ *                 description: Email verification token
+ *     responses:
+ *       200:
+ *         description: Email verified successfully
+ *       400:
+ *         description: Invalid or expired token
+ */
+router.post('/verify-email', apiRateLimit, validate(verifyEmailSchema), authController.verifyEmail.bind(authController));
+
+/**
+ * @swagger
+ * /api/v1/auth/resend-email-verification:
+ *   post:
+ *     summary: Resend email verification
+ *     tags: [Email Verification]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [email]
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: Email address to resend verification to
+ *     responses:
+ *       200:
+ *         description: Verification email sent if email exists
+ *       429:
+ *         description: Verification email already sent recently
+ */
+router.post('/resend-email-verification', authRateLimit, validate(resendEmailVerificationSchema), authController.resendEmailVerification.bind(authController));
+
+/**
+ * @swagger
+ * /api/v1/auth/send-phone-verification:
+ *   post:
+ *     summary: Send phone verification code
+ *     tags: [Phone Verification]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Verification code sent successfully
+ *       400:
+ *         description: Phone number not set or already verified
+ *       429:
+ *         description: Verification code already sent recently
+ */
+router.post('/send-phone-verification', authRateLimit, authenticateToken, requirePhoneNumber, validate(sendPhoneVerificationSchema), authController.sendPhoneVerification.bind(authController));
+
+/**
+ * @swagger
+ * /api/v1/auth/verify-phone:
+ *   post:
+ *     summary: Verify phone number with code
+ *     tags: [Phone Verification]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [code]
+ *             properties:
+ *               code:
+ *                 type: string
+ *                 pattern: '^[0-9]{6}$'
+ *                 description: 6-digit verification code
+ *     responses:
+ *       200:
+ *         description: Phone verified successfully
+ *       400:
+ *         description: Invalid or expired code
+ */
+router.post('/verify-phone', apiRateLimit, authenticateToken, validate(verifyPhoneSchema), authController.verifyPhone.bind(authController));
+
+/**
+ * @swagger
+ * /api/v1/auth/resend-phone-verification:
+ *   post:
+ *     summary: Resend phone verification code
+ *     tags: [Phone Verification]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [phone]
+ *             properties:
+ *               phone:
+ *                 type: string
+ *                 description: Phone number to resend verification to
+ *     responses:
+ *       200:
+ *         description: Verification code sent if phone exists
+ *       429:
+ *         description: Verification code already sent recently
+ */
+router.post('/resend-phone-verification', authRateLimit, validate(resendPhoneVerificationSchema), authController.resendPhoneVerification.bind(authController));
 
 export { router as authRoutes };

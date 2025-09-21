@@ -4,11 +4,25 @@ import cors from 'cors';
 import express from 'express';
 import helmet from 'helmet';
 import * as swaggerUi from 'swagger-ui-express';
+import {
+  correlationIdMiddleware,
+  errorHandler,
+  healthCheckErrorHandler,
+  notFoundHandler
+} from './middleware/error.middleware';
+import {
+  cspMiddleware,
+  generalRateLimit,
+  sanitizeInput,
+  validateRequestSize
+} from './middleware/validation.middleware';
+import batchRoutes from './routes/batch';
 import { cartRoutes } from './routes/cart';
 import { orderRoutes } from './routes/orders';
 import { productRoutes } from './routes/products';
 import { vendorRoutes } from './routes/vendor';
 import { redisService } from './services/redis.service';
+import { responseOptimizationService } from './services/response-optimization.service';
 import { specs } from './swagger';
 
 const app: express.Application = express();
@@ -20,8 +34,22 @@ app.use(cors({
   origin: process.env.NODE_ENV === 'production' ? ['https://yourdomain.com'] : true,
   credentials: true,
 }));
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
+
+// Add correlation ID tracking
+app.use(correlationIdMiddleware);
+
+// Security and validation middleware
+app.use(cspMiddleware);
+app.use(generalRateLimit);
+app.use(validateRequestSize());
+app.use(sanitizeInput);
+
+// Response optimization middleware
+app.use(responseOptimizationService.getCompressionMiddleware());
+app.use(responseOptimizationService.performanceMonitoringMiddleware());
 
 // Add Prisma and Redis to request context
 app.use((req, _res, next) => {
@@ -34,22 +62,39 @@ app.use((req, _res, next) => {
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(specs));
 
 // Health check
-app.get('/health', async (_req, res) => {
+app.get('/health', async (req, res) => {
+  const correlationId = req.correlationId;
+
   try {
+    // Check database connection
     await prisma.$queryRaw`SELECT 1`;
+
+    // Check Redis connection
+    await redisService.ping();
+
     res.json({
       status: 'healthy',
       timestamp: new Date().toISOString(),
-      database: 'connected',
+      correlationId,
       service: 'ecommerce',
+      dependencies: {
+        database: 'connected',
+        redis: 'connected',
+      },
+      uptime: process.uptime(),
     });
   } catch (error) {
-    console.error('Database health check failed:', error);
+    const errorInfo = healthCheckErrorHandler(error as Error);
     res.status(503).json({
-      status: 'unhealthy',
+      ...errorInfo,
       timestamp: new Date().toISOString(),
-      database: 'disconnected',
+      correlationId,
       service: 'ecommerce',
+      dependencies: {
+        database: 'unknown',
+        redis: 'unknown',
+      },
+      uptime: process.uptime(),
     });
   }
 });
@@ -59,25 +104,12 @@ app.use('/api/v1/products', productRoutes);
 app.use('/api/v1/cart', cartRoutes);
 app.use('/api/v1/orders', orderRoutes);
 app.use('/api/v1/vendor', vendorRoutes);
-
-// Global error handler
-app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
-  console.error('Error:', err);
-  res.status(err.statusCode || 500).json({
-    success: false,
-    error: err.message || 'Internal Server Error',
-    timestamp: new Date().toISOString(),
-  });
-});
+app.use('/api/v1/batch', batchRoutes);
 
 // 404 handler
-app.use('*', (req, res) => {
-  res.status(404).json({
-    success: false,
-    error: 'Route not found',
-    message: `${req.method} ${req.originalUrl} is not available`,
-    timestamp: new Date().toISOString(),
-  });
-});
+app.use('*', notFoundHandler);
+
+// Global error handler (must be last)
+app.use(errorHandler);
 
 export { app, prisma };

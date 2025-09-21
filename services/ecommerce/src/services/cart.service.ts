@@ -1,6 +1,7 @@
 import { Cart, CartItem } from '@platform/types';
 import { PrismaClient } from '@prisma/client';
 import { v4 as uuidv4 } from 'uuid';
+import { InventoryStatus, inventoryService } from './inventory.service';
 import { redisService } from './redis.service';
 
 export interface CartValidationResult {
@@ -59,7 +60,7 @@ export class CartService {
       }
 
       // Validate and enrich cart items with current product data
-      const validatedCart = await this.validateCartItems(cartData);
+      const validatedCart = await this.validateCartItems(cartData as Cart);
 
       if (!validatedCart.isValid && validatedCart.updatedCart) {
         // Save the updated cart if there were changes
@@ -67,7 +68,7 @@ export class CartService {
         return validatedCart.updatedCart;
       }
 
-      return cartData;
+      return cartData as Cart;
     } catch (error) {
       console.error('Error getting cart:', error);
       // Return empty cart on error
@@ -78,7 +79,11 @@ export class CartService {
   /**
    * Add item to cart
    */
-  async addItem(customerId: string, productId: string, quantity: number): Promise<Cart> {
+  async addItem(
+    customerId: string,
+    productId: string,
+    quantity: number
+  ): Promise<Cart> {
     // Validate product exists and is available
     const product = await this.getProductForCart(productId);
     if (!product) {
@@ -93,19 +98,21 @@ export class CartService {
     const cart = await this.getCart(customerId);
 
     // Check if item already exists in cart
-    const existingItemIndex = cart.items.findIndex(item => item.productId === productId);
+    const existingItemIndex = cart.items.findIndex(
+      item => item.productId === productId
+    );
 
     if (existingItemIndex >= 0) {
       // Update existing item quantity
       const newQuantity = cart.items[existingItemIndex].quantity + quantity;
 
       // Validate inventory for new total quantity
-      this.validateInventoryAvailability(product, newQuantity);
+      await this.validateInventoryAvailability(product, newQuantity);
 
       cart.items[existingItemIndex].quantity = newQuantity;
     } else {
       // Validate inventory for new item
-      this.validateInventoryAvailability(product, quantity);
+      await this.validateInventoryAvailability(product, quantity);
 
       // Add new item to cart
       const cartItem: CartItem = {
@@ -113,7 +120,7 @@ export class CartService {
         productId,
         quantity,
         price: product.price, // Store current price
-        product: product
+        product: product,
       };
       cart.items.push(cartItem);
     }
@@ -129,7 +136,11 @@ export class CartService {
   /**
    * Update item quantity in cart
    */
-  async updateItemQuantity(customerId: string, itemId: string, quantity: number): Promise<Cart> {
+  async updateItemQuantity(
+    customerId: string,
+    itemId: string,
+    quantity: number
+  ): Promise<Cart> {
     const cart = await this.getCart(customerId);
 
     const itemIndex = cart.items.findIndex(item => item.id === itemId);
@@ -145,7 +156,7 @@ export class CartService {
       throw new Error('Product not found');
     }
 
-    this.validateInventoryAvailability(product, quantity);
+    await this.validateInventoryAvailability(product, quantity);
 
     // Update quantity
     cart.items[itemIndex].quantity = quantity;
@@ -220,28 +231,40 @@ export class CartService {
           continue; // Skip this item
         }
 
-        // Check inventory availability
-        if (product.inventory.trackQuantity &&
-          product.inventory.quantity < item.quantity) {
-          issues.push({
-            itemId: item.id,
-            type: 'INSUFFICIENT_STOCK',
-            message: `Only ${product.inventory.quantity} items available`,
-            currentValue: product.inventory.quantity,
-          });
+        // Check inventory availability using real-time inventory service
+        if (product.inventory.trackQuantity) {
+          const isAvailable = await inventoryService.checkAvailability(
+            product.id,
+            item.quantity
+          );
+          if (!isAvailable) {
+            const inventoryStatus = await inventoryService.getInventoryStatus(
+              product.id
+            );
+            const availableQuantity = inventoryStatus
+              ? inventoryStatus.availableQuantity
+              : 0;
 
-          // Update quantity to available amount
-          const updatedItem = {
-            ...item,
-            quantity: Math.max(0, product.inventory.quantity),
-            product: product
-          };
+            issues.push({
+              itemId: item.id,
+              type: 'INSUFFICIENT_STOCK',
+              message: `Only ${availableQuantity} items available`,
+              currentValue: availableQuantity,
+            });
 
-          if (updatedItem.quantity > 0) {
-            updatedItems.push(updatedItem);
+            // Update quantity to available amount
+            const updatedItem = {
+              ...item,
+              quantity: Math.max(0, availableQuantity),
+              product: product,
+            };
+
+            if (updatedItem.quantity > 0) {
+              updatedItems.push(updatedItem);
+            }
+            hasChanges = true;
+            continue;
           }
-          hasChanges = true;
-          continue;
         }
 
         // Check price changes
@@ -257,7 +280,7 @@ export class CartService {
           const updatedItem = {
             ...item,
             price: product.price,
-            product: product
+            product: product,
           };
           updatedItems.push(updatedItem);
           hasChanges = true;
@@ -267,7 +290,7 @@ export class CartService {
         // Item is valid, add to updated items
         updatedItems.push({
           ...item,
-          product: product
+          product: product,
         });
       } catch (error) {
         console.error(`Error validating cart item ${item.id}:`, error);
@@ -302,7 +325,9 @@ export class CartService {
   /**
    * Get product data for cart operations
    */
-  private async getProductForCart(productId: string): Promise<ProductSummary | null> {
+  private async getProductForCart(
+    productId: string
+  ): Promise<ProductSummary | null> {
     try {
       // Try to get from cache first
       const cachedProduct = await redisService.getCachedProduct(productId);
@@ -333,7 +358,8 @@ export class CartService {
         subcategory: product.subcategory || undefined,
         brand: product.brand || undefined,
         images: product.images,
-        specifications: product.specifications as Record<string, string> || undefined,
+        specifications:
+          (product.specifications as Record<string, string>) || undefined,
         vendorId: product.vendorId,
         inventory: {
           quantity: product.inventory.quantity,
@@ -361,7 +387,8 @@ export class CartService {
    * Check if cached product has all required fields
    */
   private isValidProductSummary(product: any): boolean {
-    return product &&
+    return (
+      product &&
       typeof product.id === 'string' &&
       typeof product.name === 'string' &&
       typeof product.description === 'string' &&
@@ -371,16 +398,29 @@ export class CartService {
       Array.isArray(product.images) &&
       product.inventory &&
       typeof product.inventory.quantity === 'number' &&
-      typeof product.inventory.trackQuantity === 'boolean';
+      typeof product.inventory.trackQuantity === 'boolean'
+    );
   }
 
   /**
-   * Validate inventory availability
+   * Validate inventory availability using real-time inventory service
    */
-  private validateInventoryAvailability(product: ProductSummary, requestedQuantity: number): void {
+  private async validateInventoryAvailability(
+    product: ProductSummary,
+    requestedQuantity: number
+  ): Promise<void> {
     if (product.inventory.trackQuantity) {
-      const availableQuantity = product.inventory.quantity;
-      if (availableQuantity < requestedQuantity) {
+      const isAvailable = await inventoryService.checkAvailability(
+        product.id,
+        requestedQuantity
+      );
+      if (!isAvailable) {
+        const inventoryStatus = await inventoryService.getInventoryStatus(
+          product.id
+        );
+        const availableQuantity = inventoryStatus
+          ? inventoryStatus.availableQuantity
+          : 0;
         throw new Error(`Only ${availableQuantity} items available in stock`);
       }
     }
@@ -391,7 +431,7 @@ export class CartService {
    */
   private calculateCartTotals(cart: Cart): void {
     const subtotal = cart.items.reduce(
-      (sum, item) => sum + (item.price * item.quantity),
+      (sum, item) => sum + item.price * item.quantity,
       0
     );
 
@@ -434,11 +474,14 @@ export class CartService {
   /**
    * Merge anonymous cart with user cart (for login scenarios)
    */
-  async mergeCart(anonymousCustomerId: string, authenticatedCustomerId: string): Promise<Cart> {
+  async mergeCart(
+    anonymousCustomerId: string,
+    authenticatedCustomerId: string
+  ): Promise<Cart> {
     const anonymousCart = await redisService.getCart(anonymousCustomerId);
     const userCart = await this.getCart(authenticatedCustomerId);
 
-    if (!anonymousCart || anonymousCart.items.length === 0) {
+    if (!anonymousCart || (anonymousCart as Cart).items.length === 0) {
       return userCart;
     }
 
@@ -448,11 +491,11 @@ export class CartService {
       itemsAdded: 0,
       itemsUpdated: 0,
       itemsSkipped: 0,
-      errors: [] as string[]
+      errors: [] as string[],
     };
 
     // Merge items from anonymous cart
-    for (const anonymousItem of anonymousCart.items) {
+    for (const anonymousItem of (anonymousCart as Cart).items) {
       try {
         mergeResults.itemsProcessed++;
 
@@ -463,61 +506,85 @@ export class CartService {
 
         if (existingItemIndex >= 0) {
           // Update existing item quantity (combine quantities)
-          const newQuantity = userCart.items[existingItemIndex].quantity + anonymousItem.quantity;
+          const newQuantity =
+            userCart.items[existingItemIndex].quantity + anonymousItem.quantity;
 
           // Validate product availability for combined quantity
           const product = await this.getProductForCart(anonymousItem.productId);
           if (product && product.isActive) {
             try {
-              this.validateInventoryAvailability(product, newQuantity);
+              await this.validateInventoryAvailability(product, newQuantity);
               userCart.items[existingItemIndex].quantity = newQuantity;
               mergeResults.itemsUpdated++;
             } catch (inventoryError) {
               // Use maximum available quantity if requested exceeds stock
               if (product.inventory.trackQuantity) {
+                const inventoryStatus =
+                  await inventoryService.getInventoryStatus(product.id);
+                const availableQuantity = inventoryStatus
+                  ? inventoryStatus.availableQuantity
+                  : 0;
                 const maxQuantity = Math.max(
                   userCart.items[existingItemIndex].quantity,
-                  Math.min(newQuantity, product.inventory.quantity)
+                  Math.min(newQuantity, availableQuantity)
                 );
                 userCart.items[existingItemIndex].quantity = maxQuantity;
                 mergeResults.itemsUpdated++;
-                console.warn(`Limited quantity for ${anonymousItem.productId} to ${maxQuantity} due to stock`);
+                console.warn(
+                  `Limited quantity for ${anonymousItem.productId} to ${maxQuantity} due to stock`
+                );
               }
             }
           } else {
             mergeResults.itemsSkipped++;
-            mergeResults.errors.push(`Product ${anonymousItem.productId} is no longer available`);
+            mergeResults.errors.push(
+              `Product ${anonymousItem.productId} is no longer available`
+            );
           }
         } else {
           // Add new item to user cart
           try {
-            const product = await this.getProductForCart(anonymousItem.productId);
+            const product = await this.getProductForCart(
+              anonymousItem.productId
+            );
             if (product && product.isActive) {
-              this.validateInventoryAvailability(product, anonymousItem.quantity);
+              await this.validateInventoryAvailability(
+                product,
+                anonymousItem.quantity
+              );
 
               const cartItem: CartItem = {
                 id: uuidv4(),
                 productId: anonymousItem.productId,
                 quantity: anonymousItem.quantity,
                 price: product.price, // Use current price
-                product: product
+                product: product,
               };
 
               userCart.items.push(cartItem);
               mergeResults.itemsAdded++;
             } else {
               mergeResults.itemsSkipped++;
-              mergeResults.errors.push(`Product ${anonymousItem.productId} is no longer available`);
+              mergeResults.errors.push(
+                `Product ${anonymousItem.productId} is no longer available`
+              );
             }
           } catch (error) {
             mergeResults.itemsSkipped++;
-            mergeResults.errors.push(`Failed to add ${anonymousItem.productId}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+            mergeResults.errors.push(
+              `Failed to add ${anonymousItem.productId}: ${error instanceof Error ? error.message : 'Unknown error'}`
+            );
           }
         }
       } catch (error) {
-        console.error(`Error merging cart item ${anonymousItem.productId}:`, error);
+        console.error(
+          `Error merging cart item ${anonymousItem.productId}:`,
+          error
+        );
         mergeResults.itemsSkipped++;
-        mergeResults.errors.push(`Error processing ${anonymousItem.productId}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        mergeResults.errors.push(
+          `Error processing ${anonymousItem.productId}: ${error instanceof Error ? error.message : 'Unknown error'}`
+        );
       }
     }
 
@@ -548,23 +615,31 @@ export class CartService {
   /**
    * Get cart by session ID (for anonymous users)
    */
+  // eslint-disable-next-line require-await
   async getCartBySession(sessionId: string): Promise<Cart> {
     const anonymousCustomerId = `anonymous_${sessionId}`;
-    return await this.getCart(anonymousCustomerId);
+    return this.getCart(anonymousCustomerId);
   }
 
   /**
    * Transfer anonymous cart to authenticated user
    */
-  async transferAnonymousCart(sessionId: string, authenticatedCustomerId: string): Promise<Cart> {
+  // eslint-disable-next-line require-await
+  async transferAnonymousCart(
+    sessionId: string,
+    authenticatedCustomerId: string
+  ): Promise<Cart> {
     const anonymousCustomerId = `anonymous_${sessionId}`;
-    return await this.mergeCart(anonymousCustomerId, authenticatedCustomerId);
+    return this.mergeCart(anonymousCustomerId, authenticatedCustomerId);
   }
 
   /**
    * Set cart expiration (extend TTL)
    */
-  async extendCartExpiration(customerId: string, ttlSeconds: number = 86400): Promise<void> {
+  async extendCartExpiration(
+    customerId: string,
+    ttlSeconds: number = 86400
+  ): Promise<void> {
     const cart = await redisService.getCart(customerId);
     if (cart) {
       await redisService.setCart(customerId, cart, ttlSeconds);
@@ -610,7 +685,8 @@ export class CartService {
             if (cartData) {
               const cart = JSON.parse(cartData);
               const updatedAt = new Date(cart.updatedAt);
-              const daysSinceUpdate = (Date.now() - updatedAt.getTime()) / (1000 * 60 * 60 * 24);
+              const daysSinceUpdate =
+                (Date.now() - updatedAt.getTime()) / (1000 * 60 * 60 * 24);
 
               // Clean up carts older than 7 days
               if (daysSinceUpdate > 7) {
@@ -625,7 +701,9 @@ export class CartService {
         }
       }
 
-      console.log(`Cart cleanup completed: ${cleaned} carts cleaned, ${errors} errors`);
+      console.log(
+        `Cart cleanup completed: ${cleaned} carts cleaned, ${errors} errors`
+      );
       return { cleaned, errors };
     } catch (error) {
       console.error('Error during cart cleanup:', error);
@@ -673,7 +751,8 @@ export class CartService {
 
             // Check if cart is expiring soon (less than 2 hours TTL)
             const ttl = await client.ttl(key);
-            if (ttl > 0 && ttl < 7200) { // 2 hours = 7200 seconds
+            if (ttl > 0 && ttl < 7200) {
+              // 2 hours = 7200 seconds
               expiringCarts++;
             }
           }
@@ -706,11 +785,13 @@ export class CartService {
   /**
    * Get carts that are expiring soon (for reminder notifications)
    */
-  async getExpiringCarts(hoursBeforeExpiry: number = 2): Promise<{
-    customerId: string;
-    cart: Cart;
-    expiresInSeconds: number;
-  }[]> {
+  async getExpiringCarts(hoursBeforeExpiry: number = 2): Promise<
+    {
+      customerId: string;
+      cart: Cart;
+      expiresInSeconds: number;
+    }[]
+  > {
     const expiringCarts: {
       customerId: string;
       cart: Cart;
@@ -758,7 +839,10 @@ export class CartService {
   /**
    * Extend cart expiration for active users
    */
-  async extendCartExpirationForActiveUsers(): Promise<{ extended: number; errors: number }> {
+  async extendCartExpirationForActiveUsers(): Promise<{
+    extended: number;
+    errors: number;
+  }> {
     let extended = 0;
     let errors = 0;
 
@@ -775,7 +859,8 @@ export class CartService {
             const ttl = await client.ttl(key);
 
             // If cart is expiring within 6 hours, extend it
-            if (ttl > 0 && ttl < 21600) { // 6 hours = 21600 seconds
+            if (ttl > 0 && ttl < 21600) {
+              // 6 hours = 21600 seconds
               await this.extendCartExpiration(customerId, 86400); // Extend to 24 hours
               extended++;
             }
@@ -791,5 +876,182 @@ export class CartService {
       console.error('Error extending cart expirations:', error);
       return { extended, errors: errors + 1 };
     }
+  }
+
+  /**
+   * Reserve inventory for cart items during checkout process
+   */
+  async reserveCartInventory(
+    customerId: string,
+    sessionId?: string,
+    expirationMinutes: number = 30
+  ): Promise<{ reservationId: string; success: boolean; failures: any[] }> {
+    const cart = await this.getCart(customerId);
+
+    if (cart.items.length === 0) {
+      throw new Error('Cart is empty');
+    }
+
+    // Prepare reservation items
+    const reservationItems = cart.items.map(item => ({
+      productId: item.productId,
+      quantity: item.quantity,
+    }));
+
+    try {
+      const result = await inventoryService.reserveInventory(
+        reservationItems,
+        customerId,
+        sessionId,
+        expirationMinutes
+      );
+
+      return result;
+    } catch (error) {
+      console.error('Error reserving cart inventory:', error);
+      throw new Error('Failed to reserve inventory for checkout');
+    }
+  }
+
+  /**
+   * Release inventory reservation (for cancelled checkout)
+   */
+  async releaseCartReservation(reservationId: string): Promise<void> {
+    try {
+      await inventoryService.releaseReservation(reservationId);
+    } catch (error) {
+      console.error('Error releasing cart reservation:', error);
+      throw new Error('Failed to release inventory reservation');
+    }
+  }
+
+  /**
+   * Convert cart reservation to order (mark as used)
+   */
+  async convertReservationToOrder(
+    reservationId: string,
+    orderId: string
+  ): Promise<void> {
+    try {
+      await inventoryService.convertReservationToOrder(reservationId, orderId);
+    } catch (error) {
+      console.error('Error converting reservation to order:', error);
+      throw new Error('Failed to convert reservation to order');
+    }
+  }
+
+  /**
+   * Validate cart for checkout with real-time inventory check
+   */
+  async validateCartForCheckout(customerId: string): Promise<{
+    isValid: boolean;
+    issues: CartIssue[];
+    totalItems: number;
+    totalValue: number;
+  }> {
+    const cart = await this.getCart(customerId);
+    const validationResult = await this.validateCartItems(cart);
+
+    if (!validationResult.isValid && validationResult.updatedCart) {
+      // Save updated cart if there were changes
+      await this.saveCart(validationResult.updatedCart);
+    }
+
+    const finalCart = validationResult.updatedCart || cart;
+
+    return {
+      isValid: validationResult.isValid,
+      issues: validationResult.issues,
+      totalItems: finalCart.items.reduce((sum, item) => sum + item.quantity, 0),
+      totalValue: finalCart.total,
+    };
+  }
+
+  /**
+   * Get inventory status for all cart items
+   */
+  async getCartInventoryStatus(customerId: string): Promise<
+    {
+      productId: string;
+      quantity: number;
+      inventoryStatus: InventoryStatus | null;
+      isAvailable: boolean;
+    }[]
+  > {
+    const cart = await this.getCart(customerId);
+    const inventoryStatuses = [];
+
+    for (const item of cart.items) {
+      try {
+        const inventoryStatus = await inventoryService.getInventoryStatus(
+          item.productId
+        );
+        const isAvailable = await inventoryService.checkAvailability(
+          item.productId,
+          item.quantity
+        );
+
+        inventoryStatuses.push({
+          productId: item.productId,
+          quantity: item.quantity,
+          inventoryStatus,
+          isAvailable,
+        });
+      } catch (error) {
+        console.error(
+          `Error getting inventory status for ${item.productId}:`,
+          error
+        );
+        inventoryStatuses.push({
+          productId: item.productId,
+          quantity: item.quantity,
+          inventoryStatus: null,
+          isAvailable: false,
+        });
+      }
+    }
+
+    return inventoryStatuses;
+  }
+
+  /**
+   * Update cart items based on inventory changes
+   */
+  async updateCartFromInventoryChanges(
+    customerId: string,
+    productId: string
+  ): Promise<Cart> {
+    const cart = await this.getCart(customerId);
+    const itemIndex = cart.items.findIndex(
+      item => item.productId === productId
+    );
+
+    if (itemIndex === -1) {
+      return cart; // Product not in cart
+    }
+
+    const item = cart.items[itemIndex];
+    const inventoryStatus =
+      await inventoryService.getInventoryStatus(productId);
+
+    if (!inventoryStatus) {
+      // Product no longer has inventory tracking, remove from cart
+      cart.items.splice(itemIndex, 1);
+    } else if (inventoryStatus.trackQuantity) {
+      if (inventoryStatus.availableQuantity === 0) {
+        // Out of stock, remove from cart
+        cart.items.splice(itemIndex, 1);
+      } else if (inventoryStatus.availableQuantity < item.quantity) {
+        // Reduce quantity to available amount
+        cart.items[itemIndex].quantity = inventoryStatus.availableQuantity;
+      }
+    }
+
+    // Recalculate totals and save
+    this.calculateCartTotals(cart);
+    cart.updatedAt = new Date().toISOString();
+    await this.saveCart(cart);
+
+    return cart;
   }
 }

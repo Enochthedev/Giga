@@ -12,6 +12,7 @@ coverage/
 *.generated.*
 prisma/migrations/
 *.prisma.d.ts
+*.prisma
 
 # Logs
 *.log

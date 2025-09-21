@@ -144,6 +144,7 @@ async function buildApp() {
   await fastify.register(vendorRoutes, { prefix: '/api/v1/vendor' });
 
   // Global error handler
+  // eslint-disable-next-line require-await
   fastify.setErrorHandler(async (error, request, reply) => {
     fastify.log.error(error);
 

@@ -1,5 +1,6 @@
 import { prisma } from '../lib/prisma';
 import { CartService } from './cart.service';
+import { inventoryService } from './inventory.service';
 import { SessionService } from './session.service';
 
 export class CleanupService {
@@ -23,7 +24,9 @@ export class CleanupService {
 
     const intervalMs = intervalMinutes * 60 * 1000;
 
-    console.log(`Starting automatic cleanup service (interval: ${intervalMinutes} minutes)`);
+    console.log(
+      `Starting automatic cleanup service (interval: ${intervalMinutes} minutes)`
+    );
 
     // Run initial cleanup
     this.runCleanup();
@@ -51,6 +54,7 @@ export class CleanupService {
   async runCleanup(): Promise<{
     cartCleanup: { cleaned: number; errors: number };
     sessionCleanup: { cleaned: number; errors: number };
+    inventoryCleanup: { cleaned: number; errors: number };
     orphanedDataCleanup: { cleaned: number; errors: number };
     timestamp: string;
   }> {
@@ -59,11 +63,14 @@ export class CleanupService {
     const startTime = Date.now();
 
     try {
-      // Run cart and session cleanup in parallel
-      const [cartCleanup, sessionCleanup] = await Promise.all([
-        this.cartService.cleanupExpiredCarts(),
-        this.sessionService.cleanupExpiredSessions(),
-      ]);
+      // Run cart, session, and inventory cleanup in parallel
+      const [cartCleanup, sessionCleanup, inventoryCleanup] = await Promise.all(
+        [
+          this.cartService.cleanupExpiredCarts(),
+          this.sessionService.cleanupExpiredSessions(),
+          this.cleanupExpiredInventoryReservations(),
+        ]
+      );
 
       // Clean up orphaned data (carts without sessions, etc.)
       const orphanedDataCleanup = await this.cleanupOrphanedData();
@@ -73,12 +80,14 @@ export class CleanupService {
       console.log(`Cleanup completed in ${duration}ms:`, {
         carts: cartCleanup,
         sessions: sessionCleanup,
+        inventory: inventoryCleanup,
         orphanedData: orphanedDataCleanup,
       });
 
       return {
         cartCleanup,
         sessionCleanup,
+        inventoryCleanup,
         orphanedDataCleanup,
         timestamp: new Date().toISOString(),
       };
@@ -91,7 +100,10 @@ export class CleanupService {
   /**
    * Clean up orphaned data (carts without sessions, etc.)
    */
-  private async cleanupOrphanedData(): Promise<{ cleaned: number; errors: number }> {
+  private async cleanupOrphanedData(): Promise<{
+    cleaned: number;
+    errors: number;
+  }> {
     let cleaned = 0;
     let errors = 0;
 
@@ -102,7 +114,7 @@ export class CleanupService {
       // Get all cart keys and session keys
       const [cartKeys, sessionKeys] = await Promise.all([
         client.keys('cart:*'),
-        client.keys('session:*')
+        client.keys('session:*'),
       ]);
 
       // Extract customer IDs from session keys
@@ -139,7 +151,8 @@ export class CleanupService {
             if (cartData) {
               const cart = JSON.parse(cartData);
               const updatedAt = new Date(cart.updatedAt);
-              const hoursSinceUpdate = (Date.now() - updatedAt.getTime()) / (1000 * 60 * 60);
+              const hoursSinceUpdate =
+                (Date.now() - updatedAt.getTime()) / (1000 * 60 * 60);
 
               // Delete anonymous carts older than 2 hours without active sessions
               if (hoursSinceUpdate > 2) {
@@ -184,6 +197,22 @@ export class CleanupService {
     } catch (error) {
       console.error('Error getting cleanup statistics:', error);
       throw error;
+    }
+  }
+
+  /**
+   * Clean up expired inventory reservations
+   */
+  private async cleanupExpiredInventoryReservations(): Promise<{
+    cleaned: number;
+    errors: number;
+  }> {
+    try {
+      const cleaned = await inventoryService.cleanupExpiredReservations();
+      return { cleaned, errors: 0 };
+    } catch (error) {
+      console.error('Error cleaning up expired inventory reservations:', error);
+      return { cleaned: 0, errors: 1 };
     }
   }
 

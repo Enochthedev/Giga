@@ -9,7 +9,7 @@ module.exports = {
     ecmaVersion: 2022,
     sourceType: 'module',
   },
-  plugins: ['import', 'security'],
+  plugins: ['import', 'security', '@typescript-eslint'],
   rules: {
     // Basic rules
     'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
@@ -60,12 +60,53 @@ module.exports = {
   },
   overrides: [
     {
-      // TypeScript files - simplified configuration
+      // TypeScript files
       files: ['**/*.ts'],
+      extends: [
+        'eslint:recommended',
+        'prettier',
+      ],
+      parser: '@typescript-eslint/parser',
+      parserOptions: {
+        ecmaVersion: 2022,
+        sourceType: 'module',
+      },
+      plugins: ['@typescript-eslint', 'import', 'security'],
       rules: {
-        'no-unused-vars': 'off', // TypeScript handles this
-        'no-undef': 'off', // TypeScript handles this
-        'import/order': 'off', // Can cause issues with TypeScript imports
+        // Disable base ESLint rules that are covered by TypeScript
+        'no-unused-vars': 'off',
+        'no-undef': 'off',
+        'no-redeclare': 'off',
+        'no-use-before-define': 'off',
+
+        // Enable TypeScript-specific rules
+        '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+        '@typescript-eslint/no-explicit-any': 'warn',
+        '@typescript-eslint/explicit-function-return-type': 'off',
+        '@typescript-eslint/explicit-module-boundary-types': 'off',
+        '@typescript-eslint/no-non-null-assertion': 'warn',
+
+        // Import rules for TypeScript
+        'import/order': [
+          'error',
+          {
+            groups: [
+              'builtin',
+              'external',
+              'internal',
+              'parent',
+              'sibling',
+              'index',
+            ],
+            'newlines-between': 'never',
+            alphabetize: {
+              order: 'asc',
+              caseInsensitive: true,
+            },
+          },
+        ],
+        'import/no-duplicates': 'error',
+        'import/no-unresolved': 'off', // TypeScript handles this
       },
     },
     {

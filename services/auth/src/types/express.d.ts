@@ -7,8 +7,11 @@ declare global {
       user?: {
         sub: string;
         email: string;
+        phone?: string;
         roles: string[];
         activeRole: string;
+        isEmailVerified?: boolean;
+        isPhoneVerified?: boolean;
       };
     }
   }

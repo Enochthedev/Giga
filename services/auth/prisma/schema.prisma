@@ -40,6 +40,10 @@ model User {
   passwordResetTokens     PasswordResetToken[]
   phoneVerificationCodes  PhoneVerificationCode[]
 
+  // Audit logs
+  adminAuditLogs    AuditLog[] @relation("AdminAuditLogs")
+  targetAuditLogs   AuditLog[] @relation("TargetAuditLogs")
+
   @@map("users")
 }
 
@@ -220,6 +224,26 @@ model PhoneVerificationCode {
 
   @@unique([userId, code])
   @@map("phone_verification_codes")
+}
+
+// Audit logging for admin actions
+model AuditLog {
+  id           String   @id @default(cuid())
+  action       String   // Action performed (e.g., 'VIEW_USER', 'UPDATE_USER_STATUS')
+  adminUserId  String   // ID of admin who performed the action
+  adminUser    User     @relation("AdminAuditLogs", fields: [adminUserId], references: [id], onDelete: Cascade)
+  targetUserId String?  // ID of user being acted upon (if applicable)
+  targetUser   User?    @relation("TargetAuditLogs", fields: [targetUserId], references: [id], onDelete: SetNull)
+  details      Json     // Additional details about the action
+  ipAddress    String?  // IP address of the admin
+  userAgent    String?  // User agent of the admin
+  createdAt    DateTime @default(now())
+
+  @@index([adminUserId])
+  @@index([targetUserId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("audit_logs")
 }
 
 // Enums

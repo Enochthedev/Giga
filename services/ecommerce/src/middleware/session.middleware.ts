@@ -8,12 +8,16 @@ interface SessionRequest extends Request {
 }
 
 export class SessionMiddleware {
-  constructor(private sessionService: SessionService) { }
+  constructor(private sessionService: SessionService) {}
 
   /**
    * Middleware to handle session management
    */
-  handleSession = async (req: SessionRequest, res: Response, next: NextFunction): Promise<void> => {
+  handleSession = async (
+    req: SessionRequest,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
     try {
       // Get session ID from header, cookie, or create new one
       let sessionId = this.extractSessionId(req);
@@ -27,7 +31,9 @@ export class SessionMiddleware {
       if (!session) {
         // Create new session
         const customerId = this.extractCustomerId(req);
-        session = await this.sessionService.createSession(customerId || undefined);
+        session = await this.sessionService.createSession(
+          customerId || undefined
+        );
         sessionId = session.sessionId;
 
         // Set session cookie
@@ -54,7 +60,11 @@ export class SessionMiddleware {
   /**
    * Middleware to handle user authentication and cart merging
    */
-  handleAuthentication = async (req: SessionRequest, res: Response, next: NextFunction): Promise<void> => {
+  handleAuthentication = async (
+    req: SessionRequest,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
     try {
       const customerId = this.extractCustomerId(req);
 
@@ -71,8 +81,12 @@ export class SessionMiddleware {
           req.session = newSession;
 
           // Store anonymous customer ID for potential cart merging
-          if (previousAnonymousCustomerId && previousAnonymousCustomerId.startsWith('anonymous_')) {
-            req.session.previousAnonymousCustomerId = previousAnonymousCustomerId;
+          if (
+            previousAnonymousCustomerId &&
+            previousAnonymousCustomerId.startsWith('anonymous_')
+          ) {
+            req.session.previousAnonymousCustomerId =
+              previousAnonymousCustomerId;
           }
 
           // Update session cookie
@@ -80,7 +94,10 @@ export class SessionMiddleware {
 
           // Add header to indicate authentication state change
           res.setHeader('X-Auth-State-Changed', 'true');
-          res.setHeader('X-Previous-Anonymous-Customer', previousAnonymousCustomerId || '');
+          res.setHeader(
+            'X-Previous-Anonymous-Customer',
+            previousAnonymousCustomerId || ''
+          );
         }
       } else if (customerId && req.session && !req.session.isAnonymous) {
         // Already authenticated user, just extend session

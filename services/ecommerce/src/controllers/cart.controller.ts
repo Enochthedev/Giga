@@ -2,7 +2,6 @@ import { AddToCartSchema } from '@platform/types';
 import { Request, Response } from 'express';
 import { z } from 'zod';
 import { CartService } from '../services/cart.service';
-
 import { SessionData } from '../services/session.service';
 
 // Extend Request interface for user and session properties
@@ -32,7 +31,8 @@ export class CartController {
   async getCart(req: SessionRequest, res: Response): Promise<void> {
     try {
       // Get customerId from session (supports both authenticated and anonymous users)
-      const customerId = req.session?.customerId || req.user?.id || 'clr123customer';
+      const customerId =
+        req.session?.customerId || req.user?.id || 'clr123customer';
 
       const cart = await this.cartService.getCart(customerId);
 
@@ -70,9 +70,14 @@ export class CartController {
 
       const { productId, quantity } = validationResult.data;
       // Get customerId from session (supports both authenticated and anonymous users)
-      const customerId = req.session?.customerId || req.user?.id || 'clr123customer';
+      const customerId =
+        req.session?.customerId || req.user?.id || 'clr123customer';
 
-      const cart = await this.cartService.addItem(customerId, productId, quantity);
+      const cart = await this.cartService.addItem(
+        customerId,
+        productId,
+        quantity
+      );
 
       res.json({
         success: true,
@@ -94,9 +99,11 @@ export class CartController {
           return;
         }
 
-        if (error.message.includes('not available') ||
+        if (
+          error.message.includes('not available') ||
           error.message.includes('stock') ||
-          error.message.includes('items available')) {
+          error.message.includes('items available')
+        ) {
           res.status(400).json({
             success: false,
             error: error.message,
@@ -135,9 +142,14 @@ export class CartController {
 
       const { quantity } = validationResult.data;
       // Get customerId from session (supports both authenticated and anonymous users)
-      const customerId = req.session?.customerId || req.user?.id || 'clr123customer';
+      const customerId =
+        req.session?.customerId || req.user?.id || 'clr123customer';
 
-      const cart = await this.cartService.updateItemQuantity(customerId, itemId, quantity);
+      const cart = await this.cartService.updateItemQuantity(
+        customerId,
+        itemId,
+        quantity
+      );
 
       res.json({
         success: true,
@@ -159,7 +171,10 @@ export class CartController {
           return;
         }
 
-        if (error.message.includes('stock') || error.message.includes('items available')) {
+        if (
+          error.message.includes('stock') ||
+          error.message.includes('items available')
+        ) {
           res.status(400).json({
             success: false,
             error: error.message,
@@ -184,7 +199,8 @@ export class CartController {
     try {
       const { itemId } = req.params;
       // Get customerId from session (supports both authenticated and anonymous users)
-      const customerId = req.session?.customerId || req.user?.id || 'clr123customer';
+      const customerId =
+        req.session?.customerId || req.user?.id || 'clr123customer';
 
       const cart = await this.cartService.removeItem(customerId, itemId);
 
@@ -221,7 +237,8 @@ export class CartController {
   async clearCart(req: SessionRequest, res: Response): Promise<void> {
     try {
       // Get customerId from session (supports both authenticated and anonymous users)
-      const customerId = req.session?.customerId || req.user?.id || 'clr123customer';
+      const customerId =
+        req.session?.customerId || req.user?.id || 'clr123customer';
 
       await this.cartService.clearCart(customerId);
 
@@ -250,7 +267,8 @@ export class CartController {
   async validateCart(req: SessionRequest, res: Response): Promise<void> {
     try {
       // Get customerId from session (supports both authenticated and anonymous users)
-      const customerId = req.session?.customerId || req.user?.id || 'clr123customer';
+      const customerId =
+        req.session?.customerId || req.user?.id || 'clr123customer';
 
       const cart = await this.cartService.getCart(customerId);
       const validationResult = await this.cartService.validateCartItems(cart);
@@ -329,7 +347,8 @@ export class CartController {
   async mergeCartOnAuth(req: SessionRequest, res: Response): Promise<void> {
     try {
       const authenticatedCustomerId = req.user?.id;
-      const previousAnonymousCustomerId = req.session?.previousAnonymousCustomerId;
+      const previousAnonymousCustomerId =
+        req.session?.previousAnonymousCustomerId;
 
       if (!authenticatedCustomerId) {
         res.status(401).json({
@@ -413,14 +432,17 @@ export class CartController {
         return;
       }
 
-      const expirationSeconds = await this.cartService.getCartExpiration(customerId);
+      const expirationSeconds =
+        await this.cartService.getCartExpiration(customerId);
 
       res.json({
         success: true,
         data: {
           customerId,
           expiresInSeconds: expirationSeconds,
-          expiresAt: expirationSeconds ? new Date(Date.now() + (expirationSeconds * 1000)).toISOString() : null,
+          expiresAt: expirationSeconds
+            ? new Date(Date.now() + expirationSeconds * 1000).toISOString()
+            : null,
           isExpired: expirationSeconds === null || expirationSeconds <= 0,
         },
         timestamp: new Date().toISOString(),
@@ -438,7 +460,10 @@ export class CartController {
   /**
    * POST /api/v1/cart/extend - Extend cart expiration
    */
-  async extendCartExpiration(req: SessionRequest, res: Response): Promise<void> {
+  async extendCartExpiration(
+    req: SessionRequest,
+    res: Response
+  ): Promise<void> {
     try {
       const customerId = req.session?.customerId || req.user?.id;
       const { ttlSeconds = 86400 } = req.body; // Default 24 hours
@@ -458,14 +483,17 @@ export class CartController {
 
       await this.cartService.extendCartExpiration(customerId, validTtl);
 
-      const newExpirationSeconds = await this.cartService.getCartExpiration(customerId);
+      const newExpirationSeconds =
+        await this.cartService.getCartExpiration(customerId);
 
       res.json({
         success: true,
         data: {
           customerId,
           expiresInSeconds: newExpirationSeconds,
-          expiresAt: newExpirationSeconds ? new Date(Date.now() + (newExpirationSeconds * 1000)).toISOString() : null,
+          expiresAt: newExpirationSeconds
+            ? new Date(Date.now() + newExpirationSeconds * 1000).toISOString()
+            : null,
           extendedBy: validTtl,
         },
         message: 'Cart expiration extended successfully',
@@ -476,6 +504,188 @@ export class CartController {
       res.status(500).json({
         success: false,
         error: 'Failed to extend cart expiration',
+        timestamp: new Date().toISOString(),
+      });
+    }
+  }
+
+  /**
+   * POST /api/v1/cart/reserve - Reserve inventory for cart items during checkout
+   */
+  async reserveInventory(req: SessionRequest, res: Response): Promise<void> {
+    try {
+      const customerId = req.session?.customerId || req.user?.id;
+      const { expirationMinutes = 30 } = req.body;
+
+      if (!customerId) {
+        res.status(401).json({
+          success: false,
+          error: 'Customer ID is required',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      // Validate expiration minutes (max 2 hours for security)
+      const maxExpiration = 120; // 2 hours
+      const validExpiration = Math.min(
+        Math.max(expirationMinutes, 5),
+        maxExpiration
+      );
+
+      const result = await this.cartService.reserveCartInventory(
+        customerId,
+        req.sessionId,
+        validExpiration
+      );
+
+      if (!result.success) {
+        res.status(400).json({
+          success: false,
+          error: 'Failed to reserve inventory',
+          details: result.failures,
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      res.json({
+        success: true,
+        data: {
+          reservationId: result.reservationId,
+          expiresInMinutes: validExpiration,
+          expiresAt: new Date(
+            Date.now() + validExpiration * 60 * 1000
+          ).toISOString(),
+        },
+        message: 'Inventory reserved successfully',
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error('Reserve inventory error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to reserve inventory',
+        timestamp: new Date().toISOString(),
+      });
+    }
+  }
+
+  /**
+   * DELETE /api/v1/cart/reserve/:reservationId - Release inventory reservation
+   */
+  async releaseReservation(req: SessionRequest, res: Response): Promise<void> {
+    try {
+      const { reservationId } = req.params;
+
+      if (!reservationId) {
+        res.status(400).json({
+          success: false,
+          error: 'Reservation ID is required',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      await this.cartService.releaseCartReservation(reservationId);
+
+      res.json({
+        success: true,
+        message: 'Inventory reservation released successfully',
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error('Release reservation error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to release inventory reservation',
+        timestamp: new Date().toISOString(),
+      });
+    }
+  }
+
+  /**
+   * GET /api/v1/cart/checkout/validate - Validate cart for checkout with inventory check
+   */
+  async validateForCheckout(req: SessionRequest, res: Response): Promise<void> {
+    try {
+      const customerId = req.session?.customerId || req.user?.id;
+
+      if (!customerId) {
+        res.status(401).json({
+          success: false,
+          error: 'Customer ID is required',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      const validation =
+        await this.cartService.validateCartForCheckout(customerId);
+
+      res.json({
+        success: true,
+        data: {
+          validation: {
+            isValid: validation.isValid,
+            issues: validation.issues,
+            totalItems: validation.totalItems,
+            totalValue: validation.totalValue,
+            canProceedToCheckout:
+              validation.isValid && validation.totalItems > 0,
+          },
+        },
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error('Validate for checkout error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to validate cart for checkout',
+        timestamp: new Date().toISOString(),
+      });
+    }
+  }
+
+  /**
+   * GET /api/v1/cart/inventory - Get inventory status for all cart items
+   */
+  async getInventoryStatus(req: SessionRequest, res: Response): Promise<void> {
+    try {
+      const customerId = req.session?.customerId || req.user?.id;
+
+      if (!customerId) {
+        res.status(401).json({
+          success: false,
+          error: 'Customer ID is required',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      const inventoryStatuses =
+        await this.cartService.getCartInventoryStatus(customerId);
+
+      res.json({
+        success: true,
+        data: {
+          inventoryStatuses,
+          summary: {
+            totalItems: inventoryStatuses.length,
+            availableItems: inventoryStatuses.filter(item => item.isAvailable)
+              .length,
+            unavailableItems: inventoryStatuses.filter(
+              item => !item.isAvailable
+            ).length,
+          },
+        },
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error('Get inventory status error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to get inventory status',
         timestamp: new Date().toISOString(),
       });
     }

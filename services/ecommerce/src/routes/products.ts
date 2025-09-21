@@ -140,7 +140,10 @@ router.get('/:id', productController.getProductById.bind(productController));
  *       200:
  *         description: Categories retrieved successfully
  */
-router.get('/categories/list', productController.getCategories.bind(productController));
+router.get(
+  '/categories/list',
+  productController.getCategories.bind(productController)
+);
 
 /**
  * @swagger
@@ -158,6 +161,9 @@ router.get('/categories/list', productController.getCategories.bind(productContr
  *       200:
  *         description: Featured products retrieved successfully
  */
-router.get('/featured/list', productController.getFeaturedProducts.bind(productController));
+router.get(
+  '/featured/list',
+  productController.getFeaturedProducts.bind(productController)
+);
 
 export { router as productRoutes };

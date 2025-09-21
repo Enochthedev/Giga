@@ -36,11 +36,27 @@ model Product {
   cartItems    CartItem[]
   wishlistItems WishlistItem[]
 
+  // Strategic indexes for performance optimization
   @@index([category])
   @@index([vendorId])
   @@index([isActive])
   @@index([price])
   @@index([rating])
+  @@index([createdAt])
+  @@index([updatedAt])
+  // Composite indexes for common query patterns
+  @@index([isActive, category])
+  @@index([isActive, vendorId])
+  @@index([isActive, price])
+  @@index([isActive, rating])
+  @@index([category, subcategory])
+  @@index([category, brand])
+  @@index([vendorId, isActive, createdAt])
+  @@index([isActive, category, price])
+  @@index([isActive, rating, createdAt])
+  // Full-text search optimization (for PostgreSQL)
+  @@index([name])
+  @@index([brand])
   @@map("products")
 }
 
@@ -54,6 +70,14 @@ model ProductInventory {
   trackQuantity     Boolean @default(true)
   updatedAt         DateTime @updatedAt
 
+  // Indexes for inventory management and low stock alerts
+  @@index([quantity])
+  @@index([lowStockThreshold])
+  @@index([trackQuantity])
+  @@index([updatedAt])
+  // Composite indexes for inventory monitoring
+  @@index([trackQuantity, quantity])
+  @@index([quantity, lowStockThreshold])
   @@map("product_inventory")
 }
 
@@ -133,9 +157,18 @@ model Order {
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
 
+  // Optimized indexes for order queries
   @@index([customerId])
   @@index([status])
   @@index([createdAt])
+  @@index([updatedAt])
+  @@index([paymentStatus])
+  // Composite indexes for common query patterns
+  @@index([customerId, status])
+  @@index([customerId, createdAt])
+  @@index([status, createdAt])
+  @@index([customerId, status, createdAt])
+  @@index([paymentStatus, status])
   @@map("orders")
 }
 
@@ -155,9 +188,18 @@ model VendorOrder {
   createdAt         DateTime    @default(now())
   updatedAt         DateTime    @updatedAt
 
+  // Optimized indexes for vendor order queries
   @@index([vendorId])
   @@index([status])
   @@index([orderId])
+  @@index([createdAt])
+  @@index([updatedAt])
+  // Composite indexes for vendor analytics and filtering
+  @@index([vendorId, status])
+  @@index([vendorId, createdAt])
+  @@index([vendorId, status, createdAt])
+  @@index([status, createdAt])
+  @@index([orderId, vendorId])
   @@map("vendor_orders")
 }
 
@@ -173,6 +215,15 @@ model OrderItem {
   price         Float        // Price at time of order
   createdAt     DateTime     @default(now())
 
+  // Indexes for order item queries and analytics
+  @@index([orderId])
+  @@index([vendorOrderId])
+  @@index([productId])
+  @@index([createdAt])
+  // Composite indexes for analytics
+  @@index([productId, createdAt])
+  @@index([orderId, productId])
+  @@index([vendorOrderId, productId])
   @@map("order_items")
 }
 
@@ -232,8 +283,16 @@ model VendorAnalytics {
   createdAt    DateTime @default(now())
 
   @@unique([vendorId, period, date])
+  // Optimized indexes for analytics queries
   @@index([vendorId])
   @@index([date])
+  @@index([period])
+  @@index([createdAt])
+  // Composite indexes for analytics reporting
+  @@index([vendorId, period])
+  @@index([vendorId, date])
+  @@index([vendorId, period, date])
+  @@index([period, date])
   @@map("vendor_analytics")
 }
 

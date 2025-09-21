@@ -31,7 +31,9 @@ export function loadServiceConfig(): EcommerceServiceConfig {
   // Check for required environment variables
   const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
   if (missingVars.length > 0) {
-    throw new Error(`Missing required environment variables: ${missingVars.join(', ')}`);
+    throw new Error(
+      `Missing required environment variables: ${missingVars.join(', ')}`
+    );
   }
 
   return {

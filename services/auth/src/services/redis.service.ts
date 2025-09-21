@@ -29,28 +29,28 @@ class RedisService {
   async set(key: string, value: string, ttlSeconds?: number) {
     if (!this.client) await this.connect();
     if (ttlSeconds) {
-      return await this.client!.setEx(key, ttlSeconds, value);
+      return this.client!.setEx(key, ttlSeconds, value);
     }
-    return await this.client!.set(key, value);
+    return this.client!.set(key, value);
   }
 
   async get(key: string) {
     if (!this.client) await this.connect();
-    return await this.client!.get(key);
+    return this.client!.get(key);
   }
 
   async del(key: string) {
     if (!this.client) await this.connect();
-    return await this.client!.del(key);
+    return this.client!.del(key);
   }
 
   async exists(key: string) {
     if (!this.client) await this.connect();
-    return await this.client!.exists(key);
+    return this.client!.exists(key);
   }
 
   // Session management helpers
-  async setSession(userId: string, sessionData: any, ttlSeconds = 86400) {
+  async setSession(userId: string, sessionData: Record<string, unknown>, ttlSeconds = 86400) {
     const key = `session:${userId}`;
     return await this.set(key, JSON.stringify(sessionData), ttlSeconds);
   }

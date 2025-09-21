@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { cacheService } from '../services/cache.service';
 
 export class ProductController {
   async getProducts(req: Request, res: Response) {
@@ -16,13 +17,22 @@ export class ProductController {
         limit = 20,
       } = req.query;
 
-      // Create cache key for search results
-      const cacheKey = JSON.stringify({
-        search, category, subcategory, brand, minPrice, maxPrice, sortBy, sortOrder, page, limit
-      });
+      // Create structured query object for better caching
+      const queryParams = {
+        search,
+        category,
+        subcategory,
+        brand,
+        minPrice,
+        maxPrice,
+        sortBy,
+        sortOrder,
+        page: Number(page),
+        limit: Number(limit),
+      };
 
-      // Try to get cached results
-      const cachedResults = await req.redis.getCachedSearchResults(cacheKey);
+      // Try to get cached results with enhanced caching
+      const cachedResults = await cacheService.getCachedSearchResults(queryParams);
       if (cachedResults) {
         return res.json({
           success: true,
@@ -32,7 +42,7 @@ export class ProductController {
         });
       }
 
-      const skip = (Number(page) - 1) * Number(limit);
+      const skip = (queryParams.page - 1) * queryParams.limit;
       const where: any = { isActive: true };
 
       // Build search filters
@@ -62,7 +72,7 @@ export class ProductController {
         req.prisma.product.findMany({
           where,
           skip,
-          take: Number(limit),
+          take: queryParams.limit,
           orderBy,
           include: {
             inventory: true,
@@ -74,15 +84,20 @@ export class ProductController {
       const result = {
         products,
         pagination: {
-          page: Number(page),
-          limit: Number(limit),
+          page: queryParams.page,
+          limit: queryParams.limit,
           total,
-          pages: Math.ceil(total / Number(limit)),
+          pages: Math.ceil(total / queryParams.limit),
         },
       };
 
-      // Cache results for 5 minutes
-      await req.redis.cacheSearchResults(cacheKey, result, 300);
+      // Cache results with enhanced caching strategy
+      await cacheService.cacheSearchResults(queryParams, result);
+
+      // Also cache individual products for better performance
+      if (products.length > 0) {
+        await cacheService.cacheProductsBatch(products);
+      }
 
       res.json({
         success: true,
@@ -103,8 +118,8 @@ export class ProductController {
     try {
       const { id } = req.params;
 
-      // Try to get cached product
-      const cachedProduct = await req.redis.getCachedProduct(id);
+      // Try to get cached product with enhanced caching
+      const cachedProduct = await cacheService.getCachedProduct(id);
       if (cachedProduct) {
         return res.json({
           success: true,
@@ -134,8 +149,8 @@ export class ProductController {
         });
       }
 
-      // Cache product for 1 hour
-      await req.redis.cacheProduct(id, product, 3600);
+      // Cache product with enhanced strategy
+      await cacheService.cacheProduct(id, product);
 
       res.json({
         success: true,
@@ -154,6 +169,17 @@ export class ProductController {
 
   async getCategories(req: Request, res: Response) {
     try {
+      // Try to get cached categories
+      const cachedCategories = await cacheService.getCachedCategories();
+      if (cachedCategories) {
+        return res.json({
+          success: true,
+          data: { categories: cachedCategories },
+          cached: true,
+          timestamp: new Date().toISOString(),
+        });
+      }
+
       const categories = await req.prisma.product.groupBy({
         by: ['category', 'subcategory'],
         where: { isActive: true },
@@ -184,10 +210,15 @@ export class ProductController {
         return acc;
       }, {});
 
+      const result = Object.values(groupedCategories);
+
+      // Cache categories with enhanced strategy
+      await cacheService.cacheCategories(result);
+
       res.json({
         success: true,
         data: {
-          categories: Object.values(groupedCategories),
+          categories: result,
         },
         timestamp: new Date().toISOString(),
       });
@@ -204,6 +235,19 @@ export class ProductController {
   async getFeaturedProducts(req: Request, res: Response) {
     try {
       const { limit = 10 } = req.query;
+
+      // Try to get cached featured products
+      const cachedProducts = await cacheService.getCachedFeaturedProducts();
+      if (cachedProducts) {
+        // Filter by limit if cached result has more products
+        const limitedProducts = cachedProducts.slice(0, Number(limit));
+        return res.json({
+          success: true,
+          data: { products: limitedProducts },
+          cached: true,
+          timestamp: new Date().toISOString(),
+        });
+      }
 
       const products = await req.prisma.product.findMany({
         where: {
@@ -222,6 +266,9 @@ export class ProductController {
           inventory: true,
         },
       });
+
+      // Cache featured products with enhanced strategy
+      await cacheService.cacheFeaturedProducts(products);
 
       res.json({
         success: true,

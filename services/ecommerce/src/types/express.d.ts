@@ -13,6 +13,7 @@ declare global {
         roles: string[];
         activeRole: string;
       };
+      correlationId?: string;
     }
   }
 }

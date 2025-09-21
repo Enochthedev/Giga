@@ -1,7 +1,12 @@
 import { Router } from 'express';
 import { CartController } from '../controllers/cart.controller';
 import { prisma } from '../lib/prisma';
-import { handleAuthentication, handleSession } from '../middleware/session.middleware';
+import {
+  handleAuthentication,
+  handleSession,
+} from '../middleware/session.middleware';
+import { cartRateLimit, validate } from '../middleware/validation.middleware';
+import { CartItemParamsSchema, SanitizedAddToCartSchema, UpdateCartItemSchema } from '../schemas/validation.schemas';
 import { CartService } from '../services/cart.service';
 
 const router = Router();
@@ -13,6 +18,9 @@ const cartController = new CartController(cartService);
 // Apply session middleware to all cart routes
 router.use(handleSession);
 router.use(handleAuthentication);
+
+// Apply cart-specific rate limiting
+router.use(cartRateLimit);
 
 // Route handlers using the CartController
 
@@ -76,7 +84,7 @@ router.get('/', (req, res) => cartController.getCart(req, res));
  *       404:
  *         description: Product not found
  */
-router.post('/add', (req, res) => cartController.addItem(req, res));
+router.post('/add', validate({ body: SanitizedAddToCartSchema }), (req, res) => cartController.addItem(req, res));
 
 /**
  * @swagger
@@ -114,7 +122,13 @@ router.post('/add', (req, res) => cartController.addItem(req, res));
  *       404:
  *         description: Cart or item not found
  */
-router.put('/items/:itemId', (req, res) => cartController.updateItemQuantity(req, res));
+router.put('/items/:itemId',
+  validate({
+    params: CartItemParamsSchema,
+    body: UpdateCartItemSchema
+  }),
+  (req, res) => cartController.updateItemQuantity(req, res)
+);
 
 /**
  * @swagger
@@ -137,7 +151,10 @@ router.put('/items/:itemId', (req, res) => cartController.updateItemQuantity(req
  *       404:
  *         description: Cart or item not found
  */
-router.delete('/items/:itemId', (req, res) => cartController.removeItem(req, res));
+router.delete('/items/:itemId',
+  validate({ params: CartItemParamsSchema }),
+  (req, res) => cartController.removeItem(req, res)
+);
 
 /**
  * @swagger
@@ -232,7 +249,9 @@ router.post('/merge', (req, res) => cartController.mergeCart(req, res));
  *       401:
  *         description: User must be authenticated
  */
-router.post('/merge-on-auth', (req, res) => cartController.mergeCartOnAuth(req, res));
+router.post('/merge-on-auth', (req, res) =>
+  cartController.mergeCartOnAuth(req, res)
+);
 
 /**
  * @swagger
@@ -304,7 +323,9 @@ router.get('/stats', (req, res) => cartController.getCartStatistics(req, res));
  *                     isExpired:
  *                       type: boolean
  */
-router.get('/expiration', (req, res) => cartController.getCartExpiration(req, res));
+router.get('/expiration', (req, res) =>
+  cartController.getCartExpiration(req, res)
+);
 
 /**
  * @swagger
@@ -332,6 +353,175 @@ router.get('/expiration', (req, res) => cartController.getCartExpiration(req, re
  *       401:
  *         description: Customer ID is required
  */
-router.post('/extend', (req, res) => cartController.extendCartExpiration(req, res));
+router.post('/extend', (req, res) =>
+  cartController.extendCartExpiration(req, res)
+);
+
+/**
+ * @swagger
+ * /api/v1/cart/reserve:
+ *   post:
+ *     summary: Reserve inventory for cart items during checkout
+ *     tags: [Shopping Cart]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               expirationMinutes:
+ *                 type: number
+ *                 minimum: 5
+ *                 maximum: 120
+ *                 default: 30
+ *                 description: Reservation expiration in minutes (min 5 minutes, max 2 hours)
+ *     responses:
+ *       200:
+ *         description: Inventory reserved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     reservationId:
+ *                       type: string
+ *                     expiresInMinutes:
+ *                       type: number
+ *                     expiresAt:
+ *                       type: string
+ *                       format: date-time
+ *       400:
+ *         description: Failed to reserve inventory
+ *       401:
+ *         description: Customer ID is required
+ */
+router.post('/reserve', (req, res) =>
+  cartController.reserveInventory(req, res)
+);
+
+/**
+ * @swagger
+ * /api/v1/cart/reserve/{reservationId}:
+ *   delete:
+ *     summary: Release inventory reservation
+ *     tags: [Shopping Cart]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: reservationId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         example: res_1234567890_abc123
+ *     responses:
+ *       200:
+ *         description: Inventory reservation released successfully
+ *       400:
+ *         description: Reservation ID is required
+ */
+router.delete('/reserve/:reservationId', (req, res) =>
+  cartController.releaseReservation(req, res)
+);
+
+/**
+ * @swagger
+ * /api/v1/cart/checkout/validate:
+ *   get:
+ *     summary: Validate cart for checkout with inventory check
+ *     tags: [Shopping Cart]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Cart validation for checkout completed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     validation:
+ *                       type: object
+ *                       properties:
+ *                         isValid:
+ *                           type: boolean
+ *                         issues:
+ *                           type: array
+ *                           items:
+ *                             type: object
+ *                         totalItems:
+ *                           type: number
+ *                         totalValue:
+ *                           type: number
+ *                         canProceedToCheckout:
+ *                           type: boolean
+ *       401:
+ *         description: Customer ID is required
+ */
+router.get('/checkout/validate', (req, res) =>
+  cartController.validateForCheckout(req, res)
+);
+
+/**
+ * @swagger
+ * /api/v1/cart/inventory:
+ *   get:
+ *     summary: Get inventory status for all cart items
+ *     tags: [Shopping Cart]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Inventory status retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     inventoryStatuses:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           productId:
+ *                             type: string
+ *                           quantity:
+ *                             type: number
+ *                           inventoryStatus:
+ *                             type: object
+ *                           isAvailable:
+ *                             type: boolean
+ *                     summary:
+ *                       type: object
+ *                       properties:
+ *                         totalItems:
+ *                           type: number
+ *                         availableItems:
+ *                           type: number
+ *                         unavailableItems:
+ *                           type: number
+ *       401:
+ *         description: Customer ID is required
+ */
+router.get('/inventory', (req, res) =>
+  cartController.getInventoryStatus(req, res)
+);
 
 export const cartRoutes: Router = router;

@@ -3,20 +3,61 @@ import cors from 'cors';
 import express from 'express';
 import helmet from 'helmet';
 import * as swaggerUi from 'swagger-ui-express';
+import {
+  advancedXSSProtection,
+  comprehensiveSecurityValidation,
+  contentSecurityPolicy,
+  ipValidation,
+  requestSanitization,
+  requestTiming,
+  xssProtection
+} from './middleware/security.middleware';
+import { securityValidation } from './middleware/validation.middleware';
 import { authRoutes } from './routes/auth';
+import { profileRoutes } from './routes/profile';
 import { userRoutes } from './routes/user';
+import { CleanupService } from './services/cleanup.service';
 import { specs } from './swagger';
 
 const app: express.Application = express();
 const prisma = new PrismaClient();
 
-// Middleware
-app.use(helmet());
-app.use(cors({
-  origin: process.env.NODE_ENV === 'production' ? ['https://yourdomain.com'] : true,
-  credentials: true,
+// Initialize cleanup service
+const cleanupService = CleanupService.getInstance();
+cleanupService.startAutomaticCleanup();
+
+// Enhanced security middleware
+app.use(helmet({
+  contentSecurityPolicy: false, // We'll handle this with our custom middleware
+  crossOriginEmbedderPolicy: false
 }));
-app.use(express.json());
+
+app.use(cors({
+  origin: process.env.NODE_ENV === 'production' ?
+    (process.env.CORS_ORIGINS?.split(',') || ['https://yourdomain.com']) :
+    true,
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  maxAge: 86400 // 24 hours
+}));
+
+// Request size limit and JSON parsing
+app.use(express.json({
+  limit: '1mb',
+  strict: true,
+  type: 'application/json'
+}));
+
+// Enhanced security middleware stack
+app.use(requestTiming);
+app.use(ipValidation);
+app.use(comprehensiveSecurityValidation);
+app.use(contentSecurityPolicy);
+app.use(requestSanitization);
+app.use(xssProtection);
+app.use(advancedXSSProtection);
+app.use(securityValidation);
 
 // Add Prisma to request context
 app.use((req, _res, next) => {
@@ -48,6 +89,7 @@ app.get('/health', async (_req, res) => {
 
 // Routes
 app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/profiles', profileRoutes);
 app.use('/api/v1/users', userRoutes);
 
 // Global error handler
