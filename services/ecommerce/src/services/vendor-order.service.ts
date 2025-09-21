@@ -39,7 +39,7 @@ export class VendorOrderService {
   constructor(
     private prisma: PrismaClient,
     private notificationServiceClient: HttpNotificationServiceClient
-  ) { }
+  ) {}
 
   /**
    * Get vendor orders with filtering and pagination
@@ -290,8 +290,8 @@ export class VendorOrderService {
   async getVendorDashboard(vendorId: string): Promise<VendorDashboardMetrics> {
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-    const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+    // const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    // const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
 
     // Get basic metrics
     const [
@@ -513,7 +513,7 @@ export class VendorOrderService {
     if (!allowedTransitions.includes(newStatus)) {
       throw new Error(
         `Invalid status transition from ${currentStatus} to ${newStatus}. ` +
-        `Allowed transitions: ${allowedTransitions.join(', ')}`
+          `Allowed transitions: ${allowedTransitions.join(', ')}`
       );
     }
   }

@@ -1,9 +1,20 @@
 import { OrderStatus, PaymentStatus, PrismaClient } from '@prisma/client';
 import request from 'supertest';
-import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest';
 import { app } from '../../app';
 import { redisService } from '../../services/redis.service';
-import { mockVendorUser, setupIntegrationTestMocks } from '../integration/test-setup';
+import {
+  mockVendorUser,
+  setupIntegrationTestMocks,
+} from '../integration/test-setup';
 import { TestDataFactory } from '../utils/test-helpers';
 
 // Setup mocks before importing the app
@@ -21,13 +32,13 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
   let vendor2Id: string;
   let vendor3Id: string;
 
-  beforeAll(async () => {
+  beforeAll(() => {
     prisma = new PrismaClient({
       datasources: {
         db: {
-          url: process.env.TEST_DATABASE_URL || process.env.DATABASE_URL
-        }
-      }
+          url: process.env.TEST_DATABASE_URL || process.env.DATABASE_URL,
+        },
+      },
     });
     testDataFactory = new TestDataFactory(prisma);
   });
@@ -69,11 +80,11 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
           inventory: {
             create: {
               quantity: 50,
-              trackQuantity: true
-            }
-          }
+              trackQuantity: true,
+            },
+          },
         },
-        include: { inventory: true }
+        include: { inventory: true },
       }),
       prisma.product.create({
         data: {
@@ -86,12 +97,12 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
           inventory: {
             create: {
               quantity: 30,
-              trackQuantity: true
-            }
-          }
+              trackQuantity: true,
+            },
+          },
         },
-        include: { inventory: true }
-      })
+        include: { inventory: true },
+      }),
     ]);
 
     // Create products for vendor 2
@@ -107,11 +118,11 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
           inventory: {
             create: {
               quantity: 100,
-              trackQuantity: true
-            }
-          }
+              trackQuantity: true,
+            },
+          },
         },
-        include: { inventory: true }
+        include: { inventory: true },
       }),
       prisma.product.create({
         data: {
@@ -124,12 +135,12 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
           inventory: {
             create: {
               quantity: 200,
-              trackQuantity: true
-            }
-          }
+              trackQuantity: true,
+            },
+          },
         },
-        include: { inventory: true }
-      })
+        include: { inventory: true },
+      }),
     ]);
 
     // Create products for vendor 3
@@ -145,12 +156,12 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
           inventory: {
             create: {
               quantity: 75,
-              trackQuantity: true
-            }
-          }
+              trackQuantity: true,
+            },
+          },
         },
-        include: { inventory: true }
-      })
+        include: { inventory: true },
+      }),
     ]);
 
     customerId = 'test-customer-123';
@@ -170,7 +181,7 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
         .set('Authorization', authToken)
         .send({
           productId: vendor1Products[0].id,
-          quantity: 2
+          quantity: 2,
         })
         .expect(200);
 
@@ -179,7 +190,7 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
         .set('Authorization', authToken)
         .send({
           productId: vendor1Products[1].id,
-          quantity: 1
+          quantity: 1,
         })
         .expect(200);
 
@@ -188,7 +199,7 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
         .set('Authorization', authToken)
         .send({
           productId: vendor2Products[0].id,
-          quantity: 3
+          quantity: 3,
         })
         .expect(200);
 
@@ -197,7 +208,7 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
         .set('Authorization', authToken)
         .send({
           productId: vendor3Products[0].id,
-          quantity: 2
+          quantity: 2,
         })
         .expect(200);
 
@@ -218,10 +229,10 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
           state: 'CC',
           zipCode: '12345',
           country: 'USA',
-          phone: '+1234567890'
+          phone: '+1234567890',
         },
         paymentMethodId: 'pm_test_multivendor',
-        notes: 'Multi-vendor order test'
+        notes: 'Multi-vendor order test',
       };
 
       const createOrderResponse = await request(app)
@@ -240,7 +251,7 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
         // Verify vendor orders were created
         const vendorOrders = await prisma.vendorOrder.findMany({
           where: { orderId: order.id },
-          include: { items: true }
+          include: { items: true },
         });
 
         // Should have vendor orders for each vendor
@@ -253,7 +264,10 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
         expect(uniqueVendorIds.length).toBe(vendorOrders.length);
 
         // Verify total items match
-        const totalVendorOrderItems = vendorOrders.reduce((sum, vo) => sum + vo.items.length, 0);
+        const totalVendorOrderItems = vendorOrders.reduce(
+          (sum, vo) => sum + vo.items.length,
+          0
+        );
         expect(totalVendorOrderItems).toBe(4);
       }
     });
@@ -265,7 +279,7 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
         .set('Authorization', authToken)
         .send({
           productId: vendor1Products[0].id,
-          quantity: 1
+          quantity: 1,
         })
         .expect(200);
 
@@ -274,7 +288,7 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
         .set('Authorization', authToken)
         .send({
           productId: vendor2Products[0].id,
-          quantity: 1
+          quantity: 1,
         })
         .expect(200);
 
@@ -295,9 +309,9 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
           city: 'Split City',
           state: 'SC',
           zipCode: '54321',
-          country: 'USA'
+          country: 'USA',
         },
-        paymentMethodId: 'pm_test_split'
+        paymentMethodId: 'pm_test_split',
       };
 
       const createOrderResponse = await request(app)
@@ -316,7 +330,7 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
 
         // Verify vendor orders have their own totals
         const vendorOrders = await prisma.vendorOrder.findMany({
-          where: { orderId: order.id }
+          where: { orderId: order.id },
         });
 
         vendorOrders.forEach(vendorOrder => {
@@ -325,7 +339,10 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
         });
 
         // Sum of vendor order totals should be reasonable compared to main order
-        const vendorOrdersTotal = vendorOrders.reduce((sum, vo) => sum + vo.total, 0);
+        const vendorOrdersTotal = vendorOrders.reduce(
+          (sum, vo) => sum + vo.total,
+          0
+        );
         expect(vendorOrdersTotal).toBeGreaterThan(0);
       }
     });
@@ -334,7 +351,7 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
       // Reduce inventory for one vendor's product
       await prisma.productInventory.update({
         where: { productId: vendor1Products[0].id },
-        data: { quantity: 1 }
+        data: { quantity: 1 },
       });
 
       // Try to add more than available
@@ -343,7 +360,7 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
         .set('Authorization', authToken)
         .send({
           productId: vendor1Products[0].id,
-          quantity: 5
+          quantity: 5,
         });
 
       expect([400, 500].includes(addResponse.status)).toBe(true);
@@ -355,7 +372,7 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
         .set('Authorization', authToken)
         .send({
           productId: vendor1Products[0].id,
-          quantity: 1
+          quantity: 1,
         })
         .expect(200);
 
@@ -365,7 +382,7 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
         .set('Authorization', authToken)
         .send({
           productId: vendor2Products[0].id,
-          quantity: 2
+          quantity: 2,
         })
         .expect(200);
 
@@ -390,8 +407,8 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
           customerId,
           status: OrderStatus.CONFIRMED,
           subtotal: 359.96,
-          tax: 28.80,
-          shipping: 15.00,
+          tax: 28.8,
+          shipping: 15.0,
           total: 403.76,
           shippingAddress: {
             name: 'Multi Vendor Customer',
@@ -399,11 +416,11 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
             city: 'Commerce Hub',
             state: 'CH',
             zipCode: '67890',
-            country: 'USA'
+            country: 'USA',
           },
           paymentMethod: 'card_test',
-          paymentStatus: PaymentStatus.PAID
-        }
+          paymentStatus: PaymentStatus.PAID,
+        },
       });
 
       // Create vendor orders
@@ -414,24 +431,24 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
             vendorId: vendor1Id,
             status: OrderStatus.CONFIRMED,
             subtotal: 249.98,
-            shipping: 10.00,
+            shipping: 10.0,
             total: 279.98,
             items: {
               create: [
                 {
                   productId: vendor1Products[0].id,
                   quantity: 2,
-                  price: vendor1Products[0].price
+                  price: vendor1Products[0].price,
                 },
                 {
                   productId: vendor1Products[1].id,
                   quantity: 1,
-                  price: vendor1Products[1].price
-                }
-              ]
-            }
+                  price: vendor1Products[1].price,
+                },
+              ],
+            },
           },
-          include: { items: true }
+          include: { items: true },
         }),
         prisma.vendorOrder.create({
           data: {
@@ -439,20 +456,20 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
             vendorId: vendor2Id,
             status: OrderStatus.CONFIRMED,
             subtotal: 79.99,
-            shipping: 5.00,
+            shipping: 5.0,
             total: 89.99,
             items: {
               create: [
                 {
                   productId: vendor2Products[0].id,
                   quantity: 1,
-                  price: vendor2Products[0].price
-                }
-              ]
-            }
+                  price: vendor2Products[0].price,
+                },
+              ],
+            },
           },
-          include: { items: true }
-        })
+          include: { items: true },
+        }),
       ]);
     });
 
@@ -467,7 +484,7 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
             email: 'vendor1@example.com',
             roles: ['VENDOR'],
             activeRole: 'VENDOR',
-            vendorId: vendor1Id
+            vendorId: vendor1Id,
           };
           next();
         },
@@ -475,11 +492,11 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
           if (!req.user?.vendorId) {
             return res.status(403).json({
               success: false,
-              error: 'Vendor access required'
+              error: 'Vendor access required',
             });
           }
           next();
-        }
+        },
       }));
 
       const vendorToken = 'Bearer vendor-1-token';
@@ -510,7 +527,7 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
             email: 'vendor1@example.com',
             roles: ['VENDOR'],
             activeRole: 'VENDOR',
-            vendorId: vendor1Id
+            vendorId: vendor1Id,
           };
           next();
         },
@@ -518,11 +535,11 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
           if (!req.user?.vendorId) {
             return res.status(403).json({
               success: false,
-              error: 'Vendor access required'
+              error: 'Vendor access required',
             });
           }
           next();
-        }
+        },
       }));
 
       const vendorToken = 'Bearer vendor-1-token';
@@ -533,17 +550,19 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
         .set('Authorization', vendorToken)
         .send({
           status: OrderStatus.PROCESSING,
-          trackingNumber: 'VENDOR1-TRACK-123'
+          trackingNumber: 'VENDOR1-TRACK-123',
         });
 
-      expect([200, 400, 403, 404, 500].includes(updateStatusResponse.status)).toBe(true);
+      expect(
+        [200, 400, 403, 404, 500].includes(updateStatusResponse.status)
+      ).toBe(true);
 
       if (updateStatusResponse.status === 200) {
         expect(updateStatusResponse.body.success).toBe(true);
 
         // Verify status was updated
         const updatedVendorOrder = await prisma.vendorOrder.findUnique({
-          where: { id: vendor1Order.id }
+          where: { id: vendor1Order.id },
         });
 
         expect(updatedVendorOrder?.status).toBe(OrderStatus.PROCESSING);
@@ -562,7 +581,7 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
             email: 'vendor1@example.com',
             roles: ['VENDOR'],
             activeRole: 'VENDOR',
-            vendorId: vendor1Id
+            vendorId: vendor1Id,
           };
           next();
         },
@@ -570,11 +589,11 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
           if (!req.user?.vendorId) {
             return res.status(403).json({
               success: false,
-              error: 'Vendor access required'
+              error: 'Vendor access required',
             });
           }
           next();
-        }
+        },
       }));
 
       const vendorToken = 'Bearer vendor-1-token';
@@ -584,7 +603,7 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
         .put(`/api/v1/vendor/orders/${vendor2Order.id}/status`)
         .set('Authorization', vendorToken)
         .send({
-          status: OrderStatus.PROCESSING
+          status: OrderStatus.PROCESSING,
         });
 
       expect([403, 404, 500].includes(unauthorizedResponse.status)).toBe(true);
@@ -596,13 +615,13 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
         where: { id: vendorOrders[0].id },
         data: {
           status: OrderStatus.SHIPPED,
-          trackingNumber: 'SHIP-123'
-        }
+          trackingNumber: 'SHIP-123',
+        },
       });
 
       // Main order should still be in confirmed status (not all vendors shipped)
       const orderAfterFirstShip = await prisma.order.findUnique({
-        where: { id: multiVendorOrder.id }
+        where: { id: multiVendorOrder.id },
       });
       expect(orderAfterFirstShip?.status).toBe(OrderStatus.CONFIRMED);
 
@@ -611,17 +630,19 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
         where: { id: vendorOrders[1].id },
         data: {
           status: OrderStatus.SHIPPED,
-          trackingNumber: 'SHIP-456'
-        }
+          trackingNumber: 'SHIP-456',
+        },
       });
 
       // Now check if overall order status coordination would work
       // (This would typically be handled by a background job or webhook)
       const allVendorOrders = await prisma.vendorOrder.findMany({
-        where: { orderId: multiVendorOrder.id }
+        where: { orderId: multiVendorOrder.id },
       });
 
-      const allShipped = allVendorOrders.every(vo => vo.status === OrderStatus.SHIPPED);
+      const allShipped = allVendorOrders.every(
+        vo => vo.status === OrderStatus.SHIPPED
+      );
       expect(allShipped).toBe(true);
     });
   });
@@ -634,7 +655,7 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
         .set('Authorization', authToken)
         .send({
           productId: vendor1Products[0].id,
-          quantity: 5
+          quantity: 5,
         })
         .expect(200);
 
@@ -643,7 +664,7 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
         .set('Authorization', authToken)
         .send({
           productId: vendor2Products[0].id,
-          quantity: 3
+          quantity: 3,
         })
         .expect(200);
 
@@ -652,7 +673,7 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
         .post('/api/v1/cart/reserve')
         .set('Authorization', authToken)
         .send({
-          expirationMinutes: 30
+          expirationMinutes: 30,
         })
         .expect(200);
 
@@ -661,7 +682,7 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
 
       // Check that inventory was reserved for both vendors' products
       const reservations = await prisma.inventoryReservation.findMany({
-        where: { customerId }
+        where: { customerId },
       });
 
       expect(reservations.length).toBe(2);
@@ -675,7 +696,7 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
       // Reduce inventory for vendor 1 product
       await prisma.productInventory.update({
         where: { productId: vendor1Products[0].id },
-        data: { quantity: 2 }
+        data: { quantity: 2 },
       });
 
       // Add items that will exceed vendor 1's inventory
@@ -684,7 +705,7 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
         .set('Authorization', authToken)
         .send({
           productId: vendor1Products[0].id,
-          quantity: 5 // More than available
+          quantity: 5, // More than available
         });
 
       // Should fail due to insufficient inventory
@@ -696,7 +717,7 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
         .set('Authorization', authToken)
         .send({
           productId: vendor1Products[0].id,
-          quantity: 2
+          quantity: 2,
         })
         .expect(200);
 
@@ -706,7 +727,7 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
         .set('Authorization', authToken)
         .send({
           productId: vendor2Products[0].id,
-          quantity: 5
+          quantity: 5,
         })
         .expect(200);
 
@@ -715,7 +736,7 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
         .post('/api/v1/cart/reserve')
         .set('Authorization', authToken)
         .send({
-          expirationMinutes: 15
+          expirationMinutes: 15,
         })
         .expect(200);
 
@@ -731,18 +752,18 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
           customerId: 'analytics-customer-1',
           status: OrderStatus.DELIVERED,
           subtotal: 199.98,
-          tax: 16.00,
-          shipping: 10.00,
+          tax: 16.0,
+          shipping: 10.0,
           total: 225.98,
           shippingAddress: {
             name: 'Analytics Customer 1',
             address: '123 Analytics St',
             city: 'Data City',
-            country: 'US'
+            country: 'US',
           },
           paymentMethod: 'card_test',
-          paymentStatus: PaymentStatus.PAID
-        }
+          paymentStatus: PaymentStatus.PAID,
+        },
       });
 
       await prisma.vendorOrder.create({
@@ -751,9 +772,9 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
           vendorId: vendor1Id,
           status: OrderStatus.DELIVERED,
           subtotal: 199.98,
-          shipping: 10.00,
-          total: 225.98
-        }
+          shipping: 10.0,
+          total: 225.98,
+        },
       });
     });
 
@@ -768,7 +789,7 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
             email: 'vendor1@example.com',
             roles: ['VENDOR'],
             activeRole: 'VENDOR',
-            vendorId: vendor1Id
+            vendorId: vendor1Id,
           };
           next();
         },
@@ -776,11 +797,11 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
           if (!req.user?.vendorId) {
             return res.status(403).json({
               success: false,
-              error: 'Vendor access required'
+              error: 'Vendor access required',
             });
           }
           next();
-        }
+        },
       }));
 
       const vendorToken = 'Bearer vendor-1-token';
@@ -806,23 +827,30 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
 
       const vendorOrders = await prisma.vendorOrder.findMany({
         where: { vendorId: vendor1Id },
-        include: { items: true }
+        include: { items: true },
       });
 
       // Verify we can calculate vendor metrics
-      const totalRevenue = vendorOrders.reduce((sum, order) => sum + order.total, 0);
+      const totalRevenue = vendorOrders.reduce(
+        (sum, order) => sum + order.total,
+        0
+      );
       const totalOrders = vendorOrders.length;
-      const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+      const averageOrderValue =
+        totalOrders > 0 ? totalRevenue / totalOrders : 0;
 
       expect(totalRevenue).toBeGreaterThanOrEqual(0);
       expect(totalOrders).toBeGreaterThanOrEqual(0);
       expect(averageOrderValue).toBeGreaterThanOrEqual(0);
 
       // Verify order status distribution
-      const statusCounts = vendorOrders.reduce((acc, order) => {
-        acc[order.status] = (acc[order.status] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>);
+      const statusCounts = vendorOrders.reduce(
+        (acc, order) => {
+          acc[order.status] = (acc[order.status] || 0) + 1;
+          return acc;
+        },
+        {} as Record<string, number>
+      );
 
       expect(typeof statusCounts).toBe('object');
     });
@@ -836,7 +864,7 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
         .set('Authorization', authToken)
         .send({
           productId: vendor1Products[0].id,
-          quantity: 2
+          quantity: 2,
         })
         .expect(200);
 
@@ -845,7 +873,7 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
         .set('Authorization', authToken)
         .send({
           productId: vendor2Products[0].id,
-          quantity: 1
+          quantity: 1,
         })
         .expect(200);
 
@@ -855,7 +883,7 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
         .set('Authorization', authToken)
         .send({
           discountCode: 'VENDOR1-10OFF',
-          vendorId: vendor1Id
+          vendorId: vendor1Id,
         });
 
       expect([200, 400, 404].includes(applyDiscountResponse.status)).toBe(true);
@@ -880,7 +908,7 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
         .set('Authorization', authToken)
         .send({
           productId: vendor1Products[0].id,
-          quantity: 1
+          quantity: 1,
         })
         .expect(200);
 
@@ -889,7 +917,7 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
         .set('Authorization', authToken)
         .send({
           productId: vendor2Products[0].id,
-          quantity: 1
+          quantity: 1,
         })
         .expect(200);
 
@@ -903,8 +931,8 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
             city: 'Ship City',
             state: 'SC',
             zipCode: '12345',
-            country: 'USA'
-          }
+            country: 'USA',
+          },
         });
 
       expect([200, 400, 404].includes(shippingResponse.status)).toBe(true);
@@ -924,7 +952,7 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
         .set('Authorization', authToken)
         .send({
           productId: vendor1Products[0].id,
-          quantity: 1 // Assume this is below minimum
+          quantity: 1, // Assume this is below minimum
         });
 
       expect([200, 400].includes(smallOrderResponse.status)).toBe(true);
@@ -947,7 +975,7 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
         .set('Authorization', authToken)
         .send({
           productId: vendor1Products[0].id,
-          quantity: 1
+          quantity: 1,
         })
         .expect(200);
 
@@ -956,7 +984,7 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
         .set('Authorization', authToken)
         .send({
           productId: vendor2Products[0].id,
-          quantity: 1
+          quantity: 1,
         })
         .expect(200);
 
@@ -966,7 +994,7 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
         .set('Authorization', authToken)
         .send({
           bundleId: 'cross-vendor-bundle-1',
-          productIds: [vendor1Products[0].id, vendor2Products[0].id]
+          productIds: [vendor1Products[0].id, vendor2Products[0].id],
         });
 
       expect([200, 400, 404].includes(bundleResponse.status)).toBe(true);
@@ -981,7 +1009,7 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
         .set('Authorization', authToken)
         .send({
           productId: vendor1Products[0].id,
-          quantity: 1
+          quantity: 1,
         })
         .expect(200);
 
@@ -990,7 +1018,7 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
         .set('Authorization', authToken)
         .send({
           productId: vendor2Products[0].id,
-          quantity: 1
+          quantity: 1,
         })
         .expect(200);
 
@@ -1003,18 +1031,18 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
             status: 'requires_confirmation',
             amount: 17999, // Total amount
             currency: 'usd',
-            transferGroup: 'multi_vendor_order_123'
+            transferGroup: 'multi_vendor_order_123',
           }),
           confirmPayment: vi.fn().mockResolvedValue({
             success: true,
             paymentIntentId: 'pi_split_payment_test',
-            status: 'succeeded'
+            status: 'succeeded',
           }),
           createTransfer: vi.fn().mockResolvedValue({
             success: true,
-            transferId: 'tr_vendor_payment_123'
-          })
-        }))
+            transferId: 'tr_vendor_payment_123',
+          }),
+        })),
       }));
 
       // Create order with split payment
@@ -1025,10 +1053,10 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
           city: 'Split City',
           state: 'SC',
           zipCode: '12345',
-          country: 'USA'
+          country: 'USA',
         },
         paymentMethodId: 'pm_split_test',
-        splitPayment: true
+        splitPayment: true,
       };
 
       const createOrderResponse = await request(app)
@@ -1046,8 +1074,8 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
           customerId,
           status: OrderStatus.DELIVERED,
           subtotal: 279.98,
-          tax: 22.40,
-          shipping: 15.00,
+          tax: 22.4,
+          shipping: 15.0,
           total: 317.38,
           shippingAddress: {
             name: 'Payout Test Customer',
@@ -1055,11 +1083,11 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
             city: 'Money City',
             state: 'MC',
             zipCode: '54321',
-            country: 'USA'
+            country: 'USA',
           },
           paymentMethod: 'card_test',
-          paymentStatus: PaymentStatus.PAID
-        }
+          paymentStatus: PaymentStatus.PAID,
+        },
       });
 
       const vendor1Payout = await prisma.vendorOrder.create({
@@ -1068,9 +1096,9 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
           vendorId: vendor1Id,
           status: OrderStatus.DELIVERED,
           subtotal: 199.99,
-          shipping: 10.00,
-          total: 209.99
-        }
+          shipping: 10.0,
+          total: 209.99,
+        },
       });
 
       const vendor2Payout = await prisma.vendorOrder.create({
@@ -1079,9 +1107,9 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
           vendorId: vendor2Id,
           status: OrderStatus.DELIVERED,
           subtotal: 79.99,
-          shipping: 5.00,
-          total: 84.99
-        }
+          shipping: 5.0,
+          total: 84.99,
+        },
       });
 
       // Calculate vendor payouts (would typically be done by admin/system)
@@ -1090,7 +1118,9 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
 
       expect(vendor1PayoutAmount).toBeGreaterThan(0);
       expect(vendor2PayoutAmount).toBeGreaterThan(0);
-      expect(vendor1PayoutAmount + vendor2PayoutAmount).toBeLessThan(payoutOrder.subtotal);
+      expect(vendor1PayoutAmount + vendor2PayoutAmount).toBeLessThan(
+        payoutOrder.subtotal
+      );
     });
 
     it('should handle payment failures for specific vendors', async () => {
@@ -1100,7 +1130,7 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
         .set('Authorization', authToken)
         .send({
           productId: vendor1Products[0].id,
-          quantity: 1
+          quantity: 1,
         })
         .expect(200);
 
@@ -1109,7 +1139,7 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
         .set('Authorization', authToken)
         .send({
           productId: vendor2Products[0].id,
-          quantity: 1
+          quantity: 1,
         })
         .expect(200);
 
@@ -1119,13 +1149,13 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
           createPaymentIntent: vi.fn().mockResolvedValue({
             id: 'pi_partial_failure_test',
             clientSecret: 'pi_partial_failure_test_secret',
-            status: 'requires_confirmation'
+            status: 'requires_confirmation',
           }),
           confirmPayment: vi.fn().mockResolvedValue({
             success: false,
-            error: 'Payment failed for vendor transfer'
-          })
-        }))
+            error: 'Payment failed for vendor transfer',
+          }),
+        })),
       }));
 
       const orderData = {
@@ -1135,9 +1165,9 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
           city: 'Error City',
           state: 'EC',
           zipCode: '78901',
-          country: 'USA'
+          country: 'USA',
         },
-        paymentMethodId: 'pm_failure_test'
+        paymentMethodId: 'pm_failure_test',
       };
 
       const createOrderResponse = await request(app)
@@ -1158,7 +1188,7 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
         .set('Authorization', authToken)
         .send({
           productId: vendor1Products[0].id,
-          quantity: 1
+          quantity: 1,
         })
         .expect(200);
 
@@ -1167,16 +1197,18 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
         .set('Authorization', authToken)
         .send({
           productId: vendor2Products[0].id,
-          quantity: 1
+          quantity: 1,
         })
         .expect(200);
 
       // Mock notification service failure for vendor notifications
       vi.doMock('../../clients/notification.client', () => ({
         HttpNotificationServiceClient: vi.fn().mockImplementation(() => ({
-          sendVendorOrderNotification: vi.fn().mockRejectedValue(new Error('Notification service down')),
-          sendOrderConfirmation: vi.fn().mockResolvedValue(undefined)
-        }))
+          sendVendorOrderNotification: vi
+            .fn()
+            .mockRejectedValue(new Error('Notification service down')),
+          sendOrderConfirmation: vi.fn().mockResolvedValue(undefined),
+        })),
       }));
 
       // Create order - should handle notification failures gracefully
@@ -1187,9 +1219,9 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
           city: 'Failure City',
           state: 'FC',
           zipCode: '00000',
-          country: 'USA'
+          country: 'USA',
         },
-        paymentMethodId: 'pm_test_error'
+        paymentMethodId: 'pm_test_error',
       };
 
       const createOrderResponse = await request(app)
@@ -1205,7 +1237,7 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
       // Make one vendor's product inactive
       await prisma.product.update({
         where: { id: vendor1Products[0].id },
-        data: { isActive: false }
+        data: { isActive: false },
       });
 
       // Add inactive product to cart
@@ -1214,7 +1246,7 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
         .set('Authorization', authToken)
         .send({
           productId: vendor1Products[0].id,
-          quantity: 1
+          quantity: 1,
         });
 
       expect([400, 500].includes(addInactiveResponse.status)).toBe(true);
@@ -1225,7 +1257,7 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
         .set('Authorization', authToken)
         .send({
           productId: vendor2Products[0].id,
-          quantity: 1
+          quantity: 1,
         })
         .expect(200);
 
@@ -1247,7 +1279,7 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
         .set('Authorization', authToken)
         .send({
           productId: vendor1Products[0].id,
-          quantity: 1
+          quantity: 1,
         })
         .expect(200);
 
@@ -1256,7 +1288,7 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
         .set('Authorization', authToken)
         .send({
           productId: vendor2Products[0].id,
-          quantity: 1
+          quantity: 1,
         })
         .expect(200);
 
@@ -1271,9 +1303,9 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
           city: 'Block City',
           state: 'BC',
           zipCode: '12345',
-          country: 'USA'
+          country: 'USA',
         },
-        paymentMethodId: 'pm_suspension_test'
+        paymentMethodId: 'pm_suspension_test',
       };
 
       const createOrderResponse = await request(app)
@@ -1292,8 +1324,8 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
           customerId,
           status: OrderStatus.CONFIRMED,
           subtotal: 279.98,
-          tax: 22.40,
-          shipping: 15.00,
+          tax: 22.4,
+          shipping: 15.0,
           total: 317.38,
           shippingAddress: {
             name: 'Consistency Test Customer',
@@ -1301,11 +1333,11 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
             city: 'Data City',
             state: 'DC',
             zipCode: '54321',
-            country: 'USA'
+            country: 'USA',
           },
           paymentMethod: 'card_test',
-          paymentStatus: PaymentStatus.PAID
-        }
+          paymentStatus: PaymentStatus.PAID,
+        },
       });
 
       const vendor1ConsistencyOrder = await prisma.vendorOrder.create({
@@ -1314,9 +1346,9 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
           vendorId: vendor1Id,
           status: OrderStatus.CONFIRMED,
           subtotal: 199.99,
-          shipping: 10.00,
-          total: 209.99
-        }
+          shipping: 10.0,
+          total: 209.99,
+        },
       });
 
       const vendor2ConsistencyOrder = await prisma.vendorOrder.create({
@@ -1325,22 +1357,27 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
           vendorId: vendor2Id,
           status: OrderStatus.CONFIRMED,
           subtotal: 79.99,
-          shipping: 5.00,
-          total: 84.99
-        }
+          shipping: 5.0,
+          total: 84.99,
+        },
       });
 
       // Verify data consistency
       const vendorOrders = await prisma.vendorOrder.findMany({
-        where: { orderId: consistencyOrder.id }
+        where: { orderId: consistencyOrder.id },
       });
 
-      const totalVendorAmount = vendorOrders.reduce((sum, vo) => sum + vo.total, 0);
+      const totalVendorAmount = vendorOrders.reduce(
+        (sum, vo) => sum + vo.total,
+        0
+      );
 
       // Vendor order totals should be reasonable compared to main order
       expect(vendorOrders.length).toBe(2);
       expect(totalVendorAmount).toBeGreaterThan(0);
-      expect(Math.abs(totalVendorAmount - consistencyOrder.total)).toBeLessThan(50); // Allow for rounding/fees
+      expect(Math.abs(totalVendorAmount - consistencyOrder.total)).toBeLessThan(
+        50
+      ); // Allow for rounding/fees
     });
   });
 });

@@ -1,6 +1,14 @@
 import { OrderStatus, PaymentStatus, PrismaClient } from '@prisma/client';
 import request from 'supertest';
-import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest';
 import { app } from '../../app';
 import { redisService } from '../../services/redis.service';
 import { setupIntegrationTestMocks } from '../integration/test-setup';
@@ -17,13 +25,13 @@ describe('E2E: Complete Shopping Cart to Order Workflow', () => {
   let customerId: string;
   let authToken: string;
 
-  beforeAll(async () => {
+  beforeAll(() => {
     prisma = new PrismaClient({
       datasources: {
         db: {
-          url: process.env.TEST_DATABASE_URL || process.env.DATABASE_URL
-        }
-      }
+          url: process.env.TEST_DATABASE_URL || process.env.DATABASE_URL,
+        },
+      },
     });
     testDataFactory = new TestDataFactory(prisma);
   });
@@ -60,13 +68,13 @@ describe('E2E: Complete Shopping Cart to Order Workflow', () => {
         inventory: {
           create: {
             quantity: 50,
-            trackQuantity: true
-          }
-        }
+            trackQuantity: true,
+          },
+        },
       },
       include: {
-        inventory: true
-      }
+        inventory: true,
+      },
     });
 
     product2 = await prisma.product.create({
@@ -80,13 +88,13 @@ describe('E2E: Complete Shopping Cart to Order Workflow', () => {
         inventory: {
           create: {
             quantity: 30,
-            trackQuantity: true
-          }
-        }
+            trackQuantity: true,
+          },
+        },
       },
       include: {
-        inventory: true
-      }
+        inventory: true,
+      },
     });
 
     customerId = 'test-customer-123';
@@ -116,7 +124,7 @@ describe('E2E: Complete Shopping Cart to Order Workflow', () => {
         .set('Authorization', authToken)
         .send({
           productId: product1.id,
-          quantity: 2
+          quantity: 2,
         })
         .expect(200);
 
@@ -130,7 +138,7 @@ describe('E2E: Complete Shopping Cart to Order Workflow', () => {
         .set('Authorization', authToken)
         .send({
           productId: product2.id,
-          quantity: 1
+          quantity: 1,
         })
         .expect(200);
 
@@ -138,17 +146,21 @@ describe('E2E: Complete Shopping Cart to Order Workflow', () => {
       expect(addItem2Response.body.data.items).toHaveLength(2);
 
       // Step 4: Update quantity of first item
-      const firstItemId = addItem2Response.body.data.items.find((item: any) => item.productId === product1.id).id;
+      const firstItemId = addItem2Response.body.data.items.find(
+        (item: any) => item.productId === product1.id
+      ).id;
       const updateItemResponse = await request(app)
         .put(`/api/v1/cart/items/${firstItemId}`)
         .set('Authorization', authToken)
         .send({
-          quantity: 3
+          quantity: 3,
         })
         .expect(200);
 
       expect(updateItemResponse.body.success).toBe(true);
-      const updatedItem = updateItemResponse.body.data.items.find((item: any) => item.productId === product1.id);
+      const updatedItem = updateItemResponse.body.data.items.find(
+        (item: any) => item.productId === product1.id
+      );
       expect(updatedItem.quantity).toBe(3);
 
       // Step 5: Validate cart before checkout
@@ -159,7 +171,9 @@ describe('E2E: Complete Shopping Cart to Order Workflow', () => {
 
       expect(validateResponse.body.success).toBe(true);
       expect(validateResponse.body.data.validation.isValid).toBe(true);
-      expect(validateResponse.body.data.validation.canProceedToCheckout).toBe(true);
+      expect(validateResponse.body.data.validation.canProceedToCheckout).toBe(
+        true
+      );
       expect(validateResponse.body.data.validation.totalItems).toBe(4); // 3 + 1
 
       // Step 6: Reserve inventory for checkout
@@ -167,7 +181,7 @@ describe('E2E: Complete Shopping Cart to Order Workflow', () => {
         .post('/api/v1/cart/reserve')
         .set('Authorization', authToken)
         .send({
-          expirationMinutes: 30
+          expirationMinutes: 30,
         })
         .expect(200);
 
@@ -183,10 +197,10 @@ describe('E2E: Complete Shopping Cart to Order Workflow', () => {
           state: 'NY',
           zipCode: '10001',
           country: 'USA',
-          phone: '+1234567890'
+          phone: '+1234567890',
         },
         paymentMethodId: 'pm_test_123',
-        notes: 'Please deliver to front door'
+        notes: 'Please deliver to front door',
       };
 
       const createOrderResponse = await request(app)
@@ -217,11 +231,16 @@ describe('E2E: Complete Shopping Cart to Order Workflow', () => {
           .get(`/api/v1/orders/${order.id}`)
           .set('Authorization', authToken);
 
-        expect([200, 404, 500].includes(orderDetailsResponse.status)).toBe(true);
+        expect([200, 404, 500].includes(orderDetailsResponse.status)).toBe(
+          true
+        );
 
         if (orderDetailsResponse.status === 200) {
           expect(orderDetailsResponse.body.data).toHaveProperty('id', order.id);
-          expect(orderDetailsResponse.body.data).toHaveProperty('customerId', customerId);
+          expect(orderDetailsResponse.body.data).toHaveProperty(
+            'customerId',
+            customerId
+          );
         }
 
         // Step 10: Check order in history
@@ -231,7 +250,10 @@ describe('E2E: Complete Shopping Cart to Order Workflow', () => {
           .query({ page: 1, limit: 10 });
 
         expect([200, 404].includes(orderHistoryResponse.status)).toBe(true);
-        if (orderHistoryResponse.status === 200 && orderHistoryResponse.body.data?.orders) {
+        if (
+          orderHistoryResponse.status === 200 &&
+          orderHistoryResponse.body.data?.orders
+        ) {
           const orders = orderHistoryResponse.body.data.orders;
           const createdOrder = orders.find((o: any) => o.id === order.id);
           expect(createdOrder).toBeDefined();
@@ -246,14 +268,14 @@ describe('E2E: Complete Shopping Cart to Order Workflow', () => {
         .set('Authorization', authToken)
         .send({
           productId: product1.id,
-          quantity: 2
+          quantity: 2,
         })
         .expect(200);
 
       // Make product inactive to simulate validation failure
       await prisma.product.update({
         where: { id: product1.id },
-        data: { isActive: false }
+        data: { isActive: false },
       });
 
       // Validate cart - should detect issues
@@ -264,8 +286,12 @@ describe('E2E: Complete Shopping Cart to Order Workflow', () => {
 
       expect(validateResponse.body.success).toBe(true);
       expect(validateResponse.body.data.validation.isValid).toBe(false);
-      expect(validateResponse.body.data.validation.canProceedToCheckout).toBe(false);
-      expect(validateResponse.body.data.validation.issues.length).toBeGreaterThan(0);
+      expect(validateResponse.body.data.validation.canProceedToCheckout).toBe(
+        false
+      );
+      expect(
+        validateResponse.body.data.validation.issues.length
+      ).toBeGreaterThan(0);
 
       // Attempt to create order should fail
       const orderData = {
@@ -275,9 +301,9 @@ describe('E2E: Complete Shopping Cart to Order Workflow', () => {
           city: 'New York',
           state: 'NY',
           zipCode: '10001',
-          country: 'USA'
+          country: 'USA',
         },
-        paymentMethodId: 'pm_test_123'
+        paymentMethodId: 'pm_test_123',
       };
 
       const createOrderResponse = await request(app)
@@ -296,7 +322,7 @@ describe('E2E: Complete Shopping Cart to Order Workflow', () => {
         .set('Authorization', authToken)
         .send({
           productId: product1.id,
-          quantity: 60 // More than the 50 available
+          quantity: 60, // More than the 50 available
         });
 
       expect([400, 500].includes(addItemResponse.status)).toBe(true);
@@ -311,7 +337,7 @@ describe('E2E: Complete Shopping Cart to Order Workflow', () => {
         .set('Authorization', authToken)
         .send({
           productId: product1.id,
-          quantity: 2
+          quantity: 2,
         })
         .expect(200);
 
@@ -335,20 +361,27 @@ describe('E2E: Complete Shopping Cart to Order Workflow', () => {
       const anonymousCart = {
         id: 'anonymous-cart',
         customerId: anonymousSessionId,
-        items: [{
-          id: 'item-1',
-          productId: product1.id,
-          quantity: 1,
-          price: product1.price,
-          addedAt: new Date().toISOString()
-        }],
+        items: [
+          {
+            id: 'item-1',
+            productId: product1.id,
+            quantity: 1,
+            price: product1.price,
+            addedAt: new Date().toISOString(),
+          },
+        ],
         subtotal: product1.price,
         tax: product1.price * 0.08,
         total: product1.price * 1.08,
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
       };
 
-      await redisService.set(`cart:${anonymousSessionId}`, JSON.stringify(anonymousCart), 'EX', 86400);
+      await redisService.set(
+        `cart:${anonymousSessionId}`,
+        JSON.stringify(anonymousCart),
+        'EX',
+        86400
+      );
 
       // Add item to authenticated user's cart
       await request(app)
@@ -356,7 +389,7 @@ describe('E2E: Complete Shopping Cart to Order Workflow', () => {
         .set('Authorization', authToken)
         .send({
           productId: product2.id,
-          quantity: 1
+          quantity: 1,
         })
         .expect(200);
 
@@ -365,7 +398,7 @@ describe('E2E: Complete Shopping Cart to Order Workflow', () => {
         .post('/api/v1/cart/merge')
         .set('Authorization', authToken)
         .send({
-          anonymousSessionId
+          anonymousSessionId,
         })
         .expect(200);
 
@@ -373,7 +406,9 @@ describe('E2E: Complete Shopping Cart to Order Workflow', () => {
       expect(mergeResponse.body.data.items).toHaveLength(2);
 
       // Verify both products are in cart
-      const productIds = mergeResponse.body.data.items.map((item: any) => item.productId);
+      const productIds = mergeResponse.body.data.items.map(
+        (item: any) => item.productId
+      );
       expect(productIds).toContain(product1.id);
       expect(productIds).toContain(product2.id);
     });
@@ -389,8 +424,8 @@ describe('E2E: Complete Shopping Cart to Order Workflow', () => {
           customerId,
           status: OrderStatus.PENDING,
           subtotal: 199.98,
-          tax: 16.00,
-          shipping: 10.00,
+          tax: 16.0,
+          shipping: 10.0,
           total: 225.98,
           shippingAddress: {
             name: 'John Doe',
@@ -398,11 +433,11 @@ describe('E2E: Complete Shopping Cart to Order Workflow', () => {
             city: 'Test City',
             state: 'TS',
             zipCode: '12345',
-            country: 'US'
+            country: 'US',
           },
           paymentMethod: 'card_test',
-          paymentStatus: PaymentStatus.PENDING
-        }
+          paymentStatus: PaymentStatus.PENDING,
+        },
       });
     });
 
@@ -423,8 +458,8 @@ describe('E2E: Complete Shopping Cart to Order Workflow', () => {
         where: { id: testOrder.id },
         data: {
           status: OrderStatus.CONFIRMED,
-          paymentStatus: PaymentStatus.PAID
-        }
+          paymentStatus: PaymentStatus.PAID,
+        },
       });
 
       // Check updated status
@@ -439,7 +474,7 @@ describe('E2E: Complete Shopping Cart to Order Workflow', () => {
       // Update to processing
       await prisma.order.update({
         where: { id: testOrder.id },
-        data: { status: OrderStatus.PROCESSING }
+        data: { status: OrderStatus.PROCESSING },
       });
 
       // Check processing status
@@ -448,7 +483,9 @@ describe('E2E: Complete Shopping Cart to Order Workflow', () => {
         .set('Authorization', authToken);
 
       if (processingResponse.status === 200) {
-        expect(processingResponse.body.data.status).toBe(OrderStatus.PROCESSING);
+        expect(processingResponse.body.data.status).toBe(
+          OrderStatus.PROCESSING
+        );
       }
     });
 
@@ -458,7 +495,7 @@ describe('E2E: Complete Shopping Cart to Order Workflow', () => {
         .delete(`/api/v1/orders/${testOrder.id}/cancel`)
         .set('Authorization', authToken)
         .send({
-          reason: 'Changed my mind'
+          reason: 'Changed my mind',
         });
 
       expect([200, 400, 404, 500].includes(cancelResponse.status)).toBe(true);
@@ -486,19 +523,21 @@ describe('E2E: Complete Shopping Cart to Order Workflow', () => {
         .set('Authorization', authToken)
         .send({
           productId: product1.id,
-          quantity: 1
+          quantity: 1,
         })
         .expect(200);
 
       // Mock payment failure
       vi.doMock('../../clients/payment.client', () => ({
         HttpPaymentServiceClient: vi.fn().mockImplementation(() => ({
-          createPaymentIntent: vi.fn().mockRejectedValue(new Error('Payment service unavailable')),
+          createPaymentIntent: vi
+            .fn()
+            .mockRejectedValue(new Error('Payment service unavailable')),
           confirmPayment: vi.fn().mockResolvedValue({
             success: false,
-            error: 'Payment failed'
-          })
-        }))
+            error: 'Payment failed',
+          }),
+        })),
       }));
 
       // Attempt to create order
@@ -509,9 +548,9 @@ describe('E2E: Complete Shopping Cart to Order Workflow', () => {
           city: 'New York',
           state: 'NY',
           zipCode: '10001',
-          country: 'USA'
+          country: 'USA',
         },
-        paymentMethodId: 'pm_test_123'
+        paymentMethodId: 'pm_test_123',
       };
 
       const createOrderResponse = await request(app)
@@ -538,14 +577,14 @@ describe('E2E: Complete Shopping Cart to Order Workflow', () => {
         .set('Authorization', authToken)
         .send({
           productId: product1.id,
-          quantity: 5
+          quantity: 5,
         })
         .expect(200);
 
       // Simulate inventory reduction (e.g., another customer bought items)
       await prisma.productInventory.update({
         where: { productId: product1.id },
-        data: { quantity: 2 }
+        data: { quantity: 2 },
       });
 
       // Attempt to create order
@@ -556,9 +595,9 @@ describe('E2E: Complete Shopping Cart to Order Workflow', () => {
           city: 'New York',
           state: 'NY',
           zipCode: '10001',
-          country: 'USA'
+          country: 'USA',
         },
-        paymentMethodId: 'pm_test_123'
+        paymentMethodId: 'pm_test_123',
       };
 
       const createOrderResponse = await request(app)
@@ -579,14 +618,14 @@ describe('E2E: Complete Shopping Cart to Order Workflow', () => {
         .set('Authorization', authToken)
         .send({
           productId: product1.id,
-          quantity: 2
+          quantity: 2,
         })
         .expect(200);
 
       // Update product price
       await prisma.product.update({
         where: { id: product1.id },
-        data: { price: 119.99 } // Increased price
+        data: { price: 119.99 }, // Increased price
       });
 
       // Get cart - should show price change notification
@@ -606,7 +645,7 @@ describe('E2E: Complete Shopping Cart to Order Workflow', () => {
         .set('Authorization', authToken)
         .send({
           productId: product1.id,
-          quantity: 1
+          quantity: 1,
         })
         .expect(200);
 
@@ -632,7 +671,7 @@ describe('E2E: Complete Shopping Cart to Order Workflow', () => {
         .set('Authorization', authToken)
         .send({
           productId: product1.id,
-          quantity: 3
+          quantity: 3,
         })
         .expect(200);
 
@@ -654,20 +693,27 @@ describe('E2E: Complete Shopping Cart to Order Workflow', () => {
       const guestCart = {
         id: 'guest-cart-456',
         customerId: guestSessionId,
-        items: [{
-          id: 'guest-item-1',
-          productId: product1.id,
-          quantity: 2,
-          price: product1.price,
-          addedAt: new Date().toISOString()
-        }],
+        items: [
+          {
+            id: 'guest-item-1',
+            productId: product1.id,
+            quantity: 2,
+            price: product1.price,
+            addedAt: new Date().toISOString(),
+          },
+        ],
         subtotal: product1.price * 2,
         tax: product1.price * 2 * 0.08,
         total: product1.price * 2 * 1.08,
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
       };
 
-      await redisService.set(`cart:${guestSessionId}`, JSON.stringify(guestCart), 'EX', 86400);
+      await redisService.set(
+        `cart:${guestSessionId}`,
+        JSON.stringify(guestCart),
+        'EX',
+        86400
+      );
 
       // Guest should be able to view cart
       const guestCartResponse = await request(app)
@@ -691,7 +737,7 @@ describe('E2E: Complete Shopping Cart to Order Workflow', () => {
           .set('Authorization', authToken)
           .send({
             productId: i === 0 ? product1.id : product2.id,
-            quantity: 20 // Large quantity
+            quantity: 20, // Large quantity
           });
       }
 
@@ -701,7 +747,8 @@ describe('E2E: Complete Shopping Cart to Order Workflow', () => {
         .expect(200);
 
       const totalItems = cartResponse.body.data.items.reduce(
-        (sum: number, item: any) => sum + item.quantity, 0
+        (sum: number, item: any) => sum + item.quantity,
+        0
       );
 
       // Should respect reasonable limits
@@ -715,7 +762,7 @@ describe('E2E: Complete Shopping Cart to Order Workflow', () => {
         .set('Authorization', authToken)
         .send({
           productId: product1.id,
-          quantity: 1
+          quantity: 1,
         })
         .expect(200);
 
@@ -737,7 +784,7 @@ describe('E2E: Complete Shopping Cart to Order Workflow', () => {
         .set('Authorization', authToken)
         .send({
           productId: product1.id,
-          quantity: 1
+          quantity: 1,
         })
         .expect(200);
 
@@ -749,9 +796,9 @@ describe('E2E: Complete Shopping Cart to Order Workflow', () => {
           city: 'Restricted City',
           state: 'RC',
           zipCode: '00000',
-          country: 'RESTRICTED_COUNTRY'
+          country: 'RESTRICTED_COUNTRY',
         },
-        paymentMethodId: 'pm_test_123'
+        paymentMethodId: 'pm_test_123',
       };
 
       const createOrderResponse = await request(app)
@@ -770,7 +817,7 @@ describe('E2E: Complete Shopping Cart to Order Workflow', () => {
         .set('Authorization', authToken)
         .send({
           productId: product1.id,
-          quantity: 1
+          quantity: 1,
         })
         .expect(200);
 
@@ -780,27 +827,31 @@ describe('E2E: Complete Shopping Cart to Order Workflow', () => {
         .set('Authorization', authToken)
         .query({
           calculateTax: true,
-          shippingState: 'CA' // California tax rate
+          shippingState: 'CA', // California tax rate
         })
         .expect(200);
 
       expect(cartResponse.body.data.tax).toBeGreaterThan(0);
-      expect(cartResponse.body.data.total).toBeGreaterThan(cartResponse.body.data.subtotal);
+      expect(cartResponse.body.data.total).toBeGreaterThan(
+        cartResponse.body.data.subtotal
+      );
     });
   });
 
   describe('Performance and Concurrency', () => {
     it('should handle concurrent cart operations', async () => {
       // Simulate multiple concurrent add operations
-      const concurrentRequests = Array(5).fill(null).map((_, index) =>
-        request(app)
-          .post('/api/v1/cart/add')
-          .set('Authorization', authToken)
-          .send({
-            productId: product1.id,
-            quantity: 1
-          })
-      );
+      const concurrentRequests = Array(5)
+        .fill(null)
+        .map((_, index) =>
+          request(app)
+            .post('/api/v1/cart/add')
+            .set('Authorization', authToken)
+            .send({
+              productId: product1.id,
+              quantity: 1,
+            })
+        );
 
       const responses = await Promise.all(concurrentRequests);
 
@@ -815,8 +866,10 @@ describe('E2E: Complete Shopping Cart to Order Workflow', () => {
         .expect(200);
 
       if (finalCartResponse.body.data.items.length > 0) {
-        const totalQuantity = finalCartResponse.body.data.items
-          .reduce((sum: number, item: any) => sum + item.quantity, 0);
+        const totalQuantity = finalCartResponse.body.data.items.reduce(
+          (sum: number, item: any) => sum + item.quantity,
+          0
+        );
         expect(totalQuantity).toBeGreaterThan(0);
         expect(totalQuantity).toBeLessThanOrEqual(5);
       }
@@ -832,7 +885,7 @@ describe('E2E: Complete Shopping Cart to Order Workflow', () => {
           .set('Authorization', authToken)
           .send({
             productId: i === 0 ? product1.id : product2.id,
-            quantity: 2
+            quantity: 2,
           });
       }
 
@@ -857,7 +910,7 @@ describe('E2E: Complete Shopping Cart to Order Workflow', () => {
         .set('Authorization', authToken)
         .send({
           productId: product1.id,
-          quantity: 1
+          quantity: 1,
         })
         .expect(200);
 
@@ -869,19 +922,23 @@ describe('E2E: Complete Shopping Cart to Order Workflow', () => {
       const itemId = cartResponse.body.data.items[0].id;
 
       // Rapid quantity updates
-      const rapidUpdates = Array(10).fill(null).map((_, index) =>
-        request(app)
-          .put(`/api/v1/cart/items/${itemId}`)
-          .set('Authorization', authToken)
-          .send({
-            quantity: index + 2
-          })
-      );
+      const rapidUpdates = Array(10)
+        .fill(null)
+        .map((_, index) =>
+          request(app)
+            .put(`/api/v1/cart/items/${itemId}`)
+            .set('Authorization', authToken)
+            .send({
+              quantity: index + 2,
+            })
+        );
 
       const updateResponses = await Promise.all(rapidUpdates);
 
       // Should handle rapid updates gracefully
-      const successfulUpdates = updateResponses.filter(res => res.status === 200);
+      const successfulUpdates = updateResponses.filter(
+        res => res.status === 200
+      );
       expect(successfulUpdates.length).toBeGreaterThan(0);
 
       // Final state should be consistent
@@ -903,7 +960,7 @@ describe('E2E: Complete Shopping Cart to Order Workflow', () => {
         .set('Authorization', authToken)
         .send({
           productId: product1.id,
-          quantity: 1
+          quantity: 1,
         })
         .expect(200);
 
@@ -915,14 +972,14 @@ describe('E2E: Complete Shopping Cart to Order Workflow', () => {
             clientSecret: 'pi_integration_test_secret',
             status: 'requires_confirmation',
             amount: 11799,
-            currency: 'usd'
+            currency: 'usd',
           }),
           confirmPayment: vi.fn().mockResolvedValue({
             success: true,
             paymentIntentId: 'pi_integration_test',
-            status: 'succeeded'
-          })
-        }))
+            status: 'succeeded',
+          }),
+        })),
       }));
 
       // Create order
@@ -933,9 +990,9 @@ describe('E2E: Complete Shopping Cart to Order Workflow', () => {
           city: 'Service City',
           state: 'SC',
           zipCode: '12345',
-          country: 'USA'
+          country: 'USA',
         },
-        paymentMethodId: 'pm_integration_test'
+        paymentMethodId: 'pm_integration_test',
       };
 
       const createOrderResponse = await request(app)
@@ -952,8 +1009,8 @@ describe('E2E: Complete Shopping Cart to Order Workflow', () => {
       vi.doMock('../../clients/notification.client', () => ({
         HttpNotificationServiceClient: vi.fn().mockImplementation(() => ({
           sendOrderConfirmation: mockSendNotification,
-          sendOrderStatusUpdate: mockSendNotification
-        }))
+          sendOrderStatusUpdate: mockSendNotification,
+        })),
       }));
 
       // Add items and create order
@@ -962,7 +1019,7 @@ describe('E2E: Complete Shopping Cart to Order Workflow', () => {
         .set('Authorization', authToken)
         .send({
           productId: product1.id,
-          quantity: 1
+          quantity: 1,
         })
         .expect(200);
 
@@ -973,9 +1030,9 @@ describe('E2E: Complete Shopping Cart to Order Workflow', () => {
           city: 'Alert City',
           state: 'AC',
           zipCode: '54321',
-          country: 'USA'
+          country: 'USA',
         },
-        paymentMethodId: 'pm_notification_test'
+        paymentMethodId: 'pm_notification_test',
       };
 
       const createOrderResponse = await request(app)
@@ -996,24 +1053,31 @@ describe('E2E: Complete Shopping Cart to Order Workflow', () => {
             email: 'integration@example.com',
             name: 'Integration Test User',
             role: 'CUSTOMER',
-            permissions: ['read:cart', 'write:cart', 'read:orders', 'write:orders']
+            permissions: [
+              'read:cart',
+              'write:cart',
+              'read:orders',
+              'write:orders',
+            ],
           }),
           getUserInfo: vi.fn().mockResolvedValue({
             id: customerId,
             email: 'integration@example.com',
             name: 'Integration Test User',
-            addresses: [{
-              id: 'addr_1',
-              name: 'Home',
-              address: '789 Auth St',
-              city: 'Token City',
-              state: 'TC',
-              zipCode: '78901',
-              country: 'USA',
-              isDefault: true
-            }]
-          })
-        }))
+            addresses: [
+              {
+                id: 'addr_1',
+                name: 'Home',
+                address: '789 Auth St',
+                city: 'Token City',
+                state: 'TC',
+                zipCode: '78901',
+                country: 'USA',
+                isDefault: true,
+              },
+            ],
+          }),
+        })),
       }));
 
       // Test cart operations with auth integration

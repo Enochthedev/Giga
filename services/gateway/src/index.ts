@@ -10,13 +10,13 @@ const fastify = Fastify({
     transport:
       process.env.NODE_ENV !== 'production'
         ? {
-          target: 'pino-pretty',
-          options: {
-            colorize: true,
-            translateTime: 'HH:MM:ss Z',
-            ignore: 'pid,hostname',
-          },
-        }
+            target: 'pino-pretty',
+            options: {
+              colorize: true,
+              translateTime: 'HH:MM:ss Z',
+              ignore: 'pid,hostname',
+            },
+          }
         : undefined,
   },
 });
@@ -55,7 +55,7 @@ async function buildApp() {
   });
 
   // Health check
-  fastify.get('/health', async () => {
+  fastify.get('/health', () => {
     return {
       status: 'healthy',
       timestamp: new Date().toISOString(),
@@ -101,7 +101,7 @@ async function buildApp() {
   }
 
   // Catch-all for unmatched routes
-  fastify.setNotFoundHandler(async (request, reply) => {
+  fastify.setNotFoundHandler((request, reply) => {
     reply.code(404).send({
       success: false,
       error: 'Route not found',
@@ -111,7 +111,7 @@ async function buildApp() {
   });
 
   // Global error handler
-  fastify.setErrorHandler(async (error, request, reply) => {
+  fastify.setErrorHandler((error, request, reply) => {
     fastify.log.error(error);
 
     reply.code(error.statusCode || 500).send({

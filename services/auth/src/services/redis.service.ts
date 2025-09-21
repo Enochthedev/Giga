@@ -10,7 +10,7 @@ class RedisService {
       url: process.env.REDIS_URL || 'redis://localhost:6380',
     });
 
-    this.client.on('error', (err) => {
+    this.client.on('error', err => {
       console.error('Redis Client Error:', err);
     });
 
@@ -50,9 +50,13 @@ class RedisService {
   }
 
   // Session management helpers
-  async setSession(userId: string, sessionData: Record<string, unknown>, ttlSeconds = 86400) {
+  setSession(
+    userId: string,
+    sessionData: Record<string, unknown>,
+    ttlSeconds = 86400
+  ) {
     const key = `session:${userId}`;
-    return await this.set(key, JSON.stringify(sessionData), ttlSeconds);
+    return this.set(key, JSON.stringify(sessionData), ttlSeconds);
   }
 
   async getSession(userId: string) {
@@ -61,9 +65,9 @@ class RedisService {
     return data ? JSON.parse(data) : null;
   }
 
-  async deleteSession(userId: string) {
+  deleteSession(userId: string) {
     const key = `session:${userId}`;
-    return await this.del(key);
+    return this.del(key);
   }
 
   // Rate limiting helpers

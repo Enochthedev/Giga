@@ -1,12 +1,19 @@
 import { OrderStatus, PaymentStatus, PrismaClient } from '@prisma/client';
 import request from 'supertest';
-import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest';
+import { app } from '../../app';
 import { mockAdminUser, setupIntegrationTestMocks } from './test-setup';
 
 // Setup mocks before importing the app
 setupIntegrationTestMocks();
-
-import { app } from '../../app';
 
 describe('Orders Integration Tests (Fixed)', () => {
   let prisma: PrismaClient;
@@ -14,13 +21,13 @@ describe('Orders Integration Tests (Fixed)', () => {
   let customerId: string;
   let authToken: string;
 
-  beforeAll(async () => {
+  beforeAll(() => {
     prisma = new PrismaClient({
       datasources: {
         db: {
-          url: process.env.TEST_DATABASE_URL || process.env.DATABASE_URL
-        }
-      }
+          url: process.env.TEST_DATABASE_URL || process.env.DATABASE_URL,
+        },
+      },
     });
   });
 
@@ -46,13 +53,13 @@ describe('Orders Integration Tests (Fixed)', () => {
         inventory: {
           create: {
             quantity: 50,
-            trackQuantity: true
-          }
-        }
+            trackQuantity: true,
+          },
+        },
       },
       include: {
-        inventory: true
-      }
+        inventory: true,
+      },
     });
 
     customerId = 'test-customer-123';
@@ -105,10 +112,10 @@ describe('Orders Integration Tests (Fixed)', () => {
         address: '123 Main St',
         city: 'New York',
         country: 'USA',
-        phone: '+1234567890'
+        phone: '+1234567890',
       },
       paymentMethodId: 'pm_test_123',
-      notes: 'Please deliver to front door'
+      notes: 'Please deliver to front door',
     };
 
     beforeEach(async () => {
@@ -118,7 +125,7 @@ describe('Orders Integration Tests (Fixed)', () => {
         .set('Authorization', authToken)
         .send({
           productId: product.id,
-          quantity: 2
+          quantity: 2,
         });
     });
 
@@ -145,9 +152,9 @@ describe('Orders Integration Tests (Fixed)', () => {
           name: '', // Missing required field
           address: '123 Main St',
           city: 'New York',
-          country: 'USA'
+          country: 'USA',
         },
-        paymentMethodId: 'pm_test_123'
+        paymentMethodId: 'pm_test_123',
       };
 
       const response = await request(app)
@@ -165,8 +172,8 @@ describe('Orders Integration Tests (Fixed)', () => {
           name: 'John Doe',
           address: '123 Main St',
           city: 'New York',
-          country: 'USA'
-        }
+          country: 'USA',
+        },
         // Missing paymentMethodId
       };
 
@@ -190,18 +197,18 @@ describe('Orders Integration Tests (Fixed)', () => {
           customerId,
           status: OrderStatus.CONFIRMED,
           subtotal: 99.99,
-          tax: 8.00,
-          shipping: 10.00,
+          tax: 8.0,
+          shipping: 10.0,
           total: 117.99,
           shippingAddress: {
             name: 'John Doe',
             address: '123 Test St',
             city: 'Test City',
-            country: 'US'
+            country: 'US',
           },
           paymentMethod: 'card_test',
-          paymentStatus: PaymentStatus.PAID
-        }
+          paymentStatus: PaymentStatus.PAID,
+        },
       });
     });
 
@@ -238,18 +245,18 @@ describe('Orders Integration Tests (Fixed)', () => {
           customerId,
           status: OrderStatus.CONFIRMED,
           subtotal: 99.99,
-          tax: 8.00,
-          shipping: 10.00,
+          tax: 8.0,
+          shipping: 10.0,
           total: 117.99,
           shippingAddress: {
             name: 'John Doe',
             address: '123 Test St',
             city: 'Test City',
-            country: 'US'
+            country: 'US',
           },
           paymentMethod: 'card_test',
-          paymentStatus: PaymentStatus.PAID
-        }
+          paymentStatus: PaymentStatus.PAID,
+        },
       });
 
       // Mock admin user for status updates
@@ -262,7 +269,7 @@ describe('Orders Integration Tests (Fixed)', () => {
         .set('Authorization', authToken)
         .send({
           status: OrderStatus.PROCESSING,
-          trackingNumber: '1Z999AA1234567890'
+          trackingNumber: '1Z999AA1234567890',
         });
 
       expect([200, 400, 403, 500].includes(response.status)).toBe(true);
@@ -274,7 +281,7 @@ describe('Orders Integration Tests (Fixed)', () => {
         .put(`/api/v1/orders/${testOrder.id}/status`)
         .set('Authorization', authToken)
         .send({
-          status: 'INVALID_STATUS'
+          status: 'INVALID_STATUS',
         });
 
       expect([400, 500].includes(response.status)).toBe(true);
@@ -291,18 +298,18 @@ describe('Orders Integration Tests (Fixed)', () => {
           customerId,
           status: OrderStatus.CONFIRMED,
           subtotal: 99.99,
-          tax: 8.00,
-          shipping: 10.00,
+          tax: 8.0,
+          shipping: 10.0,
           total: 117.99,
           shippingAddress: {
             name: 'John Doe',
             address: '123 Test St',
             city: 'Test City',
-            country: 'US'
+            country: 'US',
           },
           paymentMethod: 'card_test',
-          paymentStatus: PaymentStatus.PAID
-        }
+          paymentStatus: PaymentStatus.PAID,
+        },
       });
     });
 
@@ -311,7 +318,7 @@ describe('Orders Integration Tests (Fixed)', () => {
         .delete(`/api/v1/orders/${testOrder.id}/cancel`)
         .set('Authorization', authToken)
         .send({
-          reason: 'Changed my mind'
+          reason: 'Changed my mind',
         });
 
       expect([200, 400, 404, 500].includes(response.status)).toBe(true);
@@ -323,7 +330,7 @@ describe('Orders Integration Tests (Fixed)', () => {
         .delete('/api/v1/orders/non-existent-order/cancel')
         .set('Authorization', authToken)
         .send({
-          reason: 'Changed my mind'
+          reason: 'Changed my mind',
         });
 
       expect([404, 500].includes(response.status)).toBe(true);
@@ -333,8 +340,7 @@ describe('Orders Integration Tests (Fixed)', () => {
 
   describe('Authentication and Authorization', () => {
     it('should require authentication for protected endpoints', async () => {
-      const response = await request(app)
-        .get('/api/v1/orders');
+      const response = await request(app).get('/api/v1/orders');
 
       expect([401, 403].includes(response.status)).toBe(true);
     });
@@ -351,7 +357,9 @@ describe('Orders Integration Tests (Fixed)', () => {
   describe('Error Handling', () => {
     it('should handle database errors gracefully', async () => {
       // Mock database error
-      vi.spyOn(prisma.order, 'findMany').mockRejectedValueOnce(new Error('Database connection failed'));
+      vi.spyOn(prisma.order, 'findMany').mockRejectedValueOnce(
+        new Error('Database connection failed')
+      );
 
       const response = await request(app)
         .get('/api/v1/orders')

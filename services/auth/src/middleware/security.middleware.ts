@@ -6,7 +6,11 @@ import { InputSanitizer } from '../utils/security.utils';
  * XSS Protection Middleware
  * Sanitizes request data to prevent cross-site scripting attacks
  */
-export const xssProtection = (req: Request, res: Response, next: NextFunction) => {
+export const xssProtection = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     // Sanitize request body
     if (req.body && typeof req.body === 'object') {
@@ -67,7 +71,11 @@ function sanitizeObject(obj: any): any {
  * Content Security Policy Middleware
  * Sets security headers to prevent various attacks
  */
-export const contentSecurityPolicy = (req: Request, res: Response, next: NextFunction) => {
+export const contentSecurityPolicy = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   // Set comprehensive security headers
   const cspDirectives = [
     "default-src 'self'",
@@ -82,7 +90,7 @@ export const contentSecurityPolicy = (req: Request, res: Response, next: NextFun
     "frame-ancestors 'none'",
     "form-action 'self'",
     "base-uri 'self'",
-    "manifest-src 'self'"
+    "manifest-src 'self'",
   ];
 
   res.setHeader('Content-Security-Policy', cspDirectives.join('; '));
@@ -92,14 +100,20 @@ export const contentSecurityPolicy = (req: Request, res: Response, next: NextFun
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('X-XSS-Protection', '1; mode=block');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-  res.setHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=(), payment=(), usb=()');
+  res.setHeader(
+    'Permissions-Policy',
+    'geolocation=(), microphone=(), camera=(), payment=(), usb=()'
+  );
   res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
   res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
   res.setHeader('Cross-Origin-Resource-Policy', 'same-origin');
 
   // Prevent caching of sensitive responses
   if (req.path.includes('/auth/') || req.path.includes('/users/')) {
-    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader(
+      'Cache-Control',
+      'no-store, no-cache, must-revalidate, proxy-revalidate'
+    );
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '0');
     res.setHeader('Surrogate-Control', 'no-store');
@@ -116,7 +130,11 @@ export const contentSecurityPolicy = (req: Request, res: Response, next: NextFun
  * Request sanitization middleware
  * Performs comprehensive input sanitization
  */
-export const requestSanitization = (req: Request, res: Response, next: NextFunction) => {
+export const requestSanitization = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     // Remove null bytes
     if (req.body) {
@@ -131,7 +149,8 @@ export const requestSanitization = (req: Request, res: Response, next: NextFunct
           error: 'Invalid JSON structure',
           code: 'INVALID_JSON',
           details: {
-            reason: 'Request body contains invalid JSON structure or exceeds maximum depth'
+            reason:
+              'Request body contains invalid JSON structure or exceeds maximum depth',
           },
           timestamp: new Date().toISOString(),
         });
@@ -186,7 +205,7 @@ export const requestSanitization = (req: Request, res: Response, next: NextFunct
         patterns: matchedPatterns,
         userAgent: req.headers['user-agent'],
         path: req.path,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
 
       return res.status(400).json({
@@ -195,7 +214,7 @@ export const requestSanitization = (req: Request, res: Response, next: NextFunct
         code: 'SUSPICIOUS_CONTENT',
         details: {
           reason: 'Request contains potentially malicious content',
-          patternsDetected: matchedPatterns.length
+          patternsDetected: matchedPatterns.length,
         },
         timestamp: new Date().toISOString(),
       });
@@ -204,14 +223,15 @@ export const requestSanitization = (req: Request, res: Response, next: NextFunct
     // Check for excessive nesting or large objects
     if (req.body && typeof req.body === 'object') {
       const objectSize = JSON.stringify(req.body).length;
-      if (objectSize > 100000) { // 100KB limit for JSON objects
+      if (objectSize > 100000) {
+        // 100KB limit for JSON objects
         return res.status(413).json({
           success: false,
           error: 'Request object too large',
           code: 'OBJECT_TOO_LARGE',
           details: {
             size: objectSize,
-            limit: 100000
+            limit: 100000,
           },
           timestamp: new Date().toISOString(),
         });
@@ -277,9 +297,15 @@ function getObjectDepth(obj: any, depth = 0): number {
 
   if (obj && typeof obj === 'object') {
     if (Array.isArray(obj)) {
-      return Math.max(depth, ...obj.map(item => getObjectDepth(item, depth + 1)));
+      return Math.max(
+        depth,
+        ...obj.map(item => getObjectDepth(item, depth + 1))
+      );
     } else {
-      return Math.max(depth, ...Object.values(obj).map(value => getObjectDepth(value, depth + 1)));
+      return Math.max(
+        depth,
+        ...Object.values(obj).map(value => getObjectDepth(value, depth + 1))
+      );
     }
   }
 
@@ -290,17 +316,24 @@ function getObjectDepth(obj: any, depth = 0): number {
  * IP validation middleware
  * Validates and normalizes IP addresses
  */
-export const ipValidation = (req: Request, res: Response, next: NextFunction) => {
+export const ipValidation = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     // Get real IP address
     const forwarded = req.headers['x-forwarded-for'];
     const realIp = req.headers['x-real-ip'];
-    const remoteAddress = req.connection.remoteAddress || req.socket.remoteAddress;
+    const remoteAddress =
+      req.connection.remoteAddress || req.socket.remoteAddress;
 
     let clientIp = remoteAddress;
 
     if (forwarded) {
-      clientIp = Array.isArray(forwarded) ? forwarded[0] : forwarded.split(',')[0];
+      clientIp = Array.isArray(forwarded)
+        ? forwarded[0]
+        : forwarded.split(',')[0];
     } else if (realIp) {
       clientIp = Array.isArray(realIp) ? realIp[0] : realIp;
     }
@@ -334,28 +367,41 @@ function isValidIP(ip: string): boolean {
     return true;
   }
 
-  // IPv4 regex
-  const ipv4Regex = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+  // IPv4 regex (simplified to avoid ReDoS)
+  const ipv4Regex = /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/;
 
-  // IPv6 regex (simplified)
-  const ipv6Regex = /^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$|^::1$|^::$/;
+  // IPv6 regex (simplified to avoid ReDoS)
+  const ipv6Regex = /^[0-9a-fA-F:]+$|^::1$|^::$/;
 
-  return ipv4Regex.test(ip) || ipv6Regex.test(ip) || ip === 'localhost' || ip === '::1' || ip === 'unknown';
+  return (
+    ipv4Regex.test(ip) ||
+    ipv6Regex.test(ip) ||
+    ip === 'localhost' ||
+    ip === '::1' ||
+    ip === 'unknown'
+  );
 }
 
 /**
  * Request timing middleware
  * Adds request timing for security monitoring
  */
-export const requestTiming = (req: Request, res: Response, next: NextFunction) => {
+export const requestTiming = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   req.startTime = Date.now();
 
   res.on('finish', () => {
     const duration = Date.now() - req.startTime!;
 
     // Log slow requests (potential DoS attempts)
-    if (duration > 5000) { // 5 seconds
-      console.warn(`Slow request detected: ${req.method} ${req.path} took ${duration}ms from IP ${req.clientIp}`);
+    if (duration > 5000) {
+      // 5 seconds
+      console.warn(
+        `Slow request detected: ${req.method} ${req.path} took ${duration}ms from IP ${req.clientIp}`
+      );
     }
   });
 
@@ -366,16 +412,24 @@ export const requestTiming = (req: Request, res: Response, next: NextFunction) =
  * Comprehensive security validation middleware
  * Combines multiple security checks in one middleware
  */
-export const comprehensiveSecurityValidation = (req: Request, res: Response, next: NextFunction) => {
+export const comprehensiveSecurityValidation = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     // 1. Validate request size
     const contentLength = parseInt(req.headers['content-length'] || '0');
-    if (contentLength > 2 * 1024 * 1024) { // 2MB limit
+    if (contentLength > 2 * 1024 * 1024) {
+      // 2MB limit
       return res.status(413).json({
         success: false,
         error: 'Request payload too large',
         code: 'PAYLOAD_TOO_LARGE',
-        details: { maxSize: '2MB', received: `${Math.round(contentLength / 1024)}KB` },
+        details: {
+          maxSize: '2MB',
+          received: `${Math.round(contentLength / 1024)}KB`,
+        },
         timestamp: new Date().toISOString(),
       });
     }
@@ -408,8 +462,11 @@ export const comprehensiveSecurityValidation = (req: Request, res: Response, nex
     }
 
     // 4. Check for header injection
-    for (const [headerKey, value] of Object.entries(req.headers)) {
-      if (typeof value === 'string' && (value.includes('\n') || value.includes('\r') || value.includes('\0'))) {
+    for (const [, value] of Object.entries(req.headers)) {
+      if (
+        typeof value === 'string' &&
+        (value.includes('\n') || value.includes('\r') || value.includes('\0'))
+      ) {
         return res.status(400).json({
           success: false,
           error: 'Header injection detected',
@@ -427,7 +484,9 @@ export const comprehensiveSecurityValidation = (req: Request, res: Response, nex
 
     // 6. Log security-relevant information
     if (process.env.NODE_ENV === 'production') {
-      console.log(`Security validation passed for ${req.method} ${req.path} from ${ip}`);
+      console.log(
+        `Security validation passed for ${req.method} ${req.path} from ${ip}`
+      );
     }
 
     next();
@@ -445,7 +504,11 @@ export const comprehensiveSecurityValidation = (req: Request, res: Response, nex
 /**
  * Advanced XSS protection with content analysis
  */
-export const advancedXSSProtection = (req: Request, res: Response, next: NextFunction) => {
+export const advancedXSSProtection = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     if (req.body && typeof req.body === 'object') {
       const sanitizedBody = deepSanitizeObject(req.body);
@@ -454,13 +517,17 @@ export const advancedXSSProtection = (req: Request, res: Response, next: NextFun
       const originalSize = JSON.stringify(req.body).length;
       const sanitizedSize = JSON.stringify(sanitizedBody).length;
 
-      if (originalSize - sanitizedSize > originalSize * 0.1) { // More than 10% reduction
-        console.warn(`Significant content sanitization for request from ${req.clientIp}:`, {
-          originalSize,
-          sanitizedSize,
-          reduction: originalSize - sanitizedSize,
-          path: req.path
-        });
+      if (originalSize - sanitizedSize > originalSize * 0.1) {
+        // More than 10% reduction
+        console.warn(
+          `Significant content sanitization for request from ${req.clientIp}:`,
+          {
+            originalSize,
+            sanitizedSize,
+            reduction: originalSize - sanitizedSize,
+            path: req.path,
+          }
+        );
       }
 
       req.body = sanitizedBody;

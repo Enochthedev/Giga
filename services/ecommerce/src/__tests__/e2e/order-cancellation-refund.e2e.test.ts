@@ -1,9 +1,20 @@
 import { OrderStatus, PaymentStatus, PrismaClient } from '@prisma/client';
 import request from 'supertest';
-import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest';
 import { app } from '../../app';
 import { redisService } from '../../services/redis.service';
-import { mockAdminUser, setupIntegrationTestMocks } from '../integration/test-setup';
+import {
+  mockAdminUser,
+  setupIntegrationTestMocks,
+} from '../integration/test-setup';
 import { TestDataFactory } from '../utils/test-helpers';
 
 // Setup mocks before importing the app
@@ -18,13 +29,13 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
   let authToken: string;
   let vendorId: string;
 
-  beforeAll(async () => {
+  beforeAll(() => {
     prisma = new PrismaClient({
       datasources: {
         db: {
-          url: process.env.TEST_DATABASE_URL || process.env.DATABASE_URL
-        }
-      }
+          url: process.env.TEST_DATABASE_URL || process.env.DATABASE_URL,
+        },
+      },
     });
     testDataFactory = new TestDataFactory(prisma);
   });
@@ -61,13 +72,13 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
         inventory: {
           create: {
             quantity: 50,
-            trackQuantity: true
-          }
-        }
+            trackQuantity: true,
+          },
+        },
       },
       include: {
-        inventory: true
-      }
+        inventory: true,
+      },
     });
 
     product2 = await prisma.product.create({
@@ -81,13 +92,13 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
         inventory: {
           create: {
             quantity: 30,
-            trackQuantity: true
-          }
-        }
+            trackQuantity: true,
+          },
+        },
       },
       include: {
-        inventory: true
-      }
+        inventory: true,
+      },
     });
 
     customerId = 'test-customer-123';
@@ -110,8 +121,8 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
           customerId,
           status: OrderStatus.CONFIRMED,
           subtotal: 249.98,
-          tax: 20.00,
-          shipping: 10.00,
+          tax: 20.0,
+          shipping: 10.0,
           total: 279.98,
           shippingAddress: {
             name: 'Cancellation Test Customer',
@@ -119,12 +130,12 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
             city: 'Refund City',
             state: 'RC',
             zipCode: '12345',
-            country: 'USA'
+            country: 'USA',
           },
           paymentMethod: 'card_test',
           paymentStatus: PaymentStatus.PAID,
-          paymentIntentId: 'pi_test_cancellation_123'
-        }
+          paymentIntentId: 'pi_test_cancellation_123',
+        },
       });
 
       // Create vendor order
@@ -134,24 +145,24 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
           vendorId,
           status: OrderStatus.CONFIRMED,
           subtotal: 249.98,
-          shipping: 10.00,
+          shipping: 10.0,
           total: 279.98,
           items: {
             create: [
               {
                 productId: product1.id,
                 quantity: 2,
-                price: product1.price
+                price: product1.price,
               },
               {
                 productId: product2.id,
                 quantity: 1,
-                price: product2.price
-              }
-            ]
-          }
+                price: product2.price,
+              },
+            ],
+          },
         },
-        include: { items: true }
+        include: { items: true },
       });
 
       // Create order items for main order
@@ -161,15 +172,15 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
             orderId: testOrder.id,
             productId: product1.id,
             quantity: 2,
-            price: product1.price
+            price: product1.price,
           },
           {
             orderId: testOrder.id,
             productId: product2.id,
             quantity: 1,
-            price: product2.price
-          }
-        ]
+            price: product2.price,
+          },
+        ],
       });
     });
 
@@ -178,7 +189,7 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
         .delete(`/api/v1/orders/${testOrder.id}/cancel`)
         .set('Authorization', authToken)
         .send({
-          reason: 'Changed my mind about the purchase'
+          reason: 'Changed my mind about the purchase',
         });
 
       expect([200, 400, 404, 500].includes(cancelResponse.status)).toBe(true);
@@ -186,17 +197,20 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
       if (cancelResponse.status === 200) {
         expect(cancelResponse.body.success).toBe(true);
         expect(cancelResponse.body.data).toHaveProperty('id', testOrder.id);
-        expect(cancelResponse.body.data).toHaveProperty('status', OrderStatus.CANCELLED);
+        expect(cancelResponse.body.data).toHaveProperty(
+          'status',
+          OrderStatus.CANCELLED
+        );
 
         // Verify order status was updated in database
         const updatedOrder = await prisma.order.findUnique({
-          where: { id: testOrder.id }
+          where: { id: testOrder.id },
         });
         expect(updatedOrder?.status).toBe(OrderStatus.CANCELLED);
 
         // Verify vendor orders were also cancelled
         const updatedVendorOrders = await prisma.vendorOrder.findMany({
-          where: { orderId: testOrder.id }
+          where: { orderId: testOrder.id },
         });
         updatedVendorOrders.forEach(vo => {
           expect(vo.status).toBe(OrderStatus.CANCELLED);
@@ -207,31 +221,35 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
     it('should restore inventory when order is cancelled', async () => {
       // Get initial inventory levels
       const initialInventory1 = await prisma.productInventory.findUnique({
-        where: { productId: product1.id }
+        where: { productId: product1.id },
       });
       const initialInventory2 = await prisma.productInventory.findUnique({
-        where: { productId: product2.id }
+        where: { productId: product2.id },
       });
 
       const cancelResponse = await request(app)
         .delete(`/api/v1/orders/${testOrder.id}/cancel`)
         .set('Authorization', authToken)
         .send({
-          reason: 'Inventory restoration test'
+          reason: 'Inventory restoration test',
         });
 
       if (cancelResponse.status === 200) {
         // Check if inventory was restored
         const restoredInventory1 = await prisma.productInventory.findUnique({
-          where: { productId: product1.id }
+          where: { productId: product1.id },
         });
         const restoredInventory2 = await prisma.productInventory.findUnique({
-          where: { productId: product2.id }
+          where: { productId: product2.id },
         });
 
         // Inventory should be restored (increased by cancelled quantities)
-        expect(restoredInventory1?.quantity).toBeGreaterThanOrEqual(initialInventory1?.quantity || 0);
-        expect(restoredInventory2?.quantity).toBeGreaterThanOrEqual(initialInventory2?.quantity || 0);
+        expect(restoredInventory1?.quantity).toBeGreaterThanOrEqual(
+          initialInventory1?.quantity || 0
+        );
+        expect(restoredInventory2?.quantity).toBeGreaterThanOrEqual(
+          initialInventory2?.quantity || 0
+        );
       }
     });
 
@@ -239,21 +257,23 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
       // Update order to shipped status
       await prisma.order.update({
         where: { id: testOrder.id },
-        data: { status: OrderStatus.SHIPPED }
+        data: { status: OrderStatus.SHIPPED },
       });
 
       const cancelResponse = await request(app)
         .delete(`/api/v1/orders/${testOrder.id}/cancel`)
         .set('Authorization', authToken)
         .send({
-          reason: 'Trying to cancel shipped order'
+          reason: 'Trying to cancel shipped order',
         });
 
       expect([400, 403, 500].includes(cancelResponse.status)).toBe(true);
       expect(cancelResponse.body.success).toBe(false);
 
       if (cancelResponse.body.error) {
-        expect(cancelResponse.body.error.toLowerCase()).toContain('cannot cancel');
+        expect(cancelResponse.body.error.toLowerCase()).toContain(
+          'cannot cancel'
+        );
       }
     });
 
@@ -261,14 +281,14 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
       // Update order to delivered status
       await prisma.order.update({
         where: { id: testOrder.id },
-        data: { status: OrderStatus.DELIVERED }
+        data: { status: OrderStatus.DELIVERED },
       });
 
       const cancelResponse = await request(app)
         .delete(`/api/v1/orders/${testOrder.id}/cancel`)
         .set('Authorization', authToken)
         .send({
-          reason: 'Trying to cancel delivered order'
+          reason: 'Trying to cancel delivered order',
         });
 
       expect([400, 403, 500].includes(cancelResponse.status)).toBe(true);
@@ -289,11 +309,11 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
           inventory: {
             create: {
               quantity: 25,
-              trackQuantity: true
-            }
-          }
+              trackQuantity: true,
+            },
+          },
         },
-        include: { inventory: true }
+        include: { inventory: true },
       });
 
       // Create second vendor order
@@ -303,18 +323,18 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
           vendorId: vendor2Id,
           status: OrderStatus.PROCESSING, // Different status
           subtotal: 79.99,
-          shipping: 5.00,
+          shipping: 5.0,
           total: 89.99,
           items: {
             create: [
               {
                 productId: product3.id,
                 quantity: 1,
-                price: product3.price
-              }
-            ]
-          }
-        }
+                price: product3.price,
+              },
+            ],
+          },
+        },
       });
 
       // Try to cancel entire order when one vendor is already processing
@@ -322,7 +342,7 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
         .delete(`/api/v1/orders/${testOrder.id}/cancel`)
         .set('Authorization', authToken)
         .send({
-          reason: 'Partial cancellation test'
+          reason: 'Partial cancellation test',
         });
 
       // Should handle the complexity of partial cancellation
@@ -346,25 +366,25 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
           customerId: 'other-customer-456',
           status: OrderStatus.CONFIRMED,
           subtotal: 99.99,
-          tax: 8.00,
-          shipping: 10.00,
+          tax: 8.0,
+          shipping: 10.0,
           total: 117.99,
           shippingAddress: {
             name: 'Other Customer',
             address: '456 Other St',
             city: 'Other City',
-            country: 'US'
+            country: 'US',
           },
           paymentMethod: 'card_test',
-          paymentStatus: PaymentStatus.PAID
-        }
+          paymentStatus: PaymentStatus.PAID,
+        },
       });
 
       const cancelResponse = await request(app)
         .delete(`/api/v1/orders/${otherCustomerOrder.id}/cancel`)
         .set('Authorization', authToken)
         .send({
-          reason: 'Unauthorized cancellation attempt'
+          reason: 'Unauthorized cancellation attempt',
         });
 
       expect([403, 404, 500].includes(cancelResponse.status)).toBe(true);
@@ -382,8 +402,8 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
           customerId,
           status: OrderStatus.DELIVERED,
           subtotal: 199.98,
-          tax: 16.00,
-          shipping: 10.00,
+          tax: 16.0,
+          shipping: 10.0,
           total: 225.98,
           shippingAddress: {
             name: 'Refund Test Customer',
@@ -391,12 +411,12 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
             city: 'Return City',
             state: 'RC',
             zipCode: '54321',
-            country: 'USA'
+            country: 'USA',
           },
           paymentMethod: 'card_test',
           paymentStatus: PaymentStatus.PAID,
-          paymentIntentId: 'pi_test_refund_456'
-        }
+          paymentIntentId: 'pi_test_refund_456',
+        },
       });
 
       // Create order items
@@ -406,15 +426,15 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
             orderId: paidOrder.id,
             productId: product1.id,
             quantity: 1,
-            price: product1.price
+            price: product1.price,
           },
           {
             orderId: paidOrder.id,
             productId: product2.id,
             quantity: 1,
-            price: product2.price
-          }
-        ]
+            price: product2.price,
+          },
+        ],
       });
     });
 
@@ -424,13 +444,13 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
         .delete(`/api/v1/orders/${paidOrder.id}/cancel`)
         .set('Authorization', authToken)
         .send({
-          reason: 'Full refund test'
+          reason: 'Full refund test',
         });
 
       if (cancelResponse.status === 200) {
         // Verify payment status indicates refund processing
         const cancelledOrder = await prisma.order.findUnique({
-          where: { id: paidOrder.id }
+          where: { id: paidOrder.id },
         });
 
         expect(cancelledOrder?.status).toBe(OrderStatus.CANCELLED);
@@ -452,7 +472,7 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
             email: 'admin@example.com',
             roles: ['ADMIN'],
             activeRole: 'ADMIN',
-            vendorId: undefined
+            vendorId: undefined,
           };
           next();
         },
@@ -460,11 +480,11 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
           if (req.user?.activeRole !== 'ADMIN') {
             return res.status(403).json({
               success: false,
-              error: 'Admin access required'
+              error: 'Admin access required',
             });
           }
           next();
-        }
+        },
       }));
 
       const adminToken = 'Bearer admin-token';
@@ -475,7 +495,7 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
         .set('Authorization', adminToken)
         .send({
           amount: 99.99, // Partial refund amount
-          reason: 'Defective item - partial refund'
+          reason: 'Defective item - partial refund',
         });
 
       // Endpoint might not exist yet, but should handle gracefully
@@ -488,7 +508,7 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
         .delete(`/api/v1/orders/${paidOrder.id}/cancel`)
         .set('Authorization', authToken)
         .send({
-          reason: 'Refund tracking test'
+          reason: 'Refund tracking test',
         });
 
       if (cancelResponse.status === 200) {
@@ -513,21 +533,21 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
         HttpPaymentServiceClient: vi.fn().mockImplementation(() => ({
           refundPayment: vi.fn().mockResolvedValue({
             success: false,
-            error: 'Refund failed - card expired'
+            error: 'Refund failed - card expired',
           }),
           createPaymentIntent: vi.fn().mockResolvedValue({
             id: 'pi_test_123',
             clientSecret: 'pi_test_123_secret',
-            status: 'requires_confirmation'
-          })
-        }))
+            status: 'requires_confirmation',
+          }),
+        })),
       }));
 
       const cancelResponse = await request(app)
         .delete(`/api/v1/orders/${paidOrder.id}/cancel`)
         .set('Authorization', authToken)
         .send({
-          reason: 'Refund failure test'
+          reason: 'Refund failure test',
         });
 
       // Should handle refund failure gracefully
@@ -536,7 +556,7 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
       if (cancelResponse.status === 200) {
         // Order should still be cancelled even if refund fails
         const cancelledOrder = await prisma.order.findUnique({
-          where: { id: paidOrder.id }
+          where: { id: paidOrder.id },
         });
         expect(cancelledOrder?.status).toBe(OrderStatus.CANCELLED);
       }
@@ -548,7 +568,7 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
         .delete(`/api/v1/orders/${paidOrder.id}/cancel`)
         .set('Authorization', authToken)
         .send({
-          reason: 'First cancellation'
+          reason: 'First cancellation',
         });
 
       if (firstCancelResponse.status === 200) {
@@ -557,10 +577,12 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
           .delete(`/api/v1/orders/${paidOrder.id}/cancel`)
           .set('Authorization', authToken)
           .send({
-            reason: 'Duplicate cancellation attempt'
+            reason: 'Duplicate cancellation attempt',
           });
 
-        expect([400, 409, 500].includes(secondCancelResponse.status)).toBe(true);
+        expect([400, 409, 500].includes(secondCancelResponse.status)).toBe(
+          true
+        );
         expect(secondCancelResponse.body.success).toBe(false);
       }
     });
@@ -576,8 +598,8 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
           customerId,
           status: OrderStatus.DELIVERED,
           subtotal: 299.97,
-          tax: 24.00,
-          shipping: 15.00,
+          tax: 24.0,
+          shipping: 15.0,
           total: 338.97,
           shippingAddress: {
             name: 'Admin Test Customer',
@@ -585,12 +607,12 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
             city: 'Admin City',
             state: 'AC',
             zipCode: '99999',
-            country: 'USA'
+            country: 'USA',
           },
           paymentMethod: 'card_test',
           paymentStatus: PaymentStatus.PAID,
-          paymentIntentId: 'pi_test_admin_789'
-        }
+          paymentIntentId: 'pi_test_admin_789',
+        },
       });
 
       // Mock admin user
@@ -606,7 +628,7 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
             email: 'admin@example.com',
             roles: ['ADMIN'],
             activeRole: 'ADMIN',
-            vendorId: undefined
+            vendorId: undefined,
           };
           next();
         },
@@ -614,11 +636,11 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
           if (req.user?.activeRole !== 'ADMIN') {
             return res.status(403).json({
               success: false,
-              error: 'Admin access required'
+              error: 'Admin access required',
             });
           }
           next();
-        }
+        },
       }));
 
       const adminToken = 'Bearer admin-token';
@@ -628,16 +650,18 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
         .set('Authorization', adminToken)
         .send({
           reason: 'Administrative cancellation',
-          adminOverride: true
+          adminOverride: true,
         });
 
-      expect([200, 400, 404, 500].includes(adminCancelResponse.status)).toBe(true);
+      expect([200, 400, 404, 500].includes(adminCancelResponse.status)).toBe(
+        true
+      );
 
       if (adminCancelResponse.status === 200) {
         expect(adminCancelResponse.body.success).toBe(true);
 
         const cancelledOrder = await prisma.order.findUnique({
-          where: { id: adminOrder.id }
+          where: { id: adminOrder.id },
         });
         expect(cancelledOrder?.status).toBe(OrderStatus.CANCELLED);
       }
@@ -652,7 +676,7 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
             email: 'admin@example.com',
             roles: ['ADMIN'],
             activeRole: 'ADMIN',
-            vendorId: undefined
+            vendorId: undefined,
           };
           next();
         },
@@ -660,11 +684,11 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
           if (req.user?.activeRole !== 'ADMIN') {
             return res.status(403).json({
               success: false,
-              error: 'Admin access required'
+              error: 'Admin access required',
             });
           }
           next();
-        }
+        },
       }));
 
       const adminToken = 'Bearer admin-token';
@@ -674,9 +698,9 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
         .post(`/api/v1/admin/orders/${adminOrder.id}/refund`)
         .set('Authorization', adminToken)
         .send({
-          amount: 100.00,
+          amount: 100.0,
           reason: 'Customer service gesture',
-          refundType: 'manual'
+          refundType: 'manual',
         });
 
       // Endpoint might not exist, but should handle gracefully
@@ -692,7 +716,7 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
             email: 'admin@example.com',
             roles: ['ADMIN'],
             activeRole: 'ADMIN',
-            vendorId: undefined
+            vendorId: undefined,
           };
           next();
         },
@@ -700,11 +724,11 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
           if (req.user?.activeRole !== 'ADMIN') {
             return res.status(403).json({
               success: false,
-              error: 'Admin access required'
+              error: 'Admin access required',
             });
           }
           next();
-        }
+        },
       }));
 
       const adminToken = 'Bearer admin-token';
@@ -714,8 +738,10 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
         .get('/api/v1/admin/refunds/report')
         .set('Authorization', adminToken)
         .query({
-          dateFrom: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-          dateTo: new Date().toISOString()
+          dateFrom: new Date(
+            Date.now() - 30 * 24 * 60 * 60 * 1000
+          ).toISOString(),
+          dateTo: new Date().toISOString(),
         });
 
       // Endpoint might not exist, but should handle gracefully
@@ -731,8 +757,8 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
           customerId,
           status: OrderStatus.CONFIRMED,
           subtotal: 29.99,
-          tax: 2.40,
-          shipping: 0.00, // Free shipping for subscription
+          tax: 2.4,
+          shipping: 0.0, // Free shipping for subscription
           total: 32.39,
           shippingAddress: {
             name: 'Subscription Customer',
@@ -740,12 +766,12 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
             city: 'Monthly City',
             state: 'MC',
             zipCode: '12345',
-            country: 'USA'
+            country: 'USA',
           },
           paymentMethod: 'card_test',
           paymentStatus: PaymentStatus.PAID,
-          paymentIntentId: 'pi_subscription_123'
-        }
+          paymentIntentId: 'pi_subscription_123',
+        },
       });
 
       // Cancel subscription order
@@ -754,14 +780,16 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
         .set('Authorization', authToken)
         .send({
           reason: 'Cancel subscription',
-          cancelRecurring: true
+          cancelRecurring: true,
         });
 
-      expect([200, 400, 500].includes(cancelSubscriptionResponse.status)).toBe(true);
+      expect([200, 400, 500].includes(cancelSubscriptionResponse.status)).toBe(
+        true
+      );
 
       if (cancelSubscriptionResponse.status === 200) {
         const cancelledOrder = await prisma.order.findUnique({
-          where: { id: recurringOrder.id }
+          where: { id: recurringOrder.id },
         });
         expect(cancelledOrder?.status).toBe(OrderStatus.CANCELLED);
       }
@@ -774,8 +802,8 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
           customerId,
           status: OrderStatus.DELIVERED,
           subtotal: 349.98,
-          tax: 28.00,
-          shipping: 15.00,
+          tax: 28.0,
+          shipping: 15.0,
           total: 392.98,
           shippingAddress: {
             name: 'Return Test Customer',
@@ -783,12 +811,12 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
             city: 'Exchange City',
             state: 'EC',
             zipCode: '54321',
-            country: 'USA'
+            country: 'USA',
           },
           paymentMethod: 'card_test',
           paymentStatus: PaymentStatus.PAID,
-          paymentIntentId: 'pi_return_test_456'
-        }
+          paymentIntentId: 'pi_return_test_456',
+        },
       });
 
       // Create order items
@@ -798,17 +826,17 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
             orderId: multiItemOrder.id,
             productId: product1.id,
             quantity: 1,
-            price: product1.price
-          }
+            price: product1.price,
+          },
         }),
         prisma.orderItem.create({
           data: {
             orderId: multiItemOrder.id,
             productId: product2.id,
             quantity: 1,
-            price: product2.price
-          }
-        })
+            price: product2.price,
+          },
+        }),
       ]);
 
       // Mock admin user for partial refund
@@ -821,7 +849,7 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
             email: 'admin@example.com',
             roles: ['ADMIN'],
             activeRole: 'ADMIN',
-            vendorId: undefined
+            vendorId: undefined,
           };
           next();
         },
@@ -829,11 +857,11 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
           if (req.user?.activeRole !== 'ADMIN') {
             return res.status(403).json({
               success: false,
-              error: 'Admin access required'
+              error: 'Admin access required',
             });
           }
           next();
-        }
+        },
       }));
 
       const adminToken = 'Bearer admin-token';
@@ -847,10 +875,10 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
             {
               orderItemId: orderItems[0].id,
               quantity: 1,
-              reason: 'Defective item'
-            }
+              reason: 'Defective item',
+            },
           ],
-          refundShipping: false
+          refundShipping: false,
         });
 
       expect([200, 404, 500].includes(partialReturnResponse.status)).toBe(true);
@@ -863,8 +891,8 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
           customerId,
           status: OrderStatus.DELIVERED,
           subtotal: 199.99,
-          tax: 16.00,
-          shipping: 10.00,
+          tax: 16.0,
+          shipping: 10.0,
           total: 225.99,
           shippingAddress: {
             name: 'Dispute Customer',
@@ -872,12 +900,12 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
             city: 'Chargeback City',
             state: 'CC',
             zipCode: '78901',
-            country: 'USA'
+            country: 'USA',
           },
           paymentMethod: 'card_test',
           paymentStatus: PaymentStatus.PAID,
-          paymentIntentId: 'pi_dispute_789'
-        }
+          paymentIntentId: 'pi_dispute_789',
+        },
       });
 
       // Mock payment service dispute handling
@@ -886,13 +914,13 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
           handleDispute: vi.fn().mockResolvedValue({
             success: true,
             disputeId: 'dp_test_dispute_123',
-            status: 'under_review'
+            status: 'under_review',
           }),
           refundPayment: vi.fn().mockResolvedValue({
             success: false,
-            error: 'Payment disputed - cannot refund'
-          })
-        }))
+            error: 'Payment disputed - cannot refund',
+          }),
+        })),
       }));
 
       // Attempt refund on disputed payment
@@ -900,7 +928,7 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
         .delete(`/api/v1/orders/${disputeOrder.id}/cancel`)
         .set('Authorization', authToken)
         .send({
-          reason: 'Customer dispute resolution'
+          reason: 'Customer dispute resolution',
         });
 
       expect([200, 400, 500].includes(disputeRefundResponse.status)).toBe(true);
@@ -913,8 +941,8 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
           customerId,
           status: OrderStatus.DELIVERED,
           subtotal: 299.99,
-          tax: 24.00,
-          shipping: 15.00,
+          tax: 24.0,
+          shipping: 15.0,
           total: 338.99,
           shippingAddress: {
             name: 'Delayed Refund Customer',
@@ -922,27 +950,32 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
             city: 'Slow City',
             state: 'SC',
             zipCode: '12345',
-            country: 'USA'
+            country: 'USA',
           },
           paymentMethod: 'card_test',
           paymentStatus: PaymentStatus.PAID,
-          paymentIntentId: 'pi_delayed_refund_123'
-        }
+          paymentIntentId: 'pi_delayed_refund_123',
+        },
       });
 
       // Mock slow payment service
       vi.doMock('../../clients/payment.client', () => ({
         HttpPaymentServiceClient: vi.fn().mockImplementation(() => ({
-          refundPayment: vi.fn().mockImplementation(() =>
-            new Promise(resolve =>
-              setTimeout(() => resolve({
-                success: true,
-                refundId: 'rf_delayed_123',
-                status: 'pending'
-              }), 2000)
-            )
-          )
-        }))
+          refundPayment: vi.fn().mockImplementation(
+            () =>
+              new Promise(resolve =>
+                setTimeout(
+                  () =>
+                    resolve({
+                      success: true,
+                      refundId: 'rf_delayed_123',
+                      status: 'pending',
+                    }),
+                  2000
+                )
+              )
+          ),
+        })),
       }));
 
       const startTime = Date.now();
@@ -951,7 +984,7 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
         .delete(`/api/v1/orders/${delayedRefundOrder.id}/cancel`)
         .set('Authorization', authToken)
         .send({
-          reason: 'Testing delayed refund processing'
+          reason: 'Testing delayed refund processing',
         });
 
       const endTime = Date.now();
@@ -975,8 +1008,8 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
           customerId,
           status: OrderStatus.DELIVERED,
           subtotal: 149.99,
-          tax: 12.00,
-          shipping: 10.00,
+          tax: 12.0,
+          shipping: 10.0,
           total: 171.99,
           shippingAddress: {
             name: 'Audit Trail Customer',
@@ -984,12 +1017,12 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
             city: 'Compliance City',
             state: 'CC',
             zipCode: '54321',
-            country: 'USA'
+            country: 'USA',
           },
           paymentMethod: 'card_test',
           paymentStatus: PaymentStatus.PAID,
-          paymentIntentId: 'pi_audit_456'
-        }
+          paymentIntentId: 'pi_audit_456',
+        },
       });
 
       // Cancel order
@@ -997,13 +1030,13 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
         .delete(`/api/v1/orders/${auditOrder.id}/cancel`)
         .set('Authorization', authToken)
         .send({
-          reason: 'Audit trail testing'
+          reason: 'Audit trail testing',
         });
 
       if (auditCancelResponse.status === 200) {
         // Verify audit information is captured
         const cancelledOrder = await prisma.order.findUnique({
-          where: { id: auditOrder.id }
+          where: { id: auditOrder.id },
         });
 
         expect(cancelledOrder?.status).toBe(OrderStatus.CANCELLED);
@@ -1022,8 +1055,8 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
           customerId,
           status: OrderStatus.DELIVERED,
           subtotal: 199.99,
-          tax: 18.50, // Complex tax calculation
-          shipping: 12.00,
+          tax: 18.5, // Complex tax calculation
+          shipping: 12.0,
           total: 230.49,
           shippingAddress: {
             name: 'Tax Refund Customer',
@@ -1031,12 +1064,12 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
             city: 'Revenue City',
             state: 'RC',
             zipCode: '78901',
-            country: 'USA'
+            country: 'USA',
           },
           paymentMethod: 'card_test',
           paymentStatus: PaymentStatus.PAID,
-          paymentIntentId: 'pi_tax_refund_789'
-        }
+          paymentIntentId: 'pi_tax_refund_789',
+        },
       });
 
       // Cancel order with tax refund
@@ -1046,7 +1079,7 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
         .send({
           reason: 'Tax refund calculation test',
           refundTax: true,
-          refundShipping: true
+          refundShipping: true,
         });
 
       expect([200, 400, 500].includes(taxRefundResponse.status)).toBe(true);
@@ -1054,7 +1087,7 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
       if (taxRefundResponse.status === 200) {
         // Verify tax refund is calculated correctly
         const refundedOrder = await prisma.order.findUnique({
-          where: { id: taxOrder.id }
+          where: { id: taxOrder.id },
         });
 
         expect(refundedOrder?.status).toBe(OrderStatus.CANCELLED);
@@ -1069,8 +1102,8 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
           customerId,
           status: OrderStatus.DELIVERED,
           subtotal: 299.99,
-          tax: 45.00, // VAT
-          shipping: 25.00, // International shipping
+          tax: 45.0, // VAT
+          shipping: 25.0, // International shipping
           total: 369.99,
           shippingAddress: {
             name: 'International Customer',
@@ -1078,12 +1111,12 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
             city: 'London',
             state: 'England',
             zipCode: 'SW1A 1AA',
-            country: 'GB'
+            country: 'GB',
           },
           paymentMethod: 'card_test',
           paymentStatus: PaymentStatus.PAID,
-          paymentIntentId: 'pi_international_123'
-        }
+          paymentIntentId: 'pi_international_123',
+        },
       });
 
       // Cancel international order
@@ -1093,14 +1126,16 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
         .send({
           reason: 'International refund regulation test',
           refundCurrency: 'GBP',
-          exchangeRate: 0.79
+          exchangeRate: 0.79,
         });
 
-      expect([200, 400, 500].includes(internationalCancelResponse.status)).toBe(true);
+      expect([200, 400, 500].includes(internationalCancelResponse.status)).toBe(
+        true
+      );
 
       if (internationalCancelResponse.status === 200) {
         const refundedOrder = await prisma.order.findUnique({
-          where: { id: internationalOrder.id }
+          where: { id: internationalOrder.id },
         });
 
         expect(refundedOrder?.status).toBe(OrderStatus.CANCELLED);
@@ -1116,33 +1151,33 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
           customerId,
           status: OrderStatus.PENDING,
           subtotal: 99.99,
-          tax: 8.00,
-          shipping: 10.00,
+          tax: 8.0,
+          shipping: 10.0,
           total: 117.99,
           shippingAddress: {
             name: 'Pending Payment Customer',
             address: '123 Pending St',
             city: 'Processing City',
-            country: 'US'
+            country: 'US',
           },
           paymentMethod: 'card_test',
           paymentStatus: PaymentStatus.PENDING,
-          paymentIntentId: 'pi_test_pending_123'
-        }
+          paymentIntentId: 'pi_test_pending_123',
+        },
       });
 
       const cancelResponse = await request(app)
         .delete(`/api/v1/orders/${pendingOrder.id}/cancel`)
         .set('Authorization', authToken)
         .send({
-          reason: 'Cancel during payment processing'
+          reason: 'Cancel during payment processing',
         });
 
       expect([200, 400, 500].includes(cancelResponse.status)).toBe(true);
 
       if (cancelResponse.status === 200) {
         const cancelledOrder = await prisma.order.findUnique({
-          where: { id: pendingOrder.id }
+          where: { id: pendingOrder.id },
         });
         expect(cancelledOrder?.status).toBe(OrderStatus.CANCELLED);
       }
@@ -1155,19 +1190,19 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
           customerId,
           status: OrderStatus.PENDING,
           subtotal: 199.98,
-          tax: 16.00,
-          shipping: 10.00,
+          tax: 16.0,
+          shipping: 10.0,
           total: 225.98,
           shippingAddress: {
             name: 'System Cancel Customer',
             address: '456 System St',
             city: 'Auto City',
-            country: 'US'
+            country: 'US',
           },
           paymentMethod: 'card_test',
           paymentStatus: PaymentStatus.PENDING,
-          createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000) // 2 hours ago
-        }
+          createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
+        },
       });
 
       // Simulate system cancellation (would typically be done by background job)
@@ -1175,13 +1210,13 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
         where: { id: systemOrder.id },
         data: {
           status: OrderStatus.CANCELLED,
-          paymentStatus: PaymentStatus.FAILED
-        }
+          paymentStatus: PaymentStatus.FAILED,
+        },
       });
 
       // Verify system cancellation
       const cancelledOrder = await prisma.order.findUnique({
-        where: { id: systemOrder.id }
+        where: { id: systemOrder.id },
       });
 
       expect(cancelledOrder?.status).toBe(OrderStatus.CANCELLED);
@@ -1194,34 +1229,38 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
           customerId,
           status: OrderStatus.CONFIRMED,
           subtotal: 149.99,
-          tax: 12.00,
-          shipping: 10.00,
+          tax: 12.0,
+          shipping: 10.0,
           total: 171.99,
           shippingAddress: {
             name: 'Concurrent Test Customer',
             address: '789 Concurrent Ave',
             city: 'Race City',
-            country: 'US'
+            country: 'US',
           },
           paymentMethod: 'card_test',
-          paymentStatus: PaymentStatus.PAID
-        }
+          paymentStatus: PaymentStatus.PAID,
+        },
       });
 
       // Simulate concurrent cancellation requests
-      const cancelRequests = Array(3).fill(null).map(() =>
-        request(app)
-          .delete(`/api/v1/orders/${concurrentOrder.id}/cancel`)
-          .set('Authorization', authToken)
-          .send({
-            reason: 'Concurrent cancellation test'
-          })
-      );
+      const cancelRequests = Array(3)
+        .fill(null)
+        .map(() =>
+          request(app)
+            .delete(`/api/v1/orders/${concurrentOrder.id}/cancel`)
+            .set('Authorization', authToken)
+            .send({
+              reason: 'Concurrent cancellation test',
+            })
+        );
 
       const responses = await Promise.all(cancelRequests);
 
       // Only one should succeed, others should fail gracefully
-      const successfulCancellations = responses.filter(res => res.status === 200);
+      const successfulCancellations = responses.filter(
+        res => res.status === 200
+      );
       const failedCancellations = responses.filter(res => res.status !== 200);
 
       expect(successfulCancellations.length).toBeLessThanOrEqual(1);
@@ -1235,8 +1274,8 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
           customerId,
           status: OrderStatus.DELIVERED,
           subtotal: 199.99,
-          tax: 16.00,
-          shipping: 10.00,
+          tax: 16.0,
+          shipping: 10.0,
           total: 225.99,
           shippingAddress: {
             name: 'Network Failure Customer',
@@ -1244,35 +1283,39 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
             city: 'Timeout City',
             state: 'TC',
             zipCode: '12345',
-            country: 'USA'
+            country: 'USA',
           },
           paymentMethod: 'card_test',
           paymentStatus: PaymentStatus.PAID,
-          paymentIntentId: 'pi_network_failure_123'
-        }
+          paymentIntentId: 'pi_network_failure_123',
+        },
       });
 
       // Mock network timeout
       vi.doMock('../../clients/payment.client', () => ({
         HttpPaymentServiceClient: vi.fn().mockImplementation(() => ({
-          refundPayment: vi.fn().mockRejectedValue(new Error('Network timeout'))
-        }))
+          refundPayment: vi
+            .fn()
+            .mockRejectedValue(new Error('Network timeout')),
+        })),
       }));
 
       const networkFailureCancelResponse = await request(app)
         .delete(`/api/v1/orders/${networkFailureOrder.id}/cancel`)
         .set('Authorization', authToken)
         .send({
-          reason: 'Network failure test'
+          reason: 'Network failure test',
         });
 
       // Should handle network failures gracefully
-      expect([200, 400, 500].includes(networkFailureCancelResponse.status)).toBe(true);
+      expect(
+        [200, 400, 500].includes(networkFailureCancelResponse.status)
+      ).toBe(true);
 
       if (networkFailureCancelResponse.status === 200) {
         // Order should still be cancelled even if refund fails
         const cancelledOrder = await prisma.order.findUnique({
-          where: { id: networkFailureOrder.id }
+          where: { id: networkFailureOrder.id },
         });
         expect(cancelledOrder?.status).toBe(OrderStatus.CANCELLED);
       }

@@ -1,9 +1,22 @@
 import { OrderStatus, PaymentStatus, PrismaClient } from '@prisma/client';
 import request from 'supertest';
-import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest';
 import { app } from '../../app';
 import { redisService } from '../../services/redis.service';
-import { TestDataFactory, mockAuthServiceClient, mockNotificationServiceClient, mockPaymentServiceClient } from '../utils/test-helpers';
+import {
+  TestDataFactory,
+  mockAuthServiceClient,
+  mockNotificationServiceClient,
+  mockPaymentServiceClient,
+} from '../utils/test-helpers';
 
 describe('Multi-Service Integration Tests', () => {
   let prisma: PrismaClient;
@@ -15,13 +28,13 @@ describe('Multi-Service Integration Tests', () => {
   let customerId: string;
   let authToken: string;
 
-  beforeAll(async () => {
+  beforeAll(() => {
     prisma = new PrismaClient({
       datasources: {
         db: {
-          url: process.env.TEST_DATABASE_URL || process.env.DATABASE_URL
-        }
-      }
+          url: process.env.TEST_DATABASE_URL || process.env.DATABASE_URL,
+        },
+      },
     });
     testFactory = new TestDataFactory(prisma);
   });
@@ -49,14 +62,14 @@ describe('Multi-Service Integration Tests', () => {
       name: 'Laptop',
       price: 999.99,
       category: 'Electronics',
-      inventory: { quantity: 10, trackQuantity: true }
+      inventory: { quantity: 10, trackQuantity: true },
     });
 
     product2 = await testFactory.createProduct(vendor2.id, {
       name: 'Programming Book',
       price: 49.99,
       category: 'Books',
-      inventory: { quantity: 25, trackQuantity: true }
+      inventory: { quantity: 25, trackQuantity: true },
     });
 
     customerId = 'test-customer-123';
@@ -66,14 +79,14 @@ describe('Multi-Service Integration Tests', () => {
     mockAuthServiceClient.validateToken.mockResolvedValue({
       id: customerId,
       email: 'customer@test.com',
-      role: 'CUSTOMER'
+      role: 'CUSTOMER',
     });
 
     mockAuthServiceClient.getUserInfo.mockResolvedValue({
       id: customerId,
       email: 'customer@test.com',
       name: 'Test Customer',
-      role: 'CUSTOMER'
+      role: 'CUSTOMER',
     });
 
     // Mock payment service client
@@ -82,26 +95,32 @@ describe('Multi-Service Integration Tests', () => {
       clientSecret: 'pi_test_123_secret',
       status: 'requires_confirmation',
       amount: 104999, // $1049.99 in cents
-      currency: 'usd'
+      currency: 'usd',
     });
 
     mockPaymentServiceClient.confirmPayment.mockResolvedValue({
       success: true,
       paymentIntentId: 'pi_test_123',
-      status: 'succeeded'
+      status: 'succeeded',
     });
 
     // Mock notification service client
-    mockNotificationServiceClient.sendOrderConfirmation.mockResolvedValue(undefined);
-    mockNotificationServiceClient.sendOrderStatusUpdate.mockResolvedValue(undefined);
-    mockNotificationServiceClient.sendVendorOrderNotification.mockResolvedValue(undefined);
+    mockNotificationServiceClient.sendOrderConfirmation.mockResolvedValue(
+      undefined
+    );
+    mockNotificationServiceClient.sendOrderStatusUpdate.mockResolvedValue(
+      undefined
+    );
+    mockNotificationServiceClient.sendVendorOrderNotification.mockResolvedValue(
+      undefined
+    );
 
     // Mock auth middleware
     vi.doMock('../../middleware/auth.middleware', () => ({
       authMiddleware: (req: any, res: any, next: any) => {
         req.user = { id: customerId, role: 'CUSTOMER' };
         next();
-      }
+      },
     }));
 
     // Mock session middleware
@@ -113,7 +132,7 @@ describe('Multi-Service Integration Tests', () => {
       handleAuthentication: (req: any, res: any, next: any) => {
         req.customerId = customerId;
         next();
-      }
+      },
     }));
   });
 
@@ -130,7 +149,7 @@ describe('Multi-Service Integration Tests', () => {
         .set('Authorization', authToken)
         .send({
           productId: product1.id,
-          quantity: 1
+          quantity: 1,
         })
         .expect(200);
 
@@ -141,7 +160,7 @@ describe('Multi-Service Integration Tests', () => {
         .set('Authorization', authToken)
         .send({
           productId: product2.id,
-          quantity: 2
+          quantity: 2,
         })
         .expect(200);
 
@@ -155,14 +174,16 @@ describe('Multi-Service Integration Tests', () => {
 
       expect(validateResponse.body.success).toBe(true);
       expect(validateResponse.body.data.validation.isValid).toBe(true);
-      expect(validateResponse.body.data.validation.canProceedToCheckout).toBe(true);
+      expect(validateResponse.body.data.validation.canProceedToCheckout).toBe(
+        true
+      );
 
       // Step 3: Reserve inventory for checkout
       const reserveResponse = await request(app)
         .post('/api/v1/cart/reserve')
         .set('Authorization', authToken)
         .send({
-          expirationMinutes: 30
+          expirationMinutes: 30,
         })
         .expect(200);
 
@@ -176,10 +197,10 @@ describe('Multi-Service Integration Tests', () => {
           address: '123 Main St',
           city: 'New York',
           country: 'USA',
-          phone: '+1234567890'
+          phone: '+1234567890',
         },
         paymentMethodId: 'pm_test_123',
-        notes: 'Please handle with care'
+        notes: 'Please handle with care',
       };
 
       const createOrderResponse = await request(app)
@@ -200,8 +221,12 @@ describe('Multi-Service Integration Tests', () => {
       expect(order.total).toBeGreaterThan(1000); // Should be around $1049.99
 
       // Verify vendor orders
-      const vendor1Order = order.vendorOrders.find((vo: any) => vo.vendorId === vendor1.id);
-      const vendor2Order = order.vendorOrders.find((vo: any) => vo.vendorId === vendor2.id);
+      const vendor1Order = order.vendorOrders.find(
+        (vo: any) => vo.vendorId === vendor1.id
+      );
+      const vendor2Order = order.vendorOrders.find(
+        (vo: any) => vo.vendorId === vendor2.id
+      );
 
       expect(vendor1Order).toBeDefined();
       expect(vendor2Order).toBeDefined();
@@ -218,10 +243,10 @@ describe('Multi-Service Integration Tests', () => {
 
       // Step 6: Verify inventory was updated
       const updatedProduct1 = await prisma.product.findUnique({
-        where: { id: product1.id }
+        where: { id: product1.id },
       });
       const updatedProduct2 = await prisma.product.findUnique({
-        where: { id: product2.id }
+        where: { id: product2.id },
       });
 
       expect(updatedProduct1?.inventory.quantity).toBe(9); // 10 - 1
@@ -233,11 +258,15 @@ describe('Multi-Service Integration Tests', () => {
         'usd',
         customerId
       );
-      expect(mockNotificationServiceClient.sendOrderConfirmation).toHaveBeenCalledWith(
+      expect(
+        mockNotificationServiceClient.sendOrderConfirmation
+      ).toHaveBeenCalledWith(
         customerId,
         expect.objectContaining({ id: order.id })
       );
-      expect(mockNotificationServiceClient.sendVendorOrderNotification).toHaveBeenCalledTimes(2);
+      expect(
+        mockNotificationServiceClient.sendVendorOrderNotification
+      ).toHaveBeenCalledTimes(2);
     });
 
     it('should handle order cancellation with inventory restoration', async () => {
@@ -255,9 +284,9 @@ describe('Multi-Service Integration Tests', () => {
             name: 'John Doe',
             address: '123 Main St',
             city: 'New York',
-            country: 'USA'
+            country: 'USA',
           },
-          paymentMethodId: 'pm_test_123'
+          paymentMethodId: 'pm_test_123',
         })
         .expect(201);
 
@@ -265,7 +294,7 @@ describe('Multi-Service Integration Tests', () => {
 
       // Verify inventory was reduced
       const productAfterOrder = await prisma.product.findUnique({
-        where: { id: product1.id }
+        where: { id: product1.id },
       });
       expect(productAfterOrder?.inventory.quantity).toBe(8); // 10 - 2
 
@@ -274,7 +303,7 @@ describe('Multi-Service Integration Tests', () => {
         .delete(`/api/v1/orders/${orderId}/cancel`)
         .set('Authorization', authToken)
         .send({
-          reason: 'Changed my mind'
+          reason: 'Changed my mind',
         })
         .expect(200);
 
@@ -283,16 +312,18 @@ describe('Multi-Service Integration Tests', () => {
 
       // Verify inventory was restored
       const productAfterCancel = await prisma.product.findUnique({
-        where: { id: product1.id }
+        where: { id: product1.id },
       });
       expect(productAfterCancel?.inventory.quantity).toBe(10); // Restored to original
 
       // Verify notification was sent
-      expect(mockNotificationServiceClient.sendOrderStatusUpdate).toHaveBeenCalledWith(
+      expect(
+        mockNotificationServiceClient.sendOrderStatusUpdate
+      ).toHaveBeenCalledWith(
         customerId,
         expect.objectContaining({
           id: orderId,
-          status: OrderStatus.CANCELLED
+          status: OrderStatus.CANCELLED,
         }),
         OrderStatus.PENDING
       );
@@ -324,29 +355,39 @@ describe('Multi-Service Integration Tests', () => {
             name: 'John Doe',
             address: '123 Main St',
             city: 'New York',
-            country: 'USA'
+            country: 'USA',
           },
-          paymentMethodId: 'pm_test_123'
+          paymentMethodId: 'pm_test_123',
         });
 
       order = orderResponse.body.data;
-      vendorOrder1 = order.vendorOrders.find((vo: any) => vo.vendorId === vendor1.id);
-      vendorOrder2 = order.vendorOrders.find((vo: any) => vo.vendorId === vendor2.id);
+      vendorOrder1 = order.vendorOrders.find(
+        (vo: any) => vo.vendorId === vendor1.id
+      );
+      vendorOrder2 = order.vendorOrders.find(
+        (vo: any) => vo.vendorId === vendor2.id
+      );
     });
 
     it('should handle vendor order status updates independently', async () => {
       // Mock vendor 1 authentication
       vi.doMock('../../middleware/auth.middleware', () => ({
         authMiddleware: (req: any, res: any, next: any) => {
-          req.user = { id: 'vendor1-user', role: 'VENDOR', vendorId: vendor1.id };
+          req.user = {
+            id: 'vendor1-user',
+            role: 'VENDOR',
+            vendorId: vendor1.id,
+          };
           next();
         },
         requireVendor: (req: any, res: any, next: any) => {
           if (req.user.role !== 'VENDOR') {
-            return res.status(403).json({ success: false, error: 'Vendor access required' });
+            return res
+              .status(403)
+              .json({ success: false, error: 'Vendor access required' });
           }
           next();
-        }
+        },
       }));
 
       // Vendor 1 updates their order to processing
@@ -354,25 +395,33 @@ describe('Multi-Service Integration Tests', () => {
         .put(`/api/v1/vendor/orders/${vendorOrder1.id}/status`)
         .set('Authorization', 'Bearer vendor1-token')
         .send({
-          status: OrderStatus.PROCESSING
+          status: OrderStatus.PROCESSING,
         })
         .expect(200);
 
       expect(vendor1UpdateResponse.body.success).toBe(true);
-      expect(vendor1UpdateResponse.body.data.status).toBe(OrderStatus.PROCESSING);
+      expect(vendor1UpdateResponse.body.data.status).toBe(
+        OrderStatus.PROCESSING
+      );
 
       // Mock vendor 2 authentication
       vi.doMock('../../middleware/auth.middleware', () => ({
         authMiddleware: (req: any, res: any, next: any) => {
-          req.user = { id: 'vendor2-user', role: 'VENDOR', vendorId: vendor2.id };
+          req.user = {
+            id: 'vendor2-user',
+            role: 'VENDOR',
+            vendorId: vendor2.id,
+          };
           next();
         },
         requireVendor: (req: any, res: any, next: any) => {
           if (req.user.role !== 'VENDOR') {
-            return res.status(403).json({ success: false, error: 'Vendor access required' });
+            return res
+              .status(403)
+              .json({ success: false, error: 'Vendor access required' });
           }
           next();
-        }
+        },
       }));
 
       // Vendor 2 ships their order
@@ -381,18 +430,20 @@ describe('Multi-Service Integration Tests', () => {
         .set('Authorization', 'Bearer vendor2-token')
         .send({
           status: OrderStatus.SHIPPED,
-          trackingNumber: '1Z999AA1234567890'
+          trackingNumber: '1Z999AA1234567890',
         })
         .expect(200);
 
       expect(vendor2UpdateResponse.body.success).toBe(true);
       expect(vendor2UpdateResponse.body.data.status).toBe(OrderStatus.SHIPPED);
-      expect(vendor2UpdateResponse.body.data.trackingNumber).toBe('1Z999AA1234567890');
+      expect(vendor2UpdateResponse.body.data.trackingNumber).toBe(
+        '1Z999AA1234567890'
+      );
 
       // Verify main order status is updated appropriately
       const updatedOrder = await prisma.order.findUnique({
         where: { id: order.id },
-        include: { vendorOrders: true }
+        include: { vendorOrders: true },
       });
 
       expect(updatedOrder?.status).toBe(OrderStatus.PROCESSING); // Should reflect the most advanced status
@@ -402,16 +453,20 @@ describe('Multi-Service Integration Tests', () => {
       // Update both vendor orders to delivered
       await prisma.vendorOrder.updateMany({
         where: { orderId: order.id },
-        data: { status: OrderStatus.DELIVERED }
+        data: { status: OrderStatus.DELIVERED },
       });
 
       // Check if main order status is updated
       const updatedOrder = await prisma.order.findUnique({
         where: { id: order.id },
-        include: { vendorOrders: true }
+        include: { vendorOrders: true },
       });
 
-      expect(updatedOrder?.vendorOrders.every(vo => vo.status === OrderStatus.DELIVERED)).toBe(true);
+      expect(
+        updatedOrder?.vendorOrders.every(
+          vo => vo.status === OrderStatus.DELIVERED
+        )
+      ).toBe(true);
     });
   });
 
@@ -431,9 +486,9 @@ describe('Multi-Service Integration Tests', () => {
             name: 'John Doe',
             address: '123 Main St',
             city: 'New York',
-            country: 'USA'
+            country: 'USA',
           },
-          paymentMethodId: 'pm_test_123'
+          paymentMethodId: 'pm_test_123',
         })
         .expect(201);
 
@@ -446,7 +501,9 @@ describe('Multi-Service Integration Tests', () => {
         .expect(200);
 
       expect(paymentStatusResponse.body.success).toBe(true);
-      expect(paymentStatusResponse.body.data.paymentIntentId).toBe('pi_test_123');
+      expect(paymentStatusResponse.body.data.paymentIntentId).toBe(
+        'pi_test_123'
+      );
 
       // Confirm payment
       const confirmPaymentResponse = await request(app)
@@ -455,10 +512,14 @@ describe('Multi-Service Integration Tests', () => {
         .expect(200);
 
       expect(confirmPaymentResponse.body.success).toBe(true);
-      expect(confirmPaymentResponse.body.data.paymentStatus).toBe(PaymentStatus.PAID);
+      expect(confirmPaymentResponse.body.data.paymentStatus).toBe(
+        PaymentStatus.PAID
+      );
 
       // Verify payment service was called
-      expect(mockPaymentServiceClient.confirmPayment).toHaveBeenCalledWith('pi_test_123');
+      expect(mockPaymentServiceClient.confirmPayment).toHaveBeenCalledWith(
+        'pi_test_123'
+      );
     });
 
     it('should handle payment failure during order creation', async () => {
@@ -480,9 +541,9 @@ describe('Multi-Service Integration Tests', () => {
             name: 'John Doe',
             address: '123 Main St',
             city: 'New York',
-            country: 'USA'
+            country: 'USA',
           },
-          paymentMethodId: 'pm_test_123'
+          paymentMethodId: 'pm_test_123',
         })
         .expect(500);
 
@@ -503,7 +564,7 @@ describe('Multi-Service Integration Tests', () => {
       // Create multiple customers trying to order the same limited product
       const limitedProduct = await testFactory.createProduct(vendor1.id, {
         name: 'Limited Product',
-        inventory: { quantity: 1, trackQuantity: true }
+        inventory: { quantity: 1, trackQuantity: true },
       });
 
       const customer2Id = 'customer-456';
@@ -519,7 +580,7 @@ describe('Multi-Service Integration Tests', () => {
             req.user = { id: customerId, role: 'CUSTOMER' };
           }
           next();
-        }
+        },
       }));
 
       // Both customers add the item to cart
@@ -538,9 +599,9 @@ describe('Multi-Service Integration Tests', () => {
           name: 'Customer',
           address: '123 Main St',
           city: 'New York',
-          country: 'USA'
+          country: 'USA',
         },
-        paymentMethodId: 'pm_test_123'
+        paymentMethodId: 'pm_test_123',
       };
 
       // Try to create orders concurrently
@@ -552,13 +613,13 @@ describe('Multi-Service Integration Tests', () => {
         request(app)
           .post('/api/v1/orders')
           .set('Authorization', authToken2)
-          .send(orderData)
+          .send(orderData),
       ]);
 
       // One should succeed, one should fail
-      const responses = [response1, response2].map(r =>
-        r.status === 'fulfilled' ? r.value : null
-      ).filter(Boolean);
+      const responses = [response1, response2]
+        .map(r => (r.status === 'fulfilled' ? r.value : null))
+        .filter(Boolean);
 
       const successfulResponses = responses.filter(r => r.status === 201);
       const failedResponses = responses.filter(r => r.status === 400);
@@ -579,7 +640,7 @@ describe('Multi-Service Integration Tests', () => {
         .post('/api/v1/cart/reserve')
         .set('Authorization', authToken)
         .send({
-          expirationMinutes: 1 // Very short for testing
+          expirationMinutes: 1, // Very short for testing
         })
         .expect(200);
 
@@ -597,9 +658,9 @@ describe('Multi-Service Integration Tests', () => {
             name: 'John Doe',
             address: '123 Main St',
             city: 'New York',
-            country: 'USA'
+            country: 'USA',
           },
-          paymentMethodId: 'pm_test_123'
+          paymentMethodId: 'pm_test_123',
         });
 
       // Should still succeed as inventory is available
@@ -647,9 +708,9 @@ describe('Multi-Service Integration Tests', () => {
             name: 'John Doe',
             address: '123 Main St',
             city: 'New York',
-            country: 'USA'
+            country: 'USA',
           },
-          paymentMethodId: 'pm_test_123'
+          paymentMethodId: 'pm_test_123',
         })
         .expect(201);
 
@@ -675,9 +736,9 @@ describe('Multi-Service Integration Tests', () => {
             name: 'John Doe',
             address: '123 Main St',
             city: 'New York',
-            country: 'USA'
+            country: 'USA',
           },
-          paymentMethodId: 'pm_test_123'
+          paymentMethodId: 'pm_test_123',
         })
         .expect(500);
 
@@ -688,15 +749,17 @@ describe('Multi-Service Integration Tests', () => {
 
   describe('Performance and Scalability', () => {
     it('should handle high-volume cart operations', async () => {
-      const operations = Array(50).fill(null).map((_, index) =>
-        request(app)
-          .post('/api/v1/cart/add')
-          .set('Authorization', authToken)
-          .send({
-            productId: index % 2 === 0 ? product1.id : product2.id,
-            quantity: 1
-          })
-      );
+      const operations = Array(50)
+        .fill(null)
+        .map((_, index) =>
+          request(app)
+            .post('/api/v1/cart/add')
+            .set('Authorization', authToken)
+            .send({
+              productId: index % 2 === 0 ? product1.id : product2.id,
+              quantity: 1,
+            })
+        );
 
       const responses = await Promise.all(operations);
 
@@ -713,7 +776,7 @@ describe('Multi-Service Integration Tests', () => {
           .set('Authorization', authToken)
           .send({
             productId: i % 2 === 0 ? product1.id : product2.id,
-            quantity: 1
+            quantity: 1,
           });
       }
 
@@ -727,9 +790,9 @@ describe('Multi-Service Integration Tests', () => {
             name: 'John Doe',
             address: '123 Main St',
             city: 'New York',
-            country: 'USA'
+            country: 'USA',
           },
-          paymentMethodId: 'pm_test_123'
+          paymentMethodId: 'pm_test_123',
         })
         .expect(201);
 

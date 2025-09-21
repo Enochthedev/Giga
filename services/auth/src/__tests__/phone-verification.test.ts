@@ -1,7 +1,16 @@
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import request from 'supertest';
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest';
 import { app } from '../app';
 import { JWTService } from '../services/jwt.service';
 import { SMSService } from '../services/sms.service';
@@ -13,7 +22,7 @@ describe('Phone Verification System', () => {
   let testUser: any;
   let accessToken: string;
 
-  beforeAll(async () => {
+  beforeAll(() => {
     prisma = new PrismaClient();
     jwtService = JWTService.getInstance();
     smsService = SMSService.getInstance();
@@ -130,7 +139,9 @@ describe('Phone Verification System', () => {
       it('should format phone numbers correctly', () => {
         expect(smsService.formatPhoneNumber('1234567890')).toBe('+11234567890');
         expect(smsService.formatPhoneNumber('+1234567890')).toBe('+1234567890');
-        expect(smsService.formatPhoneNumber('(123) 456-7890')).toBe('+11234567890');
+        expect(smsService.formatPhoneNumber('(123) 456-7890')).toBe(
+          '+11234567890'
+        );
       });
     });
 
@@ -405,7 +416,7 @@ describe('Phone Verification System', () => {
   });
 
   describe('Phone Verification Middleware', () => {
-    it('should require phone verification for protected endpoints', async () => {
+    it('should require phone verification for protected endpoints', () => {
       // This would be tested with actual endpoints that use requirePhoneVerification middleware
       // For now, we'll test the middleware logic directly
       expect(testUser.isPhoneVerified).toBe(false);
@@ -468,7 +479,7 @@ describe('Phone Verification System', () => {
     });
 
     it('should log security events', async () => {
-      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => { });
+      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
       await request(app)
         .post('/api/v1/auth/send-phone-verification')

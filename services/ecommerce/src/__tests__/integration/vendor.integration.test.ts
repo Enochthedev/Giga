@@ -1,9 +1,20 @@
 import { OrderStatus, PrismaClient } from '@prisma/client';
 import request from 'supertest';
-import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest';
 import { app } from '../../app';
 import { redisService } from '../../services/redis.service';
-import { TestDataFactory, mockNotificationServiceClient } from '../utils/test-helpers';
+import {
+  TestDataFactory,
+  mockNotificationServiceClient,
+} from '../utils/test-helpers';
 
 describe('Vendor Integration Tests', () => {
   let prisma: PrismaClient;
@@ -16,13 +27,13 @@ describe('Vendor Integration Tests', () => {
   let vendorId: string;
   let authToken: string;
 
-  beforeAll(async () => {
+  beforeAll(() => {
     prisma = new PrismaClient({
       datasources: {
         db: {
-          url: process.env.TEST_DATABASE_URL || process.env.DATABASE_URL
-        }
-      }
+          url: process.env.TEST_DATABASE_URL || process.env.DATABASE_URL,
+        },
+      },
     });
     testFactory = new TestDataFactory(prisma);
   });
@@ -48,12 +59,12 @@ describe('Vendor Integration Tests', () => {
 
     product = await testFactory.createProduct(vendor.id, {
       name: 'Vendor 1 Product',
-      inventory: { quantity: 50, trackQuantity: true }
+      inventory: { quantity: 50, trackQuantity: true },
     });
 
     product2 = await testFactory.createProduct(vendor.id, {
       name: 'Vendor 1 Product 2',
-      inventory: { quantity: 25, trackQuantity: true }
+      inventory: { quantity: 25, trackQuantity: true },
     });
 
     vendorId = vendor.id;
@@ -67,15 +78,17 @@ describe('Vendor Integration Tests', () => {
       },
       requireVendor: (req: any, res: any, next: any) => {
         if (req.user.role !== 'VENDOR') {
-          return res.status(403).json({ success: false, error: 'Vendor access required' });
+          return res
+            .status(403)
+            .json({ success: false, error: 'Vendor access required' });
         }
         next();
-      }
+      },
     }));
 
     // Create test order and vendor order
     const order = await testFactory.createOrder('customer-123', {
-      status: OrderStatus.CONFIRMED
+      status: OrderStatus.CONFIRMED,
     });
 
     vendorOrder = await prisma.vendorOrder.create({
@@ -85,24 +98,30 @@ describe('Vendor Integration Tests', () => {
         vendorId: vendor.id,
         status: OrderStatus.CONFIRMED,
         subtotal: 199.98,
-        shipping: 10.00,
+        shipping: 10.0,
         total: 209.98,
         items: {
-          create: [{
-            productId: product.id,
-            quantity: 2,
-            price: 99.99
-          }]
-        }
+          create: [
+            {
+              productId: product.id,
+              quantity: 2,
+              price: 99.99,
+            },
+          ],
+        },
       },
       include: {
-        items: true
-      }
+        items: true,
+      },
     });
 
     // Mock notification service
-    mockNotificationServiceClient.sendVendorOrderNotification.mockResolvedValue(undefined);
-    mockNotificationServiceClient.sendInventoryAlert.mockResolvedValue(undefined);
+    mockNotificationServiceClient.sendVendorOrderNotification.mockResolvedValue(
+      undefined
+    );
+    mockNotificationServiceClient.sendInventoryAlert.mockResolvedValue(
+      undefined
+    );
   });
 
   afterAll(async () => {
@@ -136,9 +155,9 @@ describe('Vendor Integration Tests', () => {
           vendorId: vendor.id,
           status: OrderStatus.PENDING,
           subtotal: 99.99,
-          shipping: 5.00,
-          total: 104.99
-        }
+          shipping: 5.0,
+          total: 104.99,
+        },
       });
 
       const response = await request(app)
@@ -175,9 +194,9 @@ describe('Vendor Integration Tests', () => {
           vendorId: vendor2.id, // Different vendor
           status: OrderStatus.CONFIRMED,
           subtotal: 149.99,
-          shipping: 8.00,
-          total: 157.99
-        }
+          shipping: 8.0,
+          total: 157.99,
+        },
       });
 
       const response = await request(app)
@@ -211,7 +230,7 @@ describe('Vendor Integration Tests', () => {
         .set('Authorization', authToken)
         .send({
           status: OrderStatus.PROCESSING,
-          trackingNumber: '1Z999AA1234567890'
+          trackingNumber: '1Z999AA1234567890',
         })
         .expect(200);
 
@@ -226,7 +245,7 @@ describe('Vendor Integration Tests', () => {
         .set('Authorization', authToken)
         .send({
           status: OrderStatus.SHIPPED,
-          trackingNumber: '1Z999AA1234567890'
+          trackingNumber: '1Z999AA1234567890',
         })
         .expect(200);
 
@@ -240,7 +259,7 @@ describe('Vendor Integration Tests', () => {
         .put(`/api/v1/vendor/orders/${vendorOrder.id}/status`)
         .set('Authorization', authToken)
         .send({
-          status: OrderStatus.DELIVERED // Invalid transition from CONFIRMED
+          status: OrderStatus.DELIVERED, // Invalid transition from CONFIRMED
         })
         .expect(400);
 
@@ -253,7 +272,7 @@ describe('Vendor Integration Tests', () => {
         .put('/api/v1/vendor/orders/non-existent-order/status')
         .set('Authorization', authToken)
         .send({
-          status: OrderStatus.PROCESSING
+          status: OrderStatus.PROCESSING,
         })
         .expect(404);
 
@@ -270,16 +289,16 @@ describe('Vendor Integration Tests', () => {
           vendorId: vendor2.id, // Different vendor
           status: OrderStatus.CONFIRMED,
           subtotal: 149.99,
-          shipping: 8.00,
-          total: 157.99
-        }
+          shipping: 8.0,
+          total: 157.99,
+        },
       });
 
       const response = await request(app)
         .put(`/api/v1/vendor/orders/${otherVendorOrder.id}/status`)
         .set('Authorization', authToken)
         .send({
-          status: OrderStatus.PROCESSING
+          status: OrderStatus.PROCESSING,
         })
         .expect(403);
 
@@ -298,15 +317,15 @@ describe('Vendor Integration Tests', () => {
           vendorId: vendor.id,
           status: OrderStatus.DELIVERED,
           subtotal: 149.99,
-          shipping: 8.00,
-          total: 157.99
-        }
+          shipping: 8.0,
+          total: 157.99,
+        },
       });
 
       // Create low stock product
       await testFactory.createProduct(vendor.id, {
         name: 'Low Stock Product',
-        inventory: { quantity: 2, trackQuantity: true, lowStockThreshold: 5 }
+        inventory: { quantity: 2, trackQuantity: true, lowStockThreshold: 5 },
       });
     });
 
@@ -324,8 +343,12 @@ describe('Vendor Integration Tests', () => {
       expect(response.body.data.lowStockProducts).toBeGreaterThan(0);
       expect(response.body.data.recentOrders).toBeDefined();
       expect(response.body.data.analytics).toBeDefined();
-      expect(response.body.data.analytics.salesThisMonth).toBeGreaterThanOrEqual(0);
-      expect(response.body.data.analytics.ordersThisMonth).toBeGreaterThanOrEqual(0);
+      expect(
+        response.body.data.analytics.salesThisMonth
+      ).toBeGreaterThanOrEqual(0);
+      expect(
+        response.body.data.analytics.ordersThisMonth
+      ).toBeGreaterThanOrEqual(0);
     });
 
     it('should include recent orders in dashboard', async () => {
@@ -347,7 +370,9 @@ describe('Vendor Integration Tests', () => {
 
       expect(response.body.success).toBe(true);
       expect(response.body.data.analytics.topSellingProducts).toBeDefined();
-      expect(Array.isArray(response.body.data.analytics.topSellingProducts)).toBe(true);
+      expect(
+        Array.isArray(response.body.data.analytics.topSellingProducts)
+      ).toBe(true);
     });
   });
 
@@ -371,7 +396,7 @@ describe('Vendor Integration Tests', () => {
       // Make one product inactive
       await prisma.product.update({
         where: { id: product2.id },
-        data: { isActive: false }
+        data: { isActive: false },
       });
 
       const response = await request(app)
@@ -389,7 +414,7 @@ describe('Vendor Integration Tests', () => {
       // Update one product category
       await prisma.product.update({
         where: { id: product2.id },
-        data: { category: 'Books' }
+        data: { category: 'Books' },
       });
 
       const response = await request(app)
@@ -417,7 +442,9 @@ describe('Vendor Integration Tests', () => {
 
     it('should only return products for the authenticated vendor', async () => {
       // Create product for different vendor
-      await testFactory.createProduct(vendor2.id, { name: 'Other Vendor Product' });
+      await testFactory.createProduct(vendor2.id, {
+        name: 'Other Vendor Product',
+      });
 
       const response = await request(app)
         .get('/api/v1/vendor/products')
@@ -440,7 +467,7 @@ describe('Vendor Integration Tests', () => {
         .send({
           quantity: 75,
           lowStockThreshold: 10,
-          trackQuantity: true
+          trackQuantity: true,
         })
         .expect(200);
 
@@ -456,7 +483,7 @@ describe('Vendor Integration Tests', () => {
         .set('Authorization', authToken)
         .send({
           quantity: 0,
-          trackQuantity: false
+          trackQuantity: false,
         })
         .expect(200);
 
@@ -469,7 +496,7 @@ describe('Vendor Integration Tests', () => {
         .put('/api/v1/vendor/products/non-existent-product/inventory')
         .set('Authorization', authToken)
         .send({
-          quantity: 50
+          quantity: 50,
         })
         .expect(404);
 
@@ -479,13 +506,15 @@ describe('Vendor Integration Tests', () => {
 
     it('should return 403 for product belonging to different vendor', async () => {
       // Create product for different vendor
-      const otherProduct = await testFactory.createProduct(vendor2.id, { name: 'Other Product' });
+      const otherProduct = await testFactory.createProduct(vendor2.id, {
+        name: 'Other Product',
+      });
 
       const response = await request(app)
         .put(`/api/v1/vendor/products/${otherProduct.id}/inventory`)
         .set('Authorization', authToken)
         .send({
-          quantity: 50
+          quantity: 50,
         })
         .expect(403);
 
@@ -498,7 +527,7 @@ describe('Vendor Integration Tests', () => {
         .put(`/api/v1/vendor/products/${product.id}/inventory`)
         .set('Authorization', authToken)
         .send({
-          quantity: -5 // Invalid negative quantity
+          quantity: -5, // Invalid negative quantity
         })
         .expect(400);
 
@@ -516,14 +545,14 @@ describe('Vendor Integration Tests', () => {
             {
               productId: product.id,
               quantity: 100,
-              lowStockThreshold: 15
+              lowStockThreshold: 15,
             },
             {
               productId: product2.id,
               quantity: 50,
-              lowStockThreshold: 8
-            }
-          ]
+              lowStockThreshold: 8,
+            },
+          ],
         })
         .expect(200);
 
@@ -541,13 +570,13 @@ describe('Vendor Integration Tests', () => {
           updates: [
             {
               productId: product.id,
-              quantity: 100
+              quantity: 100,
             },
             {
               productId: 'non-existent-product',
-              quantity: 50
-            }
-          ]
+              quantity: 50,
+            },
+          ],
         })
         .expect(200);
 
@@ -563,7 +592,7 @@ describe('Vendor Integration Tests', () => {
         .put('/api/v1/vendor/products/inventory/bulk')
         .set('Authorization', authToken)
         .send({
-          updates: []
+          updates: [],
         })
         .expect(400);
 
@@ -576,12 +605,12 @@ describe('Vendor Integration Tests', () => {
       // Create low stock products
       await testFactory.createProduct(vendor.id, {
         name: 'Low Stock Product 1',
-        inventory: { quantity: 2, trackQuantity: true, lowStockThreshold: 5 }
+        inventory: { quantity: 2, trackQuantity: true, lowStockThreshold: 5 },
       });
 
       await testFactory.createProduct(vendor.id, {
         name: 'Low Stock Product 2',
-        inventory: { quantity: 1, trackQuantity: true, lowStockThreshold: 3 }
+        inventory: { quantity: 1, trackQuantity: true, lowStockThreshold: 3 },
       });
     });
 
@@ -597,7 +626,9 @@ describe('Vendor Integration Tests', () => {
 
       // Verify all returned products are actually low stock
       response.body.data.products.forEach((product: any) => {
-        expect(product.inventory.quantity).toBeLessThanOrEqual(product.inventory.lowStockThreshold);
+        expect(product.inventory.quantity).toBeLessThanOrEqual(
+          product.inventory.lowStockThreshold
+        );
       });
     });
 
@@ -605,7 +636,13 @@ describe('Vendor Integration Tests', () => {
       // Update all products to have sufficient stock
       await prisma.product.updateMany({
         where: { vendorId: vendor.id },
-        data: { inventory: { quantity: 100, trackQuantity: true, lowStockThreshold: 5 } }
+        data: {
+          inventory: {
+            quantity: 100,
+            trackQuantity: true,
+            lowStockThreshold: 5,
+          },
+        },
       });
 
       const response = await request(app)
@@ -629,10 +666,12 @@ describe('Vendor Integration Tests', () => {
         },
         requireVendor: (req: any, res: any, next: any) => {
           if (req.user.role !== 'VENDOR') {
-            return res.status(403).json({ success: false, error: 'Vendor access required' });
+            return res
+              .status(403)
+              .json({ success: false, error: 'Vendor access required' });
           }
           next();
-        }
+        },
       }));
 
       const response = await request(app)
@@ -656,7 +695,9 @@ describe('Vendor Integration Tests', () => {
   describe('Error Handling', () => {
     it('should handle database connection errors gracefully', async () => {
       // Mock database error
-      vi.spyOn(prisma.vendorOrder, 'findMany').mockRejectedValueOnce(new Error('Database connection failed'));
+      vi.spyOn(prisma.vendorOrder, 'findMany').mockRejectedValueOnce(
+        new Error('Database connection failed')
+      );
 
       const response = await request(app)
         .get('/api/v1/vendor/orders')
@@ -677,7 +718,7 @@ describe('Vendor Integration Tests', () => {
         .put(`/api/v1/vendor/orders/${vendorOrder.id}/status`)
         .set('Authorization', authToken)
         .send({
-          status: OrderStatus.PROCESSING
+          status: OrderStatus.PROCESSING,
         })
         .expect(200); // Should still succeed even if notification fails
 
@@ -693,7 +734,7 @@ describe('Vendor Integration Tests', () => {
         .set('Authorization', authToken)
         .send({
           status: OrderStatus.SHIPPED,
-          trackingNumber: '1Z999AA1234567890'
+          trackingNumber: '1Z999AA1234567890',
         })
         .expect(200);
 
@@ -701,11 +742,13 @@ describe('Vendor Integration Tests', () => {
       expect(response.body.data.status).toBe(OrderStatus.SHIPPED);
 
       // Verify notification was sent
-      expect(mockNotificationServiceClient.sendVendorOrderNotification).toHaveBeenCalledWith(
+      expect(
+        mockNotificationServiceClient.sendVendorOrderNotification
+      ).toHaveBeenCalledWith(
         vendor.id,
         expect.objectContaining({
           id: vendorOrder.id,
-          status: OrderStatus.SHIPPED
+          status: OrderStatus.SHIPPED,
         })
       );
     });
@@ -717,21 +760,23 @@ describe('Vendor Integration Tests', () => {
         .send({
           quantity: 2,
           lowStockThreshold: 5,
-          trackQuantity: true
+          trackQuantity: true,
         })
         .expect(200);
 
       expect(response.body.success).toBe(true);
 
       // Verify low stock alert was sent
-      expect(mockNotificationServiceClient.sendInventoryAlert).toHaveBeenCalledWith(
+      expect(
+        mockNotificationServiceClient.sendInventoryAlert
+      ).toHaveBeenCalledWith(
         vendor.id,
         expect.objectContaining({
           id: product.id,
           inventory: expect.objectContaining({
             quantity: 2,
-            lowStockThreshold: 5
-          })
+            lowStockThreshold: 5,
+          }),
         })
       );
     });

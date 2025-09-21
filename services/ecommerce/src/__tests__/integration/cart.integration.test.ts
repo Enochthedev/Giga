@@ -1,6 +1,14 @@
 import { PrismaClient } from '@prisma/client';
 import request from 'supertest';
-import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest';
 import { app } from '../../app';
 import { redisService } from '../../services/redis.service';
 
@@ -10,13 +18,13 @@ describe('Cart Integration Tests', () => {
   let customerId: string;
   let authToken: string;
 
-  beforeAll(async () => {
+  beforeAll(() => {
     prisma = new PrismaClient({
       datasources: {
         db: {
-          url: process.env.TEST_DATABASE_URL || process.env.DATABASE_URL
-        }
-      }
+          url: process.env.TEST_DATABASE_URL || process.env.DATABASE_URL,
+        },
+      },
     });
   });
 
@@ -48,13 +56,13 @@ describe('Cart Integration Tests', () => {
         inventory: {
           create: {
             quantity: 50,
-            trackQuantity: true
-          }
-        }
+            trackQuantity: true,
+          },
+        },
       },
       include: {
-        inventory: true
-      }
+        inventory: true,
+      },
     });
 
     customerId = 'test-customer-123';
@@ -65,7 +73,7 @@ describe('Cart Integration Tests', () => {
       authMiddleware: (req: any, res: any, next: any) => {
         req.user = { id: customerId, role: 'CUSTOMER' };
         next();
-      }
+      },
     }));
 
     // Mock session middleware
@@ -77,7 +85,7 @@ describe('Cart Integration Tests', () => {
       handleAuthentication: (req: any, res: any, next: any) => {
         req.customerId = customerId;
         next();
-      }
+      },
     }));
   });
 
@@ -105,7 +113,7 @@ describe('Cart Integration Tests', () => {
         .set('Authorization', authToken)
         .send({
           productId: product.id,
-          quantity: 2
+          quantity: 2,
         })
         .expect(200);
 
@@ -129,7 +137,7 @@ describe('Cart Integration Tests', () => {
         .set('Authorization', authToken)
         .send({
           productId: product.id,
-          quantity: 2
+          quantity: 2,
         })
         .expect(200);
 
@@ -145,7 +153,7 @@ describe('Cart Integration Tests', () => {
         .set('Authorization', authToken)
         .send({
           productId: 'invalid-product-id',
-          quantity: 1
+          quantity: 1,
         })
         .expect(400);
 
@@ -159,7 +167,7 @@ describe('Cart Integration Tests', () => {
         .set('Authorization', authToken)
         .send({
           productId: product.id,
-          quantity: 100 // More than available stock
+          quantity: 100, // More than available stock
         })
         .expect(400);
 
@@ -173,7 +181,7 @@ describe('Cart Integration Tests', () => {
         .set('Authorization', authToken)
         .send({
           productId: product.id,
-          quantity: 0
+          quantity: 0,
         })
         .expect(400);
 
@@ -187,7 +195,7 @@ describe('Cart Integration Tests', () => {
         .set('Authorization', authToken)
         .send({
           productId: product.id,
-          quantity: 2
+          quantity: 2,
         })
         .expect(200);
 
@@ -197,7 +205,7 @@ describe('Cart Integration Tests', () => {
         .set('Authorization', authToken)
         .send({
           productId: product.id,
-          quantity: 3
+          quantity: 3,
         })
         .expect(200);
 
@@ -216,7 +224,7 @@ describe('Cart Integration Tests', () => {
         .set('Authorization', authToken)
         .send({
           productId: product.id,
-          quantity: 2
+          quantity: 2,
         });
       cartItem = addResponse.body.data.items[0];
     });
@@ -226,7 +234,7 @@ describe('Cart Integration Tests', () => {
         .put(`/api/v1/cart/items/${cartItem.id}`)
         .set('Authorization', authToken)
         .send({
-          quantity: 5
+          quantity: 5,
         })
         .expect(200);
 
@@ -239,7 +247,7 @@ describe('Cart Integration Tests', () => {
         .put('/api/v1/cart/items/non-existent-item')
         .set('Authorization', authToken)
         .send({
-          quantity: 5
+          quantity: 5,
         })
         .expect(404);
 
@@ -251,7 +259,7 @@ describe('Cart Integration Tests', () => {
         .put(`/api/v1/cart/items/${cartItem.id}`)
         .set('Authorization', authToken)
         .send({
-          quantity: 100 // More than available stock
+          quantity: 100, // More than available stock
         })
         .expect(400);
 
@@ -270,7 +278,7 @@ describe('Cart Integration Tests', () => {
         .set('Authorization', authToken)
         .send({
           productId: product.id,
-          quantity: 2
+          quantity: 2,
         });
       cartItem = addResponse.body.data.items[0];
     });
@@ -303,7 +311,7 @@ describe('Cart Integration Tests', () => {
         .set('Authorization', authToken)
         .send({
           productId: product.id,
-          quantity: 2
+          quantity: 2,
         });
     });
 
@@ -333,7 +341,7 @@ describe('Cart Integration Tests', () => {
         .set('Authorization', authToken)
         .send({
           productId: product.id,
-          quantity: 2
+          quantity: 2,
         });
     });
 
@@ -352,7 +360,7 @@ describe('Cart Integration Tests', () => {
       // Make product inactive
       await prisma.product.update({
         where: { id: product.id },
-        data: { isActive: false }
+        data: { isActive: false },
       });
 
       const response = await request(app)
@@ -374,7 +382,7 @@ describe('Cart Integration Tests', () => {
         .set('Authorization', authToken)
         .send({
           productId: product.id,
-          quantity: 2
+          quantity: 2,
         });
     });
 
@@ -383,7 +391,7 @@ describe('Cart Integration Tests', () => {
         .post('/api/v1/cart/reserve')
         .set('Authorization', authToken)
         .send({
-          expirationMinutes: 30
+          expirationMinutes: 30,
         })
         .expect(200);
 
@@ -396,14 +404,14 @@ describe('Cart Integration Tests', () => {
       // Update product inventory to have less stock
       await prisma.productInventory.update({
         where: { productId: product.id },
-        data: { quantity: 1 }
+        data: { quantity: 1 },
       });
 
       const response = await request(app)
         .post('/api/v1/cart/reserve')
         .set('Authorization', authToken)
         .send({
-          expirationMinutes: 30
+          expirationMinutes: 30,
         })
         .expect(400);
 
@@ -420,7 +428,7 @@ describe('Cart Integration Tests', () => {
         .set('Authorization', authToken)
         .send({
           productId: product.id,
-          quantity: 2
+          quantity: 2,
         });
     });
 
@@ -439,9 +447,7 @@ describe('Cart Integration Tests', () => {
 
     it('should return validation issues for empty cart', async () => {
       // Clear cart first
-      await request(app)
-        .delete('/api/v1/cart')
-        .set('Authorization', authToken);
+      await request(app).delete('/api/v1/cart').set('Authorization', authToken);
 
       const response = await request(app)
         .get('/api/v1/cart/checkout/validate')
@@ -463,26 +469,33 @@ describe('Cart Integration Tests', () => {
       const anonymousCart = {
         id: 'anonymous-cart',
         customerId: anonymousSessionId,
-        items: [{
-          id: 'item-1',
-          productId: product.id,
-          quantity: 1,
-          price: product.price,
-          addedAt: new Date().toISOString()
-        }],
+        items: [
+          {
+            id: 'item-1',
+            productId: product.id,
+            quantity: 1,
+            price: product.price,
+            addedAt: new Date().toISOString(),
+          },
+        ],
         subtotal: product.price,
         tax: product.price * 0.08,
         total: product.price * 1.08,
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
       };
 
-      await redisService.set(`cart:${anonymousSessionId}`, JSON.stringify(anonymousCart), 'EX', 86400);
+      await redisService.set(
+        `cart:${anonymousSessionId}`,
+        JSON.stringify(anonymousCart),
+        'EX',
+        86400
+      );
 
       const response = await request(app)
         .post('/api/v1/cart/merge')
         .set('Authorization', authToken)
         .send({
-          anonymousSessionId
+          anonymousSessionId,
         })
         .expect(200);
 
@@ -510,7 +523,7 @@ describe('Cart Integration Tests', () => {
         .set('Authorization', authToken)
         .send({
           productId: product.id,
-          quantity: 2
+          quantity: 2,
         });
     });
 
@@ -522,7 +535,9 @@ describe('Cart Integration Tests', () => {
 
       expect(response.body.success).toBe(true);
       expect(response.body.data.inventoryStatuses).toHaveLength(1);
-      expect(response.body.data.inventoryStatuses[0].productId).toBe(product.id);
+      expect(response.body.data.inventoryStatuses[0].productId).toBe(
+        product.id
+      );
       expect(response.body.data.inventoryStatuses[0].isAvailable).toBe(true);
       expect(response.body.data.summary.totalItems).toBe(1);
       expect(response.body.data.summary.availableItems).toBe(1);
@@ -533,11 +548,11 @@ describe('Cart Integration Tests', () => {
   describe('Rate Limiting', () => {
     it('should apply rate limiting to cart operations', async () => {
       // Make multiple rapid requests to test rate limiting
-      const requests = Array(20).fill(null).map(() =>
-        request(app)
-          .get('/api/v1/cart')
-          .set('Authorization', authToken)
-      );
+      const requests = Array(20)
+        .fill(null)
+        .map(() =>
+          request(app).get('/api/v1/cart').set('Authorization', authToken)
+        );
 
       const responses = await Promise.all(requests);
 
@@ -550,14 +565,16 @@ describe('Cart Integration Tests', () => {
   describe('Error Handling', () => {
     it('should handle database connection errors gracefully', async () => {
       // Mock database error
-      vi.spyOn(prisma.product, 'findUnique').mockRejectedValueOnce(new Error('Database connection failed'));
+      vi.spyOn(prisma.product, 'findUnique').mockRejectedValueOnce(
+        new Error('Database connection failed')
+      );
 
       const response = await request(app)
         .post('/api/v1/cart/add')
         .set('Authorization', authToken)
         .send({
           productId: product.id,
-          quantity: 1
+          quantity: 1,
         })
         .expect(500);
 
@@ -567,7 +584,9 @@ describe('Cart Integration Tests', () => {
 
     it('should handle Redis connection errors gracefully', async () => {
       // Mock Redis error
-      vi.spyOn(redisService, 'get').mockRejectedValueOnce(new Error('Redis connection failed'));
+      vi.spyOn(redisService, 'get').mockRejectedValueOnce(
+        new Error('Redis connection failed')
+      );
 
       const response = await request(app)
         .get('/api/v1/cart')

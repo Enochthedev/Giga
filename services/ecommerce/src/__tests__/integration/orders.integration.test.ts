@@ -1,9 +1,21 @@
 import { OrderStatus, PaymentStatus, PrismaClient } from '@prisma/client';
 import request from 'supertest';
-import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest';
 import { app } from '../../app';
 import { redisService } from '../../services/redis.service';
-import { TestDataFactory, mockNotificationServiceClient, mockPaymentServiceClient } from '../utils/test-helpers';
+import {
+  TestDataFactory,
+  mockNotificationServiceClient,
+  mockPaymentServiceClient,
+} from '../utils/test-helpers';
 
 describe('Orders Integration Tests', () => {
   let prisma: PrismaClient;
@@ -13,13 +25,13 @@ describe('Orders Integration Tests', () => {
   let customerId: string;
   let authToken: string;
 
-  beforeAll(async () => {
+  beforeAll(() => {
     prisma = new PrismaClient({
       datasources: {
         db: {
-          url: process.env.TEST_DATABASE_URL || process.env.DATABASE_URL
-        }
-      }
+          url: process.env.TEST_DATABASE_URL || process.env.DATABASE_URL,
+        },
+      },
     });
     testFactory = new TestDataFactory(prisma);
   });
@@ -42,7 +54,7 @@ describe('Orders Integration Tests', () => {
     // Create test data
     vendor = await testFactory.createVendor();
     product = await testFactory.createProduct(vendor.id, {
-      inventory: { quantity: 50, trackQuantity: true }
+      inventory: { quantity: 50, trackQuantity: true },
     });
     customerId = 'test-customer-123';
     authToken = 'Bearer test-token';
@@ -52,7 +64,7 @@ describe('Orders Integration Tests', () => {
       authMiddleware: (req: any, res: any, next: any) => {
         req.user = { id: customerId, role: 'CUSTOMER' };
         next();
-      }
+      },
     }));
 
     // Mock service clients
@@ -61,17 +73,21 @@ describe('Orders Integration Tests', () => {
       clientSecret: 'pi_test_123_secret',
       status: 'requires_confirmation',
       amount: 11799,
-      currency: 'usd'
+      currency: 'usd',
     });
 
     mockPaymentServiceClient.confirmPayment.mockResolvedValue({
       success: true,
       paymentIntentId: 'pi_test_123',
-      status: 'succeeded'
+      status: 'succeeded',
     });
 
-    mockNotificationServiceClient.sendOrderConfirmation.mockResolvedValue(undefined);
-    mockNotificationServiceClient.sendOrderStatusUpdate.mockResolvedValue(undefined);
+    mockNotificationServiceClient.sendOrderConfirmation.mockResolvedValue(
+      undefined
+    );
+    mockNotificationServiceClient.sendOrderStatusUpdate.mockResolvedValue(
+      undefined
+    );
 
     // Add item to cart for order creation tests
     await request(app)
@@ -79,7 +95,7 @@ describe('Orders Integration Tests', () => {
       .set('Authorization', authToken)
       .send({
         productId: product.id,
-        quantity: 2
+        quantity: 2,
       });
   });
 
@@ -95,10 +111,10 @@ describe('Orders Integration Tests', () => {
         address: '123 Main St',
         city: 'New York',
         country: 'USA',
-        phone: '+1234567890'
+        phone: '+1234567890',
       },
       paymentMethodId: 'pm_test_123',
-      notes: 'Please deliver to front door'
+      notes: 'Please deliver to front door',
     };
 
     it('should create order from cart successfully', async () => {
@@ -128,7 +144,9 @@ describe('Orders Integration Tests', () => {
     it('should create vendor orders for multi-vendor cart', async () => {
       // Create second vendor and product
       const vendor2 = await testFactory.createVendor({ name: 'Vendor 2' });
-      const product2 = await testFactory.createProduct(vendor2.id, { name: 'Product 2' });
+      const product2 = await testFactory.createProduct(vendor2.id, {
+        name: 'Product 2',
+      });
 
       // Add second product to cart
       await request(app)
@@ -136,7 +154,7 @@ describe('Orders Integration Tests', () => {
         .set('Authorization', authToken)
         .send({
           productId: product2.id,
-          quantity: 1
+          quantity: 1,
         });
 
       const response = await request(app)
@@ -148,8 +166,12 @@ describe('Orders Integration Tests', () => {
       expect(response.body.success).toBe(true);
       expect(response.body.data.vendorOrders).toHaveLength(2);
 
-      const vendorOrder1 = response.body.data.vendorOrders.find((vo: any) => vo.vendorId === vendor.id);
-      const vendorOrder2 = response.body.data.vendorOrders.find((vo: any) => vo.vendorId === vendor2.id);
+      const vendorOrder1 = response.body.data.vendorOrders.find(
+        (vo: any) => vo.vendorId === vendor.id
+      );
+      const vendorOrder2 = response.body.data.vendorOrders.find(
+        (vo: any) => vo.vendorId === vendor2.id
+      );
 
       expect(vendorOrder1).toBeDefined();
       expect(vendorOrder2).toBeDefined();
@@ -159,9 +181,7 @@ describe('Orders Integration Tests', () => {
 
     it('should return 400 for empty cart', async () => {
       // Clear cart first
-      await request(app)
-        .delete('/api/v1/cart')
-        .set('Authorization', authToken);
+      await request(app).delete('/api/v1/cart').set('Authorization', authToken);
 
       const response = await request(app)
         .post('/api/v1/orders')
@@ -180,8 +200,8 @@ describe('Orders Integration Tests', () => {
           name: '', // Missing required field
           address: '123 Main St',
           city: 'New York',
-          country: 'USA'
-        }
+          country: 'USA',
+        },
       };
 
       const response = await request(app)
@@ -197,7 +217,7 @@ describe('Orders Integration Tests', () => {
       // Update product to have less inventory
       await prisma.product.update({
         where: { id: product.id },
-        data: { inventory: { quantity: 1, trackQuantity: true } }
+        data: { inventory: { quantity: 1, trackQuantity: true } },
       });
 
       const response = await request(app)
@@ -233,7 +253,7 @@ describe('Orders Integration Tests', () => {
       // Create test order
       order = await testFactory.createOrder(customerId, {
         status: OrderStatus.CONFIRMED,
-        paymentStatus: PaymentStatus.PAID
+        paymentStatus: PaymentStatus.PAID,
       });
     });
 
@@ -255,7 +275,7 @@ describe('Orders Integration Tests', () => {
     it('should filter orders by status', async () => {
       // Create another order with different status
       await testFactory.createOrder(customerId, {
-        status: OrderStatus.PENDING
+        status: OrderStatus.PENDING,
       });
 
       const response = await request(app)
@@ -345,7 +365,7 @@ describe('Orders Integration Tests', () => {
 
     beforeEach(async () => {
       order = await testFactory.createOrder(customerId, {
-        status: OrderStatus.CONFIRMED
+        status: OrderStatus.CONFIRMED,
       });
 
       // Mock admin user
@@ -353,7 +373,7 @@ describe('Orders Integration Tests', () => {
         authMiddleware: (req: any, res: any, next: any) => {
           req.user = { id: 'admin-123', role: 'ADMIN' };
           next();
-        }
+        },
       }));
     });
 
@@ -363,7 +383,7 @@ describe('Orders Integration Tests', () => {
         .set('Authorization', authToken)
         .send({
           status: OrderStatus.PROCESSING,
-          trackingNumber: '1Z999AA1234567890'
+          trackingNumber: '1Z999AA1234567890',
         })
         .expect(200);
 
@@ -377,7 +397,7 @@ describe('Orders Integration Tests', () => {
         .put(`/api/v1/orders/${order.id}/status`)
         .set('Authorization', authToken)
         .send({
-          status: OrderStatus.DELIVERED // Invalid transition from CONFIRMED
+          status: OrderStatus.DELIVERED, // Invalid transition from CONFIRMED
         })
         .expect(400);
 
@@ -391,14 +411,14 @@ describe('Orders Integration Tests', () => {
         authMiddleware: (req: any, res: any, next: any) => {
           req.user = { id: customerId, role: 'CUSTOMER' };
           next();
-        }
+        },
       }));
 
       const response = await request(app)
         .put(`/api/v1/orders/${order.id}/status`)
         .set('Authorization', authToken)
         .send({
-          status: OrderStatus.PROCESSING
+          status: OrderStatus.PROCESSING,
         })
         .expect(403);
 
@@ -412,7 +432,7 @@ describe('Orders Integration Tests', () => {
 
     beforeEach(async () => {
       order = await testFactory.createOrder(customerId, {
-        status: OrderStatus.CONFIRMED
+        status: OrderStatus.CONFIRMED,
       });
     });
 
@@ -421,7 +441,7 @@ describe('Orders Integration Tests', () => {
         .delete(`/api/v1/orders/${order.id}/cancel`)
         .set('Authorization', authToken)
         .send({
-          reason: 'Changed my mind'
+          reason: 'Changed my mind',
         })
         .expect(200);
 
@@ -433,14 +453,14 @@ describe('Orders Integration Tests', () => {
       // Update order to delivered status
       await prisma.order.update({
         where: { id: order.id },
-        data: { status: OrderStatus.DELIVERED }
+        data: { status: OrderStatus.DELIVERED },
       });
 
       const response = await request(app)
         .delete(`/api/v1/orders/${order.id}/cancel`)
         .set('Authorization', authToken)
         .send({
-          reason: 'Changed my mind'
+          reason: 'Changed my mind',
         })
         .expect(400);
 
@@ -453,7 +473,7 @@ describe('Orders Integration Tests', () => {
         .delete('/api/v1/orders/non-existent-order/cancel')
         .set('Authorization', authToken)
         .send({
-          reason: 'Changed my mind'
+          reason: 'Changed my mind',
         })
         .expect(404);
 
@@ -467,14 +487,14 @@ describe('Orders Integration Tests', () => {
 
     beforeEach(async () => {
       order = await testFactory.createOrder(customerId, {
-        paymentIntentId: 'pi_test_123'
+        paymentIntentId: 'pi_test_123',
       });
 
       mockPaymentServiceClient.getPaymentStatus = vi.fn().mockResolvedValue({
         id: 'pi_test_123',
         status: 'succeeded',
         amount: 11799,
-        currency: 'usd'
+        currency: 'usd',
       });
     });
 
@@ -492,7 +512,7 @@ describe('Orders Integration Tests', () => {
     it('should return 404 for order without payment intent', async () => {
       // Create order without payment intent
       const orderWithoutPayment = await testFactory.createOrder(customerId, {
-        paymentIntentId: null
+        paymentIntentId: null,
       });
 
       const response = await request(app)
@@ -511,7 +531,7 @@ describe('Orders Integration Tests', () => {
     beforeEach(async () => {
       order = await testFactory.createOrder(customerId, {
         paymentIntentId: 'pi_test_123',
-        paymentStatus: PaymentStatus.PENDING
+        paymentStatus: PaymentStatus.PENDING,
       });
     });
 
@@ -529,7 +549,7 @@ describe('Orders Integration Tests', () => {
       // Update order to paid status
       await prisma.order.update({
         where: { id: order.id },
-        data: { paymentStatus: PaymentStatus.PAID }
+        data: { paymentStatus: PaymentStatus.PAID },
       });
 
       const response = await request(app)
@@ -559,7 +579,9 @@ describe('Orders Integration Tests', () => {
   describe('Error Handling', () => {
     it('should handle database connection errors gracefully', async () => {
       // Mock database error
-      vi.spyOn(prisma.order, 'findMany').mockRejectedValueOnce(new Error('Database connection failed'));
+      vi.spyOn(prisma.order, 'findMany').mockRejectedValueOnce(
+        new Error('Database connection failed')
+      );
 
       const response = await request(app)
         .get('/api/v1/orders')
@@ -581,9 +603,9 @@ describe('Orders Integration Tests', () => {
           name: 'John Doe',
           address: '123 Main St',
           city: 'New York',
-          country: 'USA'
+          country: 'USA',
         },
-        paymentMethodId: 'pm_test_123'
+        paymentMethodId: 'pm_test_123',
       };
 
       const response = await request(app)
@@ -602,7 +624,7 @@ describe('Orders Integration Tests', () => {
       // Update product to have limited inventory
       await prisma.product.update({
         where: { id: product.id },
-        data: { inventory: { quantity: 1, trackQuantity: true } }
+        data: { inventory: { quantity: 1, trackQuantity: true } },
       });
 
       // Add item to multiple carts
@@ -619,7 +641,7 @@ describe('Orders Integration Tests', () => {
             req.user = { id: customerId, role: 'CUSTOMER' };
           }
           next();
-        }
+        },
       }));
 
       // Add item to second customer's cart
@@ -628,7 +650,7 @@ describe('Orders Integration Tests', () => {
         .set('Authorization', authToken2)
         .send({
           productId: product.id,
-          quantity: 1
+          quantity: 1,
         });
 
       const validOrderData = {
@@ -636,9 +658,9 @@ describe('Orders Integration Tests', () => {
           name: 'John Doe',
           address: '123 Main St',
           city: 'New York',
-          country: 'USA'
+          country: 'USA',
         },
-        paymentMethodId: 'pm_test_123'
+        paymentMethodId: 'pm_test_123',
       };
 
       // Try to create orders concurrently
@@ -650,13 +672,13 @@ describe('Orders Integration Tests', () => {
         request(app)
           .post('/api/v1/orders')
           .set('Authorization', authToken2)
-          .send(validOrderData)
+          .send(validOrderData),
       ]);
 
       // One should succeed, one should fail due to insufficient inventory
-      const responses = [response1, response2].map(r =>
-        r.status === 'fulfilled' ? r.value : null
-      ).filter(Boolean);
+      const responses = [response1, response2]
+        .map(r => (r.status === 'fulfilled' ? r.value : null))
+        .filter(Boolean);
 
       const successfulResponses = responses.filter(r => r.status === 201);
       const failedResponses = responses.filter(r => r.status === 400);

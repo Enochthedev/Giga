@@ -1,6 +1,14 @@
 import { OrderStatus, PrismaClient } from '@prisma/client';
 import request from 'supertest';
-import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest';
 import { app } from '../../app';
 import { redisService } from '../../services/redis.service';
 
@@ -12,13 +20,13 @@ describe('Basic Vendor Integration Tests', () => {
   let vendorId: string;
   let authToken: string;
 
-  beforeAll(async () => {
+  beforeAll(() => {
     prisma = new PrismaClient({
       datasources: {
         db: {
-          url: process.env.TEST_DATABASE_URL || process.env.DATABASE_URL
-        }
-      }
+          url: process.env.TEST_DATABASE_URL || process.env.DATABASE_URL,
+        },
+      },
     });
   });
 
@@ -55,13 +63,13 @@ describe('Basic Vendor Integration Tests', () => {
         inventory: {
           create: {
             quantity: 50,
-            trackQuantity: true
-          }
-        }
+            trackQuantity: true,
+          },
+        },
       },
       include: {
-        inventory: true
-      }
+        inventory: true,
+      },
     });
 
     product2 = await prisma.product.create({
@@ -76,13 +84,13 @@ describe('Basic Vendor Integration Tests', () => {
           create: {
             quantity: 25,
             trackQuantity: true,
-            lowStockThreshold: 5
-          }
-        }
+            lowStockThreshold: 5,
+          },
+        },
       },
       include: {
-        inventory: true
-      }
+        inventory: true,
+      },
     });
 
     authToken = 'Bearer vendor-token';
@@ -95,10 +103,12 @@ describe('Basic Vendor Integration Tests', () => {
       },
       requireVendor: (req: any, res: any, next: any) => {
         if (req.user.role !== 'VENDOR') {
-          return res.status(403).json({ success: false, error: 'Vendor access required' });
+          return res
+            .status(403)
+            .json({ success: false, error: 'Vendor access required' });
         }
         next();
-      }
+      },
     }));
 
     // Create test order and vendor order
@@ -107,17 +117,17 @@ describe('Basic Vendor Integration Tests', () => {
         customerId: 'customer-123',
         status: OrderStatus.CONFIRMED,
         subtotal: 99.99,
-        tax: 8.00,
-        shipping: 10.00,
+        tax: 8.0,
+        shipping: 10.0,
         total: 117.99,
         shippingAddress: {
           name: 'John Doe',
           address: '123 Test St',
           city: 'Test City',
-          country: 'US'
+          country: 'US',
         },
-        paymentMethod: 'card_test'
-      }
+        paymentMethod: 'card_test',
+      },
     });
 
     vendorOrder = await prisma.vendorOrder.create({
@@ -126,19 +136,21 @@ describe('Basic Vendor Integration Tests', () => {
         vendorId,
         status: OrderStatus.CONFIRMED,
         subtotal: 199.98,
-        shipping: 10.00,
+        shipping: 10.0,
         total: 209.98,
         items: {
-          create: [{
-            productId: product1.id,
-            quantity: 2,
-            price: 99.99
-          }]
-        }
+          create: [
+            {
+              productId: product1.id,
+              quantity: 2,
+              price: 99.99,
+            },
+          ],
+        },
       },
       include: {
-        items: true
-      }
+        items: true,
+      },
     });
   });
 
@@ -193,7 +205,7 @@ describe('Basic Vendor Integration Tests', () => {
         .set('Authorization', authToken)
         .send({
           status: OrderStatus.PROCESSING,
-          trackingNumber: '1Z999AA1234567890'
+          trackingNumber: '1Z999AA1234567890',
         });
 
       expect([200, 400, 403, 404, 500].includes(response.status)).toBe(true);
@@ -205,7 +217,7 @@ describe('Basic Vendor Integration Tests', () => {
         .put(`/api/v1/vendor/orders/${vendorOrder.id}/status`)
         .set('Authorization', authToken)
         .send({
-          status: 'INVALID_STATUS'
+          status: 'INVALID_STATUS',
         });
 
       expect([400, 500].includes(response.status)).toBe(true);
@@ -217,7 +229,7 @@ describe('Basic Vendor Integration Tests', () => {
         .put('/api/v1/vendor/orders/non-existent-order/status')
         .set('Authorization', authToken)
         .send({
-          status: OrderStatus.PROCESSING
+          status: OrderStatus.PROCESSING,
         });
 
       expect([404, 500].includes(response.status)).toBe(true);
@@ -276,7 +288,7 @@ describe('Basic Vendor Integration Tests', () => {
         .send({
           quantity: 75,
           lowStockThreshold: 10,
-          trackQuantity: true
+          trackQuantity: true,
         });
 
       expect([200, 400, 403, 404, 500].includes(response.status)).toBe(true);
@@ -288,7 +300,7 @@ describe('Basic Vendor Integration Tests', () => {
         .put(`/api/v1/vendor/products/${product1.id}/inventory`)
         .set('Authorization', authToken)
         .send({
-          quantity: -5 // Invalid negative quantity
+          quantity: -5, // Invalid negative quantity
         });
 
       expect([400, 500].includes(response.status)).toBe(true);
@@ -300,7 +312,7 @@ describe('Basic Vendor Integration Tests', () => {
         .put('/api/v1/vendor/products/non-existent-product/inventory')
         .set('Authorization', authToken)
         .send({
-          quantity: 50
+          quantity: 50,
         });
 
       expect([404, 500].includes(response.status)).toBe(true);
@@ -318,14 +330,14 @@ describe('Basic Vendor Integration Tests', () => {
             {
               productId: product1.id,
               quantity: 100,
-              lowStockThreshold: 15
+              lowStockThreshold: 15,
             },
             {
               productId: product2.id,
               quantity: 50,
-              lowStockThreshold: 8
-            }
-          ]
+              lowStockThreshold: 8,
+            },
+          ],
         });
 
       expect([200, 400, 403, 500].includes(response.status)).toBe(true);
@@ -337,7 +349,7 @@ describe('Basic Vendor Integration Tests', () => {
         .put('/api/v1/vendor/products/inventory/bulk')
         .set('Authorization', authToken)
         .send({
-          updates: []
+          updates: [],
         });
 
       expect([400, 500].includes(response.status)).toBe(true);
@@ -360,10 +372,10 @@ describe('Basic Vendor Integration Tests', () => {
             create: {
               quantity: 2,
               trackQuantity: true,
-              lowStockThreshold: 5
-            }
-          }
-        }
+              lowStockThreshold: 5,
+            },
+          },
+        },
       });
     });
 
@@ -387,10 +399,12 @@ describe('Basic Vendor Integration Tests', () => {
         },
         requireVendor: (req: any, res: any, next: any) => {
           if (req.user.role !== 'VENDOR') {
-            return res.status(403).json({ success: false, error: 'Vendor access required' });
+            return res
+              .status(403)
+              .json({ success: false, error: 'Vendor access required' });
           }
           next();
-        }
+        },
       }));
 
       const response = await request(app)
@@ -402,8 +416,7 @@ describe('Basic Vendor Integration Tests', () => {
     });
 
     it('should require authentication', async () => {
-      const response = await request(app)
-        .get('/api/v1/vendor/orders');
+      const response = await request(app).get('/api/v1/vendor/orders');
 
       expect([401, 403, 500].includes(response.status)).toBe(true);
     });
@@ -412,7 +425,9 @@ describe('Basic Vendor Integration Tests', () => {
   describe('Error Handling', () => {
     it('should handle database connection errors gracefully', async () => {
       // Mock database error
-      vi.spyOn(prisma.vendorOrder, 'findMany').mockRejectedValueOnce(new Error('Database connection failed'));
+      vi.spyOn(prisma.vendorOrder, 'findMany').mockRejectedValueOnce(
+        new Error('Database connection failed')
+      );
 
       const response = await request(app)
         .get('/api/v1/vendor/orders')
@@ -439,7 +454,7 @@ describe('Basic Vendor Integration Tests', () => {
         .put(`/api/v1/vendor/products/${product1.id}/inventory`)
         .set('Authorization', authToken)
         .send({
-          quantity: 'invalid-number'
+          quantity: 'invalid-number',
         });
 
       expect([400, 500].includes(response.status)).toBe(true);
@@ -449,11 +464,13 @@ describe('Basic Vendor Integration Tests', () => {
 
   describe('Performance', () => {
     it('should handle multiple concurrent requests', async () => {
-      const requests = Array(5).fill(null).map(() =>
-        request(app)
-          .get('/api/v1/vendor/dashboard')
-          .set('Authorization', authToken)
-      );
+      const requests = Array(5)
+        .fill(null)
+        .map(() =>
+          request(app)
+            .get('/api/v1/vendor/dashboard')
+            .set('Authorization', authToken)
+        );
 
       const responses = await Promise.all(requests);
 

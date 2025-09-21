@@ -1,7 +1,7 @@
-import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
 import redis from '@fastify/redis';
+import Fastify from 'fastify';
 
 const fastify = Fastify({
   logger: {
@@ -36,7 +36,7 @@ async function buildApp() {
   });
 
   // Health check
-  fastify.get('/health', async () => {
+  fastify.get('/health', () => {
     return {
       status: 'healthy',
       timestamp: new Date().toISOString(),
@@ -45,7 +45,7 @@ async function buildApp() {
   });
 
   // Placeholder routes - will be expanded in Phase 2
-  fastify.get('/api/v1/products', async () => {
+  fastify.get('/api/v1/products', () => {
     return {
       success: true,
       data: {
@@ -57,7 +57,7 @@ async function buildApp() {
     };
   });
 
-  fastify.get('/api/v1/vendor/dashboard', async () => {
+  fastify.get('/api/v1/vendor/dashboard', () => {
     return {
       success: true,
       data: {
@@ -71,7 +71,7 @@ async function buildApp() {
   });
 
   // Global error handler
-  fastify.setErrorHandler(async (error, request, reply) => {
+  fastify.setErrorHandler((error, request, reply) => {
     fastify.log.error(error);
 
     reply.code(error.statusCode || 500).send({

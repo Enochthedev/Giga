@@ -1,6 +1,14 @@
 import { PrismaClient } from '@prisma/client';
 import request from 'supertest';
-import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest';
 import { app } from '../../app';
 import { redisService } from '../../services/redis.service';
 
@@ -10,13 +18,13 @@ describe('Basic Cart Integration Tests', () => {
   let customerId: string;
   let authToken: string;
 
-  beforeAll(async () => {
+  beforeAll(() => {
     prisma = new PrismaClient({
       datasources: {
         db: {
-          url: process.env.TEST_DATABASE_URL || process.env.DATABASE_URL
-        }
-      }
+          url: process.env.TEST_DATABASE_URL || process.env.DATABASE_URL,
+        },
+      },
     });
   });
 
@@ -53,13 +61,13 @@ describe('Basic Cart Integration Tests', () => {
         inventory: {
           create: {
             quantity: 50,
-            trackQuantity: true
-          }
-        }
+            trackQuantity: true,
+          },
+        },
       },
       include: {
-        inventory: true
-      }
+        inventory: true,
+      },
     });
 
     customerId = 'test-customer-123';
@@ -70,7 +78,7 @@ describe('Basic Cart Integration Tests', () => {
       authMiddleware: (req: any, res: any, next: any) => {
         req.user = { id: customerId, role: 'CUSTOMER' };
         next();
-      }
+      },
     }));
 
     // Mock session middleware
@@ -82,7 +90,7 @@ describe('Basic Cart Integration Tests', () => {
       handleAuthentication: (req: any, res: any, next: any) => {
         req.customerId = customerId;
         next();
-      }
+      },
     }));
   });
 
@@ -118,7 +126,7 @@ describe('Basic Cart Integration Tests', () => {
         .set('Authorization', authToken)
         .send({
           productId: product.id,
-          quantity: 2
+          quantity: 2,
         });
 
       // Should return 200, 400, or 500 (not 404)
@@ -132,7 +140,7 @@ describe('Basic Cart Integration Tests', () => {
         .set('Authorization', authToken)
         .send({
           productId: 'invalid-product-id',
-          quantity: 1
+          quantity: 1,
         });
 
       // Should handle invalid product gracefully
@@ -146,7 +154,7 @@ describe('Basic Cart Integration Tests', () => {
         .set('Authorization', authToken)
         .send({
           productId: product.id,
-          quantity: 0
+          quantity: 0,
         });
 
       // Should validate quantity
@@ -157,8 +165,7 @@ describe('Basic Cart Integration Tests', () => {
 
   describe('Health Check', () => {
     it('should return health status', async () => {
-      const response = await request(app)
-        .get('/health');
+      const response = await request(app).get('/health');
 
       expect([200, 503].includes(response.status)).toBe(true);
       expect(response.body).toHaveProperty('status');
@@ -168,8 +175,7 @@ describe('Basic Cart Integration Tests', () => {
 
   describe('API Documentation', () => {
     it('should serve Swagger documentation', async () => {
-      const response = await request(app)
-        .get('/docs');
+      const response = await request(app).get('/docs');
 
       // Should serve documentation or redirect
       expect([200, 301, 302].includes(response.status)).toBe(true);
@@ -187,8 +193,7 @@ describe('Basic Cart Integration Tests', () => {
     });
 
     it('should handle missing authorization', async () => {
-      const response = await request(app)
-        .get('/api/v1/cart');
+      const response = await request(app).get('/api/v1/cart');
 
       // Should require authentication
       expect([401, 403, 500].includes(response.status)).toBe(true);
@@ -197,8 +202,7 @@ describe('Basic Cart Integration Tests', () => {
 
   describe('CORS and Security Headers', () => {
     it('should include security headers', async () => {
-      const response = await request(app)
-        .get('/health');
+      const response = await request(app).get('/health');
 
       // Should have security headers from helmet
       expect(response.headers).toHaveProperty('x-content-type-options');
@@ -218,10 +222,9 @@ describe('Basic Cart Integration Tests', () => {
   describe('Rate Limiting', () => {
     it('should apply rate limiting to API endpoints', async () => {
       // Make multiple rapid requests
-      const requests = Array(10).fill(null).map(() =>
-        request(app)
-          .get('/health')
-      );
+      const requests = Array(10)
+        .fill(null)
+        .map(() => request(app).get('/health'));
 
       const responses = await Promise.all(requests);
 
@@ -237,7 +240,7 @@ describe('Basic Cart Integration Tests', () => {
       const largePayload = {
         productId: product.id,
         quantity: 1,
-        data: 'x'.repeat(20 * 1024 * 1024) // 20MB payload
+        data: 'x'.repeat(20 * 1024 * 1024), // 20MB payload
       };
 
       const response = await request(app)
@@ -253,7 +256,7 @@ describe('Basic Cart Integration Tests', () => {
       const maliciousPayload = {
         productId: product.id,
         quantity: 1,
-        notes: '<script>alert("xss")</script>'
+        notes: '<script>alert("xss")</script>',
       };
 
       const response = await request(app)

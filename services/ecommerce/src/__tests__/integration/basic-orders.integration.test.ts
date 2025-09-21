@@ -1,6 +1,14 @@
 import { OrderStatus, PaymentStatus, PrismaClient } from '@prisma/client';
 import request from 'supertest';
-import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest';
 import { app } from '../../app';
 import { redisService } from '../../services/redis.service';
 
@@ -10,13 +18,13 @@ describe('Basic Orders Integration Tests', () => {
   let customerId: string;
   let authToken: string;
 
-  beforeAll(async () => {
+  beforeAll(() => {
     prisma = new PrismaClient({
       datasources: {
         db: {
-          url: process.env.TEST_DATABASE_URL || process.env.DATABASE_URL
-        }
-      }
+          url: process.env.TEST_DATABASE_URL || process.env.DATABASE_URL,
+        },
+      },
     });
   });
 
@@ -52,13 +60,13 @@ describe('Basic Orders Integration Tests', () => {
         inventory: {
           create: {
             quantity: 50,
-            trackQuantity: true
-          }
-        }
+            trackQuantity: true,
+          },
+        },
       },
       include: {
-        inventory: true
-      }
+        inventory: true,
+      },
     });
 
     customerId = 'test-customer-123';
@@ -69,7 +77,7 @@ describe('Basic Orders Integration Tests', () => {
       authMiddleware: (req: any, res: any, next: any) => {
         req.user = { id: customerId, role: 'CUSTOMER' };
         next();
-      }
+      },
     }));
   });
 
@@ -125,10 +133,10 @@ describe('Basic Orders Integration Tests', () => {
         address: '123 Main St',
         city: 'New York',
         country: 'USA',
-        phone: '+1234567890'
+        phone: '+1234567890',
       },
       paymentMethodId: 'pm_test_123',
-      notes: 'Please deliver to front door'
+      notes: 'Please deliver to front door',
     };
 
     it('should handle order creation request', async () => {
@@ -148,9 +156,9 @@ describe('Basic Orders Integration Tests', () => {
           name: '', // Missing required field
           address: '123 Main St',
           city: 'New York',
-          country: 'USA'
+          country: 'USA',
         },
-        paymentMethodId: 'pm_test_123'
+        paymentMethodId: 'pm_test_123',
       };
 
       const response = await request(app)
@@ -168,8 +176,8 @@ describe('Basic Orders Integration Tests', () => {
           name: 'John Doe',
           address: '123 Main St',
           city: 'New York',
-          country: 'USA'
-        }
+          country: 'USA',
+        },
         // Missing paymentMethodId
       };
 
@@ -193,18 +201,18 @@ describe('Basic Orders Integration Tests', () => {
           customerId,
           status: OrderStatus.CONFIRMED,
           subtotal: 99.99,
-          tax: 8.00,
-          shipping: 10.00,
+          tax: 8.0,
+          shipping: 10.0,
           total: 117.99,
           shippingAddress: {
             name: 'John Doe',
             address: '123 Test St',
             city: 'Test City',
-            country: 'US'
+            country: 'US',
           },
           paymentMethod: 'card_test',
-          paymentStatus: PaymentStatus.PAID
-        }
+          paymentStatus: PaymentStatus.PAID,
+        },
       });
     });
 
@@ -236,18 +244,18 @@ describe('Basic Orders Integration Tests', () => {
           customerId,
           status: OrderStatus.CONFIRMED,
           subtotal: 99.99,
-          tax: 8.00,
-          shipping: 10.00,
+          tax: 8.0,
+          shipping: 10.0,
           total: 117.99,
           shippingAddress: {
             name: 'John Doe',
             address: '123 Test St',
             city: 'Test City',
-            country: 'US'
+            country: 'US',
           },
           paymentMethod: 'card_test',
-          paymentStatus: PaymentStatus.PAID
-        }
+          paymentStatus: PaymentStatus.PAID,
+        },
       });
 
       // Mock admin user for status updates
@@ -255,7 +263,7 @@ describe('Basic Orders Integration Tests', () => {
         authMiddleware: (req: any, res: any, next: any) => {
           req.user = { id: 'admin-123', role: 'ADMIN' };
           next();
-        }
+        },
       }));
     });
 
@@ -265,7 +273,7 @@ describe('Basic Orders Integration Tests', () => {
         .set('Authorization', authToken)
         .send({
           status: OrderStatus.PROCESSING,
-          trackingNumber: '1Z999AA1234567890'
+          trackingNumber: '1Z999AA1234567890',
         });
 
       expect([200, 400, 403, 500].includes(response.status)).toBe(true);
@@ -277,7 +285,7 @@ describe('Basic Orders Integration Tests', () => {
         .put(`/api/v1/orders/${testOrder.id}/status`)
         .set('Authorization', authToken)
         .send({
-          status: 'INVALID_STATUS'
+          status: 'INVALID_STATUS',
         });
 
       expect([400, 500].includes(response.status)).toBe(true);
@@ -294,18 +302,18 @@ describe('Basic Orders Integration Tests', () => {
           customerId,
           status: OrderStatus.CONFIRMED,
           subtotal: 99.99,
-          tax: 8.00,
-          shipping: 10.00,
+          tax: 8.0,
+          shipping: 10.0,
           total: 117.99,
           shippingAddress: {
             name: 'John Doe',
             address: '123 Test St',
             city: 'Test City',
-            country: 'US'
+            country: 'US',
           },
           paymentMethod: 'card_test',
-          paymentStatus: PaymentStatus.PAID
-        }
+          paymentStatus: PaymentStatus.PAID,
+        },
       });
     });
 
@@ -314,7 +322,7 @@ describe('Basic Orders Integration Tests', () => {
         .delete(`/api/v1/orders/${testOrder.id}/cancel`)
         .set('Authorization', authToken)
         .send({
-          reason: 'Changed my mind'
+          reason: 'Changed my mind',
         });
 
       expect([200, 400, 404, 500].includes(response.status)).toBe(true);
@@ -326,7 +334,7 @@ describe('Basic Orders Integration Tests', () => {
         .delete('/api/v1/orders/non-existent-order/cancel')
         .set('Authorization', authToken)
         .send({
-          reason: 'Changed my mind'
+          reason: 'Changed my mind',
         });
 
       expect([404, 500].includes(response.status)).toBe(true);
@@ -343,19 +351,19 @@ describe('Basic Orders Integration Tests', () => {
           customerId,
           status: OrderStatus.PENDING,
           subtotal: 99.99,
-          tax: 8.00,
-          shipping: 10.00,
+          tax: 8.0,
+          shipping: 10.0,
           total: 117.99,
           shippingAddress: {
             name: 'John Doe',
             address: '123 Test St',
             city: 'Test City',
-            country: 'US'
+            country: 'US',
           },
           paymentMethod: 'card_test',
           paymentStatus: PaymentStatus.PENDING,
-          paymentIntentId: 'pi_test_123'
-        }
+          paymentIntentId: 'pi_test_123',
+        },
       });
     });
 
@@ -378,19 +386,19 @@ describe('Basic Orders Integration Tests', () => {
           customerId,
           status: OrderStatus.PENDING,
           subtotal: 99.99,
-          tax: 8.00,
-          shipping: 10.00,
+          tax: 8.0,
+          shipping: 10.0,
           total: 117.99,
           shippingAddress: {
             name: 'John Doe',
             address: '123 Test St',
             city: 'Test City',
-            country: 'US'
+            country: 'US',
           },
           paymentMethod: 'card_test',
           paymentStatus: PaymentStatus.PENDING,
-          paymentIntentId: 'pi_test_123'
-        }
+          paymentIntentId: 'pi_test_123',
+        },
       });
     });
 
@@ -407,7 +415,9 @@ describe('Basic Orders Integration Tests', () => {
   describe('Error Handling', () => {
     it('should handle database connection errors gracefully', async () => {
       // Mock database error
-      vi.spyOn(prisma.order, 'findMany').mockRejectedValueOnce(new Error('Database connection failed'));
+      vi.spyOn(prisma.order, 'findMany').mockRejectedValueOnce(
+        new Error('Database connection failed')
+      );
 
       const response = await request(app)
         .get('/api/v1/orders')
@@ -418,8 +428,7 @@ describe('Basic Orders Integration Tests', () => {
     });
 
     it('should handle unauthorized access', async () => {
-      const response = await request(app)
-        .get('/api/v1/orders');
+      const response = await request(app).get('/api/v1/orders');
 
       expect([401, 403, 500].includes(response.status)).toBe(true);
     });

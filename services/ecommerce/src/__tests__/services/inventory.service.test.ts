@@ -1,7 +1,7 @@
-import { InventoryService } from '@/services/inventory.service';
 import { prisma } from '@tests/setup';
 import { TestDataFactory } from '@tests/utils/test-helpers';
 import { beforeEach, describe, expect, it } from 'vitest';
+import { InventoryService } from '@/services/inventory.service';
 
 describe('InventoryService', () => {
   let inventoryService: InventoryService;
@@ -16,10 +16,13 @@ describe('InventoryService', () => {
     it('should return true for available inventory', async () => {
       const vendor = await testFactory.createVendor();
       const product = await testFactory.createProduct(vendor.id, {
-        inventory: { quantity: 10, trackQuantity: true }
+        inventory: { quantity: 10, trackQuantity: true },
       });
 
-      const isAvailable = await inventoryService.checkAvailability(product.id, 5);
+      const isAvailable = await inventoryService.checkAvailability(
+        product.id,
+        5
+      );
 
       expect(isAvailable).toBe(true);
     });
@@ -27,10 +30,13 @@ describe('InventoryService', () => {
     it('should return false for insufficient inventory', async () => {
       const vendor = await testFactory.createVendor();
       const product = await testFactory.createProduct(vendor.id, {
-        inventory: { quantity: 3, trackQuantity: true }
+        inventory: { quantity: 3, trackQuantity: true },
       });
 
-      const isAvailable = await inventoryService.checkAvailability(product.id, 5);
+      const isAvailable = await inventoryService.checkAvailability(
+        product.id,
+        5
+      );
 
       expect(isAvailable).toBe(false);
     });
@@ -38,10 +44,13 @@ describe('InventoryService', () => {
     it('should return true for products not tracking quantity', async () => {
       const vendor = await testFactory.createVendor();
       const product = await testFactory.createProduct(vendor.id, {
-        inventory: { quantity: 0, trackQuantity: false }
+        inventory: { quantity: 0, trackQuantity: false },
       });
 
-      const isAvailable = await inventoryService.checkAvailability(product.id, 100);
+      const isAvailable = await inventoryService.checkAvailability(
+        product.id,
+        100
+      );
 
       expect(isAvailable).toBe(true);
     });
@@ -50,10 +59,13 @@ describe('InventoryService', () => {
       const vendor = await testFactory.createVendor();
       const product = await testFactory.createProduct(vendor.id, {
         isActive: false,
-        inventory: { quantity: 10, trackQuantity: true }
+        inventory: { quantity: 10, trackQuantity: true },
       });
 
-      const isAvailable = await inventoryService.checkAvailability(product.id, 1);
+      const isAvailable = await inventoryService.checkAvailability(
+        product.id,
+        1
+      );
 
       expect(isAvailable).toBe(false);
     });
@@ -63,11 +75,14 @@ describe('InventoryService', () => {
     it('should reserve inventory successfully', async () => {
       const vendor = await testFactory.createVendor();
       const product = await testFactory.createProduct(vendor.id, {
-        inventory: { quantity: 10, trackQuantity: true }
+        inventory: { quantity: 10, trackQuantity: true },
       });
 
       const items = [{ productId: product.id, quantity: 3 }];
-      const result = await inventoryService.reserveInventory(items, 'customer-1');
+      const result = await inventoryService.reserveInventory(
+        items,
+        'customer-1'
+      );
 
       expect(result.success).toBe(true);
       expect(result.reservationId).toBeDefined();
@@ -75,7 +90,7 @@ describe('InventoryService', () => {
 
       // Verify reservation was created
       const reservation = await prisma.inventoryReservation.findUnique({
-        where: { id: result.reservationId }
+        where: { id: result.reservationId },
       });
       expect(reservation).toBeDefined();
       expect(reservation!.quantity).toBe(3);
@@ -84,11 +99,14 @@ describe('InventoryService', () => {
     it('should fail reservation for insufficient inventory', async () => {
       const vendor = await testFactory.createVendor();
       const product = await testFactory.createProduct(vendor.id, {
-        inventory: { quantity: 2, trackQuantity: true }
+        inventory: { quantity: 2, trackQuantity: true },
       });
 
       const items = [{ productId: product.id, quantity: 5 }];
-      const result = await inventoryService.reserveInventory(items, 'customer-1');
+      const result = await inventoryService.reserveInventory(
+        items,
+        'customer-1'
+      );
 
       expect(result.success).toBe(false);
       expect(result.failures).toHaveLength(1);
@@ -96,24 +114,27 @@ describe('InventoryService', () => {
         productId: product.id,
         requested: 5,
         available: 2,
-        reason: 'Insufficient inventory'
+        reason: 'Insufficient inventory',
       });
     });
 
     it('should handle partial failures in batch reservation', async () => {
       const vendor = await testFactory.createVendor();
       const product1 = await testFactory.createProduct(vendor.id, {
-        inventory: { quantity: 10, trackQuantity: true }
+        inventory: { quantity: 10, trackQuantity: true },
       });
       const product2 = await testFactory.createProduct(vendor.id, {
-        inventory: { quantity: 2, trackQuantity: true }
+        inventory: { quantity: 2, trackQuantity: true },
       });
 
       const items = [
         { productId: product1.id, quantity: 3 },
-        { productId: product2.id, quantity: 5 }
+        { productId: product2.id, quantity: 5 },
       ];
-      const result = await inventoryService.reserveInventory(items, 'customer-1');
+      const result = await inventoryService.reserveInventory(
+        items,
+        'customer-1'
+      );
 
       expect(result.success).toBe(false);
       expect(result.failures).toHaveLength(1);
@@ -123,7 +144,7 @@ describe('InventoryService', () => {
     it('should handle concurrent reservations with optimistic locking', async () => {
       const vendor = await testFactory.createVendor();
       const product = await testFactory.createProduct(vendor.id, {
-        inventory: { quantity: 5, trackQuantity: true }
+        inventory: { quantity: 5, trackQuantity: true },
       });
 
       const items = [{ productId: product.id, quantity: 3 }];
@@ -131,7 +152,7 @@ describe('InventoryService', () => {
       // Simulate concurrent reservations
       const promises = [
         inventoryService.reserveInventory(items, 'customer-1'),
-        inventoryService.reserveInventory(items, 'customer-2')
+        inventoryService.reserveInventory(items, 'customer-2'),
       ];
 
       const results = await Promise.all(promises);
@@ -142,20 +163,25 @@ describe('InventoryService', () => {
 
       expect(successes).toHaveLength(1);
       expect(failures).toHaveLength(1);
-      expect(failures[0].failures[0].reason).toContain('Insufficient inventory');
+      expect(failures[0].failures[0].reason).toContain(
+        'Insufficient inventory'
+      );
     });
 
     it('should set expiration time for reservations', async () => {
       const vendor = await testFactory.createVendor();
       const product = await testFactory.createProduct(vendor.id, {
-        inventory: { quantity: 10, trackQuantity: true }
+        inventory: { quantity: 10, trackQuantity: true },
       });
 
       const items = [{ productId: product.id, quantity: 3 }];
-      const result = await inventoryService.reserveInventory(items, 'customer-1');
+      const result = await inventoryService.reserveInventory(
+        items,
+        'customer-1'
+      );
 
       const reservation = await prisma.inventoryReservation.findUnique({
-        where: { id: result.reservationId }
+        where: { id: result.reservationId },
       });
 
       expect(reservation!.expiresAt).toBeInstanceOf(Date);
@@ -167,24 +193,30 @@ describe('InventoryService', () => {
     it('should release reservation successfully', async () => {
       const vendor = await testFactory.createVendor();
       const product = await testFactory.createProduct(vendor.id, {
-        inventory: { quantity: 10, trackQuantity: true }
+        inventory: { quantity: 10, trackQuantity: true },
       });
 
       const items = [{ productId: product.id, quantity: 3 }];
-      const reservationResult = await inventoryService.reserveInventory(items, 'customer-1');
+      const reservationResult = await inventoryService.reserveInventory(
+        items,
+        'customer-1'
+      );
 
-      await inventoryService.releaseReservation(reservationResult.reservationId);
+      await inventoryService.releaseReservation(
+        reservationResult.reservationId
+      );
 
       // Verify reservation was deleted
       const reservation = await prisma.inventoryReservation.findUnique({
-        where: { id: reservationResult.reservationId }
+        where: { id: reservationResult.reservationId },
       });
       expect(reservation).toBeNull();
     });
 
     it('should handle non-existent reservation gracefully', async () => {
-      await expect(inventoryService.releaseReservation('non-existent'))
-        .resolves.not.toThrow();
+      await expect(
+        inventoryService.releaseReservation('non-existent')
+      ).resolves.not.toThrow();
     });
   });
 
@@ -192,13 +224,13 @@ describe('InventoryService', () => {
     it('should update inventory quantity', async () => {
       const vendor = await testFactory.createVendor();
       const product = await testFactory.createProduct(vendor.id, {
-        inventory: { quantity: 10, trackQuantity: true }
+        inventory: { quantity: 10, trackQuantity: true },
       });
 
       await inventoryService.updateInventory(product.id, 15);
 
       const updatedProduct = await prisma.product.findUnique({
-        where: { id: product.id }
+        where: { id: product.id },
       });
       expect(updatedProduct!.inventory.quantity).toBe(15);
     });
@@ -206,19 +238,19 @@ describe('InventoryService', () => {
     it('should handle concurrent inventory updates', async () => {
       const vendor = await testFactory.createVendor();
       const product = await testFactory.createProduct(vendor.id, {
-        inventory: { quantity: 10, trackQuantity: true }
+        inventory: { quantity: 10, trackQuantity: true },
       });
 
       // Simulate concurrent updates
       const promises = [
         inventoryService.updateInventory(product.id, 8),
-        inventoryService.updateInventory(product.id, 12)
+        inventoryService.updateInventory(product.id, 12),
       ];
 
       await Promise.all(promises);
 
       const updatedProduct = await prisma.product.findUnique({
-        where: { id: product.id }
+        where: { id: product.id },
       });
 
       // One of the updates should have succeeded
@@ -230,7 +262,7 @@ describe('InventoryService', () => {
     it('should return inventory status', async () => {
       const vendor = await testFactory.createVendor();
       const product = await testFactory.createProduct(vendor.id, {
-        inventory: { quantity: 10, trackQuantity: true }
+        inventory: { quantity: 10, trackQuantity: true },
       });
 
       // Create a reservation
@@ -244,14 +276,14 @@ describe('InventoryService', () => {
         totalQuantity: 10,
         reservedQuantity: 3,
         availableQuantity: 7,
-        trackQuantity: true
+        trackQuantity: true,
       });
     });
 
     it('should handle products without reservations', async () => {
       const vendor = await testFactory.createVendor();
       const product = await testFactory.createProduct(vendor.id, {
-        inventory: { quantity: 10, trackQuantity: true }
+        inventory: { quantity: 10, trackQuantity: true },
       });
 
       const status = await inventoryService.getInventoryStatus(product.id);
@@ -261,7 +293,7 @@ describe('InventoryService', () => {
         totalQuantity: 10,
         reservedQuantity: 0,
         availableQuantity: 10,
-        trackQuantity: true
+        trackQuantity: true,
       });
     });
   });
@@ -270,7 +302,7 @@ describe('InventoryService', () => {
     it('should remove expired reservations', async () => {
       const vendor = await testFactory.createVendor();
       const product = await testFactory.createProduct(vendor.id, {
-        inventory: { quantity: 10, trackQuantity: true }
+        inventory: { quantity: 10, trackQuantity: true },
       });
 
       // Create reservation with past expiration
@@ -279,8 +311,8 @@ describe('InventoryService', () => {
           productId: product.id,
           quantity: 3,
           customerId: 'customer-1',
-          expiresAt: new Date(Date.now() - 1000) // 1 second ago
-        }
+          expiresAt: new Date(Date.now() - 1000), // 1 second ago
+        },
       });
 
       // Create valid reservation
@@ -289,21 +321,21 @@ describe('InventoryService', () => {
           productId: product.id,
           quantity: 2,
           customerId: 'customer-2',
-          expiresAt: new Date(Date.now() + 60000) // 1 minute from now
-        }
+          expiresAt: new Date(Date.now() + 60000), // 1 minute from now
+        },
       });
 
       await inventoryService.cleanupExpiredReservations();
 
       // Verify expired reservation was removed
       const expired = await prisma.inventoryReservation.findUnique({
-        where: { id: expiredReservation.id }
+        where: { id: expiredReservation.id },
       });
       expect(expired).toBeNull();
 
       // Verify valid reservation remains
       const valid = await prisma.inventoryReservation.findUnique({
-        where: { id: validReservation.id }
+        where: { id: validReservation.id },
       });
       expect(valid).toBeDefined();
     });
@@ -313,7 +345,7 @@ describe('InventoryService', () => {
     it('should handle high concurrency inventory operations', async () => {
       const vendor = await testFactory.createVendor();
       const product = await testFactory.createProduct(vendor.id, {
-        inventory: { quantity: 100, trackQuantity: true }
+        inventory: { quantity: 100, trackQuantity: true },
       });
 
       // Create 50 concurrent reservation attempts
@@ -325,7 +357,9 @@ describe('InventoryService', () => {
       );
 
       const results = await Promise.allSettled(promises);
-      const successes = results.filter(r => r.status === 'fulfilled' && r.value.success);
+      const successes = results.filter(
+        r => r.status === 'fulfilled' && r.value.success
+      );
 
       // Should have exactly 50 successful reservations (100 / 2)
       expect(successes).toHaveLength(50);

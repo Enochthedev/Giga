@@ -1,8 +1,13 @@
-import { OrderService } from '@/services/order.service';
 import { OrderStatus, PaymentStatus } from '@prisma/client';
 import { prisma } from '@tests/setup';
-import { TestDataFactory, mockAuthServiceClient, mockNotificationServiceClient, mockPaymentServiceClient } from '@tests/utils/test-helpers';
+import {
+  TestDataFactory,
+  mockAuthServiceClient,
+  mockNotificationServiceClient,
+  mockPaymentServiceClient,
+} from '@tests/utils/test-helpers';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { OrderService } from '@/services/order.service';
 
 describe('OrderService', () => {
   let orderService: OrderService;
@@ -25,22 +30,26 @@ describe('OrderService', () => {
     it('should create order successfully', async () => {
       const customerId = 'customer-1';
       const vendor = await testFactory.createVendor();
-      const product = await testFactory.createProduct(vendor.id, { price: 100.00 });
+      const product = await testFactory.createProduct(vendor.id, {
+        price: 100.0,
+      });
 
       const orderData = {
-        items: [{
-          productId: product.id,
-          quantity: 2,
-          price: 100.00
-        }],
+        items: [
+          {
+            productId: product.id,
+            quantity: 2,
+            price: 100.0,
+          },
+        ],
         shippingAddress: {
           street: '123 Test St',
           city: 'Test City',
           state: 'TS',
           zipCode: '12345',
-          country: 'US'
+          country: 'US',
         },
-        paymentMethodId: 'pm_test_123'
+        paymentMethodId: 'pm_test_123',
       };
 
       mockPaymentServiceClient.createPaymentIntent.mockResolvedValue({
@@ -48,16 +57,18 @@ describe('OrderService', () => {
         clientSecret: 'pi_test_123_secret_test',
         status: 'requires_confirmation',
         amount: 21600, // $216.00 in cents
-        currency: 'usd'
+        currency: 'usd',
       });
 
       mockPaymentServiceClient.confirmPayment.mockResolvedValue({
         success: true,
         paymentIntentId: 'pi_test_123',
-        status: 'succeeded'
+        status: 'succeeded',
       });
 
-      mockNotificationServiceClient.sendOrderConfirmation.mockResolvedValue(undefined);
+      mockNotificationServiceClient.sendOrderConfirmation.mockResolvedValue(
+        undefined
+      );
 
       const order = await orderService.createOrder(customerId, orderData);
 
@@ -65,9 +76,9 @@ describe('OrderService', () => {
         customerId,
         status: OrderStatus.CONFIRMED,
         paymentStatus: PaymentStatus.PAID,
-        subtotal: 200.00,
-        tax: 16.00,
-        total: 216.00
+        subtotal: 200.0,
+        tax: 16.0,
+        total: 216.0,
       });
 
       expect(order.items).toHaveLength(1);
@@ -79,8 +90,12 @@ describe('OrderService', () => {
         'usd',
         customerId
       );
-      expect(mockPaymentServiceClient.confirmPayment).toHaveBeenCalledWith('pi_test_123');
-      expect(mockNotificationServiceClient.sendOrderConfirmation).toHaveBeenCalledWith(
+      expect(mockPaymentServiceClient.confirmPayment).toHaveBeenCalledWith(
+        'pi_test_123'
+      );
+      expect(
+        mockNotificationServiceClient.sendOrderConfirmation
+      ).toHaveBeenCalledWith(
         customerId,
         expect.objectContaining({ id: order.id })
       );
@@ -92,19 +107,21 @@ describe('OrderService', () => {
       const product = await testFactory.createProduct(vendor.id);
 
       const orderData = {
-        items: [{
-          productId: product.id,
-          quantity: 1,
-          price: 100.00
-        }],
+        items: [
+          {
+            productId: product.id,
+            quantity: 1,
+            price: 100.0,
+          },
+        ],
         shippingAddress: {
           street: '123 Test St',
           city: 'Test City',
           state: 'TS',
           zipCode: '12345',
-          country: 'US'
+          country: 'US',
         },
-        paymentMethodId: 'pm_test_123'
+        paymentMethodId: 'pm_test_123',
       };
 
       mockPaymentServiceClient.createPaymentIntent.mockResolvedValue({
@@ -112,18 +129,19 @@ describe('OrderService', () => {
         clientSecret: 'pi_test_123_secret_test',
         status: 'requires_confirmation',
         amount: 10800,
-        currency: 'usd'
+        currency: 'usd',
       });
 
       mockPaymentServiceClient.confirmPayment.mockResolvedValue({
         success: false,
         paymentIntentId: 'pi_test_123',
         status: 'failed',
-        error: 'Payment declined'
+        error: 'Payment declined',
       });
 
-      await expect(orderService.createOrder(customerId, orderData))
-        .rejects.toThrow('Payment failed: Payment declined');
+      await expect(
+        orderService.createOrder(customerId, orderData)
+      ).rejects.toThrow('Payment failed: Payment declined');
 
       // Verify no order was created in database
       const orders = await prisma.order.findMany({ where: { customerId } });
@@ -134,22 +152,26 @@ describe('OrderService', () => {
       const customerId = 'customer-1';
       const vendor1 = await testFactory.createVendor({ name: 'Vendor 1' });
       const vendor2 = await testFactory.createVendor({ name: 'Vendor 2' });
-      const product1 = await testFactory.createProduct(vendor1.id, { price: 50.00 });
-      const product2 = await testFactory.createProduct(vendor2.id, { price: 75.00 });
+      const product1 = await testFactory.createProduct(vendor1.id, {
+        price: 50.0,
+      });
+      const product2 = await testFactory.createProduct(vendor2.id, {
+        price: 75.0,
+      });
 
       const orderData = {
         items: [
-          { productId: product1.id, quantity: 1, price: 50.00 },
-          { productId: product2.id, quantity: 2, price: 75.00 }
+          { productId: product1.id, quantity: 1, price: 50.0 },
+          { productId: product2.id, quantity: 2, price: 75.0 },
         ],
         shippingAddress: {
           street: '123 Test St',
           city: 'Test City',
           state: 'TS',
           zipCode: '12345',
-          country: 'US'
+          country: 'US',
         },
-        paymentMethodId: 'pm_test_123'
+        paymentMethodId: 'pm_test_123',
       };
 
       mockPaymentServiceClient.createPaymentIntent.mockResolvedValue({
@@ -157,61 +179,74 @@ describe('OrderService', () => {
         clientSecret: 'pi_test_123_secret_test',
         status: 'requires_confirmation',
         amount: 21600, // $216.00 in cents
-        currency: 'usd'
+        currency: 'usd',
       });
 
       mockPaymentServiceClient.confirmPayment.mockResolvedValue({
         success: true,
         paymentIntentId: 'pi_test_123',
-        status: 'succeeded'
+        status: 'succeeded',
       });
 
-      mockNotificationServiceClient.sendOrderConfirmation.mockResolvedValue(undefined);
-      mockNotificationServiceClient.sendVendorOrderNotification.mockResolvedValue(undefined);
+      mockNotificationServiceClient.sendOrderConfirmation.mockResolvedValue(
+        undefined
+      );
+      mockNotificationServiceClient.sendVendorOrderNotification.mockResolvedValue(
+        undefined
+      );
 
       const order = await orderService.createOrder(customerId, orderData);
 
       expect(order.vendorOrders).toHaveLength(2);
 
-      const vendor1Order = order.vendorOrders.find(vo => vo.vendorId === vendor1.id);
-      const vendor2Order = order.vendorOrders.find(vo => vo.vendorId === vendor2.id);
+      const vendor1Order = order.vendorOrders.find(
+        vo => vo.vendorId === vendor1.id
+      );
+      const vendor2Order = order.vendorOrders.find(
+        vo => vo.vendorId === vendor2.id
+      );
 
       expect(vendor1Order).toBeDefined();
-      expect(vendor1Order!.subtotal).toBe(50.00);
+      expect(vendor1Order!.subtotal).toBe(50.0);
       expect(vendor1Order!.items).toHaveLength(1);
 
       expect(vendor2Order).toBeDefined();
-      expect(vendor2Order!.subtotal).toBe(150.00);
+      expect(vendor2Order!.subtotal).toBe(150.0);
       expect(vendor2Order!.items).toHaveLength(1);
 
-      expect(mockNotificationServiceClient.sendVendorOrderNotification).toHaveBeenCalledTimes(2);
+      expect(
+        mockNotificationServiceClient.sendVendorOrderNotification
+      ).toHaveBeenCalledTimes(2);
     });
 
     it('should validate inventory before creating order', async () => {
       const customerId = 'customer-1';
       const vendor = await testFactory.createVendor();
       const product = await testFactory.createProduct(vendor.id, {
-        inventory: { quantity: 2, trackQuantity: true }
+        inventory: { quantity: 2, trackQuantity: true },
       });
 
       const orderData = {
-        items: [{
-          productId: product.id,
-          quantity: 5, // More than available
-          price: 100.00
-        }],
+        items: [
+          {
+            productId: product.id,
+            quantity: 5, // More than available
+            price: 100.0,
+          },
+        ],
         shippingAddress: {
           street: '123 Test St',
           city: 'Test City',
           state: 'TS',
           zipCode: '12345',
-          country: 'US'
+          country: 'US',
         },
-        paymentMethodId: 'pm_test_123'
+        paymentMethodId: 'pm_test_123',
       };
 
-      await expect(orderService.createOrder(customerId, orderData))
-        .rejects.toThrow('Insufficient inventory');
+      await expect(
+        orderService.createOrder(customerId, orderData)
+      ).rejects.toThrow('Insufficient inventory');
     });
   });
 
@@ -225,20 +260,22 @@ describe('OrderService', () => {
       expect(result).toMatchObject({
         id: order.id,
         customerId,
-        status: OrderStatus.PENDING
+        status: OrderStatus.PENDING,
       });
     });
 
     it('should throw error for non-existent order', async () => {
-      await expect(orderService.getOrder('non-existent', 'customer-1'))
-        .rejects.toThrow('Order not found');
+      await expect(
+        orderService.getOrder('non-existent', 'customer-1')
+      ).rejects.toThrow('Order not found');
     });
 
     it('should throw error for unauthorized access', async () => {
       const order = await testFactory.createOrder('customer-1');
 
-      await expect(orderService.getOrder(order.id, 'customer-2'))
-        .rejects.toThrow('Order not found');
+      await expect(
+        orderService.getOrder(order.id, 'customer-2')
+      ).rejects.toThrow('Order not found');
     });
   });
 
@@ -247,13 +284,19 @@ describe('OrderService', () => {
       const customerId = 'customer-1';
 
       // Create multiple orders
-      await testFactory.createOrder(customerId, { status: OrderStatus.DELIVERED });
-      await testFactory.createOrder(customerId, { status: OrderStatus.SHIPPED });
-      await testFactory.createOrder(customerId, { status: OrderStatus.PENDING });
+      await testFactory.createOrder(customerId, {
+        status: OrderStatus.DELIVERED,
+      });
+      await testFactory.createOrder(customerId, {
+        status: OrderStatus.SHIPPED,
+      });
+      await testFactory.createOrder(customerId, {
+        status: OrderStatus.PENDING,
+      });
 
       const result = await orderService.getOrderHistory(customerId, {
         page: 1,
-        limit: 2
+        limit: 2,
       });
 
       expect(result.orders).toHaveLength(2);
@@ -265,12 +308,18 @@ describe('OrderService', () => {
     it('should filter orders by status', async () => {
       const customerId = 'customer-1';
 
-      await testFactory.createOrder(customerId, { status: OrderStatus.DELIVERED });
-      await testFactory.createOrder(customerId, { status: OrderStatus.SHIPPED });
-      await testFactory.createOrder(customerId, { status: OrderStatus.PENDING });
+      await testFactory.createOrder(customerId, {
+        status: OrderStatus.DELIVERED,
+      });
+      await testFactory.createOrder(customerId, {
+        status: OrderStatus.SHIPPED,
+      });
+      await testFactory.createOrder(customerId, {
+        status: OrderStatus.PENDING,
+      });
 
       const result = await orderService.getOrderHistory(customerId, {
-        status: OrderStatus.DELIVERED
+        status: OrderStatus.DELIVERED,
       });
 
       expect(result.orders).toHaveLength(1);
@@ -281,14 +330,23 @@ describe('OrderService', () => {
   describe('updateOrderStatus', () => {
     it('should update order status successfully', async () => {
       const customerId = 'customer-1';
-      const order = await testFactory.createOrder(customerId, { status: OrderStatus.CONFIRMED });
+      const order = await testFactory.createOrder(customerId, {
+        status: OrderStatus.CONFIRMED,
+      });
 
-      mockNotificationServiceClient.sendOrderStatusUpdate.mockResolvedValue(undefined);
+      mockNotificationServiceClient.sendOrderStatusUpdate.mockResolvedValue(
+        undefined
+      );
 
-      const updatedOrder = await orderService.updateOrderStatus(order.id, OrderStatus.PROCESSING);
+      const updatedOrder = await orderService.updateOrderStatus(
+        order.id,
+        OrderStatus.PROCESSING
+      );
 
       expect(updatedOrder.status).toBe(OrderStatus.PROCESSING);
-      expect(mockNotificationServiceClient.sendOrderStatusUpdate).toHaveBeenCalledWith(
+      expect(
+        mockNotificationServiceClient.sendOrderStatusUpdate
+      ).toHaveBeenCalledWith(
         customerId,
         expect.objectContaining({ status: OrderStatus.PROCESSING }),
         OrderStatus.CONFIRMED
@@ -297,10 +355,13 @@ describe('OrderService', () => {
 
     it('should validate status transitions', async () => {
       const customerId = 'customer-1';
-      const order = await testFactory.createOrder(customerId, { status: OrderStatus.DELIVERED });
+      const order = await testFactory.createOrder(customerId, {
+        status: OrderStatus.DELIVERED,
+      });
 
-      await expect(orderService.updateOrderStatus(order.id, OrderStatus.PENDING))
-        .rejects.toThrow('Invalid status transition');
+      await expect(
+        orderService.updateOrderStatus(order.id, OrderStatus.PENDING)
+      ).rejects.toThrow('Invalid status transition');
     });
   });
 
@@ -309,10 +370,12 @@ describe('OrderService', () => {
       const customerId = 'customer-1';
       const vendor = await testFactory.createVendor();
       const product = await testFactory.createProduct(vendor.id, {
-        inventory: { quantity: 8, trackQuantity: true }
+        inventory: { quantity: 8, trackQuantity: true },
       });
 
-      const order = await testFactory.createOrder(customerId, { status: OrderStatus.CONFIRMED });
+      const order = await testFactory.createOrder(customerId, {
+        status: OrderStatus.CONFIRMED,
+      });
 
       // Create order item
       await prisma.orderItem.create({
@@ -320,35 +383,47 @@ describe('OrderService', () => {
           orderId: order.id,
           productId: product.id,
           quantity: 2,
-          price: 100.00
-        }
+          price: 100.0,
+        },
       });
 
       mockPaymentServiceClient.refundPayment.mockResolvedValue({
         success: true,
         refundId: 'rf_test_123',
-        amount: 21600
+        amount: 21600,
       });
 
-      mockNotificationServiceClient.sendOrderStatusUpdate.mockResolvedValue(undefined);
+      mockNotificationServiceClient.sendOrderStatusUpdate.mockResolvedValue(
+        undefined
+      );
 
-      const cancelledOrder = await orderService.cancelOrder(order.id, customerId);
+      const cancelledOrder = await orderService.cancelOrder(
+        order.id,
+        customerId
+      );
 
       expect(cancelledOrder.status).toBe(OrderStatus.CANCELLED);
 
       // Verify inventory was restored
-      const updatedProduct = await prisma.product.findUnique({ where: { id: product.id } });
+      const updatedProduct = await prisma.product.findUnique({
+        where: { id: product.id },
+      });
       expect(updatedProduct!.inventory.quantity).toBe(10); // 8 + 2 restored
 
-      expect(mockPaymentServiceClient.refundPayment).toHaveBeenCalledWith(order.paymentIntentId);
+      expect(mockPaymentServiceClient.refundPayment).toHaveBeenCalledWith(
+        order.paymentIntentId
+      );
     });
 
     it('should not allow cancellation of delivered orders', async () => {
       const customerId = 'customer-1';
-      const order = await testFactory.createOrder(customerId, { status: OrderStatus.DELIVERED });
+      const order = await testFactory.createOrder(customerId, {
+        status: OrderStatus.DELIVERED,
+      });
 
-      await expect(orderService.cancelOrder(order.id, customerId))
-        .rejects.toThrow('Cannot cancel order in current status');
+      await expect(
+        orderService.cancelOrder(order.id, customerId)
+      ).rejects.toThrow('Cannot cancel order in current status');
     });
   });
 });

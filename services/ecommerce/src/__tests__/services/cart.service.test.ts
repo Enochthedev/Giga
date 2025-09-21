@@ -1,7 +1,10 @@
-import { CartService } from '@/services/cart.service';
 import { prisma } from '@tests/setup';
-import { TestDataFactory, createMockRedisClient } from '@tests/utils/test-helpers';
+import {
+  TestDataFactory,
+  createMockRedisClient,
+} from '@tests/utils/test-helpers';
 import { beforeEach, describe, expect, it } from 'vitest';
+import { CartService } from '@/services/cart.service';
 
 describe('CartService', () => {
   let cartService: CartService;
@@ -28,7 +31,7 @@ describe('CartService', () => {
         subtotal: 0,
         tax: 0,
         total: 0,
-        updatedAt: expect.any(String)
+        updatedAt: expect.any(String),
       });
       expect(mockRedis.get).toHaveBeenCalledWith(`cart:${customerId}`);
     });
@@ -36,7 +39,7 @@ describe('CartService', () => {
     it('should return existing cart from Redis', async () => {
       const customerId = 'customer-1';
       const existingCart = testFactory.createCart(customerId, [
-        testFactory.createCartItem('product-1', 2)
+        testFactory.createCartItem('product-1', 2),
       ]);
 
       mockRedis.get.mockResolvedValue(JSON.stringify(existingCart));
@@ -52,7 +55,7 @@ describe('CartService', () => {
       const product = await testFactory.createProduct(vendor.id);
 
       const cartWithItem = testFactory.createCart(customerId, [
-        testFactory.createCartItem(product.id, 1)
+        testFactory.createCartItem(product.id, 1),
       ]);
 
       mockRedis.get.mockResolvedValue(JSON.stringify(cartWithItem));
@@ -65,8 +68,8 @@ describe('CartService', () => {
         product: {
           id: product.id,
           name: product.name,
-          isActive: true
-        }
+          isActive: true,
+        },
       });
     });
   });
@@ -75,7 +78,9 @@ describe('CartService', () => {
     it('should add new item to empty cart', async () => {
       const customerId = 'customer-1';
       const vendor = await testFactory.createVendor();
-      const product = await testFactory.createProduct(vendor.id, { price: 50.00 });
+      const product = await testFactory.createProduct(vendor.id, {
+        price: 50.0,
+      });
 
       mockRedis.get.mockResolvedValue(null);
       mockRedis.set.mockResolvedValue('OK');
@@ -86,10 +91,10 @@ describe('CartService', () => {
       expect(cart.items[0]).toMatchObject({
         productId: product.id,
         quantity: 2,
-        price: 50.00
+        price: 50.0,
       });
-      expect(cart.subtotal).toBe(100.00);
-      expect(cart.total).toBe(108.00); // Including 8% tax
+      expect(cart.subtotal).toBe(100.0);
+      expect(cart.total).toBe(108.0); // Including 8% tax
       expect(mockRedis.set).toHaveBeenCalledWith(
         `cart:${customerId}`,
         expect.any(String),
@@ -100,10 +105,12 @@ describe('CartService', () => {
     it('should update quantity for existing item', async () => {
       const customerId = 'customer-1';
       const vendor = await testFactory.createVendor();
-      const product = await testFactory.createProduct(vendor.id, { price: 50.00 });
+      const product = await testFactory.createProduct(vendor.id, {
+        price: 50.0,
+      });
 
       const existingCart = testFactory.createCart(customerId, [
-        testFactory.createCartItem(product.id, 1)
+        testFactory.createCartItem(product.id, 1),
       ]);
 
       mockRedis.get.mockResolvedValue(JSON.stringify(existingCart));
@@ -118,25 +125,29 @@ describe('CartService', () => {
     it('should throw error for inactive product', async () => {
       const customerId = 'customer-1';
       const vendor = await testFactory.createVendor();
-      const product = await testFactory.createProduct(vendor.id, { isActive: false });
+      const product = await testFactory.createProduct(vendor.id, {
+        isActive: false,
+      });
 
       mockRedis.get.mockResolvedValue(null);
 
-      await expect(cartService.addItem(customerId, product.id, 1))
-        .rejects.toThrow('Product is not available');
+      await expect(
+        cartService.addItem(customerId, product.id, 1)
+      ).rejects.toThrow('Product is not available');
     });
 
     it('should throw error for insufficient inventory', async () => {
       const customerId = 'customer-1';
       const vendor = await testFactory.createVendor();
       const product = await testFactory.createProduct(vendor.id, {
-        inventory: { quantity: 5, trackQuantity: true }
+        inventory: { quantity: 5, trackQuantity: true },
       });
 
       mockRedis.get.mockResolvedValue(null);
 
-      await expect(cartService.addItem(customerId, product.id, 10))
-        .rejects.toThrow('Insufficient inventory');
+      await expect(
+        cartService.addItem(customerId, product.id, 10)
+      ).rejects.toThrow('Insufficient inventory');
     });
   });
 
@@ -152,7 +163,11 @@ describe('CartService', () => {
       mockRedis.get.mockResolvedValue(JSON.stringify(existingCart));
       mockRedis.set.mockResolvedValue('OK');
 
-      const cart = await cartService.updateItemQuantity(customerId, cartItem.id, 5);
+      const cart = await cartService.updateItemQuantity(
+        customerId,
+        cartItem.id,
+        5
+      );
 
       expect(cart.items[0].quantity).toBe(5);
     });
@@ -168,17 +183,24 @@ describe('CartService', () => {
       mockRedis.get.mockResolvedValue(JSON.stringify(existingCart));
       mockRedis.set.mockResolvedValue('OK');
 
-      const cart = await cartService.updateItemQuantity(customerId, cartItem.id, 0);
+      const cart = await cartService.updateItemQuantity(
+        customerId,
+        cartItem.id,
+        0
+      );
 
       expect(cart.items).toHaveLength(0);
     });
 
     it('should throw error for non-existent item', async () => {
       const customerId = 'customer-1';
-      mockRedis.get.mockResolvedValue(JSON.stringify(testFactory.createCart(customerId)));
+      mockRedis.get.mockResolvedValue(
+        JSON.stringify(testFactory.createCart(customerId))
+      );
 
-      await expect(cartService.updateItemQuantity(customerId, 'non-existent', 1))
-        .rejects.toThrow('Cart item not found');
+      await expect(
+        cartService.updateItemQuantity(customerId, 'non-existent', 1)
+      ).rejects.toThrow('Cart item not found');
     });
   });
 
@@ -191,7 +213,10 @@ describe('CartService', () => {
 
       const cartItem1 = testFactory.createCartItem(product1.id, 1);
       const cartItem2 = testFactory.createCartItem(product2.id, 2);
-      const existingCart = testFactory.createCart(customerId, [cartItem1, cartItem2]);
+      const existingCart = testFactory.createCart(customerId, [
+        cartItem1,
+        cartItem2,
+      ]);
 
       mockRedis.get.mockResolvedValue(JSON.stringify(existingCart));
       mockRedis.set.mockResolvedValue('OK');
@@ -219,11 +244,11 @@ describe('CartService', () => {
       const customerId = 'customer-1';
       const vendor = await testFactory.createVendor();
       const product = await testFactory.createProduct(vendor.id, {
-        inventory: { quantity: 10, trackQuantity: true }
+        inventory: { quantity: 10, trackQuantity: true },
       });
 
       const cart = testFactory.createCart(customerId, [
-        testFactory.createCartItem(product.id, 2)
+        testFactory.createCartItem(product.id, 2),
       ]);
 
       const result = await cartService.validateCartItems(cart);
@@ -235,10 +260,12 @@ describe('CartService', () => {
     it('should detect unavailable products', async () => {
       const customerId = 'customer-1';
       const vendor = await testFactory.createVendor();
-      const product = await testFactory.createProduct(vendor.id, { isActive: false });
+      const product = await testFactory.createProduct(vendor.id, {
+        isActive: false,
+      });
 
       const cart = testFactory.createCart(customerId, [
-        testFactory.createCartItem(product.id, 1)
+        testFactory.createCartItem(product.id, 1),
       ]);
 
       const result = await cartService.validateCartItems(cart);
@@ -252,11 +279,11 @@ describe('CartService', () => {
       const customerId = 'customer-1';
       const vendor = await testFactory.createVendor();
       const product = await testFactory.createProduct(vendor.id, {
-        inventory: { quantity: 2, trackQuantity: true }
+        inventory: { quantity: 2, trackQuantity: true },
       });
 
       const cart = testFactory.createCart(customerId, [
-        testFactory.createCartItem(product.id, 5)
+        testFactory.createCartItem(product.id, 5),
       ]);
 
       const result = await cartService.validateCartItems(cart);
