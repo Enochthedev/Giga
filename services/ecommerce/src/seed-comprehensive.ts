@@ -1,4 +1,8 @@
-import { OrderStatus, PaymentStatus, PrismaClient } from './generated/prisma-client';
+import {
+  OrderStatus,
+  PaymentStatus,
+  PrismaClient,
+} from './generated/prisma-client';
 
 const prisma = new PrismaClient();
 
@@ -24,7 +28,8 @@ const sampleProducts = [
   },
   {
     name: 'Samsung Galaxy S24 Ultra',
-    description: 'Premium Android smartphone with S Pen and advanced AI features',
+    description:
+      'Premium Android smartphone with S Pen and advanced AI features',
     price: 1199.99,
     category: 'Electronics',
     vendorId: 'vendor1-id',
@@ -80,7 +85,7 @@ const sampleProducts = [
   {
     name: 'Nike Air Max 270',
     description: 'Comfortable running shoes with Max Air cushioning',
-    price: 150.00,
+    price: 150.0,
     category: 'Fashion',
     vendorId: 'vendor3-id',
     isActive: true,
@@ -95,7 +100,7 @@ const sampleProducts = [
     quantity: 100,
   },
   {
-    name: 'Levi\'s 501 Original Jeans',
+    name: "Levi's 501 Original Jeans",
     description: 'Classic straight-leg jeans, the original blue jean',
     price: 89.99,
     category: 'Fashion',
@@ -103,7 +108,7 @@ const sampleProducts = [
     isActive: true,
     images: ['https://example.com/levis501.jpg'],
     specifications: {
-      brand: 'Levi\'s',
+      brand: "Levi's",
       model: '501 Original',
       size: '32x32',
       color: 'Medium Stonewash',
@@ -114,7 +119,7 @@ const sampleProducts = [
   {
     name: 'Adidas Ultraboost 22',
     description: 'High-performance running shoes with Boost midsole',
-    price: 180.00,
+    price: 180.0,
     category: 'Fashion',
     vendorId: 'vendor4-id',
     isActive: true,
@@ -169,7 +174,7 @@ const sampleProducts = [
   {
     name: 'Peloton Bike+',
     description: 'Premium indoor cycling bike with rotating HD touchscreen',
-    price: 2495.00,
+    price: 2495.0,
     category: 'Sports & Recreation',
     vendorId: 'vendor4-id',
     isActive: true,
@@ -204,7 +209,8 @@ const sampleProducts = [
   // Books & Media
   {
     name: 'The Psychology of Money',
-    description: 'Timeless lessons on wealth, greed, and happiness by Morgan Housel',
+    description:
+      'Timeless lessons on wealth, greed, and happiness by Morgan Housel',
     price: 16.99,
     category: 'Books & Media',
     vendorId: 'vendor6-id',
@@ -221,7 +227,8 @@ const sampleProducts = [
   },
   {
     name: 'AirPods Pro (2nd Generation)',
-    description: 'Active noise cancellation wireless earbuds with spatial audio',
+    description:
+      'Active noise cancellation wireless earbuds with spatial audio',
     price: 249.99,
     category: 'Electronics',
     vendorId: 'vendor1-id',
@@ -230,7 +237,11 @@ const sampleProducts = [
     specifications: {
       brand: 'Apple',
       model: 'AirPods Pro (2nd Gen)',
-      features: ['Active Noise Cancellation', 'Spatial Audio', 'Transparency Mode'],
+      features: [
+        'Active Noise Cancellation',
+        'Spatial Audio',
+        'Transparency Mode',
+      ],
       batteryLife: '6 hours (with ANC)',
       case: 'MagSafe charging case',
     },
@@ -241,7 +252,7 @@ const sampleProducts = [
   {
     name: 'Olaplex Hair Perfector No. 3',
     description: 'At-home hair treatment to strengthen and repair damaged hair',
-    price: 28.00,
+    price: 28.0,
     category: 'Beauty & Personal Care',
     vendorId: 'vendor7-id',
     isActive: true,
@@ -258,7 +269,7 @@ const sampleProducts = [
   {
     name: 'The Ordinary Niacinamide 10% + Zinc 1%',
     description: 'Serum to reduce appearance of blemishes and congestion',
-    price: 7.90,
+    price: 7.9,
     category: 'Beauty & Personal Care',
     vendorId: 'vendor7-id',
     isActive: true,
@@ -279,27 +290,61 @@ const sampleVendors = [
   { id: 'vendor1-id', name: 'Tech Solutions Inc', category: 'Electronics' },
   { id: 'vendor2-id', name: 'Premium Electronics', category: 'Electronics' },
   { id: 'vendor3-id', name: 'Fashion Forward', category: 'Fashion' },
-  { id: 'vendor4-id', name: 'Sports Gear Pro', category: 'Sports & Recreation' },
+  {
+    id: 'vendor4-id',
+    name: 'Sports Gear Pro',
+    category: 'Sports & Recreation',
+  },
   { id: 'vendor5-id', name: 'Home Essentials', category: 'Home & Garden' },
   { id: 'vendor6-id', name: 'Book Haven', category: 'Books & Media' },
-  { id: 'vendor7-id', name: 'Beauty Boutique', category: 'Beauty & Personal Care' },
+  {
+    id: 'vendor7-id',
+    name: 'Beauty Boutique',
+    category: 'Beauty & Personal Care',
+  },
 ];
 
 async function createProducts() {
   console.log('Creating products...');
 
-  // Create a mapping of vendor names to actual vendor IDs
-  // In a real scenario, these would come from the auth service
+  // First, create vendors in the database and get their actual IDs
   const vendorMapping: { [key: string]: string } = {};
 
-  for (let i = 0; i < sampleVendors.length; i++) {
-    const vendorId = `vendor-${i + 1}-${Date.now()}`;
-    vendorMapping[sampleVendors[i].id] = vendorId;
+  for (const vendorData of sampleVendors) {
+    try {
+      // Create vendor in database (simplified - in real scenario this would be in auth service)
+      const vendor = await prisma.vendor.create({
+        data: {
+          id: vendorData.id,
+          name: vendorData.name,
+          email: `${vendorData.name.toLowerCase().replace(/\s+/g, '')}@example.com`,
+          phone: '+1234567890',
+          address: {
+            street: '123 Business St',
+            city: 'City',
+            state: 'State',
+            zipCode: '12345',
+            country: 'USA',
+          },
+          description: `${vendorData.name} - ${vendorData.category} specialist`,
+          isActive: true,
+          isVerified: true,
+        },
+      });
+      vendorMapping[vendorData.id] = vendor.id;
+      console.log(`✅ Created vendor: ${vendor.name}`);
+    } catch (error) {
+      console.log(
+        `⚠️  Vendor ${vendorData.name} might already exist, using existing ID`
+      );
+      vendorMapping[vendorData.id] = vendorData.id;
+    }
   }
 
   for (const productData of sampleProducts) {
     try {
-      const actualVendorId = vendorMapping[productData.vendorId] || 'default-vendor-id';
+      const actualVendorId =
+        vendorMapping[productData.vendorId] || 'default-vendor-id';
 
       const product = await prisma.product.create({
         data: {
@@ -315,7 +360,10 @@ async function createProducts() {
             create: {
               quantity: productData.quantity,
               trackQuantity: true,
-              lowStockThreshold: Math.max(5, Math.floor(productData.quantity * 0.1)),
+              lowStockThreshold: Math.max(
+                5,
+                Math.floor(productData.quantity * 0.1)
+              ),
             },
           },
         },
@@ -371,9 +419,12 @@ async function createSampleOrders() {
 
   for (let i = 0; i < 25; i++) {
     try {
-      const customerId = customerIds[Math.floor(Math.random() * customerIds.length)];
-      const orderStatus = orderStatuses[Math.floor(Math.random() * orderStatuses.length)];
-      const paymentStatus = paymentStatuses[Math.floor(Math.random() * paymentStatuses.length)];
+      const customerId =
+        customerIds[Math.floor(Math.random() * customerIds.length)];
+      const orderStatus =
+        orderStatuses[Math.floor(Math.random() * orderStatuses.length)];
+      const paymentStatus =
+        paymentStatuses[Math.floor(Math.random() * paymentStatuses.length)];
 
       // Select 1-4 random products for this order
       const numItems = Math.floor(Math.random() * 4) + 1;
@@ -414,8 +465,12 @@ async function createSampleOrders() {
           shippingAddress: {
             name: 'John Doe',
             address: `${Math.floor(Math.random() * 9999)} Sample Street`,
-            city: ['New York', 'Los Angeles', 'Chicago', 'Houston', 'Phoenix'][Math.floor(Math.random() * 5)],
-            state: ['NY', 'CA', 'IL', 'TX', 'AZ'][Math.floor(Math.random() * 5)],
+            city: ['New York', 'Los Angeles', 'Chicago', 'Houston', 'Phoenix'][
+              Math.floor(Math.random() * 5)
+            ],
+            state: ['NY', 'CA', 'IL', 'TX', 'AZ'][
+              Math.floor(Math.random() * 5)
+            ],
             zipCode: Math.floor(Math.random() * 90000 + 10000).toString(),
             country: 'US',
           },
@@ -429,19 +484,25 @@ async function createSampleOrders() {
       });
 
       // Create vendor orders for each vendor involved
-      const vendorGroups = selectedProducts.reduce((groups, product) => {
-        if (!groups[product.vendorId]) {
-          groups[product.vendorId] = [];
-        }
-        groups[product.vendorId].push(product);
-        return groups;
-      }, {} as { [vendorId: string]: typeof selectedProducts });
+      const vendorGroups = selectedProducts.reduce(
+        (groups, product) => {
+          if (!groups[product.vendorId]) {
+            groups[product.vendorId] = [];
+          }
+          groups[product.vendorId].push(product);
+          return groups;
+        },
+        {} as { [vendorId: string]: typeof selectedProducts }
+      );
 
       for (const [vendorId, vendorProducts] of Object.entries(vendorGroups)) {
         const vendorItems = orderItems.filter(item =>
           vendorProducts.some(p => p.id === item.productId)
         );
-        const vendorSubtotal = vendorItems.reduce((sum, item) => sum + item.total, 0);
+        const vendorSubtotal = vendorItems.reduce(
+          (sum, item) => sum + item.total,
+          0
+        );
 
         await prisma.vendorOrder.create({
           data: {
@@ -454,7 +515,9 @@ async function createSampleOrders() {
         });
       }
 
-      console.log(`✅ Created order: ${order.id} (${orderItems.length} items, $${total.toFixed(2)})`);
+      console.log(
+        `✅ Created order: ${order.id} (${orderItems.length} items, $${total.toFixed(2)})`
+      );
     } catch (error) {
       console.error(`❌ Failed to create order ${i + 1}:`, error);
     }
@@ -476,9 +539,11 @@ async function createInventoryReservations() {
   ];
 
   for (const product of products) {
-    if (product.inventory && Math.random() > 0.5) { // 50% chance to create reservation
+    if (product.inventory && Math.random() > 0.5) {
+      // 50% chance to create reservation
       try {
-        const customerId = customerIds[Math.floor(Math.random() * customerIds.length)];
+        const customerId =
+          customerIds[Math.floor(Math.random() * customerIds.length)];
         const quantity = Math.floor(Math.random() * 3) + 1;
         const expiresAt = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes from now
 
@@ -491,9 +556,14 @@ async function createInventoryReservations() {
           },
         });
 
-        console.log(`✅ Created inventory reservation for product: ${product.name}`);
+        console.log(
+          `✅ Created inventory reservation for product: ${product.name}`
+        );
       } catch (error) {
-        console.error(`❌ Failed to create reservation for ${product.name}:`, error);
+        console.error(
+          `❌ Failed to create reservation for ${product.name}:`,
+          error
+        );
       }
     }
   }
@@ -504,7 +574,7 @@ async function updateProductStats() {
 
   const products = await prisma.product.findMany({
     include: {
-      items: {
+      orderItems: {
         include: {
           order: true,
         },
@@ -515,11 +585,14 @@ async function updateProductStats() {
   for (const product of products) {
     try {
       // Calculate total sold and revenue
-      const completedOrders = product.items.filter(
+      const completedOrders = product.orderItems.filter(
         item => item.order.status === OrderStatus.DELIVERED
       );
 
-      const totalSold = completedOrders.reduce((sum, item) => sum + item.quantity, 0);
+      const totalSold = completedOrders.reduce(
+        (sum, item) => sum + item.quantity,
+        0
+      );
       // Calculate total revenue for analytics (not used in current schema)
       // const totalRevenue = completedOrders.reduce((sum, item) => sum + item.total, 0);
 
@@ -586,7 +659,9 @@ async function main() {
     });
 
     sampleProductsList.forEach(product => {
-      console.log(`  • ${product.name} - $${product.price} (${product.inventory?.quantity || 0} in stock)`);
+      console.log(
+        `  • ${product.name} - $${product.price} (${product.inventory?.quantity || 0} in stock)`
+      );
     });
 
     console.log('\n📋 Sample Orders:');
@@ -596,9 +671,10 @@ async function main() {
     });
 
     sampleOrdersList.forEach(order => {
-      console.log(`  • Order ${order.id.substring(0, 8)}... - ${order.status} - $${order.total.toFixed(2)} (${order.items.length} items)`);
+      console.log(
+        `  • Order ${order.id.substring(0, 8)}... - ${order.status} - $${order.total.toFixed(2)} (${order.items.length} items)`
+      );
     });
-
   } catch (error) {
     console.error('❌ Ecommerce seeding failed:', error);
     throw error;
@@ -609,11 +685,10 @@ async function main() {
 
 // Run the seeding
 if (require.main === module) {
-  main()
-    .catch((error) => {
-      console.error(error);
-      process.exit(1);
-    });
+  main().catch(error => {
+    console.error(error);
+    process.exit(1);
+  });
 }
 
 export default main;

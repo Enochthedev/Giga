@@ -4,7 +4,7 @@ import { vi } from 'vitest';
 import { PrismaClient, RoleName } from '../../generated/prisma-client';
 
 export class TestDataFactory {
-  constructor(private _prisma: PrismaClient) { }
+  constructor(private _prisma: PrismaClient) {}
 
   async createTestUser(overrides: Partial<any> = {}) {
     const defaultUser = {
@@ -133,7 +133,8 @@ export class TestDataFactory {
 
   createRefreshToken(_userId: string, expiresAt?: Date) {
     const token = jwt.sign({ userId }, process.env.JWT_SECRET || 'test-secret');
-    const expiration = expiresAt || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+    const expiration =
+      expiresAt || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
 
     return this.prisma.refreshToken.create({
       data: {
@@ -183,7 +184,7 @@ export class TestDataFactory {
     });
   }
 
-  generateExpiredJWT(user: any) {
+  generateExpiredJWT(user: unknown) {
     return this.generateJWT(user, '-1h'); // Expired 1 hour ago
   }
 
