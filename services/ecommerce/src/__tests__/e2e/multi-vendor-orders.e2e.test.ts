@@ -21,7 +21,7 @@ import { TestDataFactory } from '../utils/test-helpers';
 setupIntegrationTestMocks();
 
 describe('E2E: Multi-Vendor Order Scenarios', () => {
-  let prisma: PrismaClient;
+  let _prisma: PrismaClient;
   let testDataFactory: TestDataFactory;
   let vendor1Products: any[];
   let vendor2Products: any[];
@@ -43,7 +43,7 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
     testDataFactory = new TestDataFactory(prisma);
   });
 
-  beforeEach(async () => {
+  beforeEach(() => {
     // Clean up test data
     await prisma.orderItem.deleteMany();
     await prisma.vendorOrder.deleteMany();
@@ -168,13 +168,13 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
     authToken = 'Bearer test-token';
   });
 
-  afterAll(async () => {
+  afterAll(() => {
     await prisma.$disconnect();
     await redisService.quit();
   });
 
   describe('Multi-Vendor Cart and Order Creation', () => {
-    it('should create order with items from multiple vendors and split into vendor orders', async () => {
+    it('should create order with items from multiple vendors and split into vendor orders', () => {
       // Add items from different vendors to cart
       await request(app)
         .post('/api/v1/cart/add')
@@ -272,7 +272,7 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
       }
     });
 
-    it('should handle vendor-specific shipping and pricing calculations', async () => {
+    it('should handle vendor-specific shipping and pricing calculations', () => {
       // Add items from two different vendors
       await request(app)
         .post('/api/v1/cart/add')
@@ -347,7 +347,7 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
       }
     });
 
-    it('should handle partial inventory availability across vendors', async () => {
+    it('should handle partial inventory availability across vendors', () => {
       // Reduce inventory for one vendor's product
       await prisma.productInventory.update({
         where: { productId: vendor1Products[0].id },
@@ -400,7 +400,7 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
     let multiVendorOrder: any;
     let vendorOrders: any[];
 
-    beforeEach(async () => {
+    beforeEach(() => {
       // Create a multi-vendor order
       multiVendorOrder = await prisma.order.create({
         data: {
@@ -473,7 +473,7 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
       ]);
     });
 
-    it('should allow vendors to view only their orders', async () => {
+    it('should allow vendors to view only their orders', () => {
       // Mock vendor 1 user
       mockVendorUser();
       vi.doMock('../../middleware/auth.middleware', () => ({
@@ -516,7 +516,7 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
       }
     });
 
-    it('should allow vendors to update their order status', async () => {
+    it('should allow vendors to update their order status', () => {
       // Mock vendor 1 user
       mockVendorUser();
       vi.doMock('../../middleware/auth.middleware', () => ({
@@ -570,7 +570,7 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
       }
     });
 
-    it('should prevent vendors from accessing other vendors orders', async () => {
+    it('should prevent vendors from accessing other vendors orders', () => {
       // Mock vendor 1 user trying to access vendor 2's order
       mockVendorUser();
       vi.doMock('../../middleware/auth.middleware', () => ({
@@ -609,7 +609,7 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
       expect([403, 404, 500].includes(unauthorizedResponse.status)).toBe(true);
     });
 
-    it('should coordinate overall order status based on vendor order statuses', async () => {
+    it('should coordinate overall order status based on vendor order statuses', () => {
       // Update first vendor order to shipped
       await prisma.vendorOrder.update({
         where: { id: vendorOrders[0].id },
@@ -648,7 +648,7 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
   });
 
   describe('Multi-Vendor Inventory Management', () => {
-    it('should handle inventory reservations across multiple vendors', async () => {
+    it('should handle inventory reservations across multiple vendors', () => {
       // Add items from multiple vendors to cart
       await request(app)
         .post('/api/v1/cart/add')
@@ -692,7 +692,7 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
       expect(productIds).toContain(vendor2Products[0].id);
     });
 
-    it('should handle partial inventory failures across vendors', async () => {
+    it('should handle partial inventory failures across vendors', () => {
       // Reduce inventory for vendor 1 product
       await prisma.productInventory.update({
         where: { productId: vendor1Products[0].id },
@@ -745,7 +745,7 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
   });
 
   describe('Multi-Vendor Analytics and Reporting', () => {
-    beforeEach(async () => {
+    beforeEach(() => {
       // Create some test orders for analytics
       const testOrder1 = await prisma.order.create({
         data: {
@@ -778,7 +778,7 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
       });
     });
 
-    it('should provide vendor-specific dashboard data', async () => {
+    it('should provide vendor-specific dashboard data', () => {
       // Mock vendor 1 user
       mockVendorUser();
       vi.doMock('../../middleware/auth.middleware', () => ({
@@ -821,7 +821,7 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
       }
     });
 
-    it('should track vendor performance metrics', async () => {
+    it('should track vendor performance metrics', () => {
       // This would typically be handled by analytics services
       // For now, we'll verify that the data structure supports it
 
@@ -857,7 +857,7 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
   });
 
   describe('Multi-Vendor Complex Scenarios', () => {
-    it('should handle vendor-specific promotions and discounts', async () => {
+    it('should handle vendor-specific promotions and discounts', () => {
       // Add items from multiple vendors
       await request(app)
         .post('/api/v1/cart/add')
@@ -901,7 +901,7 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
       }
     });
 
-    it('should handle vendor-specific shipping rules', async () => {
+    it('should handle vendor-specific shipping rules', () => {
       // Add items from vendors with different shipping policies
       await request(app)
         .post('/api/v1/cart/add')
@@ -945,7 +945,7 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
       }
     });
 
-    it('should handle vendor minimum order requirements', async () => {
+    it('should handle vendor minimum order requirements', () => {
       // Add small quantity from vendor with minimum order requirement
       const smallOrderResponse = await request(app)
         .post('/api/v1/cart/add')
@@ -968,7 +968,7 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
       expect(validateResponse.body.data.validation).toHaveProperty('isValid');
     });
 
-    it('should handle cross-vendor bundle deals', async () => {
+    it('should handle cross-vendor bundle deals', () => {
       // Add items that form a cross-vendor bundle
       await request(app)
         .post('/api/v1/cart/add')
@@ -1002,7 +1002,7 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
   });
 
   describe('Multi-Vendor Payment Scenarios', () => {
-    it('should handle split payments across vendors', async () => {
+    it('should handle split payments across vendors', () => {
       // Add items from multiple vendors
       await request(app)
         .post('/api/v1/cart/add')
@@ -1067,7 +1067,7 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
       expect([201, 400, 500].includes(createOrderResponse.status)).toBe(true);
     });
 
-    it('should handle vendor payout calculations', async () => {
+    it('should handle vendor payout calculations', () => {
       // Create completed multi-vendor order
       const payoutOrder = await prisma.order.create({
         data: {
@@ -1123,7 +1123,7 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
       );
     });
 
-    it('should handle payment failures for specific vendors', async () => {
+    it('should handle payment failures for specific vendors', () => {
       // Add items from multiple vendors
       await request(app)
         .post('/api/v1/cart/add')
@@ -1181,7 +1181,7 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
   });
 
   describe('Multi-Vendor Error Scenarios', () => {
-    it('should handle vendor service unavailability gracefully', async () => {
+    it('should handle vendor service unavailability gracefully', () => {
       // Add items from multiple vendors
       await request(app)
         .post('/api/v1/cart/add')
@@ -1233,7 +1233,7 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
       expect([201, 400, 500].includes(createOrderResponse.status)).toBe(true);
     });
 
-    it('should handle mixed vendor inventory states', async () => {
+    it('should handle mixed vendor inventory states', () => {
       // Make one vendor's product inactive
       await prisma.product.update({
         where: { id: vendor1Products[0].id },
@@ -1272,7 +1272,7 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
       expect(validateResponse.body.data.validation.isValid).toBe(true);
     });
 
-    it('should handle vendor account suspension scenarios', async () => {
+    it('should handle vendor account suspension scenarios', () => {
       // Add items from multiple vendors
       await request(app)
         .post('/api/v1/cart/add')
@@ -1317,7 +1317,7 @@ describe('E2E: Multi-Vendor Order Scenarios', () => {
       expect([201, 400, 500].includes(createOrderResponse.status)).toBe(true);
     });
 
-    it('should handle data consistency across vendor operations', async () => {
+    it('should handle data consistency across vendor operations', () => {
       // Create multi-vendor order
       const consistencyOrder = await prisma.order.create({
         data: {

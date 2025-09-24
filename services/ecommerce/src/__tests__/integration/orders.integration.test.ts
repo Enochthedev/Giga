@@ -18,7 +18,7 @@ import {
 } from '../utils/test-helpers';
 
 describe('Orders Integration Tests', () => {
-  let prisma: PrismaClient;
+  let _prisma: PrismaClient;
   let testFactory: TestDataFactory;
   let vendor: any;
   let product: any;
@@ -36,7 +36,7 @@ describe('Orders Integration Tests', () => {
     testFactory = new TestDataFactory(prisma);
   });
 
-  beforeEach(async () => {
+  beforeEach(() => {
     // Clean up test data
     await prisma.orderItem.deleteMany();
     await prisma.vendorOrder.deleteMany();
@@ -99,7 +99,7 @@ describe('Orders Integration Tests', () => {
       });
   });
 
-  afterAll(async () => {
+  afterAll(() => {
     await prisma.$disconnect();
     await redisService.quit();
   });
@@ -117,7 +117,7 @@ describe('Orders Integration Tests', () => {
       notes: 'Please deliver to front door',
     };
 
-    it('should create order from cart successfully', async () => {
+    it('should create order from cart successfully', () => {
       const response = await request(app)
         .post('/api/v1/orders')
         .set('Authorization', authToken)
@@ -141,7 +141,7 @@ describe('Orders Integration Tests', () => {
       expect(cartResponse.body.data.items).toHaveLength(0);
     });
 
-    it('should create vendor orders for multi-vendor cart', async () => {
+    it('should create vendor orders for multi-vendor cart', () => {
       // Create second vendor and product
       const vendor2 = await testFactory.createVendor({ name: 'Vendor 2' });
       const product2 = await testFactory.createProduct(vendor2.id, {
@@ -179,7 +179,7 @@ describe('Orders Integration Tests', () => {
       expect(vendorOrder2.items).toHaveLength(1);
     });
 
-    it('should return 400 for empty cart', async () => {
+    it('should return 400 for empty cart', () => {
       // Clear cart first
       await request(app).delete('/api/v1/cart').set('Authorization', authToken);
 
@@ -193,7 +193,7 @@ describe('Orders Integration Tests', () => {
       expect(response.body.error).toContain('Cart is empty');
     });
 
-    it('should return 400 for invalid shipping address', async () => {
+    it('should return 400 for invalid shipping address', () => {
       const invalidOrderData = {
         ...validOrderData,
         shippingAddress: {
@@ -213,7 +213,7 @@ describe('Orders Integration Tests', () => {
       expect(response.body.success).toBe(false);
     });
 
-    it('should return 400 for insufficient inventory', async () => {
+    it('should return 400 for insufficient inventory', () => {
       // Update product to have less inventory
       await prisma.product.update({
         where: { id: product.id },
@@ -230,7 +230,7 @@ describe('Orders Integration Tests', () => {
       expect(response.body.error).toContain('Insufficient stock');
     });
 
-    it('should handle payment service failure', async () => {
+    it('should handle payment service failure', () => {
       mockPaymentServiceClient.createPaymentIntent.mockRejectedValueOnce(
         new Error('Payment service unavailable')
       );
@@ -249,7 +249,7 @@ describe('Orders Integration Tests', () => {
   describe('GET /api/v1/orders', () => {
     let order: any;
 
-    beforeEach(async () => {
+    beforeEach(() => {
       // Create test order
       order = await testFactory.createOrder(customerId, {
         status: OrderStatus.CONFIRMED,
@@ -257,7 +257,7 @@ describe('Orders Integration Tests', () => {
       });
     });
 
-    it('should get order history with pagination', async () => {
+    it('should get order history with pagination', () => {
       const response = await request(app)
         .get('/api/v1/orders')
         .set('Authorization', authToken)
@@ -272,7 +272,7 @@ describe('Orders Integration Tests', () => {
       expect(response.body.data.pagination.total).toBe(1);
     });
 
-    it('should filter orders by status', async () => {
+    it('should filter orders by status', () => {
       // Create another order with different status
       await testFactory.createOrder(customerId, {
         status: OrderStatus.PENDING,
@@ -289,7 +289,7 @@ describe('Orders Integration Tests', () => {
       expect(response.body.data.orders[0].status).toBe(OrderStatus.CONFIRMED);
     });
 
-    it('should filter orders by date range', async () => {
+    it('should filter orders by date range', () => {
       const dateFrom = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(); // 24 hours ago
       const dateTo = new Date().toISOString();
 
@@ -303,7 +303,7 @@ describe('Orders Integration Tests', () => {
       expect(response.body.data.orders).toHaveLength(1);
     });
 
-    it('should return empty array for customer with no orders', async () => {
+    it('should return empty array for customer with no orders', () => {
       // Delete the test order
       await prisma.order.delete({ where: { id: order.id } });
 
@@ -320,11 +320,11 @@ describe('Orders Integration Tests', () => {
   describe('GET /api/v1/orders/:id', () => {
     let order: any;
 
-    beforeEach(async () => {
+    beforeEach(() => {
       order = await testFactory.createOrder(customerId);
     });
 
-    it('should get specific order details', async () => {
+    it('should get specific order details', () => {
       const response = await request(app)
         .get(`/api/v1/orders/${order.id}`)
         .set('Authorization', authToken)
@@ -336,7 +336,7 @@ describe('Orders Integration Tests', () => {
       expect(response.body.data.status).toBe(order.status);
     });
 
-    it('should return 404 for non-existent order', async () => {
+    it('should return 404 for non-existent order', () => {
       const response = await request(app)
         .get('/api/v1/orders/non-existent-order')
         .set('Authorization', authToken)
@@ -346,7 +346,7 @@ describe('Orders Integration Tests', () => {
       expect(response.body.error).toContain('Order not found');
     });
 
-    it('should return 403 for order belonging to different customer', async () => {
+    it('should return 403 for order belonging to different customer', () => {
       // Create order for different customer
       const otherOrder = await testFactory.createOrder('other-customer-123');
 
@@ -363,7 +363,7 @@ describe('Orders Integration Tests', () => {
   describe('PUT /api/v1/orders/:id/status', () => {
     let order: any;
 
-    beforeEach(async () => {
+    beforeEach(() => {
       order = await testFactory.createOrder(customerId, {
         status: OrderStatus.CONFIRMED,
       });
@@ -377,7 +377,7 @@ describe('Orders Integration Tests', () => {
       }));
     });
 
-    it('should update order status successfully (admin only)', async () => {
+    it('should update order status successfully (admin only)', () => {
       const response = await request(app)
         .put(`/api/v1/orders/${order.id}/status`)
         .set('Authorization', authToken)
@@ -392,7 +392,7 @@ describe('Orders Integration Tests', () => {
       expect(response.body.data.trackingNumber).toBe('1Z999AA1234567890');
     });
 
-    it('should return 400 for invalid status transition', async () => {
+    it('should return 400 for invalid status transition', () => {
       const response = await request(app)
         .put(`/api/v1/orders/${order.id}/status`)
         .set('Authorization', authToken)
@@ -405,7 +405,7 @@ describe('Orders Integration Tests', () => {
       expect(response.body.error).toContain('Invalid status transition');
     });
 
-    it('should return 403 for non-admin user', async () => {
+    it('should return 403 for non-admin user', () => {
       // Mock regular customer
       vi.doMock('../../middleware/auth.middleware', () => ({
         authMiddleware: (req: any, res: any, next: any) => {
@@ -430,13 +430,13 @@ describe('Orders Integration Tests', () => {
   describe('DELETE /api/v1/orders/:id/cancel', () => {
     let order: any;
 
-    beforeEach(async () => {
+    beforeEach(() => {
       order = await testFactory.createOrder(customerId, {
         status: OrderStatus.CONFIRMED,
       });
     });
 
-    it('should cancel order successfully', async () => {
+    it('should cancel order successfully', () => {
       const response = await request(app)
         .delete(`/api/v1/orders/${order.id}/cancel`)
         .set('Authorization', authToken)
@@ -449,7 +449,7 @@ describe('Orders Integration Tests', () => {
       expect(response.body.data.status).toBe(OrderStatus.CANCELLED);
     });
 
-    it('should return 400 for already delivered order', async () => {
+    it('should return 400 for already delivered order', () => {
       // Update order to delivered status
       await prisma.order.update({
         where: { id: order.id },
@@ -468,7 +468,7 @@ describe('Orders Integration Tests', () => {
       expect(response.body.error).toContain('Cannot cancel order');
     });
 
-    it('should return 404 for non-existent order', async () => {
+    it('should return 404 for non-existent order', () => {
       const response = await request(app)
         .delete('/api/v1/orders/non-existent-order/cancel')
         .set('Authorization', authToken)
@@ -485,7 +485,7 @@ describe('Orders Integration Tests', () => {
   describe('GET /api/v1/orders/:id/payment-status', () => {
     let order: any;
 
-    beforeEach(async () => {
+    beforeEach(() => {
       order = await testFactory.createOrder(customerId, {
         paymentIntentId: 'pi_test_123',
       });
@@ -498,7 +498,7 @@ describe('Orders Integration Tests', () => {
       });
     });
 
-    it('should get payment status for order', async () => {
+    it('should get payment status for order', () => {
       const response = await request(app)
         .get(`/api/v1/orders/${order.id}/payment-status`)
         .set('Authorization', authToken)
@@ -509,7 +509,7 @@ describe('Orders Integration Tests', () => {
       expect(response.body.data.paymentIntentId).toBe('pi_test_123');
     });
 
-    it('should return 404 for order without payment intent', async () => {
+    it('should return 404 for order without payment intent', () => {
       // Create order without payment intent
       const orderWithoutPayment = await testFactory.createOrder(customerId, {
         paymentIntentId: null,
@@ -528,14 +528,14 @@ describe('Orders Integration Tests', () => {
   describe('POST /api/v1/orders/:id/confirm-payment', () => {
     let order: any;
 
-    beforeEach(async () => {
+    beforeEach(() => {
       order = await testFactory.createOrder(customerId, {
         paymentIntentId: 'pi_test_123',
         paymentStatus: PaymentStatus.PENDING,
       });
     });
 
-    it('should confirm payment for order', async () => {
+    it('should confirm payment for order', () => {
       const response = await request(app)
         .post(`/api/v1/orders/${order.id}/confirm-payment`)
         .set('Authorization', authToken)
@@ -545,7 +545,7 @@ describe('Orders Integration Tests', () => {
       expect(response.body.data.paymentStatus).toBe(PaymentStatus.PAID);
     });
 
-    it('should return 400 for already confirmed payment', async () => {
+    it('should return 400 for already confirmed payment', () => {
       // Update order to paid status
       await prisma.order.update({
         where: { id: order.id },
@@ -561,7 +561,7 @@ describe('Orders Integration Tests', () => {
       expect(response.body.error).toContain('Payment already confirmed');
     });
 
-    it('should handle payment service failure', async () => {
+    it('should handle payment service failure', () => {
       mockPaymentServiceClient.confirmPayment.mockRejectedValueOnce(
         new Error('Payment confirmation failed')
       );
@@ -577,7 +577,7 @@ describe('Orders Integration Tests', () => {
   });
 
   describe('Error Handling', () => {
-    it('should handle database connection errors gracefully', async () => {
+    it('should handle database connection errors gracefully', () => {
       // Mock database error
       vi.spyOn(prisma.order, 'findMany').mockRejectedValueOnce(
         new Error('Database connection failed')
@@ -592,7 +592,7 @@ describe('Orders Integration Tests', () => {
       expect(response.body.error).toBeDefined();
     });
 
-    it('should handle service client errors gracefully', async () => {
+    it('should handle service client errors gracefully', () => {
       // Mock payment service error during order creation
       mockPaymentServiceClient.createPaymentIntent.mockRejectedValueOnce(
         new Error('Service unavailable')
@@ -620,7 +620,7 @@ describe('Orders Integration Tests', () => {
   });
 
   describe('Concurrent Order Creation', () => {
-    it('should handle concurrent order creation with inventory conflicts', async () => {
+    it('should handle concurrent order creation with inventory conflicts', () => {
       // Update product to have limited inventory
       await prisma.product.update({
         where: { id: product.id },

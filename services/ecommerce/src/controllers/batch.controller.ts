@@ -75,7 +75,7 @@ export class BatchController {
   /**
    * Batch cart operations - add, update, or remove multiple items
    */
-  async batchCartOperations(req: Request, res: Response) {
+  async batchCartOperations(_req: Request, res: Response) {
     try {
       const customerId = req.user?.id;
       if (!customerId) {
@@ -209,7 +209,7 @@ export class BatchController {
   /**
    * Batch inventory updates - update multiple product inventories
    */
-  async batchInventoryUpdates(req: Request, res: Response) {
+  async batchInventoryUpdates(_req: Request, res: Response) {
     try {
       // Check vendor permissions
       const vendorId = (req.user as any)?.vendorId;
@@ -395,7 +395,7 @@ export class BatchController {
   /**
    * Batch product cache refresh
    */
-  async batchCacheRefresh(req: Request, res: Response) {
+  async batchCacheRefresh(_req: Request, res: Response) {
     try {
       // Validate request
       const validation = BatchProductCacheSchema.safeParse(req.body);
@@ -499,7 +499,7 @@ export class BatchController {
   /**
    * Batch search operations - search multiple queries at once
    */
-  async batchSearch(req: Request, res: Response) {
+  async batchSearch(_req: Request, res: Response) {
     try {
       const { queries } = req.body;
 
@@ -625,7 +625,7 @@ export class BatchController {
   /**
    * Get batch operation status
    */
-  getBatchStatus(req: Request, res: Response) {
+  getBatchStatus(_req: Request, res: Response) {
     try {
       const { batchId } = req.params;
 

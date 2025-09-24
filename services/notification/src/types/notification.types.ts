@@ -172,7 +172,7 @@ export interface PushResult {
 }
 
 export interface InAppRequest {
-  userId: string;
+  _userId: string;
   title: string;
   body: string;
   actionUrl?: string;

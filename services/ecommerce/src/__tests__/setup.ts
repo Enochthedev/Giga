@@ -1,12 +1,12 @@
-import { PrismaClient } from '@prisma/client';
 import Redis from 'redis';
 import { afterAll, afterEach, beforeAll, beforeEach } from 'vitest';
+import { PrismaClient } from '../generated/prisma-client';
 
 // Global test setup
-let prisma: PrismaClient;
+let _prisma: PrismaClient;
 let redis: ReturnType<typeof Redis.createClient>;
 
-beforeAll(async () => {
+beforeAll(() => {
   // Initialize test database connection
   prisma = new PrismaClient({
     datasources: {
@@ -24,7 +24,7 @@ beforeAll(async () => {
   await redis.connect();
 });
 
-afterAll(async () => {
+afterAll(() => {
   // Cleanup connections
   try {
     await prisma.$disconnect();
@@ -43,12 +43,12 @@ afterAll(async () => {
   }
 });
 
-beforeEach(async () => {
+beforeEach(() => {
   // Clean up test data before each test
   await cleanupTestData();
 });
 
-afterEach(async () => {
+afterEach(() => {
   // Clean up test data after each test
   await cleanupTestData();
 });

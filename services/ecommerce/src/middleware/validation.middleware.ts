@@ -12,7 +12,7 @@ export interface ValidationOptions {
 }
 
 export function validate(schemas: ValidationOptions) {
-  return async (req: Request, res: Response, next: NextFunction) => {
+  return (_req: Request, res: Response, next: NextFunction) => {
     try {
       // const correlationId = req.correlationId;
 
@@ -91,7 +91,7 @@ export const generalRateLimit: RateLimitRequestHandler = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
-  handler: (req: Request, res: Response) => {
+  handler: (_req: Request, res: Response) => {
     const correlationId = req.correlationId;
     res.status(429).json({
       success: false,
@@ -122,7 +122,7 @@ export const strictRateLimit: RateLimitRequestHandler = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
-  handler: (req: Request, res: Response) => {
+  handler: (_req: Request, res: Response) => {
     const correlationId = req.correlationId;
     res.status(429).json({
       success: false,
@@ -153,7 +153,7 @@ export const cartRateLimit: RateLimitRequestHandler = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
-  handler: (req: Request, res: Response) => {
+  handler: (_req: Request, res: Response) => {
     const correlationId = req.correlationId;
     res.status(429).json({
       success: false,
@@ -170,7 +170,7 @@ export const cartRateLimit: RateLimitRequestHandler = rateLimit({
 });
 
 // Input sanitization middleware
-export function sanitizeInput(req: Request, res: Response, next: NextFunction) {
+export function sanitizeInput(_req: Request, res: Response, next: NextFunction) {
   // Sanitize common injection patterns
   const sanitizeValue = (value: any): any => {
     if (typeof value === 'string') {
@@ -216,7 +216,7 @@ export function validateFileUpload(_options: {
   allowedTypes?: string[];
   maxFiles?: number;
 }) {
-  return (_req: Request, _res: Response, next: NextFunction) => {
+  return (__req: Request, _res: Response, next: NextFunction) => {
     // File upload validation would be implemented here when needed
     next();
   };
@@ -224,7 +224,7 @@ export function validateFileUpload(_options: {
 
 // Request size validation
 export function validateRequestSize(maxSize: number = 10 * 1024 * 1024) {
-  return (req: Request, res: Response, next: NextFunction) => {
+  return (_req: Request, res: Response, next: NextFunction) => {
     const contentLength = parseInt(req.headers['content-length'] || '0', 10);
 
     if (contentLength > maxSize) {

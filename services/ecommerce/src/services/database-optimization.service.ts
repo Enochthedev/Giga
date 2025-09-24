@@ -16,7 +16,7 @@ export interface DatabaseMetrics {
 }
 
 export class DatabaseOptimizationService {
-  private prisma: PrismaClient;
+  private _prisma: PrismaClient;
   private config: QueryOptimizationConfig;
   private queryMetrics: {
     queries: Array<{ query: string; duration: number; timestamp: Date }>;
@@ -26,7 +26,7 @@ export class DatabaseOptimizationService {
     slowQueries: [],
   };
 
-  constructor(prisma: PrismaClient, config?: Partial<QueryOptimizationConfig>) {
+  constructor(_prisma: PrismaClient, config?: Partial<QueryOptimizationConfig>) {
     this.prisma = prisma;
     this.config = {
       enableQueryLogging: true,
@@ -41,7 +41,7 @@ export class DatabaseOptimizationService {
 
   private setupQueryLogging(): void {
     if (this.config.enableQueryLogging) {
-      this.prisma.$use(async (params, next) => {
+      this.prisma.$use((params, next) => {
         const start = Date.now();
         const result = await next(params);
         const duration = Date.now() - start;
@@ -532,7 +532,7 @@ export class DatabaseOptimizationService {
 
 // Export singleton instance
 export const createDatabaseOptimizationService = (
-  prisma: PrismaClient,
+  _prisma: PrismaClient,
   config?: Partial<QueryOptimizationConfig>
 ) => {
   return new DatabaseOptimizationService(prisma, config);

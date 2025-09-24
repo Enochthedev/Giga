@@ -4,7 +4,7 @@
 
 export interface GuestProfile {
   id: string;
-  userId: string; // Reference to Auth Service
+  _userId: string; // Reference to Auth Service
 
   // Personal information
   personalInfo: PersonalInformation;
@@ -307,7 +307,7 @@ export enum VIPLevel {
 
 // Request/Response types
 export interface CreateGuestProfileRequest {
-  userId: string;
+  _userId: string;
   personalInfo: PersonalInformation;
   contactInfo: ContactInformation;
   preferences?: Partial<GuestPreferences>;

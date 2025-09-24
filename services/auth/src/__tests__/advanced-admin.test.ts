@@ -19,7 +19,7 @@ describe('Advanced Admin User Management', () => {
   let adminUserId: string;
   let testUserId: string;
 
-  beforeAll(async () => {
+  beforeAll(() => {
     // Clean up existing test data
     await prisma.auditLog.deleteMany({});
     await prisma.userRole.deleteMany({});
@@ -81,7 +81,7 @@ describe('Advanced Admin User Management', () => {
     );
   });
 
-  afterAll(async () => {
+  afterAll(() => {
     await prisma.auditLog.deleteMany({});
     await prisma.userRole.deleteMany({});
     await prisma.user.deleteMany({});
@@ -90,7 +90,7 @@ describe('Advanced Admin User Management', () => {
   });
 
   describe('Bulk User Operations', () => {
-    it('should bulk activate users', async () => {
+    it('should bulk activate users', () => {
       // First deactivate the test user
       await prisma.user.update({
         where: { id: testUserId },
@@ -120,7 +120,7 @@ describe('Advanced Admin User Management', () => {
       expect(auditLog).toBeTruthy();
     });
 
-    it('should bulk verify emails', async () => {
+    it('should bulk verify emails', () => {
       const response = await request(app)
         .post('/api/v1/users/bulk-update')
         .set('Authorization', `Bearer ${adminToken}`)
@@ -137,7 +137,7 @@ describe('Advanced Admin User Management', () => {
       expect(user?.isEmailVerified).toBe(true);
     });
 
-    it('should bulk update custom fields', async () => {
+    it('should bulk update custom fields', () => {
       const response = await request(app)
         .post('/api/v1/users/bulk-update')
         .set('Authorization', `Bearer ${adminToken}`)
@@ -159,7 +159,7 @@ describe('Advanced Admin User Management', () => {
       expect(user?.isActive).toBe(true);
     });
 
-    it('should reject bulk update with too many users', async () => {
+    it('should reject bulk update with too many users', () => {
       const userIds = Array.from({ length: 101 }, (_, i) => `user-${i}`);
 
       const response = await request(app)
@@ -179,7 +179,7 @@ describe('Advanced Admin User Management', () => {
   });
 
   describe('Advanced User Filtering and Search', () => {
-    beforeEach(async () => {
+    beforeEach(() => {
       // Create additional test users with different properties
       await prisma.user.createMany({
         data: [
@@ -208,7 +208,7 @@ describe('Advanced Admin User Management', () => {
       });
     });
 
-    afterEach(async () => {
+    afterEach(() => {
       await prisma.user.deleteMany({
         where: {
           email: {
@@ -218,7 +218,7 @@ describe('Advanced Admin User Management', () => {
       });
     });
 
-    it('should search users by name', async () => {
+    it('should search users by name', () => {
       const response = await request(app)
         .get('/api/v1/users')
         .set('Authorization', `Bearer ${adminToken}`)
@@ -231,7 +231,7 @@ describe('Advanced Admin User Management', () => {
       ).toBe(true);
     });
 
-    it('should search users by email', async () => {
+    it('should search users by email', () => {
       const response = await request(app)
         .get('/api/v1/users')
         .set('Authorization', `Bearer ${adminToken}`)
@@ -246,7 +246,7 @@ describe('Advanced Admin User Management', () => {
       ).toBe(true);
     });
 
-    it('should filter by email verification status', async () => {
+    it('should filter by email verification status', () => {
       const response = await request(app)
         .get('/api/v1/users')
         .set('Authorization', `Bearer ${adminToken}`)
@@ -259,7 +259,7 @@ describe('Advanced Admin User Management', () => {
       ).toBe(true);
     });
 
-    it('should filter by phone verification status', async () => {
+    it('should filter by phone verification status', () => {
       const response = await request(app)
         .get('/api/v1/users')
         .set('Authorization', `Bearer ${adminToken}`)
@@ -272,7 +272,7 @@ describe('Advanced Admin User Management', () => {
       ).toBe(true);
     });
 
-    it('should filter by user status', async () => {
+    it('should filter by user status', () => {
       const response = await request(app)
         .get('/api/v1/users')
         .set('Authorization', `Bearer ${adminToken}`)
@@ -285,7 +285,7 @@ describe('Advanced Admin User Management', () => {
       ).toBe(true);
     });
 
-    it('should sort users by different fields', async () => {
+    it('should sort users by different fields', () => {
       const response = await request(app)
         .get('/api/v1/users')
         .set('Authorization', `Bearer ${adminToken}`)
@@ -299,7 +299,7 @@ describe('Advanced Admin User Management', () => {
       expect(emails).toEqual(sortedEmails);
     });
 
-    it('should filter by date range', async () => {
+    it('should filter by date range', () => {
       const yesterday = new Date(
         Date.now() - 24 * 60 * 60 * 1000
       ).toISOString();
@@ -320,7 +320,7 @@ describe('Advanced Admin User Management', () => {
   });
 
   describe('Role Assignment and Management', () => {
-    it('should assign role to user', async () => {
+    it('should assign role to user', () => {
       const response = await request(app)
         .post(`/api/v1/users/${testUserId}/roles`)
         .set('Authorization', `Bearer ${adminToken}`)
@@ -343,7 +343,7 @@ describe('Advanced Admin User Management', () => {
       expect(auditLog).toBeTruthy();
     });
 
-    it('should remove role from user', async () => {
+    it('should remove role from user', () => {
       // First assign a role
       const vendorRole = await prisma.role.findUnique({
         where: { name: 'VENDOR' },
@@ -368,7 +368,7 @@ describe('Advanced Admin User Management', () => {
       expect(userRoles.some(ur => ur.role.name === 'VENDOR')).toBe(false);
     });
 
-    it('should not allow removing CUSTOMER role', async () => {
+    it('should not allow removing CUSTOMER role', () => {
       const response = await request(app)
         .delete(`/api/v1/users/${testUserId}/roles`)
         .set('Authorization', `Bearer ${adminToken}`)
@@ -379,7 +379,7 @@ describe('Advanced Admin User Management', () => {
       expect(response.body.error).toContain('Cannot remove CUSTOMER role');
     });
 
-    it('should not assign duplicate roles', async () => {
+    it('should not assign duplicate roles', () => {
       const response = await request(app)
         .post(`/api/v1/users/${testUserId}/roles`)
         .set('Authorization', `Bearer ${adminToken}`)
@@ -392,7 +392,7 @@ describe('Advanced Admin User Management', () => {
   });
 
   describe('User Activity Logging and Audit Trails', () => {
-    beforeEach(async () => {
+    beforeEach(() => {
       // Create some audit log entries
       await prisma.auditLog.createMany({
         data: [
@@ -414,7 +414,7 @@ describe('Advanced Admin User Management', () => {
       });
     });
 
-    it('should get user activity logs', async () => {
+    it('should get user activity logs', () => {
       const response = await request(app)
         .get(`/api/v1/users/${testUserId}/activity`)
         .set('Authorization', `Bearer ${adminToken}`);
@@ -425,7 +425,7 @@ describe('Advanced Admin User Management', () => {
       expect(response.body.data.activity.auditLogs.length).toBeGreaterThan(0);
     });
 
-    it('should filter user activity by action', async () => {
+    it('should filter user activity by action', () => {
       const response = await request(app)
         .get(`/api/v1/users/${testUserId}/activity`)
         .set('Authorization', `Bearer ${adminToken}`)
@@ -440,7 +440,7 @@ describe('Advanced Admin User Management', () => {
       ).toBe(true);
     });
 
-    it('should get system audit logs', async () => {
+    it('should get system audit logs', () => {
       const response = await request(app)
         .get('/api/v1/users/audit-logs')
         .set('Authorization', `Bearer ${adminToken}`);
@@ -451,7 +451,7 @@ describe('Advanced Admin User Management', () => {
       expect(Array.isArray(response.body.data.auditLogs)).toBe(true);
     });
 
-    it('should filter audit logs by admin user', async () => {
+    it('should filter audit logs by admin user', () => {
       const response = await request(app)
         .get('/api/v1/users/audit-logs')
         .set('Authorization', `Bearer ${adminToken}`)
@@ -466,7 +466,7 @@ describe('Advanced Admin User Management', () => {
       ).toBe(true);
     });
 
-    it('should filter audit logs by date range', async () => {
+    it('should filter audit logs by date range', () => {
       const yesterday = new Date(
         Date.now() - 24 * 60 * 60 * 1000
       ).toISOString();
@@ -487,7 +487,7 @@ describe('Advanced Admin User Management', () => {
   });
 
   describe('Data Export and Reporting', () => {
-    it('should export users as JSON', async () => {
+    it('should export users as JSON', () => {
       const response = await request(app)
         .get('/api/v1/users/export')
         .set('Authorization', `Bearer ${adminToken}`)
@@ -500,7 +500,7 @@ describe('Advanced Admin User Management', () => {
       expect(response.body.data.exportInfo).toBeDefined();
     });
 
-    it('should export users as CSV', async () => {
+    it('should export users as CSV', () => {
       const response = await request(app)
         .get('/api/v1/users/export')
         .set('Authorization', `Bearer ${adminToken}`)
@@ -513,7 +513,7 @@ describe('Advanced Admin User Management', () => {
       expect(response.text).toContain('id,email,firstName');
     });
 
-    it('should export users with filters', async () => {
+    it('should export users with filters', () => {
       const filters = JSON.stringify({ status: 'active' });
 
       const response = await request(app)
@@ -531,7 +531,7 @@ describe('Advanced Admin User Management', () => {
       ).toBe(true);
     });
 
-    it('should generate audit report as JSON', async () => {
+    it('should generate audit report as JSON', () => {
       const startDate = new Date(
         Date.now() - 24 * 60 * 60 * 1000
       ).toISOString();
@@ -554,7 +554,7 @@ describe('Advanced Admin User Management', () => {
       expect(response.body.data.statistics.adminActivity).toBeDefined();
     });
 
-    it('should generate audit report as CSV', async () => {
+    it('should generate audit report as CSV', () => {
       const startDate = new Date(
         Date.now() - 24 * 60 * 60 * 1000
       ).toISOString();
@@ -574,7 +574,7 @@ describe('Advanced Admin User Management', () => {
       expect(response.headers['content-disposition']).toContain('audit-report');
     });
 
-    it('should get user statistics', async () => {
+    it('should get user statistics', () => {
       const response = await request(app)
         .get('/api/v1/users/stats')
         .set('Authorization', `Bearer ${adminToken}`);
@@ -588,7 +588,7 @@ describe('Advanced Admin User Management', () => {
       expect(response.body.data.registrationTrends).toBeDefined();
     });
 
-    it('should require date range for audit report', async () => {
+    it('should require date range for audit report', () => {
       const response = await request(app)
         .get('/api/v1/users/audit-report')
         .set('Authorization', `Bearer ${adminToken}`);
@@ -618,7 +618,7 @@ describe('Advanced Admin User Management', () => {
       );
     });
 
-    it('should deny access to non-admin users', async () => {
+    it('should deny access to non-admin users', () => {
       const response = await request(app)
         .get('/api/v1/users')
         .set('Authorization', `Bearer ${customerToken}`);
@@ -627,14 +627,14 @@ describe('Advanced Admin User Management', () => {
       expect(response.body.success).toBe(false);
     });
 
-    it('should deny access without authentication', async () => {
+    it('should deny access without authentication', () => {
       const response = await request(app).get('/api/v1/users');
 
       expect(response.status).toBe(401);
       expect(response.body.success).toBe(false);
     });
 
-    it('should log all admin actions', async () => {
+    it('should log all admin actions', () => {
       const initialLogCount = await prisma.auditLog.count();
 
       await request(app)

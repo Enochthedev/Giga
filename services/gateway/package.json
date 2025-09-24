@@ -22,7 +22,7 @@
     "@fastify/http-proxy": "^9.3.0",
     "@fastify/swagger": "^8.12.0",
     "@fastify/swagger-ui": "^2.1.0",
-    "@platform/types": "workspace:*",
+    "@platform/types": "file:../../shared/types",
     "fastify": "^4.24.3",
     "pino": "^8.16.2",
     "pino-pretty": "^10.2.3"
@@ -32,6 +32,8 @@
     "tsx": "^4.6.0",
     "typescript": "^5.3.0",
     "vitest": "^1.0.0",
-    "eslint": "^8.55.0"
+    "eslint": "^8.55.0",
+    "@vitest/coverage-v8": "^1.0.0",
+    "prettier": "^3.1.0"
   }
 }

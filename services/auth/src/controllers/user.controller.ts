@@ -46,7 +46,7 @@ export class UserController {
     }
   }
 
-  async getUserById(req: Request, res: Response) {
+  async getUserById(_req: Request, res: Response) {
     try {
       const { id } = req.params;
 
@@ -124,7 +124,7 @@ export class UserController {
     }
   }
 
-  async listUsers(req: Request, res: Response) {
+  async listUsers(_req: Request, res: Response) {
     try {
       const {
         page = 1,
@@ -299,7 +299,7 @@ export class UserController {
     }
   }
 
-  async updateUserStatus(req: Request, res: Response) {
+  async updateUserStatus(_req: Request, res: Response) {
     try {
       const { id } = req.params;
       const { isActive } = req.body;
@@ -378,7 +378,7 @@ export class UserController {
     }
   }
 
-  async bulkUpdateUsers(req: Request, res: Response) {
+  async bulkUpdateUsers(_req: Request, res: Response) {
     try {
       const { userIds, action, data } = req.body;
 
@@ -495,7 +495,7 @@ export class UserController {
     }
   }
 
-  async assignUserRole(req: Request, res: Response) {
+  async assignUserRole(_req: Request, res: Response) {
     try {
       const { id } = req.params;
       const { role } = req.body;
@@ -591,7 +591,7 @@ export class UserController {
     }
   }
 
-  async removeUserRole(req: Request, res: Response) {
+  async removeUserRole(_req: Request, res: Response) {
     try {
       const { id } = req.params;
       const { role } = req.body;
@@ -687,7 +687,7 @@ export class UserController {
     }
   }
 
-  async exportUsers(req: Request, res: Response) {
+  async exportUsers(_req: Request, res: Response) {
     try {
       const { format = 'json', filters = {} } = req.query;
 
@@ -826,7 +826,7 @@ export class UserController {
     }
   }
 
-  async getUserActivity(req: Request, res: Response) {
+  async getUserActivity(_req: Request, res: Response) {
     try {
       const { id } = req.params;
       const { page = 1, limit = 20, action } = req.query;
@@ -959,7 +959,7 @@ export class UserController {
     }
   }
 
-  async getAuditLogs(req: Request, res: Response) {
+  async getAuditLogs(_req: Request, res: Response) {
     try {
       const {
         page = 1,
@@ -1106,7 +1106,7 @@ export class UserController {
     }
   }
 
-  async getAuditReport(req: Request, res: Response) {
+  async getAuditReport(_req: Request, res: Response) {
     try {
       const {
         startDate,
@@ -1255,7 +1255,7 @@ export class UserController {
     }
   }
 
-  async getUserStats(req: Request, res: Response) {
+  async getUserStats(_req: Request, res: Response) {
     try {
       const { startDate, endDate } = req.query;
 
@@ -1378,7 +1378,7 @@ export class UserController {
     }
   }
 
-  private async createRoleProfile(prisma: any, userId: string, role: RoleName) {
+  private async createRoleProfile(prisma: any, _userId: string, role: RoleName) {
     try {
       switch (role) {
         case 'VENDOR':

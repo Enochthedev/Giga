@@ -2,7 +2,7 @@ import prisma from '@/lib/prisma';
 import { BedType, PropertyCategory, PropertyStatus, RoomCategory } from '@/types';
 import logger from '@/utils/logger';
 
-const seedData = async () => {
+const seedData = () => {
   try {
     logger.info('Starting database seeding...');
 

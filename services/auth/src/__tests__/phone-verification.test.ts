@@ -16,7 +16,7 @@ import { JWTService } from '../services/jwt.service';
 import { SMSService } from '../services/sms.service';
 
 describe('Phone Verification System', () => {
-  let prisma: PrismaClient;
+  let _prisma: PrismaClient;
   let jwtService: JWTService;
   let smsService: SMSService;
   let testUser: any;
@@ -28,11 +28,11 @@ describe('Phone Verification System', () => {
     smsService = SMSService.getInstance();
   });
 
-  afterAll(async () => {
+  afterAll(() => {
     await prisma.$disconnect();
   });
 
-  beforeEach(async () => {
+  beforeEach(() => {
     // Clean up test data
     await prisma.phoneVerificationCode.deleteMany();
     await prisma.refreshToken.deleteMany();
@@ -162,7 +162,7 @@ describe('Phone Verification System', () => {
 
   describe('Phone Verification Endpoints', () => {
     describe('POST /api/v1/auth/send-phone-verification', () => {
-      it('should send verification code successfully', async () => {
+      it('should send verification code successfully', () => {
         const response = await request(app)
           .post('/api/v1/auth/send-phone-verification')
           .set('Authorization', `Bearer ${accessToken}`)
@@ -183,7 +183,7 @@ describe('Phone Verification System', () => {
         expect(storedCode!.code).toMatch(/^\d{6}$/);
       });
 
-      it('should fail without authentication', async () => {
+      it('should fail without authentication', () => {
         const response = await request(app)
           .post('/api/v1/auth/send-phone-verification')
           .send({});
@@ -193,7 +193,7 @@ describe('Phone Verification System', () => {
         expect(response.body.code).toBe('UNAUTHORIZED');
       });
 
-      it('should fail if phone number not set', async () => {
+      it('should fail if phone number not set', () => {
         // Update user to remove phone number
         await prisma.user.update({
           where: { id: testUser.id },
@@ -210,7 +210,7 @@ describe('Phone Verification System', () => {
         expect(response.body.code).toBe('PHONE_NUMBER_NOT_SET');
       });
 
-      it('should fail if phone already verified', async () => {
+      it('should fail if phone already verified', () => {
         // Mark phone as verified
         await prisma.user.update({
           where: { id: testUser.id },
@@ -227,7 +227,7 @@ describe('Phone Verification System', () => {
         expect(response.body.code).toBe('PHONE_ALREADY_VERIFIED');
       });
 
-      it('should rate limit verification code requests', async () => {
+      it('should rate limit verification code requests', () => {
         // Send first verification code
         await request(app)
           .post('/api/v1/auth/send-phone-verification')
@@ -250,7 +250,7 @@ describe('Phone Verification System', () => {
     describe('POST /api/v1/auth/verify-phone', () => {
       let verificationCode: string;
 
-      beforeEach(async () => {
+      beforeEach(() => {
         // Create a verification code
         verificationCode = smsService.generateVerificationCode();
         await prisma.phoneVerificationCode.create({
@@ -262,7 +262,7 @@ describe('Phone Verification System', () => {
         });
       });
 
-      it('should verify phone successfully', async () => {
+      it('should verify phone successfully', () => {
         const response = await request(app)
           .post('/api/v1/auth/verify-phone')
           .set('Authorization', `Bearer ${accessToken}`)
@@ -286,7 +286,7 @@ describe('Phone Verification System', () => {
         expect(storedCode).toBeNull();
       });
 
-      it('should fail with invalid code', async () => {
+      it('should fail with invalid code', () => {
         const response = await request(app)
           .post('/api/v1/auth/verify-phone')
           .set('Authorization', `Bearer ${accessToken}`)
@@ -297,7 +297,7 @@ describe('Phone Verification System', () => {
         expect(response.body.code).toBe('INVALID_CODE');
       });
 
-      it('should fail with expired code', async () => {
+      it('should fail with expired code', () => {
         // Create expired code
         const expiredCode = smsService.generateVerificationCode();
         await prisma.phoneVerificationCode.create({
@@ -318,7 +318,7 @@ describe('Phone Verification System', () => {
         expect(response.body.code).toBe('CODE_EXPIRED');
       });
 
-      it('should fail without authentication', async () => {
+      it('should fail without authentication', () => {
         const response = await request(app)
           .post('/api/v1/auth/verify-phone')
           .send({ code: verificationCode });
@@ -328,7 +328,7 @@ describe('Phone Verification System', () => {
         expect(response.body.code).toBe('UNAUTHORIZED');
       });
 
-      it('should validate code format', async () => {
+      it('should validate code format', () => {
         const invalidCodes = ['12345', '1234567', 'abcdef', '12345a'];
 
         for (const code of invalidCodes) {
@@ -345,7 +345,7 @@ describe('Phone Verification System', () => {
     });
 
     describe('POST /api/v1/auth/resend-phone-verification', () => {
-      it('should resend verification code successfully', async () => {
+      it('should resend verification code successfully', () => {
         const response = await request(app)
           .post('/api/v1/auth/resend-phone-verification')
           .send({ phone: '+1234567890' });
@@ -361,7 +361,7 @@ describe('Phone Verification System', () => {
         expect(storedCode).toBeTruthy();
       });
 
-      it('should not reveal if phone number exists', async () => {
+      it('should not reveal if phone number exists', () => {
         const response = await request(app)
           .post('/api/v1/auth/resend-phone-verification')
           .send({ phone: '+9999999999' });
@@ -371,7 +371,7 @@ describe('Phone Verification System', () => {
         expect(response.body.message).toContain('If the phone number exists');
       });
 
-      it('should fail if phone already verified', async () => {
+      it('should fail if phone already verified', () => {
         // Mark phone as verified
         await prisma.user.update({
           where: { id: testUser.id },
@@ -387,7 +387,7 @@ describe('Phone Verification System', () => {
         expect(response.body.code).toBe('PHONE_ALREADY_VERIFIED');
       });
 
-      it('should validate phone number format', async () => {
+      it('should validate phone number format', () => {
         const response = await request(app)
           .post('/api/v1/auth/resend-phone-verification')
           .send({ phone: 'invalid-phone' });
@@ -397,7 +397,7 @@ describe('Phone Verification System', () => {
         expect(response.body.code).toBe('INVALID_PHONE_FORMAT');
       });
 
-      it('should rate limit resend requests', async () => {
+      it('should rate limit resend requests', () => {
         // Send first verification code
         await request(app)
           .post('/api/v1/auth/resend-phone-verification')
@@ -424,7 +424,7 @@ describe('Phone Verification System', () => {
   });
 
   describe('Security Features', () => {
-    it('should mask phone numbers in responses', async () => {
+    it('should mask phone numbers in responses', () => {
       const response = await request(app)
         .post('/api/v1/auth/send-phone-verification')
         .set('Authorization', `Bearer ${accessToken}`)
@@ -434,7 +434,7 @@ describe('Phone Verification System', () => {
       expect(response.body.data.phone).not.toContain('567890');
     });
 
-    it('should clean up expired codes automatically', async () => {
+    it('should clean up expired codes automatically', () => {
       // Create expired code
       const expiredCode = await prisma.phoneVerificationCode.create({
         data: {
@@ -457,7 +457,7 @@ describe('Phone Verification System', () => {
       expect(storedCode).toBeNull();
     });
 
-    it('should send security alert after successful verification', async () => {
+    it('should send security alert after successful verification', () => {
       const verificationCode = smsService.generateVerificationCode();
       await prisma.phoneVerificationCode.create({
         data: {
@@ -478,7 +478,7 @@ describe('Phone Verification System', () => {
       );
     });
 
-    it('should log security events', async () => {
+    it('should log security events', () => {
       const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
       await request(app)
@@ -499,7 +499,7 @@ describe('Phone Verification System', () => {
   });
 
   describe('Integration with Profile Updates', () => {
-    it('should reset phone verification when phone number changes', async () => {
+    it('should reset phone verification when phone number changes', () => {
       // First verify the phone
       const verificationCode = smsService.generateVerificationCode();
       await prisma.phoneVerificationCode.create({

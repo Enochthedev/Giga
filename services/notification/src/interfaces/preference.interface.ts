@@ -16,16 +16,16 @@ import {
 
 export interface IPreferenceManager {
   // User preferences
-  getUserPreferences(userId: string): Promise<NotificationPreferences>;
-  updateUserPreferences(userId: string, preferences: PreferenceUpdate): Promise<NotificationPreferences>;
-  createDefaultPreferences(userId: string): Promise<NotificationPreferences>;
-  deleteUserPreferences(userId: string): Promise<boolean>;
+  getUserPreferences(_userId: string): Promise<NotificationPreferences>;
+  updateUserPreferences(_userId: string, preferences: PreferenceUpdate): Promise<NotificationPreferences>;
+  createDefaultPreferences(_userId: string): Promise<NotificationPreferences>;
+  deleteUserPreferences(_userId: string): Promise<boolean>;
 
   // Opt-out management
   optOutUser(request: OptOutRequest): Promise<boolean>;
   optInUser(request: OptInRequest): Promise<boolean>;
-  isOptedOut(userId: string, channel: NotificationChannel, category: NotificationCategory): Promise<boolean>;
-  getOptOutStatus(userId: string): Promise<{ channels: NotificationChannel[]; categories: NotificationCategory[] }>;
+  isOptedOut(_userId: string, channel: NotificationChannel, category: NotificationCategory): Promise<boolean>;
+  getOptOutStatus(_userId: string): Promise<{ channels: NotificationChannel[]; categories: NotificationCategory[] }>;
 
   // Suppression lists
   addToSuppressionList(identifier: string, channel: NotificationChannel, reason: string, expiresAt?: Date): Promise<boolean>;
@@ -35,17 +35,17 @@ export interface IPreferenceManager {
 
   // Preference validation
   validatePreferences(preferences: PreferenceUpdate): Promise<{ isValid: boolean; errors: string[] }>;
-  canSendNotification(userId: string, channel: NotificationChannel, category: NotificationCategory): Promise<{ canSend: boolean; reason?: string }>;
+  canSendNotification(_userId: string, channel: NotificationChannel, category: NotificationCategory): Promise<{ canSend: boolean; reason?: string }>;
 
   // Engagement tracking
-  updateEngagementProfile(userId: string, channel: NotificationChannel, engaged: boolean): Promise<void>;
-  getUserEngagementProfile(userId: string): Promise<UserEngagementProfile>;
-  getOptimalSendTime(userId: string): Promise<{ dayOfWeek: number; hour: number; timezone: string } | null>;
+  updateEngagementProfile(_userId: string, channel: NotificationChannel, engaged: boolean): Promise<void>;
+  getUserEngagementProfile(_userId: string): Promise<UserEngagementProfile>;
+  getOptimalSendTime(_userId: string): Promise<{ dayOfWeek: number; hour: number; timezone: string } | null>;
 
   // Quota management
-  checkNotificationQuota(userId: string, category: NotificationCategory): Promise<NotificationQuota>;
-  incrementNotificationQuota(userId: string, category: NotificationCategory): Promise<void>;
-  resetNotificationQuota(userId: string, category?: NotificationCategory): Promise<void>;
+  checkNotificationQuota(_userId: string, category: NotificationCategory): Promise<NotificationQuota>;
+  incrementNotificationQuota(_userId: string, category: NotificationCategory): Promise<void>;
+  resetNotificationQuota(_userId: string, category?: NotificationCategory): Promise<void>;
 
   // Bulk operations
   bulkOptOut(userIds: string[], channels: NotificationChannel[], reason: string): Promise<{ success: string[]; failed: string[] }>;

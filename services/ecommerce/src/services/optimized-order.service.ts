@@ -19,7 +19,7 @@ export interface OptimizedOrderFilters {
 export class OptimizedOrderService {
   private dbOptimization;
 
-  constructor(private prisma: PrismaClient) {
+  constructor(private _prisma: PrismaClient) {
     this.dbOptimization = createDatabaseOptimizationService(prisma, {
       enableQueryLogging: true,
       slowQueryThreshold: 500, // 500ms threshold for slow queries
@@ -566,6 +566,6 @@ export class OptimizedOrderService {
 }
 
 // Export singleton instance
-export const createOptimizedOrderService = (prisma: PrismaClient) => {
+export const createOptimizedOrderService = (_prisma: PrismaClient) => {
   return new OptimizedOrderService(prisma);
 };

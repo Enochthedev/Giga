@@ -69,7 +69,7 @@ describe('UserController - Advanced Admin Features', () => {
   });
 
   describe('listUsers with advanced filtering', () => {
-    it('should list users with search functionality', async () => {
+    it('should list users with search functionality', () => {
       const mockUsers = [
         {
           id: 'user1',
@@ -150,7 +150,7 @@ describe('UserController - Advanced Admin Features', () => {
       });
     });
 
-    it('should filter users by date range', async () => {
+    it('should filter users by date range', () => {
       const req = mockRequest(
         {},
         {},
@@ -192,7 +192,7 @@ describe('UserController - Advanced Admin Features', () => {
   });
 
   describe('bulkUpdateUsers', () => {
-    it('should activate multiple users', async () => {
+    it('should activate multiple users', () => {
       const req = mockRequest({
         userIds: ['user1', 'user2', 'user3'],
         action: 'activate',
@@ -223,7 +223,7 @@ describe('UserController - Advanced Admin Features', () => {
       });
     });
 
-    it('should update custom fields for multiple users', async () => {
+    it('should update custom fields for multiple users', () => {
       const req = mockRequest({
         userIds: ['user1', 'user2'],
         action: 'update_fields',
@@ -251,7 +251,7 @@ describe('UserController - Advanced Admin Features', () => {
       });
     });
 
-    it('should reject bulk update with too many users', async () => {
+    it('should reject bulk update with too many users', () => {
       const userIds = Array.from({ length: 101 }, (_, i) => `user${i}`);
       const req = mockRequest({
         userIds,
@@ -269,7 +269,7 @@ describe('UserController - Advanced Admin Features', () => {
       });
     });
 
-    it('should reject invalid bulk action', async () => {
+    it('should reject invalid bulk action', () => {
       const req = mockRequest({
         userIds: ['user1'],
         action: 'invalid_action',
@@ -289,7 +289,7 @@ describe('UserController - Advanced Admin Features', () => {
   });
 
   describe('assignUserRole', () => {
-    it('should assign a new role to user', async () => {
+    it('should assign a new role to user', () => {
       const mockUser = {
         id: 'user1',
         email: 'user@example.com',
@@ -335,7 +335,7 @@ describe('UserController - Advanced Admin Features', () => {
       });
     });
 
-    it('should reject assigning existing role', async () => {
+    it('should reject assigning existing role', () => {
       const mockUser = {
         id: 'user1',
         email: 'user@example.com',
@@ -357,7 +357,7 @@ describe('UserController - Advanced Admin Features', () => {
       });
     });
 
-    it('should handle non-existent user', async () => {
+    it('should handle non-existent user', () => {
       mockPrisma.user.findUnique.mockResolvedValue(null);
 
       const req = mockRequest({ role: 'VENDOR' }, { id: 'nonexistent' });
@@ -375,7 +375,7 @@ describe('UserController - Advanced Admin Features', () => {
   });
 
   describe('removeUserRole', () => {
-    it('should remove a role from user', async () => {
+    it('should remove a role from user', () => {
       const mockUser = {
         id: 'user1',
         email: 'user@example.com',
@@ -405,7 +405,7 @@ describe('UserController - Advanced Admin Features', () => {
       });
     });
 
-    it('should prevent removing CUSTOMER role', async () => {
+    it('should prevent removing CUSTOMER role', () => {
       const req = mockRequest({ role: 'CUSTOMER' }, { id: 'user1' });
       const res = mockResponse();
 
@@ -419,7 +419,7 @@ describe('UserController - Advanced Admin Features', () => {
       });
     });
 
-    it('should switch active role if removing current active role', async () => {
+    it('should switch active role if removing current active role', () => {
       const mockUser = {
         id: 'user1',
         email: 'user@example.com',
@@ -447,7 +447,7 @@ describe('UserController - Advanced Admin Features', () => {
   });
 
   describe('exportUsers', () => {
-    it('should export users as JSON', async () => {
+    it('should export users as JSON', () => {
       const mockUsers = [
         {
           id: 'user1',
@@ -492,7 +492,7 @@ describe('UserController - Advanced Admin Features', () => {
       });
     });
 
-    it('should export users as CSV', async () => {
+    it('should export users as CSV', () => {
       const mockUsers = [
         {
           id: 'user1',
@@ -528,7 +528,7 @@ describe('UserController - Advanced Admin Features', () => {
       );
     });
 
-    it('should reject invalid export format', async () => {
+    it('should reject invalid export format', () => {
       const req = mockRequest({}, {}, { format: 'xml' });
       const res = mockResponse();
 
@@ -544,7 +544,7 @@ describe('UserController - Advanced Admin Features', () => {
   });
 
   describe('getUserActivity', () => {
-    it('should get user activity log', async () => {
+    it('should get user activity log', () => {
       const mockUser = {
         email: 'user@example.com',
       };
@@ -588,7 +588,7 @@ describe('UserController - Advanced Admin Features', () => {
       });
     });
 
-    it('should handle non-existent user for activity', async () => {
+    it('should handle non-existent user for activity', () => {
       mockPrisma.user.findUnique.mockResolvedValue(null);
 
       const req = mockRequest({}, { id: 'nonexistent' });
@@ -606,7 +606,7 @@ describe('UserController - Advanced Admin Features', () => {
   });
 
   describe('audit logging', () => {
-    it('should log admin actions', async () => {
+    it('should log admin actions', () => {
       const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
       const mockUser = {

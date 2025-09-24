@@ -4,7 +4,7 @@ import prisma from '@/lib/prisma';
 import { connectRedis } from '@/lib/redis';
 import logger from '@/utils/logger';
 
-const startServer = async () => {
+const startServer = () => {
   try {
     // Connect to Redis
     await connectRedis();

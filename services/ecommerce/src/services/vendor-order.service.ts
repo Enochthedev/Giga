@@ -37,7 +37,7 @@ export interface VendorOrderStatusUpdate {
 
 export class VendorOrderService {
   constructor(
-    private prisma: PrismaClient,
+    private _prisma: PrismaClient,
     private notificationServiceClient: HttpNotificationServiceClient
   ) {}
 
@@ -426,7 +426,7 @@ export class VendorOrderService {
 
     // Get product details for top products
     const topProductsWithDetails = await Promise.all(
-      (topProducts as any[]).map(async (item: any) => {
+      (topProducts as any[]).map((item: any) => {
         const product = await this.prisma.product.findUnique({
           where: { id: item.productId },
         });

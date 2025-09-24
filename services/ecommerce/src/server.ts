@@ -30,7 +30,7 @@ async function start() {
 }
 
 // Graceful shutdown
-process.on('SIGINT', async () => {
+process.on('SIGINT', () => {
   console.log('Shutting down ecommerce service...');
   cleanupService.stopAutomaticCleanup();
   await prisma.$disconnect();
@@ -38,7 +38,7 @@ process.on('SIGINT', async () => {
   process.exit(0);
 });
 
-process.on('SIGTERM', async () => {
+process.on('SIGTERM', () => {
   console.log('Shutting down ecommerce service...');
   cleanupService.stopAutomaticCleanup();
   await prisma.$disconnect();

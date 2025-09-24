@@ -51,7 +51,7 @@ export interface OrderValidationResult {
 
 export class OrderService {
   constructor(
-    private prisma: PrismaClient,
+    private _prisma: PrismaClient,
     private cartService: CartService,
     private inventoryService: InventoryService,
     private authServiceClient: HttpAuthServiceClient,

@@ -18,7 +18,7 @@ export interface JWTPayload {
 
 declare module 'fastify' {
   interface FastifyInstance {
-    prisma: PrismaClient;
+    _prisma: PrismaClient;
     authenticate: (request: any, reply: any) => Promise<void>;
     requireRole: (role: string) => (request: any, reply: any) => Promise<void>;
   }

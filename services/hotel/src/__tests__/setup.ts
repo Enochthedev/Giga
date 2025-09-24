@@ -12,7 +12,7 @@ const prisma = new PrismaClient({
 });
 
 // Global test setup
-beforeAll(async () => {
+beforeAll(() => {
   // Connect to test database
   await prisma.$connect();
 
@@ -25,7 +25,7 @@ beforeAll(async () => {
 });
 
 // Global test teardown
-afterAll(async () => {
+afterAll(() => {
   // Disconnect from database
   await prisma.$disconnect();
 
@@ -38,7 +38,7 @@ afterAll(async () => {
 });
 
 // Clean up before each test
-beforeEach(async () => {
+beforeEach(() => {
   // Clear Redis cache
   if (redisClient.isOpen) {
     await redisClient.flushAll();
@@ -46,7 +46,7 @@ beforeEach(async () => {
 });
 
 // Clean up after each test
-afterEach(async () => {
+afterEach(() => {
   // Clean up test data from database
   // Note: In a real implementation, you might want to use transactions
   // or a test database that gets reset between tests
@@ -171,7 +171,7 @@ export const createTestBooking = (propertyId: string, overrides: unknown = {}) =
   });
 };
 
-export const cleanupTestData = async () => {
+export const cleanupTestData = () => {
   // Clean up in reverse order of dependencies
   await prisma.booking.deleteMany({});
   await prisma.roomType.deleteMany({});

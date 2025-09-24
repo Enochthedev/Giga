@@ -17,7 +17,7 @@ import {
 } from '../utils/test-helpers';
 
 describe('Vendor Integration Tests', () => {
-  let prisma: PrismaClient;
+  let _prisma: PrismaClient;
   let testFactory: TestDataFactory;
   let vendor: any;
   let vendor2: any;
@@ -38,7 +38,7 @@ describe('Vendor Integration Tests', () => {
     testFactory = new TestDataFactory(prisma);
   });
 
-  beforeEach(async () => {
+  beforeEach(() => {
     // Clean up test data
     await prisma.orderItem.deleteMany();
     await prisma.vendorOrder.deleteMany();
@@ -124,13 +124,13 @@ describe('Vendor Integration Tests', () => {
     );
   });
 
-  afterAll(async () => {
+  afterAll(() => {
     await prisma.$disconnect();
     await redisService.quit();
   });
 
   describe('GET /api/v1/vendor/orders', () => {
-    it('should get vendor orders with pagination', async () => {
+    it('should get vendor orders with pagination', () => {
       const response = await request(app)
         .get('/api/v1/vendor/orders')
         .set('Authorization', authToken)
@@ -146,7 +146,7 @@ describe('Vendor Integration Tests', () => {
       expect(response.body.data.pagination.total).toBe(1);
     });
 
-    it('should filter vendor orders by status', async () => {
+    it('should filter vendor orders by status', () => {
       // Create another vendor order with different status
       const order2 = await testFactory.createOrder('customer-456');
       await prisma.vendorOrder.create({
@@ -171,7 +171,7 @@ describe('Vendor Integration Tests', () => {
       expect(response.body.data.orders[0].status).toBe(OrderStatus.CONFIRMED);
     });
 
-    it('should filter vendor orders by date range', async () => {
+    it('should filter vendor orders by date range', () => {
       const dateFrom = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
       const dateTo = new Date().toISOString();
 
@@ -185,7 +185,7 @@ describe('Vendor Integration Tests', () => {
       expect(response.body.data.orders).toHaveLength(1);
     });
 
-    it('should only return orders for the authenticated vendor', async () => {
+    it('should only return orders for the authenticated vendor', () => {
       // Create order for different vendor
       const order3 = await testFactory.createOrder('customer-789');
       await prisma.vendorOrder.create({
@@ -209,7 +209,7 @@ describe('Vendor Integration Tests', () => {
       expect(response.body.data.orders[0].vendorId).toBe(vendor.id);
     });
 
-    it('should return empty array for vendor with no orders', async () => {
+    it('should return empty array for vendor with no orders', () => {
       // Delete the test vendor order
       await prisma.vendorOrder.delete({ where: { id: vendorOrder.id } });
 
@@ -224,7 +224,7 @@ describe('Vendor Integration Tests', () => {
   });
 
   describe('PUT /api/v1/vendor/orders/:id/status', () => {
-    it('should update vendor order status successfully', async () => {
+    it('should update vendor order status successfully', () => {
       const response = await request(app)
         .put(`/api/v1/vendor/orders/${vendorOrder.id}/status`)
         .set('Authorization', authToken)
@@ -239,7 +239,7 @@ describe('Vendor Integration Tests', () => {
       expect(response.body.data.trackingNumber).toBe('1Z999AA1234567890');
     });
 
-    it('should update to shipped status with tracking number', async () => {
+    it('should update to shipped status with tracking number', () => {
       const response = await request(app)
         .put(`/api/v1/vendor/orders/${vendorOrder.id}/status`)
         .set('Authorization', authToken)
@@ -254,7 +254,7 @@ describe('Vendor Integration Tests', () => {
       expect(response.body.data.trackingNumber).toBe('1Z999AA1234567890');
     });
 
-    it('should return 400 for invalid status transition', async () => {
+    it('should return 400 for invalid status transition', () => {
       const response = await request(app)
         .put(`/api/v1/vendor/orders/${vendorOrder.id}/status`)
         .set('Authorization', authToken)
@@ -267,7 +267,7 @@ describe('Vendor Integration Tests', () => {
       expect(response.body.error).toContain('Invalid status transition');
     });
 
-    it('should return 404 for non-existent vendor order', async () => {
+    it('should return 404 for non-existent vendor order', () => {
       const response = await request(app)
         .put('/api/v1/vendor/orders/non-existent-order/status')
         .set('Authorization', authToken)
@@ -280,7 +280,7 @@ describe('Vendor Integration Tests', () => {
       expect(response.body.error).toContain('Vendor order not found');
     });
 
-    it('should return 403 for vendor order belonging to different vendor', async () => {
+    it('should return 403 for vendor order belonging to different vendor', () => {
       // Create order for different vendor
       const order3 = await testFactory.createOrder('customer-789');
       const otherVendorOrder = await prisma.vendorOrder.create({
@@ -308,7 +308,7 @@ describe('Vendor Integration Tests', () => {
   });
 
   describe('GET /api/v1/vendor/dashboard', () => {
-    beforeEach(async () => {
+    beforeEach(() => {
       // Create additional test data for dashboard
       const order2 = await testFactory.createOrder('customer-456');
       await prisma.vendorOrder.create({
@@ -329,7 +329,7 @@ describe('Vendor Integration Tests', () => {
       });
     });
 
-    it('should get vendor dashboard analytics', async () => {
+    it('should get vendor dashboard analytics', () => {
       const response = await request(app)
         .get('/api/v1/vendor/dashboard')
         .set('Authorization', authToken)
@@ -351,7 +351,7 @@ describe('Vendor Integration Tests', () => {
       ).toBeGreaterThanOrEqual(0);
     });
 
-    it('should include recent orders in dashboard', async () => {
+    it('should include recent orders in dashboard', () => {
       const response = await request(app)
         .get('/api/v1/vendor/dashboard')
         .set('Authorization', authToken)
@@ -362,7 +362,7 @@ describe('Vendor Integration Tests', () => {
       expect(response.body.data.recentOrders[0].vendorId).toBe(vendor.id);
     });
 
-    it('should include top selling products in analytics', async () => {
+    it('should include top selling products in analytics', () => {
       const response = await request(app)
         .get('/api/v1/vendor/dashboard')
         .set('Authorization', authToken)
@@ -377,7 +377,7 @@ describe('Vendor Integration Tests', () => {
   });
 
   describe('GET /api/v1/vendor/products', () => {
-    it('should get vendor products with pagination', async () => {
+    it('should get vendor products with pagination', () => {
       const response = await request(app)
         .get('/api/v1/vendor/products')
         .set('Authorization', authToken)
@@ -392,7 +392,7 @@ describe('Vendor Integration Tests', () => {
       expect(response.body.data.pagination.total).toBe(2);
     });
 
-    it('should filter products by status', async () => {
+    it('should filter products by status', () => {
       // Make one product inactive
       await prisma.product.update({
         where: { id: product2.id },
@@ -410,7 +410,7 @@ describe('Vendor Integration Tests', () => {
       expect(response.body.data.products[0].isActive).toBe(true);
     });
 
-    it('should filter products by category', async () => {
+    it('should filter products by category', () => {
       // Update one product category
       await prisma.product.update({
         where: { id: product2.id },
@@ -428,7 +428,7 @@ describe('Vendor Integration Tests', () => {
       expect(response.body.data.products[0].category).toBe('Electronics');
     });
 
-    it('should search products by name', async () => {
+    it('should search products by name', () => {
       const response = await request(app)
         .get('/api/v1/vendor/products')
         .set('Authorization', authToken)
@@ -440,7 +440,7 @@ describe('Vendor Integration Tests', () => {
       expect(response.body.data.products[0].name).toContain('Product 2');
     });
 
-    it('should only return products for the authenticated vendor', async () => {
+    it('should only return products for the authenticated vendor', () => {
       // Create product for different vendor
       await testFactory.createProduct(vendor2.id, {
         name: 'Other Vendor Product',
@@ -460,7 +460,7 @@ describe('Vendor Integration Tests', () => {
   });
 
   describe('PUT /api/v1/vendor/products/:id/inventory', () => {
-    it('should update product inventory successfully', async () => {
+    it('should update product inventory successfully', () => {
       const response = await request(app)
         .put(`/api/v1/vendor/products/${product.id}/inventory`)
         .set('Authorization', authToken)
@@ -477,7 +477,7 @@ describe('Vendor Integration Tests', () => {
       expect(response.body.data.inventory.trackQuantity).toBe(true);
     });
 
-    it('should disable inventory tracking', async () => {
+    it('should disable inventory tracking', () => {
       const response = await request(app)
         .put(`/api/v1/vendor/products/${product.id}/inventory`)
         .set('Authorization', authToken)
@@ -491,7 +491,7 @@ describe('Vendor Integration Tests', () => {
       expect(response.body.data.inventory.trackQuantity).toBe(false);
     });
 
-    it('should return 404 for non-existent product', async () => {
+    it('should return 404 for non-existent product', () => {
       const response = await request(app)
         .put('/api/v1/vendor/products/non-existent-product/inventory')
         .set('Authorization', authToken)
@@ -504,7 +504,7 @@ describe('Vendor Integration Tests', () => {
       expect(response.body.error).toContain('Product not found');
     });
 
-    it('should return 403 for product belonging to different vendor', async () => {
+    it('should return 403 for product belonging to different vendor', () => {
       // Create product for different vendor
       const otherProduct = await testFactory.createProduct(vendor2.id, {
         name: 'Other Product',
@@ -522,7 +522,7 @@ describe('Vendor Integration Tests', () => {
       expect(response.body.error).toContain('Access denied');
     });
 
-    it('should return 400 for invalid inventory data', async () => {
+    it('should return 400 for invalid inventory data', () => {
       const response = await request(app)
         .put(`/api/v1/vendor/products/${product.id}/inventory`)
         .set('Authorization', authToken)
@@ -536,7 +536,7 @@ describe('Vendor Integration Tests', () => {
   });
 
   describe('PUT /api/v1/vendor/products/inventory/bulk', () => {
-    it('should bulk update product inventories successfully', async () => {
+    it('should bulk update product inventories successfully', () => {
       const response = await request(app)
         .put('/api/v1/vendor/products/inventory/bulk')
         .set('Authorization', authToken)
@@ -562,7 +562,7 @@ describe('Vendor Integration Tests', () => {
       expect(response.body.data.results).toHaveLength(2);
     });
 
-    it('should handle partial failures in bulk update', async () => {
+    it('should handle partial failures in bulk update', () => {
       const response = await request(app)
         .put('/api/v1/vendor/products/inventory/bulk')
         .set('Authorization', authToken)
@@ -587,7 +587,7 @@ describe('Vendor Integration Tests', () => {
       expect(response.body.data.results[1].success).toBe(false);
     });
 
-    it('should return 400 for empty updates array', async () => {
+    it('should return 400 for empty updates array', () => {
       const response = await request(app)
         .put('/api/v1/vendor/products/inventory/bulk')
         .set('Authorization', authToken)
@@ -601,7 +601,7 @@ describe('Vendor Integration Tests', () => {
   });
 
   describe('GET /api/v1/vendor/products/low-stock', () => {
-    beforeEach(async () => {
+    beforeEach(() => {
       // Create low stock products
       await testFactory.createProduct(vendor.id, {
         name: 'Low Stock Product 1',
@@ -614,7 +614,7 @@ describe('Vendor Integration Tests', () => {
       });
     });
 
-    it('should get products with low stock', async () => {
+    it('should get products with low stock', () => {
       const response = await request(app)
         .get('/api/v1/vendor/products/low-stock')
         .set('Authorization', authToken)
@@ -632,7 +632,7 @@ describe('Vendor Integration Tests', () => {
       });
     });
 
-    it('should return empty array when no low stock products', async () => {
+    it('should return empty array when no low stock products', () => {
       // Update all products to have sufficient stock
       await prisma.product.updateMany({
         where: { vendorId: vendor.id },
@@ -657,7 +657,7 @@ describe('Vendor Integration Tests', () => {
   });
 
   describe('Authorization', () => {
-    it('should return 403 for non-vendor user', async () => {
+    it('should return 403 for non-vendor user', () => {
       // Mock regular customer
       vi.doMock('../../middleware/auth.middleware', () => ({
         authMiddleware: (req: any, res: any, next: any) => {
@@ -683,7 +683,7 @@ describe('Vendor Integration Tests', () => {
       expect(response.body.error).toContain('Vendor access required');
     });
 
-    it('should return 401 for unauthenticated request', async () => {
+    it('should return 401 for unauthenticated request', () => {
       const response = await request(app)
         .get('/api/v1/vendor/orders')
         .expect(401);
@@ -693,7 +693,7 @@ describe('Vendor Integration Tests', () => {
   });
 
   describe('Error Handling', () => {
-    it('should handle database connection errors gracefully', async () => {
+    it('should handle database connection errors gracefully', () => {
       // Mock database error
       vi.spyOn(prisma.vendorOrder, 'findMany').mockRejectedValueOnce(
         new Error('Database connection failed')
@@ -708,7 +708,7 @@ describe('Vendor Integration Tests', () => {
       expect(response.body.error).toBeDefined();
     });
 
-    it('should handle notification service errors gracefully', async () => {
+    it('should handle notification service errors gracefully', () => {
       // Mock notification service error
       mockNotificationServiceClient.sendVendorOrderNotification.mockRejectedValueOnce(
         new Error('Notification service unavailable')
@@ -728,7 +728,7 @@ describe('Vendor Integration Tests', () => {
   });
 
   describe('Multi-Service Workflows', () => {
-    it('should handle vendor order status update with customer notification', async () => {
+    it('should handle vendor order status update with customer notification', () => {
       const response = await request(app)
         .put(`/api/v1/vendor/orders/${vendorOrder.id}/status`)
         .set('Authorization', authToken)
@@ -753,7 +753,7 @@ describe('Vendor Integration Tests', () => {
       );
     });
 
-    it('should handle inventory update with low stock alert', async () => {
+    it('should handle inventory update with low stock alert', () => {
       const response = await request(app)
         .put(`/api/v1/vendor/products/${product.id}/inventory`)
         .set('Authorization', authToken)

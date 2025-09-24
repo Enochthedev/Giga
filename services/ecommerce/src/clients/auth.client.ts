@@ -19,15 +19,15 @@ export type AuthServiceResponse<T> = ServiceResponse<T>;
 
 export interface AuthServiceClient {
   validateToken(token: string): Promise<UserInfo>;
-  getUserInfo(userId: string): Promise<UserInfo>;
-  getUserPermissions(userId: string): Promise<string[]>;
+  getUserInfo(_userId: string): Promise<UserInfo>;
+  getUserPermissions(_userId: string): Promise<string[]>;
   refreshToken(
     refreshToken: string
   ): Promise<{ accessToken: string; refreshToken: string }>;
-  checkUserPermission(userId: string, permission: string): Promise<boolean>;
+  checkUserPermission(_userId: string, permission: string): Promise<boolean>;
   getUsersByIds(userIds: string[]): Promise<UserInfo[]>;
   validateUserAccess(
-    userId: string,
+    _userId: string,
     resource: string,
     action: string
   ): Promise<boolean>;
@@ -68,7 +68,7 @@ export class HttpAuthServiceClient implements AuthServiceClient {
     return response.data;
   }
 
-  async getUserInfo(userId: string): Promise<UserInfo> {
+  async getUserInfo(_userId: string): Promise<UserInfo> {
     const response = await this.client.get<UserInfo>(`/api/v1/users/${userId}`);
 
     if (!response.success || !response.data) {
@@ -81,9 +81,9 @@ export class HttpAuthServiceClient implements AuthServiceClient {
   }
 
   // eslint-disable-next-line require-await
-  async getUserPermissions(userId: string): Promise<string[]> {
+  async getUserPermissions(_userId: string): Promise<string[]> {
     return GracefulDegradation.executeWithDefault(
-      async () => {
+      () => {
         const response = await this.client.get<string[]>(
           `/api/v1/users/${userId}/permissions`
         );
@@ -118,11 +118,11 @@ export class HttpAuthServiceClient implements AuthServiceClient {
 
   // eslint-disable-next-line require-await
   async checkUserPermission(
-    userId: string,
+    _userId: string,
     permission: string
   ): Promise<boolean> {
     return GracefulDegradation.executeWithDefault(
-      async () => {
+      () => {
         const response = await this.client.post<{ hasPermission: boolean }>(
           '/api/v1/auth/check-permission',
           { userId, permission }
@@ -153,12 +153,12 @@ export class HttpAuthServiceClient implements AuthServiceClient {
 
   // eslint-disable-next-line require-await
   async validateUserAccess(
-    userId: string,
+    _userId: string,
     resource: string,
     action: string
   ): Promise<boolean> {
     return GracefulDegradation.executeWithDefault(
-      async () => {
+      () => {
         const response = await this.client.post<{ hasAccess: boolean }>(
           '/api/v1/auth/validate-access',
           { userId, resource, action }

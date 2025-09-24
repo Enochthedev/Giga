@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { cacheService } from '../services/cache.service';
 
 export class ProductController {
-  async getProducts(req: Request, res: Response) {
+  async getProducts(_req: Request, res: Response) {
     try {
       const {
         search,
@@ -115,7 +115,7 @@ export class ProductController {
     }
   }
 
-  async getProductById(req: Request, res: Response) {
+  async getProductById(_req: Request, res: Response) {
     try {
       const { id } = req.params;
 
@@ -168,7 +168,7 @@ export class ProductController {
     }
   }
 
-  async getCategories(req: Request, res: Response) {
+  async getCategories(_req: Request, res: Response) {
     try {
       // Try to get cached categories
       const cachedCategories = await cacheService.getCachedCategories();
@@ -233,7 +233,7 @@ export class ProductController {
     }
   }
 
-  async getFeaturedProducts(req: Request, res: Response) {
+  async getFeaturedProducts(_req: Request, res: Response) {
     try {
       const { limit = 10 } = req.query;
 

@@ -18,7 +18,7 @@ import { TestDataFactory } from '../utils/test-helpers';
 setupIntegrationTestMocks();
 
 describe('E2E: Complete Shopping Cart to Order Workflow', () => {
-  let prisma: PrismaClient;
+  let _prisma: PrismaClient;
   let testDataFactory: TestDataFactory;
   let product1: any;
   let product2: any;
@@ -36,7 +36,7 @@ describe('E2E: Complete Shopping Cart to Order Workflow', () => {
     testDataFactory = new TestDataFactory(prisma);
   });
 
-  beforeEach(async () => {
+  beforeEach(() => {
     // Clean up test data
     await prisma.orderItem.deleteMany();
     await prisma.vendorOrder.deleteMany();
@@ -101,13 +101,13 @@ describe('E2E: Complete Shopping Cart to Order Workflow', () => {
     authToken = 'Bearer test-token';
   });
 
-  afterAll(async () => {
+  afterAll(() => {
     await prisma.$disconnect();
     await redisService.quit();
   });
 
   describe('Complete Cart to Order Flow', () => {
-    it('should complete full workflow: empty cart → add items → update quantities → validate → create order → track status', async () => {
+    it('should complete full workflow: empty cart → add items → update quantities → validate → create order → track status', () => {
       // Step 1: Verify empty cart
       const emptyCartResponse = await request(app)
         .get('/api/v1/cart')
@@ -261,7 +261,7 @@ describe('E2E: Complete Shopping Cart to Order Workflow', () => {
       }
     });
 
-    it('should handle cart validation failures gracefully', async () => {
+    it('should handle cart validation failures gracefully', () => {
       // Add item to cart
       await request(app)
         .post('/api/v1/cart/add')
@@ -315,7 +315,7 @@ describe('E2E: Complete Shopping Cart to Order Workflow', () => {
       expect(createOrderResponse.body.success).toBe(false);
     });
 
-    it('should handle insufficient inventory during checkout', async () => {
+    it('should handle insufficient inventory during checkout', () => {
       // Add more items than available
       const addItemResponse = await request(app)
         .post('/api/v1/cart/add')
@@ -330,7 +330,7 @@ describe('E2E: Complete Shopping Cart to Order Workflow', () => {
       expect(addItemResponse.body.error).toContain('Insufficient stock');
     });
 
-    it('should handle cart session persistence across requests', async () => {
+    it('should handle cart session persistence across requests', () => {
       // Add item to cart
       const addResponse = await request(app)
         .post('/api/v1/cart/add')
@@ -354,7 +354,7 @@ describe('E2E: Complete Shopping Cart to Order Workflow', () => {
       expect(getResponse.body.data.items[0].quantity).toBe(2);
     });
 
-    it('should handle anonymous cart merge workflow', async () => {
+    it('should handle anonymous cart merge workflow', () => {
       const anonymousSessionId = 'anonymous-session-123';
 
       // Create anonymous cart in Redis
@@ -417,7 +417,7 @@ describe('E2E: Complete Shopping Cart to Order Workflow', () => {
   describe('Order Status Tracking Workflow', () => {
     let testOrder: any;
 
-    beforeEach(async () => {
+    beforeEach(() => {
       // Create a test order
       testOrder = await prisma.order.create({
         data: {
@@ -441,7 +441,7 @@ describe('E2E: Complete Shopping Cart to Order Workflow', () => {
       });
     });
 
-    it('should track order status progression', async () => {
+    it('should track order status progression', () => {
       // Check initial status
       const initialResponse = await request(app)
         .get(`/api/v1/orders/${testOrder.id}`)
@@ -489,7 +489,7 @@ describe('E2E: Complete Shopping Cart to Order Workflow', () => {
       }
     });
 
-    it('should handle order cancellation workflow', async () => {
+    it('should handle order cancellation workflow', () => {
       // Cancel order
       const cancelResponse = await request(app)
         .delete(`/api/v1/orders/${testOrder.id}/cancel`)
@@ -516,7 +516,7 @@ describe('E2E: Complete Shopping Cart to Order Workflow', () => {
   });
 
   describe('Error Recovery Workflows', () => {
-    it('should recover from payment failures', async () => {
+    it('should recover from payment failures', () => {
       // Add items to cart
       await request(app)
         .post('/api/v1/cart/add')
@@ -570,7 +570,7 @@ describe('E2E: Complete Shopping Cart to Order Workflow', () => {
       expect(cartResponse.body.data.items).toHaveLength(1);
     });
 
-    it('should handle inventory conflicts during order creation', async () => {
+    it('should handle inventory conflicts during order creation', () => {
       // Add item to cart
       await request(app)
         .post('/api/v1/cart/add')
@@ -611,7 +611,7 @@ describe('E2E: Complete Shopping Cart to Order Workflow', () => {
   });
 
   describe('Advanced Cart Features', () => {
-    it('should handle cart item price updates', async () => {
+    it('should handle cart item price updates', () => {
       // Add item to cart
       await request(app)
         .post('/api/v1/cart/add')
@@ -638,7 +638,7 @@ describe('E2E: Complete Shopping Cart to Order Workflow', () => {
       // In a real system, would show price change warnings
     });
 
-    it('should handle cart expiration and cleanup', async () => {
+    it('should handle cart expiration and cleanup', () => {
       // Add items to cart
       await request(app)
         .post('/api/v1/cart/add')
@@ -664,7 +664,7 @@ describe('E2E: Complete Shopping Cart to Order Workflow', () => {
       expect(expiredCartResponse.body.data.items).toHaveLength(0);
     });
 
-    it('should handle cart recovery after system restart', async () => {
+    it('should handle cart recovery after system restart', () => {
       // Add items to cart
       await request(app)
         .post('/api/v1/cart/add')
@@ -686,7 +686,7 @@ describe('E2E: Complete Shopping Cart to Order Workflow', () => {
       expect(recoveredCartResponse.body.data.items[0].quantity).toBe(3);
     });
 
-    it('should handle cart sharing and guest checkout', async () => {
+    it('should handle cart sharing and guest checkout', () => {
       const guestSessionId = 'guest-session-456';
 
       // Create guest cart
@@ -727,7 +727,7 @@ describe('E2E: Complete Shopping Cart to Order Workflow', () => {
   });
 
   describe('Cart Validation and Business Rules', () => {
-    it('should enforce maximum cart size limits', async () => {
+    it('should enforce maximum cart size limits', () => {
       // Try to add many different products to test cart limits
       const maxCartSize = 50; // Assume this is the limit
 
@@ -755,7 +755,7 @@ describe('E2E: Complete Shopping Cart to Order Workflow', () => {
       expect(totalItems).toBeLessThanOrEqual(maxCartSize);
     });
 
-    it('should handle minimum order value requirements', async () => {
+    it('should handle minimum order value requirements', () => {
       // Add low-value item
       await request(app)
         .post('/api/v1/cart/add')
@@ -777,7 +777,7 @@ describe('E2E: Complete Shopping Cart to Order Workflow', () => {
       expect(validateResponse.body.data.validation).toHaveProperty('isValid');
     });
 
-    it('should handle shipping restrictions', async () => {
+    it('should handle shipping restrictions', () => {
       // Add item to cart
       await request(app)
         .post('/api/v1/cart/add')
@@ -810,7 +810,7 @@ describe('E2E: Complete Shopping Cart to Order Workflow', () => {
       expect([201, 400, 500].includes(createOrderResponse.status)).toBe(true);
     });
 
-    it('should handle tax calculation for different regions', async () => {
+    it('should handle tax calculation for different regions', () => {
       // Add items to cart
       await request(app)
         .post('/api/v1/cart/add')
@@ -839,7 +839,7 @@ describe('E2E: Complete Shopping Cart to Order Workflow', () => {
   });
 
   describe('Performance and Concurrency', () => {
-    it('should handle concurrent cart operations', async () => {
+    it('should handle concurrent cart operations', () => {
       // Simulate multiple concurrent add operations
       const concurrentRequests = Array(5)
         .fill(null)
@@ -875,7 +875,7 @@ describe('E2E: Complete Shopping Cart to Order Workflow', () => {
       }
     });
 
-    it('should handle large cart operations efficiently', async () => {
+    it('should handle large cart operations efficiently', () => {
       const startTime = Date.now();
 
       // Add multiple different products to cart
@@ -903,7 +903,7 @@ describe('E2E: Complete Shopping Cart to Order Workflow', () => {
       expect(cartResponse.body.success).toBe(true);
     });
 
-    it('should handle high-frequency cart updates', async () => {
+    it('should handle high-frequency cart updates', () => {
       // Add initial item
       await request(app)
         .post('/api/v1/cart/add')
@@ -953,7 +953,7 @@ describe('E2E: Complete Shopping Cart to Order Workflow', () => {
   });
 
   describe('Integration with External Services', () => {
-    it('should handle payment service integration during checkout', async () => {
+    it('should handle payment service integration during checkout', () => {
       // Add items to cart
       await request(app)
         .post('/api/v1/cart/add')
@@ -1003,7 +1003,7 @@ describe('E2E: Complete Shopping Cart to Order Workflow', () => {
       expect([201, 400, 500].includes(createOrderResponse.status)).toBe(true);
     });
 
-    it('should handle notification service integration', async () => {
+    it('should handle notification service integration', () => {
       // Mock notification service
       const mockSendNotification = vi.fn().mockResolvedValue(undefined);
       vi.doMock('../../clients/notification.client', () => ({
@@ -1044,7 +1044,7 @@ describe('E2E: Complete Shopping Cart to Order Workflow', () => {
       expect([201, 400, 500].includes(createOrderResponse.status)).toBe(true);
     });
 
-    it('should handle auth service integration for user validation', async () => {
+    it('should handle auth service integration for user validation', () => {
       // Mock auth service validation
       vi.doMock('../../clients/auth.client', () => ({
         HttpAuthServiceClient: vi.fn().mockImplementation(() => ({

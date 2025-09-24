@@ -4,7 +4,7 @@ import { redisService } from '../services/redis.service';
 declare global {
   namespace Express {
     interface Request {
-      prisma: PrismaClient;
+      _prisma: PrismaClient;
       redis: typeof redisService;
       user?: {
         id: string;

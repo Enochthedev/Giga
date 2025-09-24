@@ -61,7 +61,7 @@ export class StorageManager {
     try {
       const fullPath = path.join(this.uploadDir, relativePath);
       const buffer = await fs.readFile(fullPath);
-      const stats = await fs.stat(fullPath);
+      const _stats = await fs.stat(fullPath);
 
       return {
         buffer,
@@ -166,7 +166,7 @@ export class StorageManager {
     availableSpace: number;
   }> {
     try {
-      const stats = await this.calculateDirectoryStats(this.uploadDir);
+      const _stats = await this.calculateDirectoryStats(this.uploadDir);
 
       // TODO: Calculate available space based on storage backend
       const availableSpace = 1024 * 1024 * 1024 * 100; // 100GB placeholder
@@ -230,7 +230,7 @@ export class StorageManager {
           fileCount += subStats.fileCount;
           totalSize += subStats.totalSize;
         } else if (item.isFile()) {
-          const stats = await fs.stat(itemPath);
+          const _stats = await fs.stat(itemPath);
           fileCount++;
           totalSize += stats.size;
         }

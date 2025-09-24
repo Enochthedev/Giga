@@ -92,7 +92,7 @@ async function buildApp() {
   fastify.decorate('prisma', prisma);
 
   // Add Prisma cleanup hook
-  fastify.addHook('onClose', async () => {
+  fastify.addHook('onClose', () => {
     await prisma.$disconnect();
   });
 
@@ -116,7 +116,7 @@ async function buildApp() {
         },
       },
     },
-    async (request, reply) => {
+    (request, reply) => {
       try {
         await prisma.$queryRaw`SELECT 1`;
         return reply.send({
@@ -145,7 +145,7 @@ async function buildApp() {
 
   // Global error handler
   // eslint-disable-next-line require-await
-  fastify.setErrorHandler(async (error, request, reply) => {
+  fastify.setErrorHandler((error, request, reply) => {
     fastify.log.error(error);
 
     reply.code(error.statusCode || 500).send({
@@ -174,7 +174,7 @@ async function start() {
 }
 
 // Graceful shutdown
-process.on('SIGINT', async () => {
+process.on('SIGINT', () => {
   console.log('Shutting down ecommerce service...');
   await prisma.$disconnect();
   process.exit(0);

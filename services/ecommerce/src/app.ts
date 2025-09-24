@@ -65,7 +65,7 @@ app.use((req, _res, next) => {
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(specs));
 
 // Health check
-app.get('/health', async (req, res) => {
+app.get('/health', (req, res) => {
   const correlationId = req.correlationId;
 
   try {

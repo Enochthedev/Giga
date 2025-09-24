@@ -44,7 +44,7 @@ export interface INotificationService {
   // Status and tracking
   getNotificationStatus(notificationId: string): Promise<NotificationStatus>;
   getDeliveryReport(notificationId: string): Promise<DeliveryReport>;
-  getNotificationHistory(userId: string, limit?: number, offset?: number): Promise<NotificationResult[]>;
+  getNotificationHistory(_userId: string, limit?: number, offset?: number): Promise<NotificationResult[]>;
 
   // Bulk operations
   cancelBulkNotifications(notificationIds: string[]): Promise<{ cancelled: string[]; failed: string[] }>;

@@ -15,7 +15,7 @@ export class UploadController {
   /**
    * Upload profile photo
    */
-  async uploadProfilePhoto(req: Request, res: Response) {
+  async uploadProfilePhoto(_req: Request, res: Response) {
     try {
       if (!req.file) {
         return res.status(400).json({
@@ -74,7 +74,7 @@ export class UploadController {
   /**
    * Upload product image
    */
-  async uploadProductImage(req: Request, res: Response) {
+  async uploadProductImage(_req: Request, res: Response) {
     try {
       if (!req.file) {
         return res.status(400).json({
@@ -133,7 +133,7 @@ export class UploadController {
   /**
    * Upload property photo
    */
-  async uploadPropertyPhoto(req: Request, res: Response) {
+  async uploadPropertyPhoto(_req: Request, res: Response) {
     try {
       if (!req.file) {
         return res.status(400).json({
@@ -192,7 +192,7 @@ export class UploadController {
   /**
    * Upload vehicle photo
    */
-  async uploadVehiclePhoto(req: Request, res: Response) {
+  async uploadVehiclePhoto(_req: Request, res: Response) {
     try {
       if (!req.file) {
         return res.status(400).json({
@@ -251,7 +251,7 @@ export class UploadController {
   /**
    * Upload document
    */
-  async uploadDocument(req: Request, res: Response) {
+  async uploadDocument(_req: Request, res: Response) {
     try {
       if (!req.file) {
         return res.status(400).json({
@@ -320,7 +320,7 @@ export class UploadController {
   /**
    * Upload multiple files
    */
-  async uploadMultipleFiles(req: Request, res: Response) {
+  async uploadMultipleFiles(_req: Request, res: Response) {
     try {
       if (!req.files || !Array.isArray(req.files) || req.files.length === 0) {
         return res.status(400).json({
@@ -401,7 +401,7 @@ export class UploadController {
   /**
    * Delete file
    */
-  async deleteFile(req: Request, res: Response) {
+  async deleteFile(_req: Request, res: Response) {
     try {
       const { fileId } = req.params;
       if (!fileId) {
@@ -443,9 +443,9 @@ export class UploadController {
   /**
    * Get upload service statistics
    */
-  async getStats(req: Request, res: Response) {
+  async getStats(_req: Request, res: Response) {
     try {
-      const stats = await this.storageManager.getStorageStats();
+      const _stats = await this.storageManager.getStorageStats();
 
       res.json({
         success: true,

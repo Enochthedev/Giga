@@ -144,5 +144,9 @@ module.exports = {
     '.next/',
     'prisma/migrations/',
     '**/*.d.ts',
+    '**/generated/**',
+    '**/prisma-client/**',
+    '**/*.generated.*',
+    'services/*/src/generated/**'
   ],
 };

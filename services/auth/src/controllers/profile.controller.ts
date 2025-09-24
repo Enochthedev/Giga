@@ -8,9 +8,206 @@ export class ProfileController {
   private profileService = ProfileService.getInstance();
 
   /**
+   * Update basic user profile information
+   */
+  async updateBasicProfile(_req: Request, res: Response) {
+    try {
+      if (!req.user) {
+        return res.status(401).json({
+          success: false,
+          error: 'Unauthorized',
+          code: 'UNAUTHORIZED',
+          timestamp: new Date().toISOString(),
+        });
+      }
+
+      const { firstName, lastName, phone, dateOfBirth, gender, avatar } = req.body;
+      const updateData: any = {};
+
+      // Sanitize and validate inputs
+      if (firstName !== undefined) {
+        updateData.firstName = InputSanitizer.sanitizeName(firstName);
+        if (!updateData.firstName || updateData.firstName.length < 1) {
+          return res.status(400).json({
+            success: false,
+            error: 'First name is required and must be valid',
+            code: 'INVALID_FIRST_NAME',
+            timestamp: new Date().toISOString(),
+          });
+        }
+      }
+
+      if (lastName !== undefined) {
+        updateData.lastName = InputSanitizer.sanitizeName(lastName);
+        if (!updateData.lastName || updateData.lastName.length < 1) {
+          return res.status(400).json({
+            success: false,
+            error: 'Last name is required and must be valid',
+            code: 'INVALID_LAST_NAME',
+            timestamp: new Date().toISOString(),
+          });
+        }
+      }
+
+      if (phone !== undefined) {
+        if (phone === null || phone === '') {
+          // Allow clearing phone number
+          updateData.phone = null;
+          updateData.isPhoneVerified = false;
+        } else {
+          const sanitizedPhone = PhoneNumberValidator.sanitize(phone);
+          const phoneValidation = PhoneNumberValidator.validate(sanitizedPhone);
+
+          if (!phoneValidation.isValid) {
+            return res.status(400).json({
+              success: false,
+              error: 'Invalid phone number',
+              details: phoneValidation.errors,
+              code: 'INVALID_PHONE',
+              timestamp: new Date().toISOString(),
+            });
+          }
+
+          // Check if phone is already taken by another user
+          const existingUser = await req.prisma.user.findFirst({
+            where: {
+              phone: phoneValidation.formatted,
+              id: { not: req.user.sub }
+            }
+          });
+
+          if (existingUser) {
+            return res.status(409).json({
+              success: false,
+              error: 'Phone number is already registered to another account',
+              code: 'PHONE_ALREADY_EXISTS',
+              timestamp: new Date().toISOString(),
+            });
+          }
+
+          updateData.phone = phoneValidation.formatted;
+          // Reset phone verification if phone number changed
+          const currentUser = await req.prisma.user.findUnique({
+            where: { id: req.user.sub },
+            select: { phone: true }
+          });
+
+          if (currentUser?.phone !== phoneValidation.formatted) {
+            updateData.isPhoneVerified = false;
+          }
+        }
+      }
+
+      if (dateOfBirth !== undefined) {
+        if (dateOfBirth) {
+          const birthDate = new Date(dateOfBirth);
+          if (isNaN(birthDate.getTime())) {
+            return res.status(400).json({
+              success: false,
+              error: 'Invalid date of birth format',
+              code: 'INVALID_DATE_OF_BIRTH',
+              timestamp: new Date().toISOString(),
+            });
+          }
+
+          // Check if user is at least 13 years old
+          const minAge = new Date();
+          minAge.setFullYear(minAge.getFullYear() - 13);
+          if (birthDate > minAge) {
+            return res.status(400).json({
+              success: false,
+              error: 'User must be at least 13 years old',
+              code: 'AGE_RESTRICTION',
+              timestamp: new Date().toISOString(),
+            });
+          }
+
+          updateData.dateOfBirth = birthDate;
+        } else {
+          updateData.dateOfBirth = null;
+        }
+      }
+
+      if (gender !== undefined) {
+        const validGenders = ['MALE', 'FEMALE', 'OTHER', 'PREFER_NOT_TO_SAY'];
+        if (gender && !validGenders.includes(gender)) {
+          return res.status(400).json({
+            success: false,
+            error: 'Invalid gender value',
+            code: 'INVALID_GENDER',
+            timestamp: new Date().toISOString(),
+          });
+        }
+        updateData.gender = gender;
+      }
+
+      if (avatar !== undefined) {
+        // Basic URL validation for avatar
+        if (avatar && typeof avatar === 'string') {
+          try {
+            new URL(avatar);
+            updateData.avatar = avatar;
+          } catch {
+            return res.status(400).json({
+              success: false,
+              error: 'Invalid avatar URL format',
+              code: 'INVALID_AVATAR_URL',
+              timestamp: new Date().toISOString(),
+            });
+          }
+        } else {
+          updateData.avatar = null;
+        }
+      }
+
+      // Update user profile
+      const updatedUser = await req.prisma.user.update({
+        where: { id: req.user.sub },
+        data: updateData,
+        select: {
+          id: true,
+          email: true,
+          firstName: true,
+          lastName: true,
+          phone: true,
+          avatar: true,
+          dateOfBirth: true,
+          gender: true,
+          isEmailVerified: true,
+          isPhoneVerified: true,
+          updatedAt: true,
+        }
+      });
+
+      // Format phone for response
+      const responseData = {
+        ...updatedUser,
+        phone: updatedUser.phone ? PhoneNumberValidator.formatForDisplay(updatedUser.phone) : null,
+      };
+
+      res.json({
+        success: true,
+        data: {
+          user: responseData,
+        },
+        message: 'Profile updated successfully',
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error('Update basic profile error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to update profile',
+        code: 'UPDATE_PROFILE_ERROR',
+        timestamp: new Date().toISOString(),
+      });
+    }
+  }
+
+  /**
    * Get complete user profile with all role-specific profiles
    */
-  async getCompleteProfile(req: Request, res: Response) {
+  async getCompleteProfile(_req: Request, res: Response) {
     try {
       if (!req.user) {
         return res.status(401).json({
@@ -42,8 +239,10 @@ export class ProfileController {
           email: userWithProfiles.email,
           firstName: userWithProfiles.firstName,
           lastName: userWithProfiles.lastName,
-          phone: userWithProfiles.phone,
+          phone: userWithProfiles.phone ? PhoneNumberValidator.formatForDisplay(userWithProfiles.phone) : null,
           avatar: userWithProfiles.avatar,
+          dateOfBirth: userWithProfiles.dateOfBirth,
+          gender: userWithProfiles.gender,
           isEmailVerified: userWithProfiles.isEmailVerified,
           isPhoneVerified: userWithProfiles.isPhoneVerified,
           activeRole: userWithProfiles.activeRole,
@@ -59,6 +258,10 @@ export class ProfileController {
           id: userWithProfiles.customerProfile.id,
           preferences: userWithProfiles.customerProfile.preferences,
           addresses: userWithProfiles.customerProfile.addresses,
+          loyaltyPoints: userWithProfiles.customerProfile.loyaltyPoints,
+          membershipTier: userWithProfiles.customerProfile.membershipTier,
+          totalOrders: userWithProfiles.customerProfile.totalOrders,
+          totalSpent: userWithProfiles.customerProfile.totalSpent,
           createdAt: userWithProfiles.customerProfile.createdAt,
           updatedAt: userWithProfiles.customerProfile.updatedAt,
         };
@@ -102,6 +305,7 @@ export class ProfileController {
         profileData.profiles.host = {
           id: userWithProfiles.hostProfile.id,
           businessName: userWithProfiles.hostProfile.businessName,
+          hostType: userWithProfiles.hostProfile.hostType,
           description: userWithProfiles.hostProfile.description,
           rating: userWithProfiles.hostProfile.rating,
           totalBookings: userWithProfiles.hostProfile.totalBookings,
@@ -121,6 +325,8 @@ export class ProfileController {
           industry: userWithProfiles.advertiserProfile.industry,
           website: userWithProfiles.advertiserProfile.website,
           totalSpend: userWithProfiles.advertiserProfile.totalSpend,
+          totalCampaigns: userWithProfiles.advertiserProfile.totalCampaigns,
+          subscriptionTier: userWithProfiles.advertiserProfile.subscriptionTier,
           isVerified: userWithProfiles.advertiserProfile.isVerified,
           createdAt: userWithProfiles.advertiserProfile.createdAt,
           updatedAt: userWithProfiles.advertiserProfile.updatedAt,
@@ -146,7 +352,7 @@ export class ProfileController {
   /**
    * Update customer profile
    */
-  async updateCustomerProfile(req: Request, res: Response) {
+  async updateCustomerProfile(_req: Request, res: Response) {
     try {
       if (!req.user) {
         return res.status(401).json({
@@ -207,7 +413,7 @@ export class ProfileController {
   /**
    * Update vendor profile
    */
-  async updateVendorProfile(req: Request, res: Response) {
+  async updateVendorProfile(_req: Request, res: Response) {
     try {
       if (!req.user) {
         return res.status(401).json({
@@ -273,7 +479,7 @@ export class ProfileController {
   /**
    * Update driver profile
    */
-  async updateDriverProfile(req: Request, res: Response) {
+  async updateDriverProfile(_req: Request, res: Response) {
     try {
       if (!req.user) {
         return res.status(401).json({
@@ -339,7 +545,7 @@ export class ProfileController {
   /**
    * Update host profile
    */
-  async updateHostProfile(req: Request, res: Response) {
+  async updateHostProfile(_req: Request, res: Response) {
     try {
       if (!req.user) {
         return res.status(401).json({
@@ -405,7 +611,7 @@ export class ProfileController {
   /**
    * Update advertiser profile
    */
-  async updateAdvertiserProfile(req: Request, res: Response) {
+  async updateAdvertiserProfile(_req: Request, res: Response) {
     try {
       if (!req.user) {
         return res.status(401).json({
@@ -471,7 +677,7 @@ export class ProfileController {
   /**
    * Add customer address
    */
-  async addCustomerAddress(req: Request, res: Response) {
+  async addCustomerAddress(_req: Request, res: Response) {
     try {
       if (!req.user) {
         return res.status(401).json({
@@ -545,7 +751,7 @@ export class ProfileController {
   /**
    * Update customer address
    */
-  async updateCustomerAddress(req: Request, res: Response) {
+  async updateCustomerAddress(_req: Request, res: Response) {
     try {
       if (!req.user) {
         return res.status(401).json({
@@ -600,7 +806,7 @@ export class ProfileController {
   /**
    * Delete customer address
    */
-  async deleteCustomerAddress(req: Request, res: Response) {
+  async deleteCustomerAddress(_req: Request, res: Response) {
     try {
       if (!req.user) {
         return res.status(401).json({
@@ -651,7 +857,7 @@ export class ProfileController {
   /**
    * Get profile statistics for current user's role
    */
-  async getProfileStats(req: Request, res: Response) {
+  async getProfileStats(_req: Request, res: Response) {
     try {
       if (!req.user) {
         return res.status(401).json({
@@ -750,7 +956,7 @@ export class ProfileController {
   /**
    * Update profile verification status (admin only)
    */
-  async updateProfileVerification(req: Request, res: Response) {
+  async updateProfileVerification(_req: Request, res: Response) {
     try {
       if (!req.user) {
         return res.status(401).json({
@@ -820,7 +1026,7 @@ export class ProfileController {
   /**
    * Update profile rating (for external rating systems)
    */
-  async updateProfileRating(req: Request, res: Response) {
+  async updateProfileRating(_req: Request, res: Response) {
     try {
       if (!req.user) {
         return res.status(401).json({

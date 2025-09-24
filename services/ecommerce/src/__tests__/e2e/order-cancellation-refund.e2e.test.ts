@@ -21,7 +21,7 @@ import { TestDataFactory } from '../utils/test-helpers';
 setupIntegrationTestMocks();
 
 describe('E2E: Order Cancellation and Refund Processes', () => {
-  let prisma: PrismaClient;
+  let _prisma: PrismaClient;
   let testDataFactory: TestDataFactory;
   let product1: any;
   let product2: any;
@@ -40,7 +40,7 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
     testDataFactory = new TestDataFactory(prisma);
   });
 
-  beforeEach(async () => {
+  beforeEach(() => {
     // Clean up test data
     await prisma.orderItem.deleteMany();
     await prisma.vendorOrder.deleteMany();
@@ -105,7 +105,7 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
     authToken = 'Bearer test-token';
   });
 
-  afterAll(async () => {
+  afterAll(() => {
     await prisma.$disconnect();
     await redisService.quit();
   });
@@ -114,7 +114,7 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
     let testOrder: any;
     let vendorOrder: any;
 
-    beforeEach(async () => {
+    beforeEach(() => {
       // Create a test order with items
       testOrder = await prisma.order.create({
         data: {
@@ -184,7 +184,7 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
       });
     });
 
-    it('should allow customer to cancel confirmed order', async () => {
+    it('should allow customer to cancel confirmed order', () => {
       const cancelResponse = await request(app)
         .delete(`/api/v1/orders/${testOrder.id}/cancel`)
         .set('Authorization', authToken)
@@ -218,7 +218,7 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
       }
     });
 
-    it('should restore inventory when order is cancelled', async () => {
+    it('should restore inventory when order is cancelled', () => {
       // Get initial inventory levels
       const initialInventory1 = await prisma.productInventory.findUnique({
         where: { productId: product1.id },
@@ -253,7 +253,7 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
       }
     });
 
-    it('should prevent cancellation of shipped orders', async () => {
+    it('should prevent cancellation of shipped orders', () => {
       // Update order to shipped status
       await prisma.order.update({
         where: { id: testOrder.id },
@@ -277,7 +277,7 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
       }
     });
 
-    it('should prevent cancellation of delivered orders', async () => {
+    it('should prevent cancellation of delivered orders', () => {
       // Update order to delivered status
       await prisma.order.update({
         where: { id: testOrder.id },
@@ -295,7 +295,7 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
       expect(cancelResponse.body.success).toBe(false);
     });
 
-    it('should handle partial cancellation scenarios', async () => {
+    it('should handle partial cancellation scenarios', () => {
       // Create multi-vendor order for partial cancellation testing
       const vendor2Id = 'test-vendor-456';
       const product3 = await prisma.product.create({
@@ -349,7 +349,7 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
       expect([200, 400, 500].includes(cancelResponse.status)).toBe(true);
     });
 
-    it('should require cancellation reason', async () => {
+    it('should require cancellation reason', () => {
       const cancelResponse = await request(app)
         .delete(`/api/v1/orders/${testOrder.id}/cancel`)
         .set('Authorization', authToken)
@@ -359,7 +359,7 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
       expect(cancelResponse.body.success).toBe(false);
     });
 
-    it('should prevent customers from cancelling other customers orders', async () => {
+    it('should prevent customers from cancelling other customers orders', () => {
       // Create order for different customer
       const otherCustomerOrder = await prisma.order.create({
         data: {
@@ -395,7 +395,7 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
   describe('Refund Processing Workflows', () => {
     let paidOrder: any;
 
-    beforeEach(async () => {
+    beforeEach(() => {
       // Create a paid order for refund testing
       paidOrder = await prisma.order.create({
         data: {
@@ -438,7 +438,7 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
       });
     });
 
-    it('should process full refund for cancelled order', async () => {
+    it('should process full refund for cancelled order', () => {
       // First cancel the order
       const cancelResponse = await request(app)
         .delete(`/api/v1/orders/${paidOrder.id}/cancel`)
@@ -461,7 +461,7 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
       }
     });
 
-    it('should handle partial refunds for multi-item orders', async () => {
+    it('should handle partial refunds for multi-item orders', () => {
       // Mock admin user for refund operations
       mockAdminUser();
       vi.doMock('../../middleware/auth.middleware', () => ({
@@ -502,7 +502,7 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
       expect([200, 404, 500].includes(refundResponse.status)).toBe(true);
     });
 
-    it('should track refund status and history', async () => {
+    it('should track refund status and history', () => {
       // Cancel order to trigger refund
       const cancelResponse = await request(app)
         .delete(`/api/v1/orders/${paidOrder.id}/cancel`)
@@ -527,7 +527,7 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
       }
     });
 
-    it('should handle refund failures gracefully', async () => {
+    it('should handle refund failures gracefully', () => {
       // Mock payment service refund failure
       vi.doMock('../../clients/payment.client', () => ({
         HttpPaymentServiceClient: vi.fn().mockImplementation(() => ({
@@ -562,7 +562,7 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
       }
     });
 
-    it('should prevent duplicate refunds', async () => {
+    it('should prevent duplicate refunds', () => {
       // Cancel order first time
       const firstCancelResponse = await request(app)
         .delete(`/api/v1/orders/${paidOrder.id}/cancel`)
@@ -591,7 +591,7 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
   describe('Administrative Refund Operations', () => {
     let adminOrder: any;
 
-    beforeEach(async () => {
+    beforeEach(() => {
       // Create order for admin operations
       adminOrder = await prisma.order.create({
         data: {
@@ -619,7 +619,7 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
       mockAdminUser();
     });
 
-    it('should allow admin to force cancel any order', async () => {
+    it('should allow admin to force cancel any order', () => {
       vi.doMock('../../middleware/auth.middleware', () => ({
         authMiddleware: (req: any, res: any, next: any) => {
           req.user = {
@@ -667,7 +667,7 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
       }
     });
 
-    it('should allow admin to process manual refunds', async () => {
+    it('should allow admin to process manual refunds', () => {
       vi.doMock('../../middleware/auth.middleware', () => ({
         authMiddleware: (req: any, res: any, next: any) => {
           req.user = {
@@ -707,7 +707,7 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
       expect([200, 404, 500].includes(manualRefundResponse.status)).toBe(true);
     });
 
-    it('should provide admin refund reporting', async () => {
+    it('should provide admin refund reporting', () => {
       vi.doMock('../../middleware/auth.middleware', () => ({
         authMiddleware: (req: any, res: any, next: any) => {
           req.user = {
@@ -750,7 +750,7 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
   });
 
   describe('Advanced Refund Scenarios', () => {
-    it('should handle subscription and recurring order cancellations', async () => {
+    it('should handle subscription and recurring order cancellations', () => {
       // Create recurring order
       const recurringOrder = await prisma.order.create({
         data: {
@@ -795,7 +795,7 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
       }
     });
 
-    it('should handle partial item returns and refunds', async () => {
+    it('should handle partial item returns and refunds', () => {
       // Create order with multiple items
       const multiItemOrder = await prisma.order.create({
         data: {
@@ -884,7 +884,7 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
       expect([200, 404, 500].includes(partialReturnResponse.status)).toBe(true);
     });
 
-    it('should handle refund disputes and chargebacks', async () => {
+    it('should handle refund disputes and chargebacks', () => {
       // Create order that will have a dispute
       const disputeOrder = await prisma.order.create({
         data: {
@@ -934,7 +934,7 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
       expect([200, 400, 500].includes(disputeRefundResponse.status)).toBe(true);
     });
 
-    it('should handle refund processing delays', async () => {
+    it('should handle refund processing delays', () => {
       // Create order for delayed refund testing
       const delayedRefundOrder = await prisma.order.create({
         data: {
@@ -1001,7 +1001,7 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
   });
 
   describe('Refund Audit and Compliance', () => {
-    it('should maintain refund audit trail', async () => {
+    it('should maintain refund audit trail', () => {
       // Create order for audit testing
       const auditOrder = await prisma.order.create({
         data: {
@@ -1048,7 +1048,7 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
       }
     });
 
-    it('should handle tax refund calculations', async () => {
+    it('should handle tax refund calculations', () => {
       // Create order with complex tax structure
       const taxOrder = await prisma.order.create({
         data: {
@@ -1095,7 +1095,7 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
       }
     });
 
-    it('should handle international refund regulations', async () => {
+    it('should handle international refund regulations', () => {
       // Create international order
       const internationalOrder = await prisma.order.create({
         data: {
@@ -1144,7 +1144,7 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
   });
 
   describe('Cancellation and Refund Edge Cases', () => {
-    it('should handle cancellation during payment processing', async () => {
+    it('should handle cancellation during payment processing', () => {
       // Create order in pending payment status
       const pendingOrder = await prisma.order.create({
         data: {
@@ -1183,7 +1183,7 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
       }
     });
 
-    it('should handle system-initiated cancellations', async () => {
+    it('should handle system-initiated cancellations', () => {
       // Create order that would be cancelled by system (e.g., payment timeout)
       const systemOrder = await prisma.order.create({
         data: {
@@ -1223,7 +1223,7 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
       expect(cancelledOrder?.paymentStatus).toBe(PaymentStatus.FAILED);
     });
 
-    it('should handle concurrent cancellation attempts', async () => {
+    it('should handle concurrent cancellation attempts', () => {
       const concurrentOrder = await prisma.order.create({
         data: {
           customerId,
@@ -1267,7 +1267,7 @@ describe('E2E: Order Cancellation and Refund Processes', () => {
       expect(failedCancellations.length).toBeGreaterThanOrEqual(2);
     });
 
-    it('should handle network failures during refund processing', async () => {
+    it('should handle network failures during refund processing', () => {
       // Create order for network failure testing
       const networkFailureOrder = await prisma.order.create({
         data: {

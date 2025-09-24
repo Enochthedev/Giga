@@ -1,4 +1,3 @@
-import { PrismaClient } from '@prisma/client';
 import request from 'supertest';
 import {
   afterAll,
@@ -10,10 +9,11 @@ import {
   vi,
 } from 'vitest';
 import { app } from '../../app';
+import { PrismaClient } from '../../generated/prisma-client';
 import { redisService } from '../../services/redis.service';
 
 describe('Basic Cart Integration Tests', () => {
-  let prisma: PrismaClient;
+  let _prisma: PrismaClient;
   let product: any;
   let customerId: string;
   let authToken: string;
@@ -28,7 +28,7 @@ describe('Basic Cart Integration Tests', () => {
     });
   });
 
-  beforeEach(async () => {
+  beforeEach(() => {
     // Clean up test data
     await prisma.orderItem.deleteMany();
     await prisma.vendorOrder.deleteMany();
@@ -94,7 +94,7 @@ describe('Basic Cart Integration Tests', () => {
     }));
   });
 
-  afterAll(async () => {
+  afterAll(() => {
     await prisma.$disconnect();
     try {
       await redisService.quit();
@@ -105,7 +105,7 @@ describe('Basic Cart Integration Tests', () => {
   });
 
   describe('GET /api/v1/cart', () => {
-    it('should return empty cart for new customer', async () => {
+    it('should return empty cart for new customer', () => {
       const response = await request(app)
         .get('/api/v1/cart')
         .set('Authorization', authToken);
@@ -120,7 +120,7 @@ describe('Basic Cart Integration Tests', () => {
   });
 
   describe('POST /api/v1/cart/add', () => {
-    it('should handle add item request', async () => {
+    it('should handle add item request', () => {
       const response = await request(app)
         .post('/api/v1/cart/add')
         .set('Authorization', authToken)
@@ -134,7 +134,7 @@ describe('Basic Cart Integration Tests', () => {
       expect(response.body).toHaveProperty('success');
     });
 
-    it('should return 400 for invalid product ID', async () => {
+    it('should return 400 for invalid product ID', () => {
       const response = await request(app)
         .post('/api/v1/cart/add')
         .set('Authorization', authToken)
@@ -148,7 +148,7 @@ describe('Basic Cart Integration Tests', () => {
       expect(response.body).toHaveProperty('success');
     });
 
-    it('should return 400 for invalid quantity', async () => {
+    it('should return 400 for invalid quantity', () => {
       const response = await request(app)
         .post('/api/v1/cart/add')
         .set('Authorization', authToken)
@@ -164,7 +164,7 @@ describe('Basic Cart Integration Tests', () => {
   });
 
   describe('Health Check', () => {
-    it('should return health status', async () => {
+    it('should return health status', () => {
       const response = await request(app).get('/health');
 
       expect([200, 503].includes(response.status)).toBe(true);
@@ -174,7 +174,7 @@ describe('Basic Cart Integration Tests', () => {
   });
 
   describe('API Documentation', () => {
-    it('should serve Swagger documentation', async () => {
+    it('should serve Swagger documentation', () => {
       const response = await request(app).get('/docs');
 
       // Should serve documentation or redirect
@@ -183,7 +183,7 @@ describe('Basic Cart Integration Tests', () => {
   });
 
   describe('Error Handling', () => {
-    it('should handle 404 for non-existent routes', async () => {
+    it('should handle 404 for non-existent routes', () => {
       const response = await request(app)
         .get('/api/v1/non-existent-route')
         .set('Authorization', authToken);
@@ -192,7 +192,7 @@ describe('Basic Cart Integration Tests', () => {
       expect(response.body).toHaveProperty('success', false);
     });
 
-    it('should handle missing authorization', async () => {
+    it('should handle missing authorization', () => {
       const response = await request(app).get('/api/v1/cart');
 
       // Should require authentication
@@ -201,14 +201,14 @@ describe('Basic Cart Integration Tests', () => {
   });
 
   describe('CORS and Security Headers', () => {
-    it('should include security headers', async () => {
+    it('should include security headers', () => {
       const response = await request(app).get('/health');
 
       // Should have security headers from helmet
       expect(response.headers).toHaveProperty('x-content-type-options');
     });
 
-    it('should handle CORS preflight requests', async () => {
+    it('should handle CORS preflight requests', () => {
       const response = await request(app)
         .options('/api/v1/cart')
         .set('Origin', 'http://localhost:3000')
@@ -220,7 +220,7 @@ describe('Basic Cart Integration Tests', () => {
   });
 
   describe('Rate Limiting', () => {
-    it('should apply rate limiting to API endpoints', async () => {
+    it('should apply rate limiting to API endpoints', () => {
       // Make multiple rapid requests
       const requests = Array(10)
         .fill(null)
@@ -236,7 +236,7 @@ describe('Basic Cart Integration Tests', () => {
   });
 
   describe('Request Validation', () => {
-    it('should validate request body size', async () => {
+    it('should validate request body size', () => {
       const largePayload = {
         productId: product.id,
         quantity: 1,
@@ -252,7 +252,7 @@ describe('Basic Cart Integration Tests', () => {
       expect([400, 413, 500].includes(response.status)).toBe(true);
     });
 
-    it('should sanitize input data', async () => {
+    it('should sanitize input data', () => {
       const maliciousPayload = {
         productId: product.id,
         quantity: 1,

@@ -81,7 +81,7 @@ export class OrderSagaOrchestrator {
   };
 
   constructor(
-    private prisma: PrismaClient,
+    private _prisma: PrismaClient,
     private cartService: CartService,
     private inventoryService: InventoryService,
     private authServiceClient: HttpAuthServiceClient,
@@ -294,7 +294,7 @@ export class OrderSagaOrchestrator {
 
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
       try {
-        return await step.execute();
+        return step.execute();
       } catch (error) {
         lastError = error instanceof Error ? error : new Error('Unknown error');
 
@@ -587,7 +587,7 @@ export class OrderSagaOrchestrator {
 
         // Create order items
         const vendorOrderItems = await Promise.all(
-          items.map(async (item: any) => {
+          items.map((item: any) => {
             const orderItem = await tx.orderItem.create({
               data: {
                 id: uuidv4(),

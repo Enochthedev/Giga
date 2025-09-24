@@ -21,7 +21,7 @@ import { TestDataFactory } from '../utils/test-helpers';
 setupIntegrationTestMocks();
 
 describe('E2E: Vendor Order Fulfillment Workflows', () => {
-  let prisma: PrismaClient;
+  let _prisma: PrismaClient;
   let testDataFactory: TestDataFactory;
   let vendor1Products: any[];
   let vendor2Products: any[];
@@ -43,7 +43,7 @@ describe('E2E: Vendor Order Fulfillment Workflows', () => {
     testDataFactory = new TestDataFactory(prisma);
   });
 
-  beforeEach(async () => {
+  beforeEach(() => {
     // Clean up test data
     await prisma.orderItem.deleteMany();
     await prisma.vendorOrder.deleteMany();
@@ -147,7 +147,7 @@ describe('E2E: Vendor Order Fulfillment Workflows', () => {
     ]);
   });
 
-  afterAll(async () => {
+  afterAll(() => {
     await prisma.$disconnect();
     await redisService.quit();
   });
@@ -157,7 +157,7 @@ describe('E2E: Vendor Order Fulfillment Workflows', () => {
     let vendor1Orders: any[];
     let vendor2Orders: any[];
 
-    beforeEach(async () => {
+    beforeEach(() => {
       // Create a multi-vendor order for fulfillment testing
       multiVendorOrder = await prisma.order.create({
         data: {
@@ -240,7 +240,7 @@ describe('E2E: Vendor Order Fulfillment Workflows', () => {
       ]);
     });
 
-    it('should allow vendor to view their pending orders', async () => {
+    it('should allow vendor to view their pending orders', () => {
       // Mock vendor 1 authentication
       mockVendorUser();
       vi.doMock('../../middleware/auth.middleware', () => ({
@@ -289,7 +289,7 @@ describe('E2E: Vendor Order Fulfillment Workflows', () => {
       }
     });
 
-    it('should allow vendor to update order status to processing', async () => {
+    it('should allow vendor to update order status to processing', () => {
       // Mock vendor 1 authentication
       mockVendorUser();
       vi.doMock('../../middleware/auth.middleware', () => ({
@@ -343,7 +343,7 @@ describe('E2E: Vendor Order Fulfillment Workflows', () => {
       }
     });
 
-    it('should allow vendor to mark order as shipped with tracking', async () => {
+    it('should allow vendor to mark order as shipped with tracking', () => {
       // Mock vendor 1 authentication
       mockVendorUser();
       vi.doMock('../../middleware/auth.middleware', () => ({
@@ -410,7 +410,7 @@ describe('E2E: Vendor Order Fulfillment Workflows', () => {
       }
     });
 
-    it('should prevent vendor from updating other vendors orders', async () => {
+    it('should prevent vendor from updating other vendors orders', () => {
       // Mock vendor 1 authentication
       mockVendorUser();
       vi.doMock('../../middleware/auth.middleware', () => ({
@@ -449,7 +449,7 @@ describe('E2E: Vendor Order Fulfillment Workflows', () => {
       expect(unauthorizedResponse.body.success).toBe(false);
     });
 
-    it('should validate status transitions', async () => {
+    it('should validate status transitions', () => {
       // Mock vendor 1 authentication
       mockVendorUser();
       vi.doMock('../../middleware/auth.middleware', () => ({
@@ -495,7 +495,7 @@ describe('E2E: Vendor Order Fulfillment Workflows', () => {
       }
     });
 
-    it('should require tracking number when shipping', async () => {
+    it('should require tracking number when shipping', () => {
       // Mock vendor 1 authentication
       mockVendorUser();
       vi.doMock('../../middleware/auth.middleware', () => ({
@@ -544,7 +544,7 @@ describe('E2E: Vendor Order Fulfillment Workflows', () => {
   });
 
   describe('Vendor Inventory Management During Fulfillment', () => {
-    it('should allow vendor to update product inventory', async () => {
+    it('should allow vendor to update product inventory', () => {
       // Mock vendor 1 authentication
       mockVendorUser();
       vi.doMock('../../middleware/auth.middleware', () => ({
@@ -595,7 +595,7 @@ describe('E2E: Vendor Order Fulfillment Workflows', () => {
       }
     });
 
-    it('should prevent vendor from updating other vendors inventory', async () => {
+    it('should prevent vendor from updating other vendors inventory', () => {
       // Mock vendor 1 authentication
       mockVendorUser();
       vi.doMock('../../middleware/auth.middleware', () => ({
@@ -636,7 +636,7 @@ describe('E2E: Vendor Order Fulfillment Workflows', () => {
       expect(unauthorizedInventoryResponse.body.success).toBe(false);
     });
 
-    it('should handle low inventory alerts during fulfillment', async () => {
+    it('should handle low inventory alerts during fulfillment', () => {
       // Mock vendor 1 authentication
       mockVendorUser();
       vi.doMock('../../middleware/auth.middleware', () => ({
@@ -689,7 +689,7 @@ describe('E2E: Vendor Order Fulfillment Workflows', () => {
   });
 
   describe('Vendor Dashboard and Analytics', () => {
-    beforeEach(async () => {
+    beforeEach(() => {
       // Create some completed orders for analytics
       const completedOrder = await prisma.order.create({
         data: {
@@ -722,7 +722,7 @@ describe('E2E: Vendor Order Fulfillment Workflows', () => {
       });
     });
 
-    it('should provide vendor dashboard with key metrics', async () => {
+    it('should provide vendor dashboard with key metrics', () => {
       // Mock vendor 1 authentication
       mockVendorUser();
       vi.doMock('../../middleware/auth.middleware', () => ({
@@ -774,7 +774,7 @@ describe('E2E: Vendor Order Fulfillment Workflows', () => {
       }
     });
 
-    it('should provide vendor product performance metrics', async () => {
+    it('should provide vendor product performance metrics', () => {
       // Mock vendor 1 authentication
       mockVendorUser();
       vi.doMock('../../middleware/auth.middleware', () => ({
@@ -831,7 +831,7 @@ describe('E2E: Vendor Order Fulfillment Workflows', () => {
     let vendor1CoordOrder: any;
     let vendor2CoordOrder: any;
 
-    beforeEach(async () => {
+    beforeEach(() => {
       // Create order requiring coordination between vendors
       coordinationOrder = await prisma.order.create({
         data: {
@@ -878,7 +878,7 @@ describe('E2E: Vendor Order Fulfillment Workflows', () => {
       });
     });
 
-    it('should coordinate overall order status when all vendors ship', async () => {
+    it('should coordinate overall order status when all vendors ship', () => {
       // Vendor 1 ships their part
       await prisma.vendorOrder.update({
         where: { id: vendor1CoordOrder.id },
@@ -920,7 +920,7 @@ describe('E2E: Vendor Order Fulfillment Workflows', () => {
       expect(allVendorOrders[1].trackingNumber).toBeDefined();
     });
 
-    it('should handle partial delivery scenarios', async () => {
+    it('should handle partial delivery scenarios', () => {
       // Vendor 1 delivers their part
       await prisma.vendorOrder.update({
         where: { id: vendor1CoordOrder.id },
@@ -958,7 +958,7 @@ describe('E2E: Vendor Order Fulfillment Workflows', () => {
       expect(overallOrder?.status).not.toBe(OrderStatus.DELIVERED);
     });
 
-    it('should handle vendor communication and notifications', async () => {
+    it('should handle vendor communication and notifications', () => {
       // Mock notification service calls
       const mockNotificationClient = vi.fn();
       vi.doMock('../../clients/notification.client', () => ({
@@ -987,7 +987,7 @@ describe('E2E: Vendor Order Fulfillment Workflows', () => {
   });
 
   describe('Fulfillment Error Scenarios', () => {
-    it('should handle inventory conflicts during fulfillment', async () => {
+    it('should handle inventory conflicts during fulfillment', () => {
       // Create order with product
       const conflictOrder = await prisma.order.create({
         data: {
@@ -1076,7 +1076,7 @@ describe('E2E: Vendor Order Fulfillment Workflows', () => {
       }
     });
 
-    it('should handle shipping service failures', async () => {
+    it('should handle shipping service failures', () => {
       const shippingOrder = await prisma.vendorOrder.create({
         data: {
           orderId: (
@@ -1145,7 +1145,7 @@ describe('E2E: Vendor Order Fulfillment Workflows', () => {
       expect(invalidTrackingResponse.body.success).toBe(false);
     });
 
-    it('should handle concurrent vendor operations', async () => {
+    it('should handle concurrent vendor operations', () => {
       const concurrentOrder = await prisma.vendorOrder.create({
         data: {
           orderId: (

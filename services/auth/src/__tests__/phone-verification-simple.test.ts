@@ -85,7 +85,7 @@ describe('Phone Verification - SMS Service Only', () => {
     });
 
     describe('sendVerificationSMS', () => {
-      it('should mock SMS sending successfully', async () => {
+      it('should mock SMS sending successfully', () => {
         const consoleSpy = vi
           .spyOn(console, 'log')
           .mockImplementation(() => {});
@@ -109,7 +109,7 @@ describe('Phone Verification - SMS Service Only', () => {
     });
 
     describe('sendSecurityAlert', () => {
-      it('should mock security alert SMS successfully', async () => {
+      it('should mock security alert SMS successfully', () => {
         const consoleSpy = vi
           .spyOn(console, 'log')
           .mockImplementation(() => {});

@@ -7,7 +7,7 @@ const jwtService = JWTService.getInstance();
  * Enhanced authentication middleware with comprehensive security
  */
 export const authenticateToken = async (
-  req: Request,
+  _req: Request,
   res: Response,
   next: NextFunction
 ) => {
@@ -125,7 +125,7 @@ export const authenticateToken = async (
  * Enhanced role-based authorization middleware
  */
 export const requireRole = (roles: string[]) => {
-  return (req: Request, res: Response, next: NextFunction) => {
+  return (_req: Request, res: Response, next: NextFunction) => {
     if (!req.user) {
       return res.status(401).json({
         success: false,
@@ -168,7 +168,7 @@ export const requireRole = (roles: string[]) => {
  * Admin-only access middleware
  */
 export const requireAdmin = (
-  req: Request,
+  _req: Request,
   res: Response,
   next: NextFunction
 ) => {
@@ -179,7 +179,7 @@ export const requireAdmin = (
  * Active role validation middleware
  */
 export const requireActiveRole = (role: string) => {
-  return (req: Request, res: Response, next: NextFunction) => {
+  return (_req: Request, res: Response, next: NextFunction) => {
     if (!req.user) {
       return res.status(401).json({
         success: false,
@@ -207,7 +207,7 @@ export const requireActiveRole = (role: string) => {
  * Optional authentication middleware (doesn't fail if no token)
  */
 export const optionalAuth = (
-  req: Request,
+  _req: Request,
   res: Response,
   next: NextFunction
 ) => {
@@ -233,7 +233,7 @@ export const optionalAuth = (
  * Token validation middleware (for debugging/monitoring)
  */
 export const validateTokenHealth = (
-  req: Request,
+  _req: Request,
   res: Response,
   next: NextFunction
 ) => {

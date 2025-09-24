@@ -19,14 +19,14 @@ describe('Profile Management', () => {
   let testUser: any;
   let accessToken: string;
 
-  beforeAll(async () => {
+  beforeAll(() => {
     // Clean up any existing test data
     await prisma.user.deleteMany({
       where: { email: 'profiletest@example.com' },
     });
   });
 
-  afterAll(async () => {
+  afterAll(() => {
     // Clean up test data
     if (testUser) {
       await prisma.user.delete({
@@ -36,7 +36,7 @@ describe('Profile Management', () => {
     await prisma.$disconnect();
   });
 
-  beforeEach(async () => {
+  beforeEach(() => {
     // Create a test user with multiple roles
     const response = await request(app)
       .post('/api/v1/auth/register')
@@ -54,7 +54,7 @@ describe('Profile Management', () => {
     accessToken = response.body.data.tokens.accessToken;
   });
 
-  afterEach(async () => {
+  afterEach(() => {
     // Clean up after each test
     if (testUser) {
       await prisma.user
@@ -68,7 +68,7 @@ describe('Profile Management', () => {
   });
 
   describe('GET /api/v1/profiles/complete', () => {
-    it('should return complete profile with all role-specific profiles', async () => {
+    it('should return complete profile with all role-specific profiles', () => {
       const response = await request(app)
         .get('/api/v1/profiles/complete')
         .set('Authorization', `Bearer ${accessToken}`);
@@ -82,7 +82,7 @@ describe('Profile Management', () => {
       expect(response.body.data.profiles.driver).toBeDefined();
     });
 
-    it('should require authentication', async () => {
+    it('should require authentication', () => {
       const response = await request(app).get('/api/v1/profiles/complete');
 
       expect(response.status).toBe(401);
@@ -90,7 +90,7 @@ describe('Profile Management', () => {
   });
 
   describe('PUT /api/v1/profiles/customer', () => {
-    it('should update customer profile preferences', async () => {
+    it('should update customer profile preferences', () => {
       const preferences = {
         language: 'en',
         currency: 'USD',
@@ -107,7 +107,7 @@ describe('Profile Management', () => {
       expect(response.body.data.profile.preferences).toEqual(preferences);
     });
 
-    it('should require customer role', async () => {
+    it('should require customer role', () => {
       // Create user without customer role
       const userResponse = await request(app)
         .post('/api/v1/auth/register')
@@ -138,7 +138,7 @@ describe('Profile Management', () => {
   });
 
   describe('PUT /api/v1/profiles/vendor', () => {
-    it('should update vendor profile', async () => {
+    it('should update vendor profile', () => {
       const vendorData = {
         businessName: 'Test Electronics Store',
         businessType: 'Electronics',
@@ -161,7 +161,7 @@ describe('Profile Management', () => {
       );
     });
 
-    it('should reject duplicate business name', async () => {
+    it('should reject duplicate business name', () => {
       // First, create another vendor with a business name
       const otherUserResponse = await request(app)
         .post('/api/v1/auth/register')
@@ -198,7 +198,7 @@ describe('Profile Management', () => {
       });
     });
 
-    it('should reject invalid business type', async () => {
+    it('should reject invalid business type', () => {
       const response = await request(app)
         .put('/api/v1/profiles/vendor')
         .set('Authorization', `Bearer ${accessToken}`)
@@ -211,7 +211,7 @@ describe('Profile Management', () => {
   });
 
   describe('PUT /api/v1/profiles/driver', () => {
-    it('should update driver profile', async () => {
+    it('should update driver profile', () => {
       const driverData = {
         licenseNumber: 'DL123456789',
         vehicleInfo: {
@@ -235,7 +235,7 @@ describe('Profile Management', () => {
       );
     });
 
-    it('should reject duplicate license number', async () => {
+    it('should reject duplicate license number', () => {
       // First, set license number for current user
       await request(app)
         .put('/api/v1/profiles/driver')
@@ -272,7 +272,7 @@ describe('Profile Management', () => {
       });
     });
 
-    it('should prevent going online without verification', async () => {
+    it('should prevent going online without verification', () => {
       const response = await request(app)
         .put('/api/v1/profiles/driver')
         .set('Authorization', `Bearer ${accessToken}`)
@@ -285,7 +285,7 @@ describe('Profile Management', () => {
   });
 
   describe('Customer Address Management', () => {
-    it('should add customer address', async () => {
+    it('should add customer address', () => {
       const addressData = {
         label: 'Home',
         address: '123 Main Street',
@@ -305,7 +305,7 @@ describe('Profile Management', () => {
       expect(response.body.data.address.isDefault).toBe(true);
     });
 
-    it('should update customer address', async () => {
+    it('should update customer address', () => {
       // First add an address
       const addResponse = await request(app)
         .post('/api/v1/profiles/customer/addresses')
@@ -337,7 +337,7 @@ describe('Profile Management', () => {
       expect(response.body.data.address.isDefault).toBe(true);
     });
 
-    it('should delete customer address', async () => {
+    it('should delete customer address', () => {
       // First add an address
       const addResponse = await request(app)
         .post('/api/v1/profiles/customer/addresses')
@@ -362,7 +362,7 @@ describe('Profile Management', () => {
   });
 
   describe('Profile Statistics', () => {
-    it('should get vendor statistics', async () => {
+    it('should get vendor statistics', () => {
       const response = await request(app)
         .get('/api/v1/profiles/vendor/stats')
         .set('Authorization', `Bearer ${accessToken}`);
@@ -375,7 +375,7 @@ describe('Profile Management', () => {
       expect(response.body.data.stats.isVerified).toBeDefined();
     });
 
-    it('should get driver statistics', async () => {
+    it('should get driver statistics', () => {
       const response = await request(app)
         .get('/api/v1/profiles/driver/stats')
         .set('Authorization', `Bearer ${accessToken}`);
@@ -388,7 +388,7 @@ describe('Profile Management', () => {
       expect(response.body.data.stats.isOnline).toBeDefined();
     });
 
-    it('should reject stats request for role user does not have', async () => {
+    it('should reject stats request for role user does not have', () => {
       const response = await request(app)
         .get('/api/v1/profiles/host/stats')
         .set('Authorization', `Bearer ${accessToken}`);
@@ -397,7 +397,7 @@ describe('Profile Management', () => {
       expect(response.body.code).toBe('INSUFFICIENT_ROLE');
     });
 
-    it('should reject invalid role for stats', async () => {
+    it('should reject invalid role for stats', () => {
       const response = await request(app)
         .get('/api/v1/profiles/invalid/stats')
         .set('Authorization', `Bearer ${accessToken}`);
@@ -408,7 +408,7 @@ describe('Profile Management', () => {
   });
 
   describe('Profile Rating Management', () => {
-    it('should update vendor profile rating', async () => {
+    it('should update vendor profile rating', () => {
       const ratingData = {
         role: 'VENDOR',
         rating: 4.5,
@@ -424,7 +424,7 @@ describe('Profile Management', () => {
       expect(response.body.data.profile.rating).toBe(4.5);
     });
 
-    it('should reject invalid rating value', async () => {
+    it('should reject invalid rating value', () => {
       const ratingData = {
         role: 'VENDOR',
         rating: 6.0, // Invalid: exceeds maximum
@@ -438,7 +438,7 @@ describe('Profile Management', () => {
       expect(response.status).toBe(400);
     });
 
-    it('should reject invalid role for rating', async () => {
+    it('should reject invalid role for rating', () => {
       const ratingData = {
         role: 'CUSTOMER', // Invalid: customers don't have ratings
         rating: 4.0,
@@ -454,7 +454,7 @@ describe('Profile Management', () => {
   });
 
   describe('Enhanced Profile Features', () => {
-    it('should update host profile with response metrics', async () => {
+    it('should update host profile with response metrics', () => {
       // First create a user with HOST role
       const hostUserResponse = await request(app)
         .post('/api/v1/auth/register')
@@ -499,7 +499,7 @@ describe('Profile Management', () => {
       });
     });
 
-    it('should update advertiser profile with company information', async () => {
+    it('should update advertiser profile with company information', () => {
       // First create a user with ADVERTISER role
       const advertiserUserResponse = await request(app)
         .post('/api/v1/auth/register')

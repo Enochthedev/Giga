@@ -399,7 +399,7 @@ export class CartController {
   async getCartStatistics(req: SessionRequest, res: Response): Promise<void> {
     try {
       // This would typically require admin authentication
-      const stats = await this.cartService.getCartStatistics();
+      const _stats = await this.cartService.getCartStatistics();
 
       res.json({
         success: true,

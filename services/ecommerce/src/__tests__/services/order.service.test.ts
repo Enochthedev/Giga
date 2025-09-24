@@ -1,4 +1,3 @@
-import { OrderStatus, PaymentStatus } from '@prisma/client';
 import { prisma } from '@tests/setup';
 import {
   TestDataFactory,
@@ -7,6 +6,7 @@ import {
   mockPaymentServiceClient,
 } from '@tests/utils/test-helpers';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { OrderStatus, PaymentStatus } from '../generated/prisma-client';
 import { OrderService } from '@/services/order.service';
 
 describe('OrderService', () => {
@@ -27,7 +27,7 @@ describe('OrderService', () => {
   });
 
   describe('createOrder', () => {
-    it('should create order successfully', async () => {
+    it('should create order successfully', () => {
       const customerId = 'customer-1';
       const vendor = await testFactory.createVendor();
       const product = await testFactory.createProduct(vendor.id, {
@@ -101,7 +101,7 @@ describe('OrderService', () => {
       );
     });
 
-    it('should handle payment failure and rollback', async () => {
+    it('should handle payment failure and rollback', () => {
       const customerId = 'customer-1';
       const vendor = await testFactory.createVendor();
       const product = await testFactory.createProduct(vendor.id);
@@ -148,7 +148,7 @@ describe('OrderService', () => {
       expect(orders).toHaveLength(0);
     });
 
-    it('should create separate vendor orders for multi-vendor cart', async () => {
+    it('should create separate vendor orders for multi-vendor cart', () => {
       const customerId = 'customer-1';
       const vendor1 = await testFactory.createVendor({ name: 'Vendor 1' });
       const vendor2 = await testFactory.createVendor({ name: 'Vendor 2' });
@@ -219,7 +219,7 @@ describe('OrderService', () => {
       ).toHaveBeenCalledTimes(2);
     });
 
-    it('should validate inventory before creating order', async () => {
+    it('should validate inventory before creating order', () => {
       const customerId = 'customer-1';
       const vendor = await testFactory.createVendor();
       const product = await testFactory.createProduct(vendor.id, {
@@ -251,7 +251,7 @@ describe('OrderService', () => {
   });
 
   describe('getOrder', () => {
-    it('should return order with all relations', async () => {
+    it('should return order with all relations', () => {
       const customerId = 'customer-1';
       const order = await testFactory.createOrder(customerId);
 
@@ -264,13 +264,13 @@ describe('OrderService', () => {
       });
     });
 
-    it('should throw error for non-existent order', async () => {
+    it('should throw error for non-existent order', () => {
       await expect(
         orderService.getOrder('non-existent', 'customer-1')
       ).rejects.toThrow('Order not found');
     });
 
-    it('should throw error for unauthorized access', async () => {
+    it('should throw error for unauthorized access', () => {
       const order = await testFactory.createOrder('customer-1');
 
       await expect(
@@ -280,7 +280,7 @@ describe('OrderService', () => {
   });
 
   describe('getOrderHistory', () => {
-    it('should return paginated order history', async () => {
+    it('should return paginated order history', () => {
       const customerId = 'customer-1';
 
       // Create multiple orders
@@ -305,7 +305,7 @@ describe('OrderService', () => {
       expect(result.totalPages).toBe(2);
     });
 
-    it('should filter orders by status', async () => {
+    it('should filter orders by status', () => {
       const customerId = 'customer-1';
 
       await testFactory.createOrder(customerId, {
@@ -328,7 +328,7 @@ describe('OrderService', () => {
   });
 
   describe('updateOrderStatus', () => {
-    it('should update order status successfully', async () => {
+    it('should update order status successfully', () => {
       const customerId = 'customer-1';
       const order = await testFactory.createOrder(customerId, {
         status: OrderStatus.CONFIRMED,
@@ -353,7 +353,7 @@ describe('OrderService', () => {
       );
     });
 
-    it('should validate status transitions', async () => {
+    it('should validate status transitions', () => {
       const customerId = 'customer-1';
       const order = await testFactory.createOrder(customerId, {
         status: OrderStatus.DELIVERED,
@@ -366,7 +366,7 @@ describe('OrderService', () => {
   });
 
   describe('cancelOrder', () => {
-    it('should cancel order and restore inventory', async () => {
+    it('should cancel order and restore inventory', () => {
       const customerId = 'customer-1';
       const vendor = await testFactory.createVendor();
       const product = await testFactory.createProduct(vendor.id, {
@@ -415,7 +415,7 @@ describe('OrderService', () => {
       );
     });
 
-    it('should not allow cancellation of delivered orders', async () => {
+    it('should not allow cancellation of delivered orders', () => {
       const customerId = 'customer-1';
       const order = await testFactory.createOrder(customerId, {
         status: OrderStatus.DELIVERED,

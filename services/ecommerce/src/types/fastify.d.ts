@@ -2,10 +2,10 @@ import { PrismaClient } from '../generated/prisma-client';
 
 declare module 'fastify' {
   interface FastifyInstance {
-    prisma: PrismaClient;
+    _prisma: PrismaClient;
   }
 
   interface FastifyRequest {
-    prisma: PrismaClient;
+    _prisma: PrismaClient;
   }
 }

@@ -26,7 +26,7 @@ export interface IAnalyticsService {
   // Analytics queries
   getDeliveryAnalytics(notificationId: string): Promise<DeliveryAnalytics>;
   getEngagementEvents(notificationId: string): Promise<EngagementEvent[]>;
-  getUserEngagementAnalytics(userId: string, period: DateRange): Promise<UserEngagementAnalytics>;
+  getUserEngagementAnalytics(_userId: string, period: DateRange): Promise<UserEngagementAnalytics>;
   getCampaignAnalytics(campaignId: string): Promise<CampaignAnalytics>;
 
   // Report generation
@@ -86,7 +86,7 @@ export interface IAnalyticsService {
   }>>;
 
   // User behavior analytics
-  getUserBehaviorInsights(userId: string): Promise<{
+  getUserBehaviorInsights(_userId: string): Promise<{
     preferredChannels: NotificationChannel[];
     optimalSendTimes: Array<{ hour: number; dayOfWeek: number; engagementRate: number }>;
     categoryPreferences: Array<{ category: NotificationCategory; engagementRate: number }>;

@@ -13,7 +13,7 @@ describe('InventoryService', () => {
   });
 
   describe('checkAvailability', () => {
-    it('should return true for available inventory', async () => {
+    it('should return true for available inventory', () => {
       const vendor = await testFactory.createVendor();
       const product = await testFactory.createProduct(vendor.id, {
         inventory: { quantity: 10, trackQuantity: true },
@@ -27,7 +27,7 @@ describe('InventoryService', () => {
       expect(isAvailable).toBe(true);
     });
 
-    it('should return false for insufficient inventory', async () => {
+    it('should return false for insufficient inventory', () => {
       const vendor = await testFactory.createVendor();
       const product = await testFactory.createProduct(vendor.id, {
         inventory: { quantity: 3, trackQuantity: true },
@@ -41,7 +41,7 @@ describe('InventoryService', () => {
       expect(isAvailable).toBe(false);
     });
 
-    it('should return true for products not tracking quantity', async () => {
+    it('should return true for products not tracking quantity', () => {
       const vendor = await testFactory.createVendor();
       const product = await testFactory.createProduct(vendor.id, {
         inventory: { quantity: 0, trackQuantity: false },
@@ -55,7 +55,7 @@ describe('InventoryService', () => {
       expect(isAvailable).toBe(true);
     });
 
-    it('should return false for inactive products', async () => {
+    it('should return false for inactive products', () => {
       const vendor = await testFactory.createVendor();
       const product = await testFactory.createProduct(vendor.id, {
         isActive: false,
@@ -72,7 +72,7 @@ describe('InventoryService', () => {
   });
 
   describe('reserveInventory', () => {
-    it('should reserve inventory successfully', async () => {
+    it('should reserve inventory successfully', () => {
       const vendor = await testFactory.createVendor();
       const product = await testFactory.createProduct(vendor.id, {
         inventory: { quantity: 10, trackQuantity: true },
@@ -96,7 +96,7 @@ describe('InventoryService', () => {
       expect(reservation!.quantity).toBe(3);
     });
 
-    it('should fail reservation for insufficient inventory', async () => {
+    it('should fail reservation for insufficient inventory', () => {
       const vendor = await testFactory.createVendor();
       const product = await testFactory.createProduct(vendor.id, {
         inventory: { quantity: 2, trackQuantity: true },
@@ -118,7 +118,7 @@ describe('InventoryService', () => {
       });
     });
 
-    it('should handle partial failures in batch reservation', async () => {
+    it('should handle partial failures in batch reservation', () => {
       const vendor = await testFactory.createVendor();
       const product1 = await testFactory.createProduct(vendor.id, {
         inventory: { quantity: 10, trackQuantity: true },
@@ -141,7 +141,7 @@ describe('InventoryService', () => {
       expect(result.failures[0].productId).toBe(product2.id);
     });
 
-    it('should handle concurrent reservations with optimistic locking', async () => {
+    it('should handle concurrent reservations with optimistic locking', () => {
       const vendor = await testFactory.createVendor();
       const product = await testFactory.createProduct(vendor.id, {
         inventory: { quantity: 5, trackQuantity: true },
@@ -168,7 +168,7 @@ describe('InventoryService', () => {
       );
     });
 
-    it('should set expiration time for reservations', async () => {
+    it('should set expiration time for reservations', () => {
       const vendor = await testFactory.createVendor();
       const product = await testFactory.createProduct(vendor.id, {
         inventory: { quantity: 10, trackQuantity: true },
@@ -190,7 +190,7 @@ describe('InventoryService', () => {
   });
 
   describe('releaseReservation', () => {
-    it('should release reservation successfully', async () => {
+    it('should release reservation successfully', () => {
       const vendor = await testFactory.createVendor();
       const product = await testFactory.createProduct(vendor.id, {
         inventory: { quantity: 10, trackQuantity: true },
@@ -213,7 +213,7 @@ describe('InventoryService', () => {
       expect(reservation).toBeNull();
     });
 
-    it('should handle non-existent reservation gracefully', async () => {
+    it('should handle non-existent reservation gracefully', () => {
       await expect(
         inventoryService.releaseReservation('non-existent')
       ).resolves.not.toThrow();
@@ -221,7 +221,7 @@ describe('InventoryService', () => {
   });
 
   describe('updateInventory', () => {
-    it('should update inventory quantity', async () => {
+    it('should update inventory quantity', () => {
       const vendor = await testFactory.createVendor();
       const product = await testFactory.createProduct(vendor.id, {
         inventory: { quantity: 10, trackQuantity: true },
@@ -235,7 +235,7 @@ describe('InventoryService', () => {
       expect(updatedProduct!.inventory.quantity).toBe(15);
     });
 
-    it('should handle concurrent inventory updates', async () => {
+    it('should handle concurrent inventory updates', () => {
       const vendor = await testFactory.createVendor();
       const product = await testFactory.createProduct(vendor.id, {
         inventory: { quantity: 10, trackQuantity: true },
@@ -259,7 +259,7 @@ describe('InventoryService', () => {
   });
 
   describe('getInventoryStatus', () => {
-    it('should return inventory status', async () => {
+    it('should return inventory status', () => {
       const vendor = await testFactory.createVendor();
       const product = await testFactory.createProduct(vendor.id, {
         inventory: { quantity: 10, trackQuantity: true },
@@ -280,7 +280,7 @@ describe('InventoryService', () => {
       });
     });
 
-    it('should handle products without reservations', async () => {
+    it('should handle products without reservations', () => {
       const vendor = await testFactory.createVendor();
       const product = await testFactory.createProduct(vendor.id, {
         inventory: { quantity: 10, trackQuantity: true },
@@ -299,7 +299,7 @@ describe('InventoryService', () => {
   });
 
   describe('cleanupExpiredReservations', () => {
-    it('should remove expired reservations', async () => {
+    it('should remove expired reservations', () => {
       const vendor = await testFactory.createVendor();
       const product = await testFactory.createProduct(vendor.id, {
         inventory: { quantity: 10, trackQuantity: true },
@@ -342,7 +342,7 @@ describe('InventoryService', () => {
   });
 
   describe('stress testing', () => {
-    it('should handle high concurrency inventory operations', async () => {
+    it('should handle high concurrency inventory operations', () => {
       const vendor = await testFactory.createVendor();
       const product = await testFactory.createProduct(vendor.id, {
         inventory: { quantity: 100, trackQuantity: true },

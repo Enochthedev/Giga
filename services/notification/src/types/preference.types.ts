@@ -5,7 +5,7 @@
 import { NotificationCategory, NotificationChannel } from './notification.types';
 
 export interface NotificationPreferences {
-  userId: string;
+  _userId: string;
 
   // Channel preferences
   channels: {
@@ -76,7 +76,7 @@ export interface PreferenceUpdate {
 }
 
 export interface OptOutRequest {
-  userId: string;
+  _userId: string;
   channels: NotificationChannel[];
   categories?: NotificationCategory[];
   reason?: string;
@@ -84,7 +84,7 @@ export interface OptOutRequest {
 }
 
 export interface OptInRequest {
-  userId: string;
+  _userId: string;
   channels: NotificationChannel[];
   categories?: NotificationCategory[];
   consentSource?: string;
@@ -106,7 +106,7 @@ export interface PreferenceValidationResult {
 }
 
 export interface UserEngagementProfile {
-  userId: string;
+  _userId: string;
   totalNotificationsSent: number;
   totalNotificationsOpened: number;
   totalNotificationsClicked: number;
@@ -125,7 +125,7 @@ export interface UserOptimalSendTime {
 }
 
 export interface NotificationQuota {
-  userId: string;
+  _userId: string;
   category: NotificationCategory;
   dailyCount: number;
   weeklyCount: number;

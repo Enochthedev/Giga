@@ -40,10 +40,17 @@ model User {
   emailVerificationTokens EmailVerificationToken[]
   passwordResetTokens     PasswordResetToken[]
   phoneVerificationCodes  PhoneVerificationCode[]
+  passwordHistory         PasswordHistory[]
 
   // Audit logs
   adminAuditLogs  AuditLog[] @relation("AdminAuditLogs")
   targetAuditLogs AuditLog[] @relation("TargetAuditLogs")
+
+  // Token management
+  tokenEvents       TokenEvent[]
+  deviceSessions    DeviceSession[]
+  blacklistedTokens BlacklistedToken[]
+  securityEvents    SecurityEvent[]
 
   @@map("users")
 }
@@ -190,6 +197,15 @@ model RefreshToken {
   expiresAt DateTime
   createdAt DateTime @default(now())
 
+  // Enhanced device tracking
+  deviceId  String?
+  sessionId String?
+  ipAddress String?
+  userAgent String?
+
+  @@index([userId])
+  @@index([deviceId])
+  @@index([sessionId])
   @@map("refresh_tokens")
 }
 
@@ -213,6 +229,18 @@ model PasswordResetToken {
   createdAt DateTime @default(now())
 
   @@map("password_reset_tokens")
+}
+
+model PasswordHistory {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  passwordHash String
+  createdAt    DateTime @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
+  @@map("password_history")
 }
 
 model PhoneVerificationCode {
@@ -245,6 +273,88 @@ model AuditLog {
   @@index([action])
   @@index([createdAt])
   @@map("audit_logs")
+}
+
+// Token event logging for analytics and security monitoring
+model TokenEvent {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  eventType String // TOKEN_GENERATED, TOKEN_REFRESHED, SUSPICIOUS_ACTIVITY, etc.
+  deviceId  String?
+  sessionId String?
+  ipAddress String? // Hashed for privacy
+  userAgent String?
+  metadata  Json     @default("{}")
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([eventType])
+  @@index([deviceId])
+  @@index([createdAt])
+  @@map("token_events")
+}
+
+// Device session tracking
+model DeviceSession {
+  id                String   @id @default(cuid())
+  userId            String
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deviceId          String
+  sessionId         String   @unique
+  deviceFingerprint String
+  ipAddress         String // Hashed for privacy
+  userAgent         String
+  isActive          Boolean  @default(true)
+  lastUsed          DateTime @default(now())
+  createdAt         DateTime @default(now())
+  expiresAt         DateTime
+
+  @@unique([userId, deviceId])
+  @@index([userId])
+  @@index([deviceId])
+  @@index([isActive])
+  @@index([expiresAt])
+  @@map("device_sessions")
+}
+
+// Token blacklist for revoked tokens
+model BlacklistedToken {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique // Hash of the token for privacy
+  tokenType String // access, refresh
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  reason    String // logout, password_change, suspicious_activity, etc.
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([tokenHash])
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("blacklisted_tokens")
+}
+
+// Security event logging for monitoring and analytics
+model SecurityEvent {
+  id                String   @id @default(cuid())
+  userId            String?
+  user              User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  eventType         String // LOGIN_ANALYSIS, TOKEN_REFRESH_ANALYSIS, SUSPICIOUS_ACTIVITY, etc.
+  deviceId          String?
+  ipAddress         String? // Hashed for privacy
+  deviceFingerprint String?
+  riskScore         Int?
+  riskLevel         String? // low, medium, high, critical
+  riskFactors       String[] // Array of risk factor types
+  metadata          Json     @default("{}")
+  createdAt         DateTime @default(now())
+
+  @@index([userId])
+  @@index([eventType])
+  @@index([riskLevel])
+  @@index([createdAt])
+  @@map("security_events")
 }
 
 // Enums

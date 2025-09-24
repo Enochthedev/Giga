@@ -21,7 +21,7 @@ export class EnhancedOrderService extends OrderService {
   private transactionCoordinator: TransactionCoordinator;
 
   constructor(
-    prisma: PrismaClient,
+    _prisma: PrismaClient,
     cartService: CartService,
     inventoryService: InventoryService,
     authServiceClient: HttpAuthServiceClient,
@@ -110,7 +110,7 @@ export class EnhancedOrderService extends OrderService {
     try {
       // For simple status updates, use the base implementation
       if (this.isSimpleStatusUpdate(status)) {
-        return await super.updateOrderStatus(orderId, status, customerId);
+        return super.updateOrderStatus(orderId, status, customerId);
       }
 
       // For complex status updates that involve multiple services, use distributed transactions

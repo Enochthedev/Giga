@@ -1,3 +1,5 @@
+import { v4 as uuidv4 } from 'uuid';
+import { vi } from 'vitest';
 import {
   Order,
   OrderStatus,
@@ -5,12 +7,10 @@ import {
   PrismaClient,
   Product,
   Vendor,
-} from '@prisma/client';
-import { v4 as uuidv4 } from 'uuid';
-import { vi } from 'vitest';
+} from '../generated/prisma-client';
 
 export class TestDataFactory {
-  constructor(private prisma: PrismaClient) {}
+  constructor(private _prisma: PrismaClient) { }
 
   createVendor(overrides: Partial<Vendor> = {}): Promise<Vendor> {
     return this.prisma.vendor.create({

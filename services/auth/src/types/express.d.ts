@@ -1,9 +1,10 @@
 import { PrismaClient } from '../generated/prisma-client';
+import { DeviceInfo } from '../services/token-management.service';
 
 declare global {
   namespace Express {
     interface Request {
-      prisma: PrismaClient;
+      _prisma: PrismaClient;
       user?: {
         sub: string;
         email: string;
@@ -13,6 +14,9 @@ declare global {
         isEmailVerified?: boolean;
         isPhoneVerified?: boolean;
       };
+      deviceInfo?: DeviceInfo;
+      clientIp?: string;
+      deviceFingerprint?: string;
     }
   }
 }

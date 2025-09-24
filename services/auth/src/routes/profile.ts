@@ -108,7 +108,7 @@ router.post(
   apiRateLimit,
   authenticateToken,
   uploadService.getMulterConfig().single('avatar'),
-  async (req, res) => {
+  (req, res) => {
     try {
       if (!req.user) {
         return res.status(401).json({
@@ -205,7 +205,7 @@ router.delete(
   '/avatar',
   apiRateLimit,
   authenticateToken,
-  async (req, res) => {
+  (req, res) => {
     try {
       if (!req.user) {
         return res.status(401).json({

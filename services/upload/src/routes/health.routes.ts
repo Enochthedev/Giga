@@ -12,7 +12,7 @@ const router = Router();
  *       200:
  *         description: Service is healthy
  */
-router.get('/', (req: Request, res: Response) => {
+router.get('/', (_req: Request, res: Response) => {
   res.json({
     status: 'healthy',
     service: 'upload-service',
@@ -34,7 +34,7 @@ router.get('/', (req: Request, res: Response) => {
  *       200:
  *         description: Service is ready
  */
-router.get('/ready', async (req: Request, res: Response) => {
+router.get('/ready', (_req: Request, res: Response) => {
   try {
     // Check if upload directory is accessible
     const fs = require('fs/promises');

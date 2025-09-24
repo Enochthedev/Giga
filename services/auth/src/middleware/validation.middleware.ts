@@ -131,6 +131,75 @@ export const resendPhoneVerificationSchema = z
   })
   .strict();
 
+// Password reset validation schemas
+export const requestPasswordResetSchema = z
+  .object({
+    email: secureEmailSchema,
+  })
+  .strict();
+
+export const resetPasswordSchema = z
+  .object({
+    token: z
+      .string()
+      .min(1, 'Reset token is required')
+      .max(128, 'Invalid token format')
+      .regex(/^[a-f0-9]+$/, 'Invalid token format')
+      .transform(InputSanitizer.sanitizeString),
+    newPassword: securePasswordSchema,
+  })
+  .strict();
+
+export const verifyPasswordResetTokenSchema = z
+  .object({
+    token: z
+      .string()
+      .min(1, 'Reset token is required')
+      .max(128, 'Invalid token format')
+      .regex(/^[a-f0-9]+$/, 'Invalid token format')
+      .transform(InputSanitizer.sanitizeString),
+  })
+  .strict();
+
+// Basic profile validation schema
+export const updateBasicProfileSchema = z
+  .object({
+    firstName: z
+      .string()
+      .min(1, 'First name is required')
+      .max(50, 'First name too long')
+      .transform(InputSanitizer.sanitizeName)
+      .optional(),
+    lastName: z
+      .string()
+      .min(1, 'Last name is required')
+      .max(50, 'Last name too long')
+      .transform(InputSanitizer.sanitizeName)
+      .optional(),
+    phone: z
+      .string()
+      .max(20, 'Phone number too long')
+      .transform(InputSanitizer.sanitizePhone)
+      .optional()
+      .nullable(),
+    dateOfBirth: z
+      .string()
+      .datetime({ message: 'Invalid date format' })
+      .optional()
+      .nullable(),
+    gender: z
+      .enum(['MALE', 'FEMALE', 'OTHER', 'PREFER_NOT_TO_SAY'])
+      .optional()
+      .nullable(),
+    avatar: z
+      .string()
+      .url('Invalid avatar URL format')
+      .max(500, 'Avatar URL too long')
+      .optional()
+      .nullable(),
+  })
+  .strict();
+
 // Profile-specific validation schemas
 export const updateCustomerProfileSchema = z
   .object({
@@ -456,7 +525,7 @@ export const removeUserRoleSchema = z
 
 // Enhanced validation middleware with comprehensive security checks
 export const validate = (schema: z.ZodSchema) => {
-  return (req: Request, res: Response, next: NextFunction) => {
+  return (_req: Request, res: Response, next: NextFunction) => {
     try {
       // Pre-validation security checks
       const sizeValidation = RequestValidator.validateRequestSize(req);
@@ -564,7 +633,7 @@ export const validate = (schema: z.ZodSchema) => {
 
 // Security middleware for additional request validation
 export const securityValidation = (
-  req: Request,
+  _req: Request,
   res: Response,
   next: NextFunction
 ) => {

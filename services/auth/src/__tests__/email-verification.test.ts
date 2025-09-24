@@ -77,7 +77,7 @@ describe('EmailService', () => {
   });
 
   describe('sendVerificationEmail', () => {
-    it('should log email sending attempt', async () => {
+    it('should log email sending attempt', () => {
       const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
       const data = {
@@ -104,7 +104,7 @@ describe('EmailService', () => {
   });
 
   describe('sendWelcomeEmail', () => {
-    it('should log welcome email sending attempt', async () => {
+    it('should log welcome email sending attempt', () => {
       const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
       await emailService.sendWelcomeEmail('test@example.com', 'John');

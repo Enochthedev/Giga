@@ -43,7 +43,7 @@ export interface ProductSummary {
 }
 
 export class CartService {
-  constructor(private prisma: PrismaClient) {}
+  constructor(private _prisma: PrismaClient) {}
 
   /**
    * Get cart for a customer from Redis
@@ -652,7 +652,7 @@ export class CartService {
   async getCartExpiration(customerId: string): Promise<number | null> {
     try {
       const client = await redisService.connect();
-      const key = `cart:${customerId}`;
+      const _key = `cart:${customerId}`;
       const ttl = await client.ttl(key);
       return ttl > 0 ? ttl : null;
     } catch (error) {

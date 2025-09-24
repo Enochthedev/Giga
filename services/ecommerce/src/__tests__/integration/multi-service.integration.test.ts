@@ -19,7 +19,7 @@ import {
 } from '../utils/test-helpers';
 
 describe('Multi-Service Integration Tests', () => {
-  let prisma: PrismaClient;
+  let _prisma: PrismaClient;
   let testFactory: TestDataFactory;
   let vendor1: any;
   let vendor2: any;
@@ -39,7 +39,7 @@ describe('Multi-Service Integration Tests', () => {
     testFactory = new TestDataFactory(prisma);
   });
 
-  beforeEach(async () => {
+  beforeEach(() => {
     // Clean up test data
     await prisma.orderItem.deleteMany();
     await prisma.vendorOrder.deleteMany();
@@ -136,13 +136,13 @@ describe('Multi-Service Integration Tests', () => {
     }));
   });
 
-  afterAll(async () => {
+  afterAll(() => {
     await prisma.$disconnect();
     await redisService.quit();
   });
 
   describe('Complete Shopping Workflow', () => {
-    it('should handle complete cart-to-order workflow with multiple vendors', async () => {
+    it('should handle complete cart-to-order workflow with multiple vendors', () => {
       // Step 1: Add items from multiple vendors to cart
       const addItem1Response = await request(app)
         .post('/api/v1/cart/add')
@@ -269,7 +269,7 @@ describe('Multi-Service Integration Tests', () => {
       ).toHaveBeenCalledTimes(2);
     });
 
-    it('should handle order cancellation with inventory restoration', async () => {
+    it('should handle order cancellation with inventory restoration', () => {
       // Create order first
       await request(app)
         .post('/api/v1/cart/add')
@@ -335,7 +335,7 @@ describe('Multi-Service Integration Tests', () => {
     let vendorOrder1: any;
     let vendorOrder2: any;
 
-    beforeEach(async () => {
+    beforeEach(() => {
       // Create multi-vendor order
       await request(app)
         .post('/api/v1/cart/add')
@@ -369,7 +369,7 @@ describe('Multi-Service Integration Tests', () => {
       );
     });
 
-    it('should handle vendor order status updates independently', async () => {
+    it('should handle vendor order status updates independently', () => {
       // Mock vendor 1 authentication
       vi.doMock('../../middleware/auth.middleware', () => ({
         authMiddleware: (req: any, res: any, next: any) => {
@@ -449,7 +449,7 @@ describe('Multi-Service Integration Tests', () => {
       expect(updatedOrder?.status).toBe(OrderStatus.PROCESSING); // Should reflect the most advanced status
     });
 
-    it('should complete order when all vendor orders are delivered', async () => {
+    it('should complete order when all vendor orders are delivered', () => {
       // Update both vendor orders to delivered
       await prisma.vendorOrder.updateMany({
         where: { orderId: order.id },
@@ -471,7 +471,7 @@ describe('Multi-Service Integration Tests', () => {
   });
 
   describe('Payment Integration Workflow', () => {
-    it('should handle payment confirmation workflow', async () => {
+    it('should handle payment confirmation workflow', () => {
       // Add item to cart and create order
       await request(app)
         .post('/api/v1/cart/add')
@@ -522,7 +522,7 @@ describe('Multi-Service Integration Tests', () => {
       );
     });
 
-    it('should handle payment failure during order creation', async () => {
+    it('should handle payment failure during order creation', () => {
       // Mock payment service failure
       mockPaymentServiceClient.createPaymentIntent.mockRejectedValueOnce(
         new Error('Payment service unavailable')
@@ -560,7 +560,7 @@ describe('Multi-Service Integration Tests', () => {
   });
 
   describe('Inventory Management Workflow', () => {
-    it('should handle concurrent inventory updates', async () => {
+    it('should handle concurrent inventory updates', () => {
       // Create multiple customers trying to order the same limited product
       const limitedProduct = await testFactory.createProduct(vendor1.id, {
         name: 'Limited Product',
@@ -629,7 +629,7 @@ describe('Multi-Service Integration Tests', () => {
       expect(failedResponses[0].body.error).toContain('Insufficient stock');
     });
 
-    it('should handle inventory reservation expiration', async () => {
+    it('should handle inventory reservation expiration', () => {
       await request(app)
         .post('/api/v1/cart/add')
         .set('Authorization', authToken)
@@ -674,7 +674,7 @@ describe('Multi-Service Integration Tests', () => {
   });
 
   describe('Error Recovery and Resilience', () => {
-    it('should handle auth service unavailability gracefully', async () => {
+    it('should handle auth service unavailability gracefully', () => {
       // Mock auth service failure
       mockAuthServiceClient.validateToken.mockRejectedValueOnce(
         new Error('Auth service unavailable')
@@ -688,7 +688,7 @@ describe('Multi-Service Integration Tests', () => {
       expect(response.body.success).toBe(false);
     });
 
-    it('should handle notification service failures gracefully', async () => {
+    it('should handle notification service failures gracefully', () => {
       // Mock notification service failure
       mockNotificationServiceClient.sendOrderConfirmation.mockRejectedValueOnce(
         new Error('Notification service unavailable')
@@ -717,7 +717,7 @@ describe('Multi-Service Integration Tests', () => {
       expect(orderResponse.body.success).toBe(true);
     });
 
-    it('should handle database transaction failures', async () => {
+    it('should handle database transaction failures', () => {
       // Mock database transaction failure
       vi.spyOn(prisma, '$transaction').mockRejectedValueOnce(
         new Error('Database transaction failed')
@@ -748,7 +748,7 @@ describe('Multi-Service Integration Tests', () => {
   });
 
   describe('Performance and Scalability', () => {
-    it('should handle high-volume cart operations', async () => {
+    it('should handle high-volume cart operations', () => {
       const operations = Array(50)
         .fill(null)
         .map((_, index) =>
@@ -768,7 +768,7 @@ describe('Multi-Service Integration Tests', () => {
       expect(successfulResponses.length).toBeGreaterThan(40);
     });
 
-    it('should handle large order creation efficiently', async () => {
+    it('should handle large order creation efficiently', () => {
       // Add many items to cart
       for (let i = 0; i < 10; i++) {
         await request(app)

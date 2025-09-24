@@ -16129,7 +16129,7 @@ export namespace Prisma {
 
   export type GuestProfileMinAggregateOutputType = {
     id: string | null
-    userId: string | null
+    _userId: string | null
     loyaltyPoints: number | null
     createdAt: Date | null
     updatedAt: Date | null
@@ -16139,7 +16139,7 @@ export namespace Prisma {
 
   export type GuestProfileMaxAggregateOutputType = {
     id: string | null
-    userId: string | null
+    _userId: string | null
     loyaltyPoints: number | null
     createdAt: Date | null
     updatedAt: Date | null
@@ -16304,7 +16304,7 @@ export namespace Prisma {
 
   export type GuestProfileGroupByOutputType = {
     id: string
-    userId: string
+    _userId: string
     personalInfo: JsonValue
     contactInfo: JsonValue
     preferences: JsonValue
@@ -16403,7 +16403,7 @@ export namespace Prisma {
     objects: {}
     scalars: $Extensions.GetPayloadResult<{
       id: string
-      userId: string
+      _userId: string
       personalInfo: Prisma.JsonValue
       contactInfo: Prisma.JsonValue
       preferences: Prisma.JsonValue
@@ -21598,7 +21598,7 @@ export namespace Prisma {
 
   export type GuestProfileCreateInput = {
     id?: string
-    userId: string
+    _userId: string
     personalInfo: JsonNullValueInput | InputJsonValue
     contactInfo: JsonNullValueInput | InputJsonValue
     preferences: JsonNullValueInput | InputJsonValue
@@ -21617,7 +21617,7 @@ export namespace Prisma {
 
   export type GuestProfileUncheckedCreateInput = {
     id?: string
-    userId: string
+    _userId: string
     personalInfo: JsonNullValueInput | InputJsonValue
     contactInfo: JsonNullValueInput | InputJsonValue
     preferences: JsonNullValueInput | InputJsonValue
@@ -21674,7 +21674,7 @@ export namespace Prisma {
 
   export type GuestProfileCreateManyInput = {
     id?: string
-    userId: string
+    _userId: string
     personalInfo: JsonNullValueInput | InputJsonValue
     contactInfo: JsonNullValueInput | InputJsonValue
     preferences: JsonNullValueInput | InputJsonValue

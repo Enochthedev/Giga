@@ -34,13 +34,13 @@ afterAll(() => {
 });
 
 // Per-test setup
-beforeEach(async () => {
+beforeEach(() => {
   // Clear test data before each test
   // TODO: Clear test data when database is set up
 });
 
 // Per-test cleanup
-afterEach(async () => {
+afterEach(() => {
   // Clean up any test artifacts
   // TODO: Clean up test artifacts when needed
 });

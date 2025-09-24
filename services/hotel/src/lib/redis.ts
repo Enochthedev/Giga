@@ -22,7 +22,7 @@ redisClient.on('end', () => {
 });
 
 // Connect to Redis
-const connectRedis = async () => {
+const connectRedis = () => {
   try {
     if (!redisClient.isOpen) {
       await redisClient.connect();
@@ -33,13 +33,13 @@ const connectRedis = async () => {
 };
 
 // Graceful shutdown
-process.on('SIGINT', async () => {
+process.on('SIGINT', () => {
   console.log('Closing Redis connection...');
   await redisClient.quit();
   process.exit(0);
 });
 
-process.on('SIGTERM', async () => {
+process.on('SIGTERM', () => {
   console.log('Closing Redis connection...');
   await redisClient.quit();
   process.exit(0);

@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { AuthController } from '../controllers/auth.controller';
+import { AccountLockoutMiddleware } from '../middleware/accountLockout.middleware';
 import { authenticateToken } from '../middleware/auth.middleware';
 import { requirePhoneNumber } from '../middleware/phoneVerification.middleware';
 import {
@@ -7,18 +8,23 @@ import {
   authRateLimit,
   passwordRateLimit,
 } from '../middleware/rateLimit.middleware';
+import { SessionManagementMiddleware } from '../middleware/sessionManagement.middleware';
+import { TwoFactorAuthMiddleware } from '../middleware/twoFactorAuth.middleware';
 import {
   changePasswordSchema,
   loginSchema,
   refreshTokenSchema,
   registerSchema,
+  requestPasswordResetSchema,
   resendEmailVerificationSchema,
   resendPhoneVerificationSchema,
+  resetPasswordSchema,
   sendPhoneVerificationSchema,
   switchRoleSchema,
   updateProfileSchema,
   validate,
   verifyEmailSchema,
+  verifyPasswordResetTokenSchema,
   verifyPhoneSchema,
 } from '../middleware/validation.middleware';
 
@@ -71,6 +77,7 @@ router.post(
 router.post(
   '/login',
   authRateLimit,
+  AccountLockoutMiddleware.checkAccountLockout,
   validate(loginSchema),
   authController.login.bind(authController)
 );
@@ -142,6 +149,7 @@ router.get(
   '/profile',
   apiRateLimit,
   authenticateToken,
+  SessionManagementMiddleware.validateSession,
   authController.getProfile.bind(authController)
 );
 
@@ -175,6 +183,7 @@ router.put(
   '/profile',
   apiRateLimit,
   authenticateToken,
+  SessionManagementMiddleware.validateSession,
   validate(updateProfileSchema),
   authController.updateProfile.bind(authController)
 );
@@ -210,6 +219,8 @@ router.put(
   '/change-password',
   passwordRateLimit,
   authenticateToken,
+  SessionManagementMiddleware.validateSession,
+  TwoFactorAuthMiddleware.check2FARequirement,
   validate(changePasswordSchema),
   authController.changePassword.bind(authController)
 );
@@ -418,6 +429,101 @@ router.post(
   authRateLimit,
   validate(resendPhoneVerificationSchema),
   authController.resendPhoneVerification.bind(authController)
+);
+
+/**
+ * @swagger
+ * /api/v1/auth/request-password-reset:
+ *   post:
+ *     summary: Request password reset
+ *     tags: [Password Reset]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [email]
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: Email address to send reset link to
+ *     responses:
+ *       200:
+ *         description: Reset email sent if account exists
+ *       429:
+ *         description: Too many reset requests
+ */
+router.post(
+  '/request-password-reset',
+  passwordRateLimit,
+  validate(requestPasswordResetSchema),
+  authController.requestPasswordReset.bind(authController)
+);
+
+/**
+ * @swagger
+ * /api/v1/auth/verify-reset-token:
+ *   post:
+ *     summary: Verify password reset token
+ *     tags: [Password Reset]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [token]
+ *             properties:
+ *               token:
+ *                 type: string
+ *                 description: Password reset token to verify
+ *     responses:
+ *       200:
+ *         description: Token is valid
+ *       400:
+ *         description: Invalid or expired token
+ */
+router.post(
+  '/verify-reset-token',
+  apiRateLimit,
+  validate(verifyPasswordResetTokenSchema),
+  authController.verifyPasswordResetToken.bind(authController)
+);
+
+/**
+ * @swagger
+ * /api/v1/auth/reset-password:
+ *   post:
+ *     summary: Reset password using token
+ *     tags: [Password Reset]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [token, newPassword]
+ *             properties:
+ *               token:
+ *                 type: string
+ *                 description: Password reset token
+ *               newPassword:
+ *                 type: string
+ *                 minLength: 8
+ *                 description: New password meeting security requirements
+ *     responses:
+ *       200:
+ *         description: Password reset successfully
+ *       400:
+ *         description: Invalid token or weak password
+ */
+router.post(
+  '/reset-password',
+  passwordRateLimit,
+  validate(resetPasswordSchema),
+  authController.resetPassword.bind(authController)
 );
 
 export { router as authRoutes };

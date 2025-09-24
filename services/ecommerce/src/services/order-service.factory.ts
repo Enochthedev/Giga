@@ -26,7 +26,7 @@ export class OrderServiceFactory {
    */
   static create(
     config: OrderServiceConfig,
-    prisma: PrismaClient,
+    _prisma: PrismaClient,
     cartService: CartService,
     inventoryService: InventoryService,
     authServiceClient: HttpAuthServiceClient,

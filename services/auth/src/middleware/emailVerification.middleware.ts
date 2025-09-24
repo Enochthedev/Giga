@@ -4,7 +4,7 @@ import { NextFunction, Request, Response } from 'express';
  * Middleware to require email verification for certain endpoints
  */
 export const requireEmailVerification = (
-  req: Request,
+  _req: Request,
   res: Response,
   next: NextFunction
 ) => {
@@ -49,7 +49,7 @@ export const requireEmailVerification = (
  * Middleware to check email verification status and add warning if not verified
  */
 export const checkEmailVerificationStatus = (
-  req: Request,
+  _req: Request,
   res: Response,
   next: NextFunction
 ) => {

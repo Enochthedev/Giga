@@ -83,7 +83,7 @@ class ErrorLogger {
 }
 
 export function correlationIdMiddleware(
-  req: Request,
+  _req: Request,
   res: Response,
   next: NextFunction
 ): void {
@@ -100,7 +100,7 @@ export function correlationIdMiddleware(
 
 export function errorHandler(
   error: Error,
-  req: Request,
+  _req: Request,
   res: Response,
   _next: NextFunction
 ): void {
@@ -287,7 +287,7 @@ function handlePrismaError(
   }
 }
 
-export function notFoundHandler(req: Request, res: Response): void {
+export function notFoundHandler(_req: Request, res: Response): void {
   const correlationId = req.correlationId;
 
   const errorResponse: ErrorResponse = {
@@ -311,7 +311,7 @@ function generateCorrelationId(): string {
 
 // Async error wrapper for route handlers
 export function asyncHandler(fn: Function) {
-  return (req: Request, res: Response, next: NextFunction) => {
+  return (_req: Request, res: Response, next: NextFunction) => {
     Promise.resolve(fn(req, res, next)).catch(next);
   };
 }

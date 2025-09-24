@@ -84,7 +84,7 @@ export class TransactionCoordinator {
   private readonly serviceOperations: Map<string, ServiceOperation> = new Map();
 
   constructor(
-    private prisma: PrismaClient,
+    private _prisma: PrismaClient,
     private authServiceClient: HttpAuthServiceClient,
     private paymentServiceClient: HttpPaymentServiceClient,
     private notificationServiceClient: HttpNotificationServiceClient
@@ -106,7 +106,7 @@ export class TransactionCoordinator {
           { ...payload.metadata, idempotencyKey }
         );
       },
-      rollback: async (payload, result) => {
+      rollback: (payload, result) => {
         if (result?.id) {
           await this.paymentServiceClient.cancelPaymentIntent(result.id);
         }
@@ -120,7 +120,7 @@ export class TransactionCoordinator {
           payload.paymentIntentId
         );
       },
-      rollback: async (payload, result) => {
+      rollback: (payload, result) => {
         if (result?.success && payload.paymentIntentId) {
           await this.paymentServiceClient.refundPayment(
             payload.paymentIntentId
@@ -137,7 +137,7 @@ export class TransactionCoordinator {
           payload.amount
         );
       },
-      rollback: async () => {
+      rollback: () => {
         // Refunds cannot be rolled back
       },
       isIdempotent: true,
@@ -148,7 +148,7 @@ export class TransactionCoordinator {
       execute: (payload, _idempotencyKey) => {
         return this.authServiceClient.getUserInfo(payload.userId);
       },
-      rollback: async () => {
+      rollback: () => {
         // Read operations don't need rollback
       },
       isIdempotent: true,
@@ -161,7 +161,7 @@ export class TransactionCoordinator {
           payload.permission
         );
       },
-      rollback: async () => {
+      rollback: () => {
         // Read operations don't need rollback
       },
       isIdempotent: true,
@@ -172,7 +172,7 @@ export class TransactionCoordinator {
       execute: (payload, _idempotencyKey) => {
         return this.notificationServiceClient.sendOrderConfirmation(payload);
       },
-      rollback: async () => {
+      rollback: () => {
         // Notifications cannot be rolled back, but we can send cancellation notice
       },
       isIdempotent: false, // Notifications should not be duplicated
@@ -184,7 +184,7 @@ export class TransactionCoordinator {
           payload
         );
       },
-      rollback: async () => {
+      rollback: () => {
         // Notifications cannot be rolled back
       },
       isIdempotent: false,

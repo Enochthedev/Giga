@@ -152,7 +152,7 @@ export class UploadService {
   /**
    * Specialized upload methods for different entity types
    */
-  uploadProfilePhoto(userId: string, file: FileData): Promise<UploadResult> {
+  uploadProfilePhoto(_userId: string, file: FileData): Promise<UploadResult> {
     return this.uploadFile({
       file,
       entityType: EntityType.USER_PROFILE,
@@ -420,7 +420,7 @@ export class UploadService {
 
       for (const file of files) {
         const filepath = path.join(tempDir, file);
-        const stats = await fs.stat(filepath);
+        const _stats = await fs.stat(filepath);
 
         if (stats.mtime.getTime() < cutoffTime) {
           await fs.unlink(filepath);

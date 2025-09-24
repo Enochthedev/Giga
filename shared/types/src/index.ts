@@ -1,9 +1,11 @@
 // Core platform types
-export * from './user';
 export * from './auth';
-export * from './ecommerce';
-export * from './taxi';
-export * from './hotel';
-export * from './payment';
 export * from './common';
+export * from './ecommerce';
 export * from './events';
+export * from './hotel';
+export * from './hotel-service';
+export * from './payment';
+export * from './taxi';
+export * from './user';
+

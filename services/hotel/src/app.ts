@@ -44,7 +44,7 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Request logging middleware
-app.use((req: Request, res: Response, next: NextFunction) => {
+app.use((_req: Request, res: Response, next: NextFunction) => {
   logger.info(`${req.method} ${req.path}`, {
     ip: req.ip,
     userAgent: req.get('User-Agent'),
@@ -54,7 +54,7 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 });
 
 // Health check endpoint
-app.get('/health', (req: Request, res: Response) => {
+app.get('/health', (_req: Request, res: Response) => {
   res.json({
     success: true,
     message: 'Hotel Service is healthy',
@@ -64,7 +64,7 @@ app.get('/health', (req: Request, res: Response) => {
 });
 
 // API routes will be added here
-app.get('/api/v1', (req: Request, res: Response) => {
+app.get('/api/v1', (_req: Request, res: Response) => {
   res.json({
     success: true,
     message: 'Hotel Service API v1',
@@ -82,7 +82,7 @@ app.get('/api/v1', (req: Request, res: Response) => {
 });
 
 // API documentation placeholder
-app.get('/api/docs', (req: Request, res: Response) => {
+app.get('/api/docs', (_req: Request, res: Response) => {
   res.json({
     success: true,
     message: 'API documentation will be available here',
@@ -91,7 +91,7 @@ app.get('/api/docs', (req: Request, res: Response) => {
 });
 
 // 404 handler
-app.use('*', (req: Request, res: Response) => {
+app.use('*', (_req: Request, res: Response) => {
   res.status(404).json({
     success: false,
     error: {

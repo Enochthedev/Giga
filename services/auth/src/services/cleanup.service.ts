@@ -2,7 +2,7 @@ import { PrismaClient } from '../generated/prisma-client';
 
 export class CleanupService {
   private static instance: CleanupService;
-  private prisma: PrismaClient;
+  private _prisma: PrismaClient;
   private cleanupInterval: NodeJS.Timeout | null = null;
 
   private constructor() {
@@ -243,7 +243,7 @@ export class CleanupService {
   /**
    * Clean up tokens for a specific user
    */
-  async cleanupUserTokens(userId: string): Promise<void> {
+  async cleanupUserTokens(_userId: string): Promise<void> {
     try {
       await Promise.all([
         this.prisma.emailVerificationToken.deleteMany({

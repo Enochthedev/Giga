@@ -116,20 +116,20 @@ export class CacheService {
   }
 
   // Cart caching with real-time updates
-  async cacheCart(userId: string, cartData: any): Promise<void> {
+  async cacheCart(_userId: string, cartData: any): Promise<void> {
     await redisService.setCart(userId, cartData, this.config.cartTTL);
   }
 
   // eslint-disable-next-line require-await
-  async getCachedCart(userId: string): Promise<any | null> {
+  async getCachedCart(_userId: string): Promise<any | null> {
     return redisService.getCart(userId);
   }
 
-  async invalidateCart(userId: string): Promise<void> {
+  async invalidateCart(_userId: string): Promise<void> {
     await redisService.deleteCart(userId);
   }
 
-  async invalidateUserCarts(userId: string): Promise<void> {
+  async invalidateUserCarts(_userId: string): Promise<void> {
     await redisService.invalidateByTags([`user:${userId}`]);
   }
 
@@ -295,7 +295,7 @@ export class CacheService {
 
   // Scheduled invalidation
   private scheduleInvalidation(tags: string[], delaySeconds: number): void {
-    const key = tags.join(',');
+    const _key = tags.join(',');
 
     // Clear existing timeout if any
     if (this.invalidationQueue.has(key)) {
@@ -303,7 +303,7 @@ export class CacheService {
     }
 
     // Schedule new invalidation
-    const timeout = setTimeout(async () => {
+    const timeout = setTimeout(() => {
       try {
         await redisService.invalidateByTags(tags);
         this.invalidationQueue.delete(key);
@@ -391,7 +391,7 @@ export class CacheService {
   }
 
   // Cache preloading for specific scenarios
-  async preloadForUser(userId: string): Promise<void> {
+  async preloadForUser(_userId: string): Promise<void> {
     // Preload user-specific data like cart, recent orders, etc.
     console.log(`Preloading cache for user: ${userId}`);
     // Implementation would depend on user behavior patterns

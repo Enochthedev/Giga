@@ -1,4 +1,3 @@
-import { PrismaClient } from '@prisma/client';
 import request from 'supertest';
 import {
   afterAll,
@@ -10,10 +9,11 @@ import {
   vi,
 } from 'vitest';
 import { app } from '../../app';
+import { PrismaClient } from '../../generated/prisma-client';
 import { redisService } from '../../services/redis.service';
 
 describe('Cart Integration Tests', () => {
-  let prisma: PrismaClient;
+  let _prisma: PrismaClient;
   let product: any;
   let customerId: string;
   let authToken: string;
@@ -28,7 +28,7 @@ describe('Cart Integration Tests', () => {
     });
   });
 
-  beforeEach(async () => {
+  beforeEach(() => {
     // Clean up test data
     await prisma.orderItem.deleteMany();
     await prisma.vendorOrder.deleteMany();
@@ -89,13 +89,13 @@ describe('Cart Integration Tests', () => {
     }));
   });
 
-  afterAll(async () => {
+  afterAll(() => {
     await prisma.$disconnect();
     await redisService.quit();
   });
 
   describe('GET /api/v1/cart', () => {
-    it('should return empty cart for new customer', async () => {
+    it('should return empty cart for new customer', () => {
       const response = await request(app)
         .get('/api/v1/cart')
         .set('Authorization', authToken)
@@ -106,7 +106,7 @@ describe('Cart Integration Tests', () => {
       expect(response.body.data.total).toBe(0);
     });
 
-    it('should return cart with items when cart exists', async () => {
+    it('should return cart with items when cart exists', () => {
       // Add item to cart first
       await request(app)
         .post('/api/v1/cart/add')
@@ -131,7 +131,7 @@ describe('Cart Integration Tests', () => {
   });
 
   describe('POST /api/v1/cart/add', () => {
-    it('should add item to cart successfully', async () => {
+    it('should add item to cart successfully', () => {
       const response = await request(app)
         .post('/api/v1/cart/add')
         .set('Authorization', authToken)
@@ -147,7 +147,7 @@ describe('Cart Integration Tests', () => {
       expect(response.body.data.items[0].quantity).toBe(2);
     });
 
-    it('should return 400 for invalid product ID', async () => {
+    it('should return 400 for invalid product ID', () => {
       const response = await request(app)
         .post('/api/v1/cart/add')
         .set('Authorization', authToken)
@@ -161,7 +161,7 @@ describe('Cart Integration Tests', () => {
       expect(response.body.error).toContain('Product not found');
     });
 
-    it('should return 400 for insufficient stock', async () => {
+    it('should return 400 for insufficient stock', () => {
       const response = await request(app)
         .post('/api/v1/cart/add')
         .set('Authorization', authToken)
@@ -175,7 +175,7 @@ describe('Cart Integration Tests', () => {
       expect(response.body.error).toContain('Insufficient stock');
     });
 
-    it('should return 400 for invalid quantity', async () => {
+    it('should return 400 for invalid quantity', () => {
       const response = await request(app)
         .post('/api/v1/cart/add')
         .set('Authorization', authToken)
@@ -188,7 +188,7 @@ describe('Cart Integration Tests', () => {
       expect(response.body.success).toBe(false);
     });
 
-    it('should update quantity if item already exists in cart', async () => {
+    it('should update quantity if item already exists in cart', () => {
       // Add item first time
       await request(app)
         .post('/api/v1/cart/add')
@@ -217,7 +217,7 @@ describe('Cart Integration Tests', () => {
   describe('PUT /api/v1/cart/items/:itemId', () => {
     let cartItem: any;
 
-    beforeEach(async () => {
+    beforeEach(() => {
       // Add item to cart first
       const addResponse = await request(app)
         .post('/api/v1/cart/add')
@@ -229,7 +229,7 @@ describe('Cart Integration Tests', () => {
       cartItem = addResponse.body.data.items[0];
     });
 
-    it('should update item quantity successfully', async () => {
+    it('should update item quantity successfully', () => {
       const response = await request(app)
         .put(`/api/v1/cart/items/${cartItem.id}`)
         .set('Authorization', authToken)
@@ -242,7 +242,7 @@ describe('Cart Integration Tests', () => {
       expect(response.body.data.items[0].quantity).toBe(5);
     });
 
-    it('should return 404 for non-existent item', async () => {
+    it('should return 404 for non-existent item', () => {
       const response = await request(app)
         .put('/api/v1/cart/items/non-existent-item')
         .set('Authorization', authToken)
@@ -254,7 +254,7 @@ describe('Cart Integration Tests', () => {
       expect(response.body.success).toBe(false);
     });
 
-    it('should return 400 for insufficient stock', async () => {
+    it('should return 400 for insufficient stock', () => {
       const response = await request(app)
         .put(`/api/v1/cart/items/${cartItem.id}`)
         .set('Authorization', authToken)
@@ -271,7 +271,7 @@ describe('Cart Integration Tests', () => {
   describe('DELETE /api/v1/cart/items/:itemId', () => {
     let cartItem: any;
 
-    beforeEach(async () => {
+    beforeEach(() => {
       // Add item to cart first
       const addResponse = await request(app)
         .post('/api/v1/cart/add')
@@ -283,7 +283,7 @@ describe('Cart Integration Tests', () => {
       cartItem = addResponse.body.data.items[0];
     });
 
-    it('should remove item from cart successfully', async () => {
+    it('should remove item from cart successfully', () => {
       const response = await request(app)
         .delete(`/api/v1/cart/items/${cartItem.id}`)
         .set('Authorization', authToken)
@@ -293,7 +293,7 @@ describe('Cart Integration Tests', () => {
       expect(response.body.data.items).toHaveLength(0);
     });
 
-    it('should return 404 for non-existent item', async () => {
+    it('should return 404 for non-existent item', () => {
       const response = await request(app)
         .delete('/api/v1/cart/items/non-existent-item')
         .set('Authorization', authToken)
@@ -304,7 +304,7 @@ describe('Cart Integration Tests', () => {
   });
 
   describe('DELETE /api/v1/cart', () => {
-    beforeEach(async () => {
+    beforeEach(() => {
       // Add items to cart first
       await request(app)
         .post('/api/v1/cart/add')
@@ -315,7 +315,7 @@ describe('Cart Integration Tests', () => {
         });
     });
 
-    it('should clear entire cart successfully', async () => {
+    it('should clear entire cart successfully', () => {
       const response = await request(app)
         .delete('/api/v1/cart')
         .set('Authorization', authToken)
@@ -334,7 +334,7 @@ describe('Cart Integration Tests', () => {
   });
 
   describe('GET /api/v1/cart/validate', () => {
-    beforeEach(async () => {
+    beforeEach(() => {
       // Add item to cart
       await request(app)
         .post('/api/v1/cart/add')
@@ -345,7 +345,7 @@ describe('Cart Integration Tests', () => {
         });
     });
 
-    it('should validate cart successfully when all items are available', async () => {
+    it('should validate cart successfully when all items are available', () => {
       const response = await request(app)
         .get('/api/v1/cart/validate')
         .set('Authorization', authToken)
@@ -356,7 +356,7 @@ describe('Cart Integration Tests', () => {
       expect(response.body.data.validation.issues).toHaveLength(0);
     });
 
-    it('should return validation issues when product becomes unavailable', async () => {
+    it('should return validation issues when product becomes unavailable', () => {
       // Make product inactive
       await prisma.product.update({
         where: { id: product.id },
@@ -375,7 +375,7 @@ describe('Cart Integration Tests', () => {
   });
 
   describe('POST /api/v1/cart/reserve', () => {
-    beforeEach(async () => {
+    beforeEach(() => {
       // Add item to cart
       await request(app)
         .post('/api/v1/cart/add')
@@ -386,7 +386,7 @@ describe('Cart Integration Tests', () => {
         });
     });
 
-    it('should reserve inventory for cart items successfully', async () => {
+    it('should reserve inventory for cart items successfully', () => {
       const response = await request(app)
         .post('/api/v1/cart/reserve')
         .set('Authorization', authToken)
@@ -400,7 +400,7 @@ describe('Cart Integration Tests', () => {
       expect(response.body.data.expiresInMinutes).toBe(30);
     });
 
-    it('should return 400 for insufficient inventory', async () => {
+    it('should return 400 for insufficient inventory', () => {
       // Update product inventory to have less stock
       await prisma.productInventory.update({
         where: { productId: product.id },
@@ -421,7 +421,7 @@ describe('Cart Integration Tests', () => {
   });
 
   describe('GET /api/v1/cart/checkout/validate', () => {
-    beforeEach(async () => {
+    beforeEach(() => {
       // Add item to cart
       await request(app)
         .post('/api/v1/cart/add')
@@ -432,7 +432,7 @@ describe('Cart Integration Tests', () => {
         });
     });
 
-    it('should validate cart for checkout successfully', async () => {
+    it('should validate cart for checkout successfully', () => {
       const response = await request(app)
         .get('/api/v1/cart/checkout/validate')
         .set('Authorization', authToken)
@@ -445,7 +445,7 @@ describe('Cart Integration Tests', () => {
       expect(response.body.data.validation.totalValue).toBeGreaterThan(0);
     });
 
-    it('should return validation issues for empty cart', async () => {
+    it('should return validation issues for empty cart', () => {
       // Clear cart first
       await request(app).delete('/api/v1/cart').set('Authorization', authToken);
 
@@ -462,7 +462,7 @@ describe('Cart Integration Tests', () => {
   });
 
   describe('POST /api/v1/cart/merge', () => {
-    it('should merge anonymous cart with authenticated user cart', async () => {
+    it('should merge anonymous cart with authenticated user cart', () => {
       const anonymousSessionId = 'anonymous-session-123';
 
       // Create anonymous cart in Redis
@@ -504,7 +504,7 @@ describe('Cart Integration Tests', () => {
       expect(response.body.data.items[0].productId).toBe(product.id);
     });
 
-    it('should return 400 for missing anonymous session ID', async () => {
+    it('should return 400 for missing anonymous session ID', () => {
       const response = await request(app)
         .post('/api/v1/cart/merge')
         .set('Authorization', authToken)
@@ -516,7 +516,7 @@ describe('Cart Integration Tests', () => {
   });
 
   describe('GET /api/v1/cart/inventory', () => {
-    beforeEach(async () => {
+    beforeEach(() => {
       // Add item to cart
       await request(app)
         .post('/api/v1/cart/add')
@@ -527,7 +527,7 @@ describe('Cart Integration Tests', () => {
         });
     });
 
-    it('should return inventory status for cart items', async () => {
+    it('should return inventory status for cart items', () => {
       const response = await request(app)
         .get('/api/v1/cart/inventory')
         .set('Authorization', authToken)
@@ -546,7 +546,7 @@ describe('Cart Integration Tests', () => {
   });
 
   describe('Rate Limiting', () => {
-    it('should apply rate limiting to cart operations', async () => {
+    it('should apply rate limiting to cart operations', () => {
       // Make multiple rapid requests to test rate limiting
       const requests = Array(20)
         .fill(null)
@@ -563,7 +563,7 @@ describe('Cart Integration Tests', () => {
   });
 
   describe('Error Handling', () => {
-    it('should handle database connection errors gracefully', async () => {
+    it('should handle database connection errors gracefully', () => {
       // Mock database error
       vi.spyOn(prisma.product, 'findUnique').mockRejectedValueOnce(
         new Error('Database connection failed')
@@ -582,7 +582,7 @@ describe('Cart Integration Tests', () => {
       expect(response.body.error).toBeDefined();
     });
 
-    it('should handle Redis connection errors gracefully', async () => {
+    it('should handle Redis connection errors gracefully', () => {
       // Mock Redis error
       vi.spyOn(redisService, 'get').mockRejectedValueOnce(
         new Error('Redis connection failed')

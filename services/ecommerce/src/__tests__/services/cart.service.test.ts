@@ -18,7 +18,7 @@ describe('CartService', () => {
   });
 
   describe('getCart', () => {
-    it('should return empty cart for new customer', async () => {
+    it('should return empty cart for new customer', () => {
       const customerId = 'customer-1';
       mockRedis.get.mockResolvedValue(null);
 
@@ -36,7 +36,7 @@ describe('CartService', () => {
       expect(mockRedis.get).toHaveBeenCalledWith(`cart:${customerId}`);
     });
 
-    it('should return existing cart from Redis', async () => {
+    it('should return existing cart from Redis', () => {
       const customerId = 'customer-1';
       const existingCart = testFactory.createCart(customerId, [
         testFactory.createCartItem('product-1', 2),
@@ -49,7 +49,7 @@ describe('CartService', () => {
       expect(cart).toEqual(existingCart);
     });
 
-    it('should enrich cart items with product data', async () => {
+    it('should enrich cart items with product data', () => {
       const customerId = 'customer-1';
       const vendor = await testFactory.createVendor();
       const product = await testFactory.createProduct(vendor.id);
@@ -75,7 +75,7 @@ describe('CartService', () => {
   });
 
   describe('addItem', () => {
-    it('should add new item to empty cart', async () => {
+    it('should add new item to empty cart', () => {
       const customerId = 'customer-1';
       const vendor = await testFactory.createVendor();
       const product = await testFactory.createProduct(vendor.id, {
@@ -102,7 +102,7 @@ describe('CartService', () => {
       );
     });
 
-    it('should update quantity for existing item', async () => {
+    it('should update quantity for existing item', () => {
       const customerId = 'customer-1';
       const vendor = await testFactory.createVendor();
       const product = await testFactory.createProduct(vendor.id, {
@@ -122,7 +122,7 @@ describe('CartService', () => {
       expect(cart.items[0].quantity).toBe(3);
     });
 
-    it('should throw error for inactive product', async () => {
+    it('should throw error for inactive product', () => {
       const customerId = 'customer-1';
       const vendor = await testFactory.createVendor();
       const product = await testFactory.createProduct(vendor.id, {
@@ -136,7 +136,7 @@ describe('CartService', () => {
       ).rejects.toThrow('Product is not available');
     });
 
-    it('should throw error for insufficient inventory', async () => {
+    it('should throw error for insufficient inventory', () => {
       const customerId = 'customer-1';
       const vendor = await testFactory.createVendor();
       const product = await testFactory.createProduct(vendor.id, {
@@ -152,7 +152,7 @@ describe('CartService', () => {
   });
 
   describe('updateItemQuantity', () => {
-    it('should update item quantity', async () => {
+    it('should update item quantity', () => {
       const customerId = 'customer-1';
       const vendor = await testFactory.createVendor();
       const product = await testFactory.createProduct(vendor.id);
@@ -172,7 +172,7 @@ describe('CartService', () => {
       expect(cart.items[0].quantity).toBe(5);
     });
 
-    it('should remove item when quantity is 0', async () => {
+    it('should remove item when quantity is 0', () => {
       const customerId = 'customer-1';
       const vendor = await testFactory.createVendor();
       const product = await testFactory.createProduct(vendor.id);
@@ -192,7 +192,7 @@ describe('CartService', () => {
       expect(cart.items).toHaveLength(0);
     });
 
-    it('should throw error for non-existent item', async () => {
+    it('should throw error for non-existent item', () => {
       const customerId = 'customer-1';
       mockRedis.get.mockResolvedValue(
         JSON.stringify(testFactory.createCart(customerId))
@@ -205,7 +205,7 @@ describe('CartService', () => {
   });
 
   describe('removeItem', () => {
-    it('should remove item from cart', async () => {
+    it('should remove item from cart', () => {
       const customerId = 'customer-1';
       const vendor = await testFactory.createVendor();
       const product1 = await testFactory.createProduct(vendor.id);
@@ -229,7 +229,7 @@ describe('CartService', () => {
   });
 
   describe('clearCart', () => {
-    it('should clear all items from cart', async () => {
+    it('should clear all items from cart', () => {
       const customerId = 'customer-1';
       mockRedis.del.mockResolvedValue(1);
 
@@ -240,7 +240,7 @@ describe('CartService', () => {
   });
 
   describe('validateCartItems', () => {
-    it('should return valid for available items', async () => {
+    it('should return valid for available items', () => {
       const customerId = 'customer-1';
       const vendor = await testFactory.createVendor();
       const product = await testFactory.createProduct(vendor.id, {
@@ -257,7 +257,7 @@ describe('CartService', () => {
       expect(result.issues).toHaveLength(0);
     });
 
-    it('should detect unavailable products', async () => {
+    it('should detect unavailable products', () => {
       const customerId = 'customer-1';
       const vendor = await testFactory.createVendor();
       const product = await testFactory.createProduct(vendor.id, {
@@ -275,7 +275,7 @@ describe('CartService', () => {
       expect(result.issues[0].type).toBe('UNAVAILABLE');
     });
 
-    it('should detect insufficient stock', async () => {
+    it('should detect insufficient stock', () => {
       const customerId = 'customer-1';
       const vendor = await testFactory.createVendor();
       const product = await testFactory.createProduct(vendor.id, {

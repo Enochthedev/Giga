@@ -92,7 +92,7 @@ const ProductFiltersSchema = z.object({
 
 export class VendorController {
   constructor(
-    private prisma: PrismaClient,
+    private _prisma: PrismaClient,
     private vendorOrderService: VendorOrderService,
     private inventoryService: InventoryService,
     private notificationServiceClient: HttpNotificationServiceClient

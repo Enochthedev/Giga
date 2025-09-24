@@ -33,7 +33,7 @@ export const retry = async <T>(
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
-      return await fn();
+      return fn();
     } catch (error) {
       lastError = error as Error;
 

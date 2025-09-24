@@ -13,7 +13,7 @@ import { app } from '../../app';
 import { redisService } from '../../services/redis.service';
 
 describe('Basic Orders Integration Tests', () => {
-  let prisma: PrismaClient;
+  let _prisma: PrismaClient;
   let product: any;
   let customerId: string;
   let authToken: string;
@@ -28,7 +28,7 @@ describe('Basic Orders Integration Tests', () => {
     });
   });
 
-  beforeEach(async () => {
+  beforeEach(() => {
     // Clean up test data
     await prisma.orderItem.deleteMany();
     await prisma.vendorOrder.deleteMany();
@@ -81,7 +81,7 @@ describe('Basic Orders Integration Tests', () => {
     }));
   });
 
-  afterAll(async () => {
+  afterAll(() => {
     await prisma.$disconnect();
     try {
       await redisService.quit();
@@ -91,7 +91,7 @@ describe('Basic Orders Integration Tests', () => {
   });
 
   describe('GET /api/v1/orders', () => {
-    it('should handle order history request', async () => {
+    it('should handle order history request', () => {
       const response = await request(app)
         .get('/api/v1/orders')
         .set('Authorization', authToken)
@@ -102,7 +102,7 @@ describe('Basic Orders Integration Tests', () => {
       expect(response.body).toHaveProperty('success');
     });
 
-    it('should handle order filtering by status', async () => {
+    it('should handle order filtering by status', () => {
       const response = await request(app)
         .get('/api/v1/orders')
         .set('Authorization', authToken)
@@ -112,7 +112,7 @@ describe('Basic Orders Integration Tests', () => {
       expect(response.body).toHaveProperty('success');
     });
 
-    it('should handle date range filtering', async () => {
+    it('should handle date range filtering', () => {
       const dateFrom = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
       const dateTo = new Date().toISOString();
 
@@ -139,7 +139,7 @@ describe('Basic Orders Integration Tests', () => {
       notes: 'Please deliver to front door',
     };
 
-    it('should handle order creation request', async () => {
+    it('should handle order creation request', () => {
       const response = await request(app)
         .post('/api/v1/orders')
         .set('Authorization', authToken)
@@ -150,7 +150,7 @@ describe('Basic Orders Integration Tests', () => {
       expect(response.body).toHaveProperty('success');
     });
 
-    it('should validate required fields', async () => {
+    it('should validate required fields', () => {
       const invalidOrderData = {
         shippingAddress: {
           name: '', // Missing required field
@@ -170,7 +170,7 @@ describe('Basic Orders Integration Tests', () => {
       expect(response.body).toHaveProperty('success');
     });
 
-    it('should handle missing payment method', async () => {
+    it('should handle missing payment method', () => {
       const orderDataWithoutPayment = {
         shippingAddress: {
           name: 'John Doe',
@@ -194,7 +194,7 @@ describe('Basic Orders Integration Tests', () => {
   describe('GET /api/v1/orders/:id', () => {
     let testOrder: any;
 
-    beforeEach(async () => {
+    beforeEach(() => {
       // Create a test order
       testOrder = await prisma.order.create({
         data: {
@@ -216,7 +216,7 @@ describe('Basic Orders Integration Tests', () => {
       });
     });
 
-    it('should handle order details request', async () => {
+    it('should handle order details request', () => {
       const response = await request(app)
         .get(`/api/v1/orders/${testOrder.id}`)
         .set('Authorization', authToken);
@@ -225,7 +225,7 @@ describe('Basic Orders Integration Tests', () => {
       expect(response.body).toHaveProperty('success');
     });
 
-    it('should handle non-existent order', async () => {
+    it('should handle non-existent order', () => {
       const response = await request(app)
         .get('/api/v1/orders/non-existent-order')
         .set('Authorization', authToken);
@@ -238,7 +238,7 @@ describe('Basic Orders Integration Tests', () => {
   describe('PUT /api/v1/orders/:id/status', () => {
     let testOrder: any;
 
-    beforeEach(async () => {
+    beforeEach(() => {
       testOrder = await prisma.order.create({
         data: {
           customerId,
@@ -267,7 +267,7 @@ describe('Basic Orders Integration Tests', () => {
       }));
     });
 
-    it('should handle order status update request', async () => {
+    it('should handle order status update request', () => {
       const response = await request(app)
         .put(`/api/v1/orders/${testOrder.id}/status`)
         .set('Authorization', authToken)
@@ -280,7 +280,7 @@ describe('Basic Orders Integration Tests', () => {
       expect(response.body).toHaveProperty('success');
     });
 
-    it('should validate status transitions', async () => {
+    it('should validate status transitions', () => {
       const response = await request(app)
         .put(`/api/v1/orders/${testOrder.id}/status`)
         .set('Authorization', authToken)
@@ -296,7 +296,7 @@ describe('Basic Orders Integration Tests', () => {
   describe('DELETE /api/v1/orders/:id/cancel', () => {
     let testOrder: any;
 
-    beforeEach(async () => {
+    beforeEach(() => {
       testOrder = await prisma.order.create({
         data: {
           customerId,
@@ -317,7 +317,7 @@ describe('Basic Orders Integration Tests', () => {
       });
     });
 
-    it('should handle order cancellation request', async () => {
+    it('should handle order cancellation request', () => {
       const response = await request(app)
         .delete(`/api/v1/orders/${testOrder.id}/cancel`)
         .set('Authorization', authToken)
@@ -329,7 +329,7 @@ describe('Basic Orders Integration Tests', () => {
       expect(response.body).toHaveProperty('success');
     });
 
-    it('should handle cancellation of non-existent order', async () => {
+    it('should handle cancellation of non-existent order', () => {
       const response = await request(app)
         .delete('/api/v1/orders/non-existent-order/cancel')
         .set('Authorization', authToken)
@@ -345,7 +345,7 @@ describe('Basic Orders Integration Tests', () => {
   describe('GET /api/v1/orders/:id/payment-status', () => {
     let testOrder: any;
 
-    beforeEach(async () => {
+    beforeEach(() => {
       testOrder = await prisma.order.create({
         data: {
           customerId,
@@ -367,7 +367,7 @@ describe('Basic Orders Integration Tests', () => {
       });
     });
 
-    it('should handle payment status request', async () => {
+    it('should handle payment status request', () => {
       const response = await request(app)
         .get(`/api/v1/orders/${testOrder.id}/payment-status`)
         .set('Authorization', authToken);
@@ -380,7 +380,7 @@ describe('Basic Orders Integration Tests', () => {
   describe('POST /api/v1/orders/:id/confirm-payment', () => {
     let testOrder: any;
 
-    beforeEach(async () => {
+    beforeEach(() => {
       testOrder = await prisma.order.create({
         data: {
           customerId,
@@ -402,7 +402,7 @@ describe('Basic Orders Integration Tests', () => {
       });
     });
 
-    it('should handle payment confirmation request', async () => {
+    it('should handle payment confirmation request', () => {
       const response = await request(app)
         .post(`/api/v1/orders/${testOrder.id}/confirm-payment`)
         .set('Authorization', authToken);
@@ -413,7 +413,7 @@ describe('Basic Orders Integration Tests', () => {
   });
 
   describe('Error Handling', () => {
-    it('should handle database connection errors gracefully', async () => {
+    it('should handle database connection errors gracefully', () => {
       // Mock database error
       vi.spyOn(prisma.order, 'findMany').mockRejectedValueOnce(
         new Error('Database connection failed')
@@ -427,7 +427,7 @@ describe('Basic Orders Integration Tests', () => {
       expect(response.body).toHaveProperty('success', false);
     });
 
-    it('should handle unauthorized access', async () => {
+    it('should handle unauthorized access', () => {
       const response = await request(app).get('/api/v1/orders');
 
       expect([401, 403, 500].includes(response.status)).toBe(true);
@@ -435,7 +435,7 @@ describe('Basic Orders Integration Tests', () => {
   });
 
   describe('Request Validation', () => {
-    it('should validate pagination parameters', async () => {
+    it('should validate pagination parameters', () => {
       const response = await request(app)
         .get('/api/v1/orders')
         .set('Authorization', authToken)
@@ -445,7 +445,7 @@ describe('Basic Orders Integration Tests', () => {
       expect(response.body).toHaveProperty('success');
     });
 
-    it('should validate date format', async () => {
+    it('should validate date format', () => {
       const response = await request(app)
         .get('/api/v1/orders')
         .set('Authorization', authToken)

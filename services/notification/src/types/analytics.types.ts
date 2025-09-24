@@ -195,7 +195,7 @@ export interface TimeSeriesData {
 }
 
 export interface UserEngagementAnalytics {
-  userId: string;
+  _userId: string;
   period: DateRange;
   totalNotificationsReceived: number;
   engagementScore: number; // 0-100

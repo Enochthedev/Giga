@@ -13,7 +13,7 @@ import { app } from '../../app';
 import { redisService } from '../../services/redis.service';
 
 describe('Basic Vendor Integration Tests', () => {
-  let prisma: PrismaClient;
+  let _prisma: PrismaClient;
   let product1: any;
   let product2: any;
   let vendorOrder: any;
@@ -30,7 +30,7 @@ describe('Basic Vendor Integration Tests', () => {
     });
   });
 
-  beforeEach(async () => {
+  beforeEach(() => {
     // Clean up test data
     await prisma.orderItem.deleteMany();
     await prisma.vendorOrder.deleteMany();
@@ -154,7 +154,7 @@ describe('Basic Vendor Integration Tests', () => {
     });
   });
 
-  afterAll(async () => {
+  afterAll(() => {
     await prisma.$disconnect();
     try {
       await redisService.quit();
@@ -164,7 +164,7 @@ describe('Basic Vendor Integration Tests', () => {
   });
 
   describe('GET /api/v1/vendor/orders', () => {
-    it('should handle vendor orders request', async () => {
+    it('should handle vendor orders request', () => {
       const response = await request(app)
         .get('/api/v1/vendor/orders')
         .set('Authorization', authToken)
@@ -174,7 +174,7 @@ describe('Basic Vendor Integration Tests', () => {
       expect(response.body).toHaveProperty('success');
     });
 
-    it('should handle order filtering by status', async () => {
+    it('should handle order filtering by status', () => {
       const response = await request(app)
         .get('/api/v1/vendor/orders')
         .set('Authorization', authToken)
@@ -184,7 +184,7 @@ describe('Basic Vendor Integration Tests', () => {
       expect(response.body).toHaveProperty('success');
     });
 
-    it('should handle date range filtering', async () => {
+    it('should handle date range filtering', () => {
       const dateFrom = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
       const dateTo = new Date().toISOString();
 
@@ -199,7 +199,7 @@ describe('Basic Vendor Integration Tests', () => {
   });
 
   describe('PUT /api/v1/vendor/orders/:id/status', () => {
-    it('should handle vendor order status update', async () => {
+    it('should handle vendor order status update', () => {
       const response = await request(app)
         .put(`/api/v1/vendor/orders/${vendorOrder.id}/status`)
         .set('Authorization', authToken)
@@ -212,7 +212,7 @@ describe('Basic Vendor Integration Tests', () => {
       expect(response.body).toHaveProperty('success');
     });
 
-    it('should handle invalid status transitions', async () => {
+    it('should handle invalid status transitions', () => {
       const response = await request(app)
         .put(`/api/v1/vendor/orders/${vendorOrder.id}/status`)
         .set('Authorization', authToken)
@@ -224,7 +224,7 @@ describe('Basic Vendor Integration Tests', () => {
       expect(response.body).toHaveProperty('success');
     });
 
-    it('should handle non-existent vendor order', async () => {
+    it('should handle non-existent vendor order', () => {
       const response = await request(app)
         .put('/api/v1/vendor/orders/non-existent-order/status')
         .set('Authorization', authToken)
@@ -238,7 +238,7 @@ describe('Basic Vendor Integration Tests', () => {
   });
 
   describe('GET /api/v1/vendor/dashboard', () => {
-    it('should handle vendor dashboard request', async () => {
+    it('should handle vendor dashboard request', () => {
       const response = await request(app)
         .get('/api/v1/vendor/dashboard')
         .set('Authorization', authToken);
@@ -249,7 +249,7 @@ describe('Basic Vendor Integration Tests', () => {
   });
 
   describe('GET /api/v1/vendor/products', () => {
-    it('should handle vendor products request', async () => {
+    it('should handle vendor products request', () => {
       const response = await request(app)
         .get('/api/v1/vendor/products')
         .set('Authorization', authToken)
@@ -259,7 +259,7 @@ describe('Basic Vendor Integration Tests', () => {
       expect(response.body).toHaveProperty('success');
     });
 
-    it('should handle product filtering by status', async () => {
+    it('should handle product filtering by status', () => {
       const response = await request(app)
         .get('/api/v1/vendor/products')
         .set('Authorization', authToken)
@@ -269,7 +269,7 @@ describe('Basic Vendor Integration Tests', () => {
       expect(response.body).toHaveProperty('success');
     });
 
-    it('should handle product search', async () => {
+    it('should handle product search', () => {
       const response = await request(app)
         .get('/api/v1/vendor/products')
         .set('Authorization', authToken)
@@ -281,7 +281,7 @@ describe('Basic Vendor Integration Tests', () => {
   });
 
   describe('PUT /api/v1/vendor/products/:id/inventory', () => {
-    it('should handle inventory update request', async () => {
+    it('should handle inventory update request', () => {
       const response = await request(app)
         .put(`/api/v1/vendor/products/${product1.id}/inventory`)
         .set('Authorization', authToken)
@@ -295,7 +295,7 @@ describe('Basic Vendor Integration Tests', () => {
       expect(response.body).toHaveProperty('success');
     });
 
-    it('should handle invalid inventory data', async () => {
+    it('should handle invalid inventory data', () => {
       const response = await request(app)
         .put(`/api/v1/vendor/products/${product1.id}/inventory`)
         .set('Authorization', authToken)
@@ -307,7 +307,7 @@ describe('Basic Vendor Integration Tests', () => {
       expect(response.body).toHaveProperty('success');
     });
 
-    it('should handle non-existent product', async () => {
+    it('should handle non-existent product', () => {
       const response = await request(app)
         .put('/api/v1/vendor/products/non-existent-product/inventory')
         .set('Authorization', authToken)
@@ -321,7 +321,7 @@ describe('Basic Vendor Integration Tests', () => {
   });
 
   describe('PUT /api/v1/vendor/products/inventory/bulk', () => {
-    it('should handle bulk inventory update request', async () => {
+    it('should handle bulk inventory update request', () => {
       const response = await request(app)
         .put('/api/v1/vendor/products/inventory/bulk')
         .set('Authorization', authToken)
@@ -344,7 +344,7 @@ describe('Basic Vendor Integration Tests', () => {
       expect(response.body).toHaveProperty('success');
     });
 
-    it('should handle empty updates array', async () => {
+    it('should handle empty updates array', () => {
       const response = await request(app)
         .put('/api/v1/vendor/products/inventory/bulk')
         .set('Authorization', authToken)
@@ -358,7 +358,7 @@ describe('Basic Vendor Integration Tests', () => {
   });
 
   describe('GET /api/v1/vendor/products/low-stock', () => {
-    beforeEach(async () => {
+    beforeEach(() => {
       // Create low stock product
       await prisma.product.create({
         data: {
@@ -379,7 +379,7 @@ describe('Basic Vendor Integration Tests', () => {
       });
     });
 
-    it('should handle low stock products request', async () => {
+    it('should handle low stock products request', () => {
       const response = await request(app)
         .get('/api/v1/vendor/products/low-stock')
         .set('Authorization', authToken);
@@ -390,7 +390,7 @@ describe('Basic Vendor Integration Tests', () => {
   });
 
   describe('Authorization', () => {
-    it('should require vendor role', async () => {
+    it('should require vendor role', () => {
       // Mock regular customer
       vi.doMock('../../middleware/auth.middleware', () => ({
         authMiddleware: (req: any, res: any, next: any) => {
@@ -415,7 +415,7 @@ describe('Basic Vendor Integration Tests', () => {
       expect(response.body).toHaveProperty('success');
     });
 
-    it('should require authentication', async () => {
+    it('should require authentication', () => {
       const response = await request(app).get('/api/v1/vendor/orders');
 
       expect([401, 403, 500].includes(response.status)).toBe(true);
@@ -423,7 +423,7 @@ describe('Basic Vendor Integration Tests', () => {
   });
 
   describe('Error Handling', () => {
-    it('should handle database connection errors gracefully', async () => {
+    it('should handle database connection errors gracefully', () => {
       // Mock database error
       vi.spyOn(prisma.vendorOrder, 'findMany').mockRejectedValueOnce(
         new Error('Database connection failed')
@@ -439,7 +439,7 @@ describe('Basic Vendor Integration Tests', () => {
   });
 
   describe('Request Validation', () => {
-    it('should validate pagination parameters', async () => {
+    it('should validate pagination parameters', () => {
       const response = await request(app)
         .get('/api/v1/vendor/orders')
         .set('Authorization', authToken)
@@ -449,7 +449,7 @@ describe('Basic Vendor Integration Tests', () => {
       expect(response.body).toHaveProperty('success');
     });
 
-    it('should validate inventory update data', async () => {
+    it('should validate inventory update data', () => {
       const response = await request(app)
         .put(`/api/v1/vendor/products/${product1.id}/inventory`)
         .set('Authorization', authToken)
@@ -463,7 +463,7 @@ describe('Basic Vendor Integration Tests', () => {
   });
 
   describe('Performance', () => {
-    it('should handle multiple concurrent requests', async () => {
+    it('should handle multiple concurrent requests', () => {
       const requests = Array(5)
         .fill(null)
         .map(() =>
