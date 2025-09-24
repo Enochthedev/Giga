@@ -40,7 +40,7 @@ export class OrderServiceFactory {
       );
 
       return new EnhancedOrderService(
-        prisma,
+        _prisma,
         cartService,
         inventoryService,
         authServiceClient,
@@ -53,7 +53,7 @@ export class OrderServiceFactory {
     console.log('[OrderServiceFactory] Creating standard order service');
 
     return new OrderService(
-      prisma,
+      _prisma,
       cartService,
       inventoryService,
       authServiceClient,

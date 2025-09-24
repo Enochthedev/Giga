@@ -121,7 +121,7 @@ export class CleanupService {
       const activeCustomerIds = new Set<string>();
       for (const sessionKey of sessionKeys) {
         try {
-          const _sessionData = await client.get(sessionKey);
+          const sessionData = await client.get(sessionKey);
           if (sessionData) {
             const session = JSON.parse(sessionData);
             if (session.customerId) {

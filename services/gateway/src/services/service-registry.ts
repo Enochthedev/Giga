@@ -45,7 +45,7 @@ export class ServiceRegistry extends EventEmitter {
       return;
     }
 
-    this.discoveryInterval = setInterval(() => {
+    this.discoveryInterval = setInterval(async () => {
       try {
         await this.discoverServices();
       } catch (error) {
@@ -574,7 +574,7 @@ export class ServiceRegistry extends EventEmitter {
       return;
     }
 
-    const interval = setInterval(() => {
+    const interval = setInterval(async () => {
       await this.performHealthChecks(serviceId);
     }, service.healthCheck.interval);
 

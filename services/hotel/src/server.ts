@@ -7,11 +7,11 @@ import logger from '@/utils/logger';
 const startServer = () => {
   try {
     // Connect to Redis
-    await connectRedis();
+    connectRedis();
     logger.info('Connected to Redis');
 
     // Test database connection
-    await prisma.$connect();
+    prisma.$connect();
     logger.info('Connected to database');
 
     // Start the server

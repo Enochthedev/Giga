@@ -302,7 +302,7 @@ class ConnectionPoolService {
 
   private startMonitoring(): void {
     // Monitor connection pool every 30 seconds
-    setInterval(() => {
+    setInterval(async () => {
       try {
         const _stats = this.getConnectionStats();
 

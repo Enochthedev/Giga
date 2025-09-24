@@ -26,8 +26,11 @@ export class DatabaseOptimizationService {
     slowQueries: [],
   };
 
-  constructor(_prisma: PrismaClient, config?: Partial<QueryOptimizationConfig>) {
-    this.prisma = prisma;
+  constructor(
+    _prisma: PrismaClient,
+    config?: Partial<QueryOptimizationConfig>
+  ) {
+    this._prisma = _prisma;
     this.config = {
       enableQueryLogging: true,
       slowQueryThreshold: 1000, // 1 second
@@ -41,7 +44,7 @@ export class DatabaseOptimizationService {
 
   private setupQueryLogging(): void {
     if (this.config.enableQueryLogging) {
-      this.prisma.$use((params, next) => {
+      this._prisma.$use(async (params, next) => {
         const start = Date.now();
         const result = await next(params);
         const duration = Date.now() - start;
@@ -138,7 +141,7 @@ export class DatabaseOptimizationService {
     orderBy[sortBy] = sortOrder;
 
     // Execute optimized query with selective field loading
-    const products = await this.prisma.product.findMany({
+    const products = await this._prisma.product.findMany({
       where,
       skip,
       take,
@@ -176,7 +179,7 @@ export class DatabaseOptimizationService {
     // Get total count only when needed (first page or when explicitly requested)
     let total = 0;
     if (page === 1) {
-      total = await this.prisma.product.count({ where });
+      total = await this._prisma.product.count({ where });
     }
 
     return {
@@ -252,7 +255,7 @@ export class DatabaseOptimizationService {
       queryOptions.skip = 1; // Skip the cursor
     }
 
-    const orders = await this.prisma.order.findMany(queryOptions);
+    const orders = await this._prisma.order.findMany(queryOptions);
 
     const hasMore = orders.length > limit;
     const resultOrders = hasMore ? orders.slice(0, limit) : orders;
@@ -274,7 +277,7 @@ export class DatabaseOptimizationService {
     dateRange: { from: Date; to: Date }
   ): Promise<any[]> {
     // Use aggregation for better performance
-    const analytics = await this.prisma.vendorAnalytics.findMany({
+    const analytics = await this._prisma.vendorAnalytics.findMany({
       where: {
         vendorId,
         period,
@@ -356,7 +359,7 @@ export class DatabaseOptimizationService {
       queryOptions.skip = 1;
     }
 
-    const orders = await this.prisma.vendorOrder.findMany(queryOptions);
+    const orders = await this._prisma.vendorOrder.findMany(queryOptions);
 
     const hasMore = orders.length > limit;
     const resultOrders = hasMore ? orders.slice(0, limit) : orders;
@@ -376,9 +379,9 @@ export class DatabaseOptimizationService {
     updates: Array<{ productId: string; quantity: number }>
   ): Promise<void> {
     // Use transaction for consistency
-    await this.prisma.$transaction(
+    await this._prisma.$transaction(
       updates.map(update =>
-        this.prisma.productInventory.update({
+        this._prisma.productInventory.update({
           where: { productId: update.productId },
           data: { quantity: update.quantity, updatedAt: new Date() },
         })
@@ -395,7 +398,7 @@ export class DatabaseOptimizationService {
       price: number;
     }>
   ): Promise<void> {
-    await this.prisma.orderItem.createMany({
+    await this._prisma.orderItem.createMany({
       data: orderItems,
     });
   }
@@ -416,7 +419,7 @@ export class DatabaseOptimizationService {
       ];
 
       for (const table of tables) {
-        const count = await this.prisma.$queryRaw`
+        const count = await this._prisma.$queryRaw`
           SELECT COUNT(*) as count FROM ${table}
         `;
         stats[table] = { rowCount: count };
@@ -535,5 +538,5 @@ export const createDatabaseOptimizationService = (
   _prisma: PrismaClient,
   config?: Partial<QueryOptimizationConfig>
 ) => {
-  return new DatabaseOptimizationService(prisma, config);
+  return new DatabaseOptimizationService(_prisma, config);
 };

@@ -93,7 +93,7 @@ export class InventoryService {
 
     try {
       // Use a transaction to ensure atomicity
-      const result = await prisma.$transaction(async tx => {
+      const result = await prisma.$transaction(async (tx: any) => {
         // First, check availability for all items
         for (const item of items) {
           const inventory = await tx.productInventory.findUnique({
@@ -206,7 +206,7 @@ export class InventoryService {
    */
   async releaseReservation(reservationId: string): Promise<void> {
     try {
-      await prisma.$transaction(async tx => {
+      await prisma.$transaction(async (tx: any) => {
         // Find all reservation records for this reservation ID
         const reservations = await tx.inventoryReservation.findMany({
           where: {
@@ -291,7 +291,7 @@ export class InventoryService {
         return 0;
       }
 
-      await prisma.$transaction(async tx => {
+      await prisma.$transaction(async (tx: any) => {
         // Release inventory for expired reservations
         for (const reservation of expiredReservations) {
           const inventory = await tx.productInventory.findUnique({
@@ -347,7 +347,7 @@ export class InventoryService {
       },
     });
 
-    return reservations.map(reservation => ({
+    return reservations.map((reservation: any) => ({
       id: reservation.id,
       productId: reservation.productId,
       quantity: reservation.quantity,
@@ -388,7 +388,7 @@ export class InventoryService {
    */
   async restoreInventory(items: ReservationItem[]): Promise<void> {
     try {
-      await prisma.$transaction(async tx => {
+      await prisma.$transaction(async (tx: any) => {
         for (const item of items) {
           const inventory = await tx.productInventory.findUnique({
             where: { productId: item.productId },
@@ -429,7 +429,7 @@ export class InventoryService {
       },
     });
 
-    return products.filter(product => {
+    return products.filter((product: any) => {
       if (!product.inventory) return false;
       const availableQuantity =
         product.inventory.quantity - product.inventory.reservedQuantity;

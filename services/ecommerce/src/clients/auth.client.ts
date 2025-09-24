@@ -68,7 +68,7 @@ export class HttpAuthServiceClient implements AuthServiceClient {
     return response.data;
   }
 
-  async getUserInfo(_userId: string): Promise<UserInfo> {
+  async getUserInfo(userId: string): Promise<UserInfo> {
     const response = await this.client.get<UserInfo>(`/api/v1/users/${userId}`);
 
     if (!response.success || !response.data) {
@@ -83,9 +83,9 @@ export class HttpAuthServiceClient implements AuthServiceClient {
   // eslint-disable-next-line require-await
   async getUserPermissions(_userId: string): Promise<string[]> {
     return GracefulDegradation.executeWithDefault(
-      () => {
+      async () => {
         const response = await this.client.get<string[]>(
-          `/api/v1/users/${userId}/permissions`
+          `/api/v1/users/${_userId}/permissions`
         );
 
         if (!response.success || !response.data) {
@@ -122,10 +122,10 @@ export class HttpAuthServiceClient implements AuthServiceClient {
     permission: string
   ): Promise<boolean> {
     return GracefulDegradation.executeWithDefault(
-      () => {
+      async () => {
         const response = await this.client.post<{ hasPermission: boolean }>(
           '/api/v1/auth/check-permission',
-          { userId, permission }
+          { userId: _userId, permission }
         );
 
         if (!response.success || response.data === undefined) {
@@ -158,10 +158,10 @@ export class HttpAuthServiceClient implements AuthServiceClient {
     action: string
   ): Promise<boolean> {
     return GracefulDegradation.executeWithDefault(
-      () => {
+      async () => {
         const response = await this.client.post<{ hasAccess: boolean }>(
           '/api/v1/auth/validate-access',
-          { userId, resource, action }
+          { userId: _userId, resource, action }
         );
 
         if (!response.success || response.data === undefined) {

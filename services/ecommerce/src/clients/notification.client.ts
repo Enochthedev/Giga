@@ -177,7 +177,7 @@ export class HttpNotificationServiceClient
       error: 'Notification service unavailable',
     };
 
-    return this.executeWithRetry(() => {
+    return this.executeWithRetry(async () => {
       const response = await this.client.post<
         NotificationServiceResponse<NotificationResult>
       >('/api/v1/notifications/order-confirmation', {
@@ -278,7 +278,7 @@ export class HttpNotificationServiceClient
       error: 'Notification service unavailable',
     };
 
-    return this.executeWithRetry(() => {
+    return this.executeWithRetry(async () => {
       const response = await this.client.post<
         NotificationServiceResponse<NotificationResult>
       >('/api/v1/notifications/order-cancellation', {
@@ -309,7 +309,7 @@ export class HttpNotificationServiceClient
       error: 'Notification service unavailable',
     };
 
-    return this.executeWithRetry(() => {
+    return this.executeWithRetry(async () => {
       const response = await this.client.post<
         NotificationServiceResponse<NotificationResult>
       >('/api/v1/notifications/vendor-order-status', {
@@ -340,7 +340,7 @@ export class HttpNotificationServiceClient
       error: 'Notification service unavailable',
     }));
 
-    return this.executeWithRetry(() => {
+    return this.executeWithRetry(async () => {
       const response = await this.client.post<
         NotificationServiceResponse<NotificationResult[]>
       >('/api/v1/notifications/bulk', { notifications });
@@ -373,7 +373,7 @@ export class HttpNotificationServiceClient
       error: 'Notification service unavailable',
     };
 
-    return this.executeWithRetry(() => {
+    return this.executeWithRetry(async () => {
       const response = await this.client.post<
         NotificationServiceResponse<NotificationResult>
       >('/api/v1/notifications/order-status-update', {
@@ -408,7 +408,7 @@ export class HttpNotificationServiceClient
       error: 'Notification service unavailable',
     };
 
-    return this.executeWithRetry(() => {
+    return this.executeWithRetry(async () => {
       const response = await this.client.post<
         NotificationServiceResponse<NotificationResult>
       >('/api/v1/notifications/vendor-order-completion', {

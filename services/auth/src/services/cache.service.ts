@@ -381,7 +381,7 @@ class CacheService {
 
       // Preload active user roles
       const activeUsers = await this.getActiveUserIds();
-      const preloadPromises = activeUsers.slice(0, 100).map((userId) => {
+      const preloadPromises = activeUsers.slice(0, 100).map(async (userId) => {
         try {
           // This would typically fetch from database and cache
           // For now, we'll just warm the cache keys

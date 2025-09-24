@@ -335,7 +335,7 @@ export class VendorController {
 
       // Get products with inventory
       const [products, total] = await Promise.all([
-        this.prisma.product.findMany({
+        this._prisma.product.findMany({
           where,
           include: {
             inventory: true,
@@ -346,7 +346,7 @@ export class VendorController {
           skip,
           take: limit,
         }),
-        this.prisma.product.count({ where }),
+        this._prisma.product.count({ where }),
       ]);
 
       // Map products to type format
@@ -626,7 +626,7 @@ export class VendorController {
     };
   }> {
     // Verify product belongs to vendor
-    const product = await this.prisma.product.findFirst({
+    const product = await this._prisma.product.findFirst({
       where: {
         id: productId,
         vendorId,
@@ -641,7 +641,7 @@ export class VendorController {
     }
 
     // Update inventory
-    const updatedInventory = await this.prisma.productInventory.upsert({
+    const updatedInventory = await this._prisma.productInventory.upsert({
       where: {
         productId,
       },
@@ -709,7 +709,7 @@ export class VendorController {
   }> {
     // Verify all products belong to vendor
     const productIds = updates.map(update => update.productId);
-    const products = await this.prisma.product.findMany({
+    const products = await this._prisma.product.findMany({
       where: {
         id: { in: productIds },
         vendorId,
@@ -724,9 +724,9 @@ export class VendorController {
     }
 
     // Perform bulk updates in transaction
-    const results = await this.prisma.$transaction(
+    const results = await this._prisma.$transaction(
       updates.map(update =>
-        this.prisma.productInventory.upsert({
+        this._prisma.productInventory.upsert({
           where: {
             productId: update.productId,
           },

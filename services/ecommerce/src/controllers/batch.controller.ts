@@ -75,7 +75,7 @@ export class BatchController {
   /**
    * Batch cart operations - add, update, or remove multiple items
    */
-  async batchCartOperations(_req: Request, res: Response) {
+  async batchCartOperations(req: Request, res: Response) {
     try {
       const customerId = req.user?.id;
       if (!customerId) {
@@ -209,7 +209,7 @@ export class BatchController {
   /**
    * Batch inventory updates - update multiple product inventories
    */
-  async batchInventoryUpdates(_req: Request, res: Response) {
+  async batchInventoryUpdates(req: Request, res: Response) {
     try {
       // Check vendor permissions
       const vendorId = (req.user as any)?.vendorId;
@@ -258,7 +258,7 @@ export class BatchController {
               }
 
               // Check if product belongs to vendor
-              const product = await req.prisma.product.findUnique({
+              const product = await req._prisma.product.findUnique({
                 where: { id: item.productId },
                 select: { vendorId: true },
               });
@@ -301,7 +301,7 @@ export class BatchController {
         items,
         async item => {
           // Verify product ownership
-          const product = await req.prisma.product.findUnique({
+          const product = await req._prisma.product.findUnique({
             where: { id: item.productId },
             select: { vendorId: true, name: true },
           });
@@ -395,7 +395,7 @@ export class BatchController {
   /**
    * Batch product cache refresh
    */
-  async batchCacheRefresh(_req: Request, res: Response) {
+  async batchCacheRefresh(req: Request, res: Response) {
     try {
       // Validate request
       const validation = BatchProductCacheSchema.safeParse(req.body);
@@ -421,7 +421,7 @@ export class BatchController {
         async productId => {
           try {
             // Get product data
-            const product = await req.prisma.product.findUnique({
+            const product = await req._prisma.product.findUnique({
               where: { id: productId },
               include: {
                 inventory: includeInventory,
@@ -499,7 +499,7 @@ export class BatchController {
   /**
    * Batch search operations - search multiple queries at once
    */
-  async batchSearch(_req: Request, res: Response) {
+  async batchSearch(req: Request, res: Response) {
     try {
       const { queries } = req.body;
 
@@ -566,7 +566,7 @@ export class BatchController {
             if (maxPrice) where.price.lte = maxPrice;
           }
 
-          const products = await req.prisma.product.findMany({
+          const products = await req._prisma.product.findMany({
             where,
             take: limit,
             orderBy: { createdAt: 'desc' },
@@ -625,7 +625,7 @@ export class BatchController {
   /**
    * Get batch operation status
    */
-  getBatchStatus(_req: Request, res: Response) {
+  getBatchStatus(req: Request, res: Response) {
     try {
       const { batchId } = req.params;
 

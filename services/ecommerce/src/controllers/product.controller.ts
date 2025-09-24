@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { cacheService } from '../services/cache.service';
 
 export class ProductController {
-  async getProducts(_req: Request, res: Response) {
+  async getProducts(req: Request, res: Response) {
     try {
       const {
         search,
@@ -70,7 +70,7 @@ export class ProductController {
       orderBy[sortBy as string] = sortOrder;
 
       const [products, total] = await Promise.all([
-        req.prisma.product.findMany({
+        req._prisma.product.findMany({
           where,
           skip,
           take: queryParams.limit,
@@ -79,7 +79,7 @@ export class ProductController {
             inventory: true,
           },
         }),
-        req.prisma.product.count({ where }),
+        req._prisma.product.count({ where }),
       ]);
 
       const result = {
@@ -115,7 +115,7 @@ export class ProductController {
     }
   }
 
-  async getProductById(_req: Request, res: Response) {
+  async getProductById(req: Request, res: Response) {
     try {
       const { id } = req.params;
 
@@ -130,7 +130,7 @@ export class ProductController {
         });
       }
 
-      const product = await req.prisma.product.findUnique({
+      const product = await req._prisma.product.findUnique({
         where: { id, isActive: true },
         include: {
           inventory: true,
@@ -168,7 +168,7 @@ export class ProductController {
     }
   }
 
-  async getCategories(_req: Request, res: Response) {
+  async getCategories(req: Request, res: Response) {
     try {
       // Try to get cached categories
       const cachedCategories = await cacheService.getCachedCategories();
@@ -181,7 +181,7 @@ export class ProductController {
         });
       }
 
-      const categories = await req.prisma.product.groupBy({
+      const categories = await req._prisma.product.groupBy({
         by: ['category', 'subcategory'],
         where: { isActive: true },
         _count: {
@@ -233,7 +233,7 @@ export class ProductController {
     }
   }
 
-  async getFeaturedProducts(_req: Request, res: Response) {
+  async getFeaturedProducts(req: Request, res: Response) {
     try {
       const { limit = 10 } = req.query;
 
@@ -250,7 +250,7 @@ export class ProductController {
         });
       }
 
-      const products = await req.prisma.product.findMany({
+      const products = await req._prisma.product.findMany({
         where: {
           isActive: true,
           // Featured products logic would be implemented differently

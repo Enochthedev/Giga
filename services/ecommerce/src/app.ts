@@ -56,7 +56,7 @@ app.use(responseOptimizationService.performanceMonitoringMiddleware());
 
 // Add Prisma and Redis to request context
 app.use((req, _res, next) => {
-  req.prisma = prisma;
+  req._prisma = prisma;
   req.redis = redisService;
   next();
 });
@@ -65,7 +65,7 @@ app.use((req, _res, next) => {
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(specs));
 
 // Health check
-app.get('/health', (req, res) => {
+app.get('/health', async (req, res) => {
   const correlationId = req.correlationId;
 
   try {

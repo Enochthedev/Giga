@@ -59,7 +59,7 @@ export class ResponseOptimizationService {
 
   // Field selection middleware
   fieldSelectionMiddleware() {
-    return (_req: Request, res: Response, next: NextFunction) => {
+    return (req: Request, res: Response, next: NextFunction) => {
       if (!this.config.enableFieldSelection) {
         return next();
       }
@@ -87,7 +87,7 @@ export class ResponseOptimizationService {
 
   // Response caching middleware
   responseCachingMiddleware() {
-    return (_req: Request, res: Response, next: NextFunction) => {
+    return (req: Request, res: Response, next: NextFunction) => {
       if (!this.config.enableResponseCaching) {
         return next();
       }
@@ -249,7 +249,7 @@ export class ResponseOptimizationService {
     // Process items in batches with controlled concurrency
     for (let i = 0; i < items.length; i += batchSize) {
       const batch = items.slice(i, i + batchSize);
-      const batchPromises = batch.map((item, batchIndex) => {
+      const batchPromises = batch.map(async (item, batchIndex) => {
         const globalIndex = i + batchIndex;
         try {
           const result = await operation(item);
@@ -272,7 +272,7 @@ export class ResponseOptimizationService {
         null
       );
       await Promise.all(
-        semaphore.map((_, semIndex) => {
+        semaphore.map(async (_, semIndex) => {
           for (let j = semIndex; j < batchPromises.length; j += concurrency) {
             await batchPromises[j];
           }
@@ -422,7 +422,7 @@ export class ResponseOptimizationService {
   // Middleware for batch operations
   batchOperationMiddleware() {
     // eslint-disable-next-line require-await
-    return (_req: Request, res: Response, next: NextFunction) => {
+    return (req: Request, res: Response, next: NextFunction) => {
       if (!this.config.enableBatchOperations) {
         return next();
       }
@@ -459,7 +459,7 @@ export class ResponseOptimizationService {
 
   // Performance monitoring middleware
   performanceMonitoringMiddleware() {
-    return (_req: Request, res: Response, next: NextFunction) => {
+    return (req: Request, res: Response, next: NextFunction) => {
       const startTime = Date.now();
 
       // Override res.json to measure response time
@@ -487,7 +487,7 @@ export class ResponseOptimizationService {
 
   // Content negotiation middleware
   contentNegotiationMiddleware() {
-    return (_req: Request, res: Response, next: NextFunction) => {
+    return (req: Request, res: Response, next: NextFunction) => {
       const acceptHeader = req.headers.accept || 'application/json';
 
       // Override res.json to handle different content types

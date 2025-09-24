@@ -20,7 +20,7 @@ export class OptimizedOrderService {
   private dbOptimization;
 
   constructor(private _prisma: PrismaClient) {
-    this.dbOptimization = createDatabaseOptimizationService(prisma, {
+    this.dbOptimization = createDatabaseOptimizationService(this._prisma, {
       enableQueryLogging: true,
       slowQueryThreshold: 500, // 500ms threshold for slow queries
     });
@@ -116,7 +116,7 @@ export class OptimizedOrderService {
     }
 
     const [orders, total] = await Promise.all([
-      this.prisma.order.findMany({
+      this._prisma.order.findMany({
         where,
         skip,
         take,
@@ -154,7 +154,7 @@ export class OptimizedOrderService {
           },
         },
       }),
-      this.prisma.order.count({ where }),
+      this._prisma.order.count({ where }),
     ]);
 
     return PaginationService.createPaginatedResponse(
@@ -235,7 +235,7 @@ export class OptimizedOrderService {
     }
 
     const [orders, total] = await Promise.all([
-      this.prisma.vendorOrder.findMany({
+      this._prisma.vendorOrder.findMany({
         where,
         skip,
         take,
@@ -275,7 +275,7 @@ export class OptimizedOrderService {
           },
         },
       }),
-      this.prisma.vendorOrder.count({ where }),
+      this._prisma.vendorOrder.count({ where }),
     ]);
 
     return PaginationService.createPaginatedResponse(
@@ -341,9 +341,9 @@ export class OptimizedOrderService {
     let updated = 0;
 
     try {
-      await this.prisma.$transaction(
+      await this._prisma.$transaction(
         updates.map(update => {
-          return this.prisma.order.update({
+          return this._prisma.order.update({
             where: { id: update.orderId },
             data: {
               status: update.status as any,
@@ -361,7 +361,7 @@ export class OptimizedOrderService {
 
       for (const update of updates) {
         // Get order details to invalidate specific caches
-        const order = await this.prisma.order.findUnique({
+        const order = await this._prisma.order.findUnique({
           where: { id: update.orderId },
           select: {
             customerId: true,
@@ -373,7 +373,7 @@ export class OptimizedOrderService {
 
         if (order) {
           customerIds.add(order.customerId);
-          order.vendorOrders.forEach(vo => vendorIds.add(vo.vendorId));
+          order.vendorOrders.forEach((vo: any) => vendorIds.add(vo.vendorId));
         }
       }
 
@@ -438,13 +438,13 @@ export class OptimizedOrderService {
     // Execute optimized aggregation queries
     const [totalOrders, orderStats, statusCounts, topProducts] =
       await Promise.all([
-        this.prisma.order.count({ where }),
-        this.prisma.order.aggregate({
+        this._prisma.order.count({ where }),
+        this._prisma.order.aggregate({
           where,
           _sum: { total: true },
           _avg: { total: true },
         }),
-        this.prisma.order.groupBy({
+        this._prisma.order.groupBy({
           by: ['status'],
           where,
           _count: { id: true },
@@ -456,7 +456,7 @@ export class OptimizedOrderService {
     const averageOrderValue = orderStats._avg.total || 0;
 
     const ordersByStatus = statusCounts.reduce(
-      (acc, item) => {
+      (acc: any, item: any) => {
         acc[item.status] = item._count.id;
         return acc;
       },
@@ -484,7 +484,7 @@ export class OptimizedOrderService {
     }>
   > {
     // Use raw query for better performance on complex aggregations
-    const topProducts = (await this.prisma.$queryRaw`
+    const topProducts = (await this._prisma.$queryRaw`
       SELECT 
         oi.product_id as "productId",
         p.name as "productName",
@@ -567,5 +567,5 @@ export class OptimizedOrderService {
 
 // Export singleton instance
 export const createOptimizedOrderService = (_prisma: PrismaClient) => {
-  return new OptimizedOrderService(prisma);
+  return new OptimizedOrderService(_prisma);
 };

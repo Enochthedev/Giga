@@ -540,7 +540,7 @@ export class OrderSagaOrchestrator {
     const shipping = subtotal >= 50 ? 0 : 5.99; // Free shipping over $50
     const total = subtotal + tax + shipping;
 
-    const order = await this.prisma.$transaction(async tx => {
+    const order = await this._prisma.$transaction(async (tx: any) => {
       // Create main order
       const newOrder = await tx.order.create({
         data: {
@@ -587,7 +587,7 @@ export class OrderSagaOrchestrator {
 
         // Create order items
         const vendorOrderItems = await Promise.all(
-          items.map((item: any) => {
+          items.map(async (item: any) => {
             const orderItem = await tx.orderItem.create({
               data: {
                 id: uuidv4(),
@@ -653,7 +653,7 @@ export class OrderSagaOrchestrator {
     if (order?.id) {
       try {
         // Delete the order and related records
-        await this.prisma.$transaction(async tx => {
+        await this._prisma.$transaction(async (tx: any) => {
           await tx.orderItem.deleteMany({ where: { orderId: order.id } });
           await tx.vendorOrder.deleteMany({ where: { orderId: order.id } });
           await tx.order.delete({ where: { id: order.id } });

@@ -37,12 +37,12 @@ async function start() {
 }
 
 // Graceful shutdown handler
-function gracefulShutdown(signal: string) {
+async async function gracefulShutdown(signal: string) {
   logger.info(`${signal} received, starting graceful shutdown`);
 
   if (server) {
     // Stop accepting new connections
-    server.close((err: any) => {
+    server.close(async (err: any) => {
       if (err) {
         logger.error('Error during server shutdown', err);
         process.exit(1);

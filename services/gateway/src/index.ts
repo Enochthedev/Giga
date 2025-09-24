@@ -50,7 +50,7 @@ async function buildApp() {
   initializeServices();
 
   // Add correlation ID middleware
-  fastify.addHook('onRequest', (request: FastifyRequest) => {
+  fastify.addHook('onRequest', async (request: FastifyRequest) => {
     const correlationId = request.headers['x-correlation-id'] as string ||
       `gw-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
@@ -60,7 +60,7 @@ async function buildApp() {
   });
 
   // Add request logging middleware
-  fastify.addHook('onRequest', (request: FastifyRequest) => {
+  fastify.addHook('onRequest', async (request: FastifyRequest) => {
     await Promise.resolve(); // Ensure async function has await
     request.log.info({
       correlationId: (request as any).correlationId,
@@ -72,9 +72,9 @@ async function buildApp() {
   });
 
   // Health check with service registry status
-  fastify.get('/health', () => {
+  fastify.get('/health', async () => {
     await Promise.resolve(); // Ensure async function has await
-    const _stats = serviceRegistry.getStats();
+    const stats = serviceRegistry.getStats();
     const routerStats = requestRouter.getStats();
     const loadBalancerStats = loadBalancer.getStats();
 
@@ -92,7 +92,7 @@ async function buildApp() {
   });
 
   // Gateway management endpoints
-  fastify.get('/gateway/services', () => {
+  fastify.get('/gateway/services', async () => {
     await Promise.resolve(); // Ensure async function has await
     return {
       success: true,
@@ -100,7 +100,7 @@ async function buildApp() {
     };
   });
 
-  fastify.get('/gateway/services/:serviceId/versions', (request: FastifyRequest) => {
+  fastify.get('/gateway/services/:serviceId/versions', async (request: FastifyRequest) => {
     await Promise.resolve(); // Ensure async function has await
     const { serviceId } = request.params as { serviceId: string };
     return {
@@ -109,7 +109,7 @@ async function buildApp() {
     };
   });
 
-  fastify.post('/gateway/services/:serviceId/versions', (request: FastifyRequest, reply: FastifyReply) => {
+  fastify.post('/gateway/services/:serviceId/versions', async (request: FastifyRequest, reply: FastifyReply) => {
     await Promise.resolve(); // Ensure async function has await
     const { serviceId } = request.params as { serviceId: string };
     const versionConfig = request.body as any;
@@ -128,7 +128,7 @@ async function buildApp() {
     }
   });
 
-  fastify.get('/gateway/routes', () => {
+  fastify.get('/gateway/routes', async () => {
     await Promise.resolve(); // Ensure async function has await
     return {
       success: true,
@@ -136,7 +136,7 @@ async function buildApp() {
     };
   });
 
-  fastify.post('/gateway/routes', (request: FastifyRequest, reply: FastifyReply) => {
+  fastify.post('/gateway/routes', async (request: FastifyRequest, reply: FastifyReply) => {
     await Promise.resolve(); // Ensure async function has await
     const rule = request.body as any;
 
@@ -154,7 +154,7 @@ async function buildApp() {
     }
   });
 
-  fastify.put('/gateway/routes/:ruleId/toggle', (request: FastifyRequest, reply: FastifyReply) => {
+  fastify.put('/gateway/routes/:ruleId/toggle', async (request: FastifyRequest, reply: FastifyReply) => {
     await Promise.resolve(); // Ensure async function has await
     const { ruleId } = request.params as { ruleId: string };
     const { enabled } = request.body as { enabled: boolean };
@@ -173,7 +173,7 @@ async function buildApp() {
     }
   });
 
-  fastify.post('/gateway/services/:serviceId/rewrite-rules', (request: FastifyRequest, reply: FastifyReply) => {
+  fastify.post('/gateway/services/:serviceId/rewrite-rules', async (request: FastifyRequest, reply: FastifyReply) => {
     await Promise.resolve(); // Ensure async function has await
     const { serviceId } = request.params as { serviceId: string };
     const rule = request.body as any;
@@ -192,7 +192,7 @@ async function buildApp() {
     }
   });
 
-  fastify.get('/gateway/stats', () => {
+  fastify.get('/gateway/stats', async () => {
     await Promise.resolve(); // Ensure async function has await
     return {
       success: true,
@@ -204,7 +204,7 @@ async function buildApp() {
     };
   });
 
-  fastify.post('/gateway/discovery/configure', (request: FastifyRequest, reply: FastifyReply) => {
+  fastify.post('/gateway/discovery/configure', async (request: FastifyRequest, reply: FastifyReply) => {
     await Promise.resolve(); // Ensure async function has await
     const config = request.body as any;
 
@@ -222,7 +222,7 @@ async function buildApp() {
     }
   });
 
-  fastify.post('/gateway/discovery/trigger', (request: FastifyRequest, reply: FastifyReply) => {
+  fastify.post('/gateway/discovery/trigger', async (request: FastifyRequest, reply: FastifyReply) => {
     await Promise.resolve(); // Ensure async function has await
     try {
       const discoveredServices = await serviceRegistry.discoverServices();
@@ -240,7 +240,7 @@ async function buildApp() {
   });
 
   // Dynamic proxy handler for all API routes
-  fastify.all('/api/*', (request: FastifyRequest, reply: FastifyReply) => {
+  fastify.all('/api/*', async (request: FastifyRequest, reply: FastifyReply) => {
     await Promise.resolve(); // Ensure async function has await
     const startTime = Date.now();
 

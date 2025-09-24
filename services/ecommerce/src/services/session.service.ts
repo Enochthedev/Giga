@@ -44,7 +44,7 @@ export class SessionService {
   async getSession(sessionId: string): Promise<SessionData | null> {
     try {
       const sessionKey = `session:${sessionId}`;
-      const _sessionData = await redisService.get(sessionKey);
+      const sessionData = await redisService.get(sessionKey);
 
       if (!sessionData) {
         return null;
@@ -142,7 +142,7 @@ export class SessionService {
 
           // If TTL is -1 (no expiration), check if session is old
           if (ttl === -1) {
-            const _sessionData = await client.get(key);
+            const sessionData = await client.get(key);
             if (sessionData) {
               const session: SessionData = JSON.parse(sessionData);
               const lastActivity = new Date(session.lastActivity);
@@ -192,7 +192,7 @@ export class SessionService {
 
       for (const key of sessionKeys) {
         try {
-          const _sessionData = await client.get(key);
+          const sessionData = await client.get(key);
           if (sessionData) {
             const session: SessionData = JSON.parse(sessionData);
             totalSessions++;

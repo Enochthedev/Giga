@@ -336,7 +336,7 @@ export class CartService {
       }
 
       // Fetch from database
-      const product = await this.prisma.product.findUnique({
+      const product = await this._prisma.product.findUnique({
         where: { id: productId },
         include: {
           inventory: true,
@@ -652,7 +652,7 @@ export class CartService {
   async getCartExpiration(customerId: string): Promise<number | null> {
     try {
       const client = await redisService.connect();
-      const _key = `cart:${customerId}`;
+      const key = `cart:${customerId}`;
       const ttl = await client.ttl(key);
       return ttl > 0 ? ttl : null;
     } catch (error) {

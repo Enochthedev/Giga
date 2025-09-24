@@ -128,7 +128,7 @@ export class OrderService {
       );
 
       // Create order in database transaction
-      const order = await this.prisma.$transaction(async tx => {
+      const order = await this._prisma.$transaction(async tx => {
         // Create main order
         const newOrder = await tx.order.create({
           data: {
@@ -301,7 +301,7 @@ export class OrderService {
    * Get order by ID with customer validation
    */
   async getOrder(orderId: string, customerId: string): Promise<Order> {
-    const order = await this.prisma.order.findFirst({
+    const order = await this._prisma.order.findFirst({
       where: {
         id: orderId,
         customerId,
@@ -361,7 +361,7 @@ export class OrderService {
     }
 
     const [orders, total] = await Promise.all([
-      this.prisma.order.findMany({
+      this._prisma.order.findMany({
         where,
         include: {
           items: {
@@ -385,7 +385,7 @@ export class OrderService {
         skip,
         take: limit,
       }),
-      this.prisma.order.count({ where }),
+      this._prisma.order.count({ where }),
     ]);
 
     const mappedOrders = orders.map(order => this.mapOrderToType(order));
@@ -408,7 +408,7 @@ export class OrderService {
     customerId?: string
   ): Promise<Order> {
     // Get current order
-    const currentOrder = await this.prisma.order.findUnique({
+    const currentOrder = await this._prisma.order.findUnique({
       where: { id: orderId },
       include: {
         items: {
@@ -441,7 +441,7 @@ export class OrderService {
     this.validateStatusTransition(currentOrder.status as OrderStatus, status);
 
     // Update order status
-    const updatedOrder = await this.prisma.order.update({
+    const updatedOrder = await this._prisma.order.update({
       where: { id: orderId },
       data: {
         status,
@@ -577,7 +577,7 @@ export class OrderService {
     }
 
     const [vendorOrders, total] = await Promise.all([
-      this.prisma.vendorOrder.findMany({
+      this._prisma.vendorOrder.findMany({
         where,
         include: {
           order: true,
@@ -593,7 +593,7 @@ export class OrderService {
         skip,
         take: limit,
       }),
-      this.prisma.vendorOrder.count({ where }),
+      this._prisma.vendorOrder.count({ where }),
     ]);
 
     // Convert vendor orders to full orders
@@ -624,7 +624,7 @@ export class OrderService {
     status: OrderStatus,
     trackingNumber?: string
   ): Promise<VendorOrder> {
-    const vendorOrder = await this.prisma.vendorOrder.findUnique({
+    const vendorOrder = await this._prisma.vendorOrder.findUnique({
       where: { id: vendorOrderId },
       include: {
         order: true,
@@ -644,7 +644,7 @@ export class OrderService {
     this.validateStatusTransition(vendorOrder.status as OrderStatus, status);
 
     // Update vendor order
-    const updatedVendorOrder = await this.prisma.vendorOrder.update({
+    const updatedVendorOrder = await this._prisma.vendorOrder.update({
       where: { id: vendorOrderId },
       data: {
         status,
@@ -886,7 +886,7 @@ export class OrderService {
 
     try {
       // Check customer order limits (fraud prevention)
-      const recentOrders = await this.prisma.order.count({
+      const recentOrders = await this._prisma.order.count({
         where: {
           customerId,
           createdAt: {
@@ -1048,7 +1048,7 @@ export class OrderService {
 
     try {
       // Check for first-time customer discount
-      const orderCount = await this.prisma.order.count({
+      const orderCount = await this._prisma.order.count({
         where: { customerId },
       });
 
@@ -1176,31 +1176,31 @@ export class OrderService {
   private async updateMainOrderStatusFromVendorOrders(
     orderId: string
   ): Promise<void> {
-    const vendorOrders = await this.prisma.vendorOrder.findMany({
+    const vendorOrders = await this._prisma.vendorOrder.findMany({
       where: { orderId },
     });
 
     if (vendorOrders.length === 0) return;
 
     // Determine main order status based on vendor order statuses
-    const statuses = vendorOrders.map(vo => vo.status as OrderStatus);
+    const statuses = vendorOrders.map((vo: any) => vo.status as OrderStatus);
     let newMainStatus: OrderStatus;
 
-    if (statuses.every(s => s === OrderStatus.DELIVERED)) {
+    if (statuses.every((s: any) => s === OrderStatus.DELIVERED)) {
       newMainStatus = OrderStatus.DELIVERED;
-    } else if (statuses.every(s => s === OrderStatus.CANCELLED)) {
+    } else if (statuses.every((s: any) => s === OrderStatus.CANCELLED)) {
       newMainStatus = OrderStatus.CANCELLED;
-    } else if (statuses.some(s => s === OrderStatus.SHIPPED)) {
+    } else if (statuses.some((s: any) => s === OrderStatus.SHIPPED)) {
       newMainStatus = OrderStatus.SHIPPED;
-    } else if (statuses.some(s => s === OrderStatus.PROCESSING)) {
+    } else if (statuses.some((s: any) => s === OrderStatus.PROCESSING)) {
       newMainStatus = OrderStatus.PROCESSING;
-    } else if (statuses.every(s => s === OrderStatus.CONFIRMED)) {
+    } else if (statuses.every((s: any) => s === OrderStatus.CONFIRMED)) {
       newMainStatus = OrderStatus.CONFIRMED;
     } else {
       return; // No change needed
     }
 
-    await this.prisma.order.update({
+    await this._prisma.order.update({
       where: { id: orderId },
       data: { status: newMainStatus },
     });

@@ -216,7 +216,7 @@ export class HttpClient {
 
     try {
       // Execute with circuit breaker and retry
-      const response = await this.circuitBreaker.execute(() => {
+      const response = await this.circuitBreaker.execute(async () => {
         const result = await RetryManager.executeWithRetry(
           operation,
           finalRetryOptions,
@@ -393,7 +393,7 @@ export class HttpClientFactory {
   private static clients: Map<string, HttpClient> = new Map();
 
   static createClient(options: HttpClientOptions): HttpClient {
-    const _key = `${options.serviceName}-${options.baseURL}`;
+    const key = `${options.serviceName}-${options.baseURL}`;
 
     if (!this.clients.has(key)) {
       this.clients.set(key, new HttpClient(options));
@@ -406,7 +406,7 @@ export class HttpClientFactory {
     serviceName: string,
     baseURL?: string
   ): HttpClient | undefined {
-    const _key = baseURL ? `${serviceName}-${baseURL}` : serviceName;
+    const key = baseURL ? `${serviceName}-${baseURL}` : serviceName;
 
     // If no baseURL provided, find the first client for the service
     if (!baseURL) {
@@ -424,7 +424,7 @@ export class HttpClientFactory {
     return new Map(this.clients);
   }
 
-  static getHealthStatus(): Record<string, any> {
+  static getHealthStatus(): Record<string, unknown> {
     const status: Record<string, unknown> = {};
 
     for (const [key, client] of this.clients) {

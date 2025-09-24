@@ -251,8 +251,8 @@ class RedisService {
   }
 
   // Cart management helpers with real-time updates
-  async setCart(_userId: string, cartData: any, ttlSeconds = 86400) {
-    const _key = `cart:${userId}`;
+  async setCart(userId: string, cartData: any, ttlSeconds = 86400) {
+    const key = `cart:${userId}`;
     const tags = ['cart', `user:${userId}`];
     await this.setWithMetadata(key, cartData, ttlSeconds, tags);
 
@@ -260,14 +260,14 @@ class RedisService {
     await this.publishCartUpdate(userId, cartData);
   }
 
-  async getCart(_userId: string) {
-    const _key = `cart:${userId}`;
+  async getCart(userId: string) {
+    const key = `cart:${userId}`;
     const entry = await this.getWithMetadata(key);
     return entry ? entry.data : null;
   }
 
-  async deleteCart(_userId: string) {
-    const _key = `cart:${userId}`;
+  async deleteCart(userId: string) {
+    const key = `cart:${userId}`;
     await this.del(key);
 
     // Remove from tag sets
@@ -280,7 +280,7 @@ class RedisService {
 
   // Enhanced product caching with TTL-based invalidation
   async cacheProduct(productId: string, productData: any, ttlSeconds = 3600) {
-    const _key = `product:${productId}`;
+    const key = `product:${productId}`;
     const tags = [
       'product',
       `vendor:${productData.vendorId}`,
@@ -303,7 +303,7 @@ class RedisService {
   }
 
   async getCachedProduct(productId: string) {
-    const _key = `product:${productId}`;
+    const key = `product:${productId}`;
     const entry = await this.getWithMetadata(key);
     return entry ? entry.data : null;
   }
@@ -313,7 +313,7 @@ class RedisService {
     const pipeline = [];
 
     for (const product of products) {
-      const _key = `product:${product.id}`;
+      const key = `product:${product.id}`;
       const tags = [
         'product',
         `vendor:${product.vendorId}`,
@@ -337,7 +337,7 @@ class RedisService {
   // Enhanced search results caching with improved performance
   async cacheSearchResults(query: string, results: any, ttlSeconds = 300) {
     const queryHash = Buffer.from(JSON.stringify(query)).toString('base64');
-    const _key = `search:${queryHash}`;
+    const key = `search:${queryHash}`;
     const tags = ['search'];
 
     // Add category/brand tags if present in query
@@ -354,53 +354,53 @@ class RedisService {
 
   async getCachedSearchResults(query: string) {
     const queryHash = Buffer.from(JSON.stringify(query)).toString('base64');
-    const _key = `search:${queryHash}`;
+    const key = `search:${queryHash}`;
     const entry = await this.getWithMetadata(key);
     return entry ? entry.data : null;
   }
 
   // Category caching for improved navigation performance
   async cacheCategories(categories: any[], ttlSeconds = 7200) {
-    const _key = 'categories:all';
+    const key = 'categories:all';
     const tags = ['categories'];
     await this.setWithMetadata(key, categories, ttlSeconds, tags);
   }
 
   async getCachedCategories() {
-    const _key = 'categories:all';
+    const key = 'categories:all';
     const entry = await this.getWithMetadata(key);
     return entry ? entry.data : null;
   }
 
   // Featured products caching
   async cacheFeaturedProducts(products: any[], ttlSeconds = 1800) {
-    const _key = 'products:featured';
+    const key = 'products:featured';
     const tags = ['product', 'featured'];
     await this.setWithMetadata(key, products, ttlSeconds, tags);
   }
 
   async getCachedFeaturedProducts() {
-    const _key = 'products:featured';
+    const key = 'products:featured';
     const entry = await this.getWithMetadata(key);
     return entry ? entry.data : null;
   }
 
   // Inventory status caching
   async cacheInventoryStatus(productId: string, status: any, ttlSeconds = 300) {
-    const _key = `inventory:${productId}`;
+    const key = `inventory:${productId}`;
     const tags = ['inventory', `product:${productId}`];
     await this.setWithMetadata(key, status, ttlSeconds, tags);
   }
 
   async getCachedInventoryStatus(productId: string) {
-    const _key = `inventory:${productId}`;
+    const key = `inventory:${productId}`;
     const entry = await this.getWithMetadata(key);
     return entry ? entry.data : null;
   }
 
   // Order caching for improved performance
   async cacheOrder(orderId: string, orderData: any, ttlSeconds = 3600) {
-    const _key = `order:${orderId}`;
+    const key = `order:${orderId}`;
     const tags = ['order', `customer:${orderData.customerId}`];
     if (orderData.vendorOrders) {
       orderData.vendorOrders.forEach((vo: any) => {
@@ -411,7 +411,7 @@ class RedisService {
   }
 
   async getCachedOrder(orderId: string) {
-    const _key = `order:${orderId}`;
+    const key = `order:${orderId}`;
     const entry = await this.getWithMetadata(key);
     return entry ? entry.data : null;
   }
@@ -424,13 +424,13 @@ class RedisService {
     limit: number,
     ttlSeconds = 1800
   ) {
-    const _key = `orders:user:${customerId}:${page}:${limit}`;
+    const key = `orders:user:${customerId}:${page}:${limit}`;
     const tags = ['order', `customer:${customerId}`];
     await this.setWithMetadata(key, orders, ttlSeconds, tags);
   }
 
   async getCachedUserOrders(customerId: string, page: number, limit: number) {
-    const _key = `orders:user:${customerId}:${page}:${limit}`;
+    const key = `orders:user:${customerId}:${page}:${limit}`;
     const entry = await this.getWithMetadata(key);
     return entry ? entry.data : null;
   }
@@ -441,19 +441,19 @@ class RedisService {
     analytics: any,
     ttlSeconds = 1800
   ) {
-    const _key = `analytics:vendor:${vendorId}`;
+    const key = `analytics:vendor:${vendorId}`;
     const tags = ['analytics', `vendor:${vendorId}`];
     await this.setWithMetadata(key, analytics, ttlSeconds, tags);
   }
 
   async getCachedVendorAnalytics(vendorId: string) {
-    const _key = `analytics:vendor:${vendorId}`;
+    const key = `analytics:vendor:${vendorId}`;
     const entry = await this.getWithMetadata(key);
     return entry ? entry.data : null;
   }
 
   // Real-time cart updates using pub/sub
-  async publishCartUpdate(_userId: string, cartData: any): Promise<void> {
+  async publishCartUpdate(userId: string, cartData: any): Promise<void> {
     try {
       if (!this.client) await this.connect();
       const message = JSON.stringify({
@@ -468,7 +468,7 @@ class RedisService {
   }
 
   async subscribeToCartUpdates(
-    _userId: string,
+    userId: string,
     callback: (cartData: unknown) => void
   ): Promise<void> {
     try {

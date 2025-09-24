@@ -29,7 +29,7 @@ export class EnhancedOrderService extends OrderService {
     notificationServiceClient: HttpNotificationServiceClient
   ) {
     super(
-      prisma,
+      _prisma,
       cartService,
       inventoryService,
       authServiceClient,
@@ -38,7 +38,7 @@ export class EnhancedOrderService extends OrderService {
     );
 
     this.sagaOrchestrator = new OrderSagaOrchestrator(
-      prisma,
+      _prisma,
       cartService,
       inventoryService,
       authServiceClient,
@@ -47,7 +47,7 @@ export class EnhancedOrderService extends OrderService {
     );
 
     this.transactionCoordinator = new TransactionCoordinator(
-      prisma,
+      _prisma,
       authServiceClient,
       paymentServiceClient,
       notificationServiceClient
