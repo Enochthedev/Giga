@@ -510,7 +510,8 @@ async function createSampleOrders() {
             vendorId,
             status: orderStatus,
             subtotal: vendorSubtotal,
-            items: vendorItems,
+            shipping: 0, // Add required fields
+            total: vendorSubtotal,
           },
         });
       }
@@ -586,7 +587,7 @@ async function updateProductStats() {
     try {
       // Calculate total sold and revenue
       const completedOrders = product.orderItems.filter(
-        item => item.order.status === OrderStatus.DELIVERED
+        item => item.order && item.order.status === OrderStatus.DELIVERED
       );
 
       const totalSold = completedOrders.reduce(
@@ -605,8 +606,8 @@ async function updateProductStats() {
         data: {
           rating,
           reviewCount,
-          totalSold,
-          // Note: totalRevenue would need to be added to the schema
+          // Note: totalSold and totalRevenue would need to be added to the schema
+          // totalSold,
         },
       });
 

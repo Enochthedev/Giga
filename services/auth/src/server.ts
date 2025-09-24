@@ -37,7 +37,7 @@ async function start() {
 }
 
 // Graceful shutdown handler
-async async function gracefulShutdown(signal: string) {
+async function gracefulShutdown(signal: string) {
   logger.info(`${signal} received, starting graceful shutdown`);
 
   if (server) {

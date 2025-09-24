@@ -29,8 +29,8 @@ class CacheService {
   private readonly SESSION_TTL = 86400; // 24 hours
 
   // User profile caching
-  async cacheUserProfile(_userId: string, userData: UserCacheData, options?: CacheOptions): Promise<void> {
-    const _key = this.getUserCacheKey(userId);
+  async cacheUserProfile(userId: string, userData: UserCacheData, options?: CacheOptions): Promise<void> {
+    const key = this.getUserCacheKey(userId);
     const ttl = options?.ttl || this.USER_PROFILE_TTL;
 
     try {

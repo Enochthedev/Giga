@@ -224,7 +224,7 @@ export function validateFileUpload(_options: {
 
 // Request size validation
 export function validateRequestSize(maxSize: number = 10 * 1024 * 1024) {
-  return async (req: Request, res: Response, next: NextFunction) => {
+  return (req: Request, res: Response, next: NextFunction) => {
     const contentLength = parseInt(req.headers['content-length'] || '0', 10);
 
     if (contentLength > maxSize) {
