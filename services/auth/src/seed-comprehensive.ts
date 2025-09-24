@@ -1,5 +1,5 @@
-import bcrypt from 'bcryptjs';
-import { Gender, HostType, PrismaClient, RoleName } from './generated/prisma-client';
+import * as bcrypt from 'bcryptjs';
+import { PrismaClient, RoleName } from './generated/prisma-client';
 
 const prisma = new PrismaClient();
 
@@ -9,8 +9,6 @@ interface SeedUser {
   firstName: string;
   lastName: string;
   phone?: string;
-  dateOfBirth?: Date;
-  gender?: Gender;
   roles: RoleName[];
   isEmailVerified?: boolean;
   isPhoneVerified?: boolean;
@@ -24,8 +22,6 @@ const seedUsers: SeedUser[] = [
     firstName: 'Platform',
     lastName: 'Admin',
     phone: '+1234567890',
-    dateOfBirth: new Date('1985-01-15'),
-    gender: Gender.PREFER_NOT_TO_SAY,
     roles: [RoleName.ADMIN],
     isEmailVerified: true,
     isPhoneVerified: true,
@@ -48,8 +44,6 @@ const seedUsers: SeedUser[] = [
     firstName: 'John',
     lastName: 'Customer',
     phone: '+1234567892',
-    dateOfBirth: new Date('1990-05-20'),
-    gender: Gender.MALE,
     roles: [RoleName.CUSTOMER],
     isEmailVerified: true,
     isPhoneVerified: true,
@@ -60,22 +54,8 @@ const seedUsers: SeedUser[] = [
     firstName: 'Jane',
     lastName: 'Smith',
     phone: '+1234567893',
-    dateOfBirth: new Date('1988-08-12'),
-    gender: Gender.FEMALE,
     roles: [RoleName.CUSTOMER],
     isEmailVerified: true,
-    isPhoneVerified: false,
-  },
-  {
-    email: 'alex.customer@example.com',
-    password: 'CustomerPassword123!',
-    firstName: 'Alex',
-    lastName: 'Johnson',
-    phone: '+1234567894',
-    dateOfBirth: new Date('1995-03-08'),
-    gender: Gender.OTHER,
-    roles: [RoleName.CUSTOMER],
-    isEmailVerified: false,
     isPhoneVerified: false,
   },
 
@@ -86,20 +66,6 @@ const seedUsers: SeedUser[] = [
     firstName: 'Mike',
     lastName: 'Vendor',
     phone: '+1234567895',
-    dateOfBirth: new Date('1982-11-30'),
-    gender: Gender.MALE,
-    roles: [RoleName.VENDOR, RoleName.CUSTOMER],
-    isEmailVerified: true,
-    isPhoneVerified: true,
-  },
-  {
-    email: 'vendor2@example.com',
-    password: 'VendorPassword123!',
-    firstName: 'Sarah',
-    lastName: 'Business',
-    phone: '+1234567896',
-    dateOfBirth: new Date('1987-07-14'),
-    gender: Gender.FEMALE,
     roles: [RoleName.VENDOR, RoleName.CUSTOMER],
     isEmailVerified: true,
     isPhoneVerified: true,
@@ -112,20 +78,6 @@ const seedUsers: SeedUser[] = [
     firstName: 'Carlos',
     lastName: 'Driver',
     phone: '+1234567897',
-    dateOfBirth: new Date('1991-02-28'),
-    gender: Gender.MALE,
-    roles: [RoleName.DRIVER, RoleName.CUSTOMER],
-    isEmailVerified: true,
-    isPhoneVerified: true,
-  },
-  {
-    email: 'driver2@example.com',
-    password: 'DriverPassword123!',
-    firstName: 'Maria',
-    lastName: 'Rodriguez',
-    phone: '+1234567898',
-    dateOfBirth: new Date('1993-09-05'),
-    gender: Gender.FEMALE,
     roles: [RoleName.DRIVER, RoleName.CUSTOMER],
     isEmailVerified: true,
     isPhoneVerified: true,
@@ -138,20 +90,6 @@ const seedUsers: SeedUser[] = [
     firstName: 'David',
     lastName: 'Host',
     phone: '+1234567899',
-    dateOfBirth: new Date('1984-12-10'),
-    gender: Gender.MALE,
-    roles: [RoleName.HOST, RoleName.CUSTOMER],
-    isEmailVerified: true,
-    isPhoneVerified: true,
-  },
-  {
-    email: 'host2@example.com',
-    password: 'HostPassword123!',
-    firstName: 'Lisa',
-    lastName: 'Property',
-    phone: '+1234567800',
-    dateOfBirth: new Date('1989-04-22'),
-    gender: Gender.FEMALE,
     roles: [RoleName.HOST, RoleName.CUSTOMER],
     isEmailVerified: true,
     isPhoneVerified: true,
@@ -164,23 +102,7 @@ const seedUsers: SeedUser[] = [
     firstName: 'Robert',
     lastName: 'Marketing',
     phone: '+1234567801',
-    dateOfBirth: new Date('1980-06-18'),
-    gender: Gender.MALE,
     roles: [RoleName.ADVERTISER, RoleName.CUSTOMER],
-    isEmailVerified: true,
-    isPhoneVerified: true,
-  },
-
-  // Multi-role Users
-  {
-    email: 'multirole@example.com',
-    password: 'MultiRolePassword123!',
-    firstName: 'Multi',
-    lastName: 'Role',
-    phone: '+1234567802',
-    dateOfBirth: new Date('1986-10-03'),
-    gender: Gender.PREFER_NOT_TO_SAY,
-    roles: [RoleName.CUSTOMER, RoleName.VENDOR, RoleName.DRIVER],
     isEmailVerified: true,
     isPhoneVerified: true,
   },
@@ -225,8 +147,6 @@ async function createUsers() {
           firstName: userData.firstName,
           lastName: userData.lastName,
           phone: userData.phone,
-          dateOfBirth: userData.dateOfBirth,
-          gender: userData.gender,
           isEmailVerified: userData.isEmailVerified || false,
           isPhoneVerified: userData.isPhoneVerified || false,
           activeRole: userData.roles[0], // First role as active
@@ -242,7 +162,7 @@ async function createUsers() {
         if (role) {
           await prisma.userRole.create({
             data: {
-              userId: user.id,
+              _userId: user.id,
               roleId: role.id,
             },
           });
@@ -259,7 +179,7 @@ async function createUsers() {
   }
 }
 
-async function createProfilesForUser(_userId: string, roles: RoleName[]) {
+async function createProfilesForUser(userId: string, roles: RoleName[]) {
   for (const role of roles) {
     switch (role) {
       case RoleName.CUSTOMER:
@@ -281,20 +201,16 @@ async function createProfilesForUser(_userId: string, roles: RoleName[]) {
   }
 }
 
-async function createCustomerProfile(_userId: string) {
+async function createCustomerProfile(userId: string) {
   const profile = await prisma.customerProfile.create({
     data: {
-      userId,
+      _userId: userId,
       preferences: {
         newsletter: true,
         notifications: true,
         theme: 'light',
         language: 'en',
       },
-      loyaltyPoints: Math.floor(Math.random() * 1000),
-      membershipTier: ['BRONZE', 'SILVER', 'GOLD', 'PLATINUM'][Math.floor(Math.random() * 4)],
-      totalOrders: Math.floor(Math.random() * 50),
-      totalSpent: Math.floor(Math.random() * 5000),
     },
   });
 
@@ -335,7 +251,7 @@ async function createCustomerProfile(_userId: string) {
   }
 }
 
-async function createVendorProfile(_userId: string) {
+async function createVendorProfile(userId: string) {
   const businessNames = [
     'Tech Solutions Inc',
     'Green Garden Supply',
@@ -344,39 +260,24 @@ async function createVendorProfile(_userId: string) {
     'Sports Gear Pro',
   ];
 
-  const businessTypes = [
-    'Technology',
-    'Retail',
-    'Fashion',
-    'Home & Garden',
-    'Sports & Recreation',
-  ];
-
   await prisma.vendorProfile.create({
     data: {
-      userId,
+      _userId: userId,
       businessName: businessNames[Math.floor(Math.random() * businessNames.length)],
-      businessType: businessTypes[Math.floor(Math.random() * businessTypes.length)],
       description: 'A quality business providing excellent products and services to our customers.',
       website: 'https://example-business.com',
-      subscriptionTier: ['BASIC', 'PRO', 'ENTERPRISE'][Math.floor(Math.random() * 3)],
-      commissionRate: 0.10 + Math.random() * 0.10, // 10-20%
-      isVerified: Math.random() > 0.3, // 70% verified
-      rating: 3.5 + Math.random() * 1.5, // 3.5-5.0 rating
-      totalSales: Math.floor(Math.random() * 100000),
     },
   });
 }
 
-async function createDriverProfile(_userId: string) {
-  const vehicleTypes = ['CAR', 'MOTORCYCLE', 'BICYCLE', 'SCOOTER'];
+async function createDriverProfile(userId: string) {
   const makes = ['Toyota', 'Honda', 'Ford', 'Chevrolet', 'Nissan'];
   const models = ['Camry', 'Civic', 'Focus', 'Malibu', 'Altima'];
   const colors = ['White', 'Black', 'Silver', 'Blue', 'Red'];
 
   await prisma.driverProfile.create({
     data: {
-      userId,
+      _userId: userId,
       licenseNumber: `DL${Math.floor(Math.random() * 1000000).toString().padStart(6, '0')}`,
       vehicleInfo: {
         make: makes[Math.floor(Math.random() * makes.length)],
@@ -384,24 +285,12 @@ async function createDriverProfile(_userId: string) {
         year: 2015 + Math.floor(Math.random() * 9), // 2015-2023
         color: colors[Math.floor(Math.random() * colors.length)],
         licensePlate: `ABC${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`,
-        type: vehicleTypes[Math.floor(Math.random() * vehicleTypes.length)],
       },
-      isOnline: Math.random() > 0.5,
-      currentLocation: {
-        latitude: 40.7128 + (Math.random() - 0.5) * 0.1, // Around NYC
-        longitude: -74.0060 + (Math.random() - 0.5) * 0.1,
-        address: '123 Street, New York, NY',
-      },
-      rating: 3.5 + Math.random() * 1.5,
-      totalRides: Math.floor(Math.random() * 1000),
-      isVerified: Math.random() > 0.2, // 80% verified
-      subscriptionTier: ['BASIC', 'PRO'][Math.floor(Math.random() * 2)],
     },
   });
 }
 
-async function createHostProfile(_userId: string) {
-  const hostTypes = [HostType.INDIVIDUAL, HostType.BUSINESS];
+async function createHostProfile(userId: string) {
   const businessNames = [
     'Cozy Stays',
     'Urban Retreats',
@@ -412,21 +301,14 @@ async function createHostProfile(_userId: string) {
 
   await prisma.hostProfile.create({
     data: {
-      userId,
+      _userId: userId,
       businessName: businessNames[Math.floor(Math.random() * businessNames.length)],
-      hostType: hostTypes[Math.floor(Math.random() * hostTypes.length)],
       description: 'Providing comfortable and clean accommodations for travelers.',
-      rating: 3.5 + Math.random() * 1.5,
-      totalBookings: Math.floor(Math.random() * 500),
-      isVerified: Math.random() > 0.3, // 70% verified
-      subscriptionTier: ['BASIC', 'PRO'][Math.floor(Math.random() * 2)],
-      responseRate: 80 + Math.random() * 20, // 80-100%
-      responseTime: Math.floor(Math.random() * 120) + 5, // 5-125 minutes
     },
   });
 }
 
-async function createAdvertiserProfile(_userId: string) {
+async function createAdvertiserProfile(userId: string) {
   const companies = [
     'Digital Marketing Pro',
     'Brand Boost Agency',
@@ -446,14 +328,10 @@ async function createAdvertiserProfile(_userId: string) {
 
   await prisma.advertiserProfile.create({
     data: {
-      userId,
+      _userId: userId,
       companyName: companies[Math.floor(Math.random() * companies.length)],
       industry: industries[Math.floor(Math.random() * industries.length)],
       website: 'https://example-agency.com',
-      totalSpend: Math.floor(Math.random() * 50000),
-      totalCampaigns: Math.floor(Math.random() * 100),
-      isVerified: Math.random() > 0.4, // 60% verified
-      subscriptionTier: ['BASIC', 'PRO', 'ENTERPRISE'][Math.floor(Math.random() * 3)],
     },
   });
 }
@@ -473,7 +351,7 @@ async function createSampleTokens() {
     await prisma.emailVerificationToken.create({
       data: {
         token: Math.random().toString(36).substring(2, 15),
-        userId: user.id,
+        _userId: user.id,
         expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
       },
     });
@@ -483,7 +361,7 @@ async function createSampleTokens() {
       await prisma.phoneVerificationCode.create({
         data: {
           code: Math.floor(100000 + Math.random() * 900000).toString(), // 6-digit code
-          userId: user.id,
+          _userId: user.id,
           expiresAt: new Date(Date.now() + 10 * 60 * 1000), // 10 minutes
         },
       });
