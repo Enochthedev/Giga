@@ -437,7 +437,7 @@ class CacheService {
     }
   }
 
-  async getCachedCompressed(key: string): Promise<any | null> {
+  async getCachedCompressed(key: string): Promise<unknown | null> {
     try {
       const meta = await redisService.get(`${key}:meta`);
       if (!meta) return null;

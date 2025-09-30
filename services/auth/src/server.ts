@@ -42,7 +42,7 @@ async function gracefulShutdown(signal: string) {
 
   if (server) {
     // Stop accepting new connections
-    server.close(async (err: any) => {
+    server.close(async (err: unknown) => {
       if (err) {
         logger.error('Error during server shutdown', err);
         process.exit(1);

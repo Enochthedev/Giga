@@ -585,16 +585,13 @@ async function updateProductStats() {
 
   for (const product of products) {
     try {
-      // Calculate total sold and revenue
+      // Calculate completed orders for analytics
       const completedOrders = product.orderItems.filter(
         item => item.order && item.order.status === OrderStatus.DELIVERED
       );
 
-      const totalSold = completedOrders.reduce(
-        (sum, item) => sum + item.quantity,
-        0
-      );
-      // Calculate total revenue for analytics (not used in current schema)
+      // Note: totalSold and totalRevenue would need to be added to the schema to store these values
+      // const totalSold = completedOrders.reduce((sum, item) => sum + item.quantity, 0);
       // const totalRevenue = completedOrders.reduce((sum, item) => sum + item.total, 0);
 
       // Generate random rating and review count
@@ -611,7 +608,7 @@ async function updateProductStats() {
         },
       });
 
-      console.log(`✅ Updated stats for product: ${product.name}`);
+      console.log(`✅ Updated stats for product: ${product.name} (${completedOrders.length} completed orders)`);
     } catch (error) {
       console.error(`❌ Failed to update stats for ${product.name}:`, error);
     }

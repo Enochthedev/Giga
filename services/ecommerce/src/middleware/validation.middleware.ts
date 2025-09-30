@@ -172,7 +172,7 @@ export const cartRateLimit: RateLimitRequestHandler = rateLimit({
 // Input sanitization middleware
 export function sanitizeInput(req: Request, res: Response, next: NextFunction) {
   // Sanitize common injection patterns
-  const sanitizeValue = (value: any): any => {
+  const sanitizeValue = (value: any): unknown => {
     if (typeof value === 'string') {
       return value
         .replace(/[<>]/g, '') // Remove potential HTML tags

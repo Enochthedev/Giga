@@ -1,0 +1,684 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Transaction {
+  id                    String            @id @default(cuid())
+  type                  TransactionType
+  status                PaymentStatus     @default(PENDING)
+  amount                Decimal           @db.Decimal(12, 2)
+  currency              String            @db.VarChar(3)
+  description           String?
+  
+  // Parties
+  userId                String?
+  merchantId            String?
+  vendorId              String?
+  
+  // Payment details
+  paymentMethodId       String?
+  gatewayId             String
+  gatewayTransactionId  String?
+  
+  // References
+  internalReference     String?           @unique
+  externalReference     String?
+  
+  // Fees and splits
+  platformFee           Decimal?          @db.Decimal(12, 2)
+  gatewayFee            Decimal?          @db.Decimal(12, 2)
+  
+  // Fraud and risk
+  riskScore             Float?
+  fraudFlags            String[]
+  
+  // Metadata
+  metadata              Json              @default("{}")
+  
+  // Timestamps
+  processedAt           DateTime?
+  settledAt             DateTime?
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+  
+  // Relations
+  paymentMethod         PaymentMethod?    @relation(fields: [paymentMethodId], references: [id])
+  gateway               GatewayConfig     @relation(fields: [gatewayId], references: [id])
+  refunds               Refund[]
+  disputes              Dispute[]
+  splits                PaymentSplit[]
+  fraudAssessment       FraudAssessment?
+  
+  // Parent-child relationships for refunds/chargebacks
+  parentId              String?
+  parent                Transaction?      @relation("TransactionHierarchy", fields: [parentId], references: [id])
+  children              Transaction[]     @relation("TransactionHierarchy")
+  
+  @@map("transactions")
+}
+
+model PaymentMethod {
+  id              String            @id @default(cuid())
+  userId          String
+  type            PaymentMethodType
+  provider        String
+  token           String            @unique
+  isDefault       Boolean           @default(false)
+  isActive        Boolean           @default(true)
+  
+  // Metadata (encrypted sensitive data)
+  metadata        Json              @default("{}")
+  
+  // Billing address
+  billingAddress  Json?
+  
+  // Timestamps
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  
+  // Relations
+  transactions    Transaction[]
+  subscriptions   Subscription[]
+  
+  @@map("payment_methods")
+}
+
+model Refund {
+  id                String        @id @default(cuid())
+  transactionId     String
+  amount            Decimal       @db.Decimal(12, 2)
+  currency          String        @db.VarChar(3)
+  reason            String
+  status            PaymentStatus @default(PENDING)
+  gatewayRefundId   String?
+  metadata          Json          @default("{}")
+  
+  // Timestamps
+  processedAt       DateTime?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  
+  // Relations
+  transaction       Transaction   @relation(fields: [transactionId], references: [id])
+  
+  @@map("refunds")
+}
+
+model Dispute {
+  id                String        @id @default(cuid())
+  transactionId     String
+  amount            Decimal       @db.Decimal(12, 2)
+  currency          String        @db.VarChar(3)
+  reason            String
+  status            DisputeStatus @default(OPEN)
+  evidenceDeadline  DateTime?
+  gatewayDisputeId  String?
+  metadata          Json          @default("{}")
+  
+  // Timestamps
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  
+  // Relations
+  transaction       Transaction   @relation(fields: [transactionId], references: [id])
+  
+  @@map("disputes")
+}
+
+model PaymentSplit {
+  id            String            @id @default(cuid())
+  transactionId String
+  recipientId   String
+  amount        Decimal           @db.Decimal(12, 2)
+  currency      String            @db.VarChar(3)
+  type          PaymentSplitType
+  description   String?
+  status        PaymentStatus     @default(PENDING)
+  
+  // Timestamps
+  processedAt   DateTime?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  
+  // Relations
+  transaction   Transaction       @relation(fields: [transactionId], references: [id])
+  
+  @@map("payment_splits")
+}
+
+model GatewayConfig {
+  id            String        @id @default(cuid())
+  type          GatewayType
+  name          String
+  status        GatewayStatus @default(ACTIVE)
+  priority      Int           @default(0)
+  
+  // Configuration (encrypted)
+  credentials   Json          @default("{}")
+  settings      Json          @default("{}")
+  
+  // Health check configuration
+  healthCheck   Json          @default("{}")
+  
+  // Rate limiting
+  rateLimit     Json          @default("{}")
+  
+  // Metadata
+  metadata      Json          @default("{}")
+  
+  // Timestamps
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  
+  // Relations
+  transactions  Transaction[]
+  metrics       GatewayMetrics[]
+  healthStatus  GatewayHealthStatus[]
+  
+  @@map("gateway_configs")
+}
+
+model GatewayMetrics {
+  id                String        @id @default(cuid())
+  gatewayId         String
+  timestamp         DateTime      @default(now())
+  
+  // Performance metrics
+  responseTime      Int
+  successRate       Float
+  errorRate         Float
+  
+  // Volume metrics
+  transactionCount  Int
+  transactionVolume Decimal       @db.Decimal(15, 2)
+  
+  // Status and error counts
+  statusCounts      Json          @default("{}")
+  errorTypes        Json          @default("{}")
+  
+  // Relations
+  gateway           GatewayConfig @relation(fields: [gatewayId], references: [id])
+  
+  @@map("gateway_metrics")
+}
+
+model GatewayHealthStatus {
+  id                  String        @id @default(cuid())
+  gatewayId           String
+  status              GatewayStatus
+  lastCheck           DateTime      @default(now())
+  responseTime        Int?
+  errorMessage        String?
+  consecutiveFailures Int           @default(0)
+  
+  // Relations
+  gateway             GatewayConfig @relation(fields: [gatewayId], references: [id])
+  
+  @@map("gateway_health_status")
+}
+
+model SubscriptionPlan {
+  id              String        @id @default(cuid())
+  name            String
+  description     String?
+  amount          Decimal       @db.Decimal(12, 2)
+  currency        String        @db.VarChar(3)
+  interval        BillingInterval
+  intervalCount   Int           @default(1)
+  trialPeriodDays Int?
+  usageType       UsageType?
+  meteringUnit    String?
+  metadata        Json          @default("{}")
+  isActive        Boolean       @default(true)
+  
+  // Timestamps
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  // Relations
+  subscriptions   Subscription[]
+  
+  @@map("subscription_plans")
+}
+
+model Subscription {
+  id                    String              @id @default(cuid())
+  userId                String
+  planId                String
+  status                SubscriptionStatus  @default(ACTIVE)
+  paymentMethodId       String
+  currency              String              @db.VarChar(3)
+  unitAmount            Decimal             @db.Decimal(12, 2)
+  quantity              Int                 @default(1)
+  
+  // Billing cycle
+  billingCycleAnchor    DateTime
+  currentPeriodStart    DateTime
+  currentPeriodEnd      DateTime
+  
+  // Trial
+  trialStart            DateTime?
+  trialEnd              DateTime?
+  
+  // Cancellation
+  cancelAt              DateTime?
+  cancelAtPeriodEnd     Boolean             @default(false)
+  canceledAt            DateTime?
+  
+  // Pause
+  pauseCollection       Json?
+  
+  // Proration
+  prorationBehavior     ProrationBehavior   @default(CREATE_PRORATIONS)
+  
+  // Gateway integration
+  gatewaySubscriptionId String?
+  
+  // Metadata
+  metadata              Json                @default("{}")
+  
+  // Timestamps
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+  
+  // Relations
+  plan                  SubscriptionPlan    @relation(fields: [planId], references: [id])
+  paymentMethod         PaymentMethod       @relation(fields: [paymentMethodId], references: [id])
+  invoices              Invoice[]
+  usageRecords          UsageRecord[]
+  
+  @@map("subscriptions")
+}
+
+model Invoice {
+  id              String          @id @default(cuid())
+  subscriptionId  String?
+  userId          String
+  status          InvoiceStatus   @default(DRAFT)
+  
+  // Amounts
+  subtotal        Decimal         @db.Decimal(12, 2)
+  tax             Decimal?        @db.Decimal(12, 2)
+  total           Decimal         @db.Decimal(12, 2)
+  amountPaid      Decimal         @db.Decimal(12, 2) @default(0)
+  amountRemaining Decimal         @db.Decimal(12, 2)
+  currency        String          @db.VarChar(3)
+  
+  // Billing period
+  periodStart     DateTime
+  periodEnd       DateTime
+  
+  // Due date
+  dueDate         DateTime?
+  
+  // Payment
+  paymentMethodId String?
+  gatewayInvoiceId String?
+  
+  // Attempts
+  attemptCount    Int             @default(0)
+  nextPaymentAttempt DateTime?
+  
+  // Metadata
+  description     String?
+  metadata        Json            @default("{}")
+  
+  // Timestamps
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  
+  // Relations
+  subscription    Subscription?   @relation(fields: [subscriptionId], references: [id])
+  items           InvoiceItem[]
+  payments        InvoicePayment[]
+  
+  @@map("invoices")
+}
+
+model InvoiceItem {
+  id          String    @id @default(cuid())
+  invoiceId   String
+  description String
+  amount      Decimal   @db.Decimal(12, 2)
+  currency    String    @db.VarChar(3)
+  quantity    Int       @default(1)
+  unitAmount  Decimal   @db.Decimal(12, 2)
+  periodStart DateTime?
+  periodEnd   DateTime?
+  proration   Boolean   @default(false)
+  metadata    Json      @default("{}")
+  
+  // Relations
+  invoice     Invoice   @relation(fields: [invoiceId], references: [id])
+  
+  @@map("invoice_items")
+}
+
+model InvoicePayment {
+  id            String        @id @default(cuid())
+  invoiceId     String
+  transactionId String
+  amount        Decimal       @db.Decimal(12, 2)
+  currency      String        @db.VarChar(3)
+  status        PaymentStatus
+  createdAt     DateTime      @default(now())
+  
+  // Relations
+  invoice       Invoice       @relation(fields: [invoiceId], references: [id])
+  
+  @@map("invoice_payments")
+}
+
+model UsageRecord {
+  id             String       @id @default(cuid())
+  subscriptionId String
+  quantity       Int
+  timestamp      DateTime     @default(now())
+  action         UsageAction  @default(INCREMENT)
+  metadata       Json         @default("{}")
+  
+  // Relations
+  subscription   Subscription @relation(fields: [subscriptionId], references: [id])
+  
+  @@map("usage_records")
+}
+
+model FraudRule {
+  id          String        @id @default(cuid())
+  name        String
+  type        FraudRuleType
+  isActive    Boolean       @default(true)
+  priority    Int           @default(0)
+  conditions  Json          @default("[]")
+  action      FraudAction
+  riskScore   Int
+  description String?
+  metadata    Json          @default("{}")
+  
+  // Timestamps
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  
+  @@map("fraud_rules")
+}
+
+model FraudAssessment {
+  id                String    @id @default(cuid())
+  transactionId     String    @unique
+  riskScore         Int
+  riskLevel         RiskLevel
+  recommendation    FraudAction
+  ruleEvaluations   Json      @default("[]")
+  signals           Json      @default("[]")
+  deviceFingerprint String?
+  ipAddress         String?
+  geolocation       Json?
+  behavioralScore   Int?
+  velocityFlags     String[]
+  externalScores    Json      @default("[]")
+  metadata          Json      @default("{}")
+  assessedAt        DateTime  @default(now())
+  
+  // Relations
+  transaction       Transaction @relation(fields: [transactionId], references: [id])
+  
+  @@map("fraud_assessments")
+}
+
+model BlacklistEntry {
+  id        String    @id @default(cuid())
+  type      BlacklistType
+  value     String
+  reason    String
+  isActive  Boolean   @default(true)
+  expiresAt DateTime?
+  metadata  Json      @default("{}")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  
+  @@unique([type, value])
+  @@map("blacklist_entries")
+}
+
+model WhitelistEntry {
+  id        String    @id @default(cuid())
+  type      WhitelistType
+  value     String
+  reason    String
+  isActive  Boolean   @default(true)
+  expiresAt DateTime?
+  metadata  Json      @default("{}")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  
+  @@unique([type, value])
+  @@map("whitelist_entries")
+}
+
+model WebhookEndpoint {
+  id            String        @id @default(cuid())
+  url           String
+  description   String?
+  enabledEvents String[]
+  secret        String
+  isActive      Boolean       @default(true)
+  retryConfig   Json          @default("{}")
+  filters       Json          @default("[]")
+  metadata      Json          @default("{}")
+  stats         Json          @default("{}")
+  
+  // Timestamps
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  
+  // Relations
+  deliveries    WebhookDelivery[]
+  
+  @@map("webhook_endpoints")
+}
+
+model WebhookEvent {
+  id              String    @id @default(cuid())
+  type            String
+  gatewayId       String?
+  gatewayEventId  String?
+  data            Json
+  livemode        Boolean   @default(false)
+  apiVersion      String?
+  processed       Boolean   @default(false)
+  processedAt     DateTime?
+  metadata        Json      @default("{}")
+  createdAt       DateTime  @default(now())
+  
+  // Relations
+  deliveries      WebhookDelivery[]
+  
+  @@map("webhook_events")
+}
+
+model WebhookDelivery {
+  id                String        @id @default(cuid())
+  webhookEndpointId String
+  webhookEventId    String
+  url               String
+  httpMethod        String        @default("POST")
+  headers           Json          @default("{}")
+  payload           String
+  status            WebhookStatus @default(PENDING)
+  httpStatusCode    Int?
+  responseBody      String?
+  responseHeaders   Json?
+  sentAt            DateTime      @default(now())
+  respondedAt       DateTime?
+  duration          Int?
+  attemptNumber     Int           @default(1)
+  nextRetryAt       DateTime?
+  errorMessage      String?
+  errorCode         String?
+  metadata          Json          @default("{}")
+  
+  // Relations
+  endpoint          WebhookEndpoint @relation(fields: [webhookEndpointId], references: [id])
+  event             WebhookEvent    @relation(fields: [webhookEventId], references: [id])
+  
+  @@map("webhook_deliveries")
+}
+
+// Enums
+enum TransactionType {
+  PAYMENT
+  REFUND
+  CHARGEBACK
+  FEE
+  PAYOUT
+  ADJUSTMENT
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  SUCCEEDED
+  FAILED
+  CANCELLED
+  REFUNDED
+  PARTIALLY_REFUNDED
+  DISPUTED
+  EXPIRED
+}
+
+enum PaymentMethodType {
+  CARD
+  BANK_ACCOUNT
+  DIGITAL_WALLET
+  CRYPTO
+  BUY_NOW_PAY_LATER
+}
+
+enum PaymentSplitType {
+  FIXED
+  PERCENTAGE
+}
+
+enum DisputeStatus {
+  OPEN
+  UNDER_REVIEW
+  WON
+  LOST
+  WARNING_CLOSED
+}
+
+enum GatewayType {
+  STRIPE
+  PAYPAL
+  SQUARE
+  ADYEN
+  BRAINTREE
+}
+
+enum GatewayStatus {
+  ACTIVE
+  INACTIVE
+  MAINTENANCE
+  ERROR
+}
+
+enum BillingInterval {
+  DAY
+  WEEK
+  MONTH
+  YEAR
+}
+
+enum UsageType {
+  LICENSED
+  METERED
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  PAST_DUE
+  UNPAID
+  CANCELLED
+  INCOMPLETE
+  INCOMPLETE_EXPIRED
+  TRIALING
+  PAUSED
+}
+
+enum ProrationBehavior {
+  NONE
+  CREATE_PRORATIONS
+  ALWAYS_INVOICE
+}
+
+enum InvoiceStatus {
+  DRAFT
+  OPEN
+  PAID
+  UNCOLLECTIBLE
+  VOID
+}
+
+enum UsageAction {
+  INCREMENT
+  SET
+}
+
+enum FraudRuleType {
+  VELOCITY
+  AMOUNT
+  GEOLOCATION
+  DEVICE
+  BEHAVIORAL
+  BLACKLIST
+  WHITELIST
+  MACHINE_LEARNING
+}
+
+enum FraudAction {
+  ALLOW
+  REVIEW
+  DECLINE
+  CHALLENGE
+  STEP_UP_AUTH
+}
+
+enum RiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum BlacklistType {
+  USER
+  EMAIL
+  IP
+  DEVICE
+  CARD
+  PHONE
+}
+
+enum WhitelistType {
+  USER
+  EMAIL
+  IP
+  DEVICE
+  MERCHANT
+}
+
+enum WebhookStatus {
+  PENDING
+  PROCESSING
+  SUCCEEDED
+  FAILED
+  RETRYING
+}
