@@ -1,7 +1,17 @@
 import { Decimal } from '../../lib/decimal';
 import { logger } from '../../lib/logger';
-import { GatewayConfig, GatewayStatus, PaymentGateway, WebhookEvent } from '../../types/gateway.types';
-import { PaymentMethod, PaymentRequest, PaymentResponse, Refund } from '../../types/payment.types';
+import {
+  GatewayConfig,
+  GatewayStatus,
+  PaymentGateway,
+  WebhookEvent,
+} from '../../types/gateway.types';
+import {
+  PaymentMethod,
+  PaymentRequest,
+  PaymentResponse,
+  Refund,
+} from '../../types/payment.types';
 
 export class SquareGateway extends PaymentGateway {
   constructor(config: GatewayConfig) {
@@ -14,7 +24,7 @@ export class SquareGateway extends PaymentGateway {
       logger.info('Processing Square payment', {
         gatewayId: this.getId(),
         amount: request.amount,
-        currency: request.currency
+        currency: request.currency,
       });
 
       await this.simulateApiCall();
@@ -25,30 +35,33 @@ export class SquareGateway extends PaymentGateway {
         amount: new Decimal(request.amount),
         currency: request.currency,
         metadata: request.metadata || {},
-        createdAt: new Date()
+        createdAt: new Date(),
       };
 
       logger.info('Square payment processed successfully', {
         gatewayId: this.getId(),
-        paymentId: response.id
+        paymentId: response.id,
       });
 
       return response;
     } catch (error) {
       logger.error('Square payment processing failed', {
         gatewayId: this.getId(),
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
       throw error;
     }
   }
 
-  async capturePayment(transactionId: string, amount?: number): Promise<PaymentResponse> {
+  async capturePayment(
+    transactionId: string,
+    amount?: number
+  ): Promise<PaymentResponse> {
     try {
       logger.info('Capturing Square payment', {
         gatewayId: this.getId(),
         transactionId,
-        amount
+        amount,
       });
 
       await this.simulateApiCall();
@@ -59,12 +72,12 @@ export class SquareGateway extends PaymentGateway {
         amount: new Decimal(amount || 0),
         currency: 'USD',
         metadata: {},
-        createdAt: new Date()
+        createdAt: new Date(),
       };
 
       logger.info('Square payment captured successfully', {
         gatewayId: this.getId(),
-        transactionId
+        transactionId,
       });
 
       return response;
@@ -72,7 +85,7 @@ export class SquareGateway extends PaymentGateway {
       logger.error('Square payment capture failed', {
         gatewayId: this.getId(),
         transactionId,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
       throw error;
     }
@@ -82,7 +95,7 @@ export class SquareGateway extends PaymentGateway {
     try {
       logger.info('Canceling Square payment', {
         gatewayId: this.getId(),
-        transactionId
+        transactionId,
       });
 
       await this.simulateApiCall();
@@ -93,12 +106,12 @@ export class SquareGateway extends PaymentGateway {
         amount: new Decimal(0),
         currency: 'USD',
         metadata: {},
-        createdAt: new Date()
+        createdAt: new Date(),
       };
 
       logger.info('Square payment canceled successfully', {
         gatewayId: this.getId(),
-        transactionId
+        transactionId,
       });
 
       return response;
@@ -106,19 +119,23 @@ export class SquareGateway extends PaymentGateway {
       logger.error('Square payment cancellation failed', {
         gatewayId: this.getId(),
         transactionId,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
       throw error;
     }
   }
 
-  async refundPayment(transactionId: string, amount?: number, reason?: string): Promise<Refund> {
+  async refundPayment(
+    transactionId: string,
+    amount?: number,
+    reason?: string
+  ): Promise<Refund> {
     try {
       logger.info('Processing Square refund', {
         gatewayId: this.getId(),
         transactionId,
         amount,
-        reason
+        reason,
       });
 
       await this.simulateApiCall();
@@ -132,12 +149,12 @@ export class SquareGateway extends PaymentGateway {
         status: 'succeeded',
         processedAt: new Date(),
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
       };
 
       logger.info('Square refund processed successfully', {
         gatewayId: this.getId(),
-        refundId: refund.id
+        refundId: refund.id,
       });
 
       return refund;
@@ -145,7 +162,7 @@ export class SquareGateway extends PaymentGateway {
       logger.error('Square refund processing failed', {
         gatewayId: this.getId(),
         transactionId,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
       throw error;
     }
@@ -155,7 +172,7 @@ export class SquareGateway extends PaymentGateway {
     try {
       logger.info('Creating Square payment method', {
         gatewayId: this.getId(),
-        type: data.type
+        type: data.type,
       });
 
       await this.simulateApiCall();
@@ -167,19 +184,19 @@ export class SquareGateway extends PaymentGateway {
         isDefault: data.isDefault || false,
         metadata: { ...data.metadata, provider: 'square' },
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
       };
 
       logger.info('Square payment method created successfully', {
         gatewayId: this.getId(),
-        paymentMethodId: paymentMethod.id
+        paymentMethodId: paymentMethod.id,
       });
 
       return paymentMethod;
     } catch (error) {
       logger.error('Square payment method creation failed', {
         gatewayId: this.getId(),
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
       throw error;
     }
@@ -189,7 +206,7 @@ export class SquareGateway extends PaymentGateway {
     try {
       logger.info('Updating Square payment method', {
         gatewayId: this.getId(),
-        paymentMethodId: id
+        paymentMethodId: id,
       });
 
       await this.simulateApiCall();
@@ -201,12 +218,12 @@ export class SquareGateway extends PaymentGateway {
         isDefault: data.isDefault || false,
         metadata: { ...data.metadata, provider: 'square' },
         createdAt: new Date(Date.now() - 86400000),
-        updatedAt: new Date()
+        updatedAt: new Date(),
       };
 
       logger.info('Square payment method updated successfully', {
         gatewayId: this.getId(),
-        paymentMethodId: id
+        paymentMethodId: id,
       });
 
       return paymentMethod;
@@ -214,7 +231,7 @@ export class SquareGateway extends PaymentGateway {
       logger.error('Square payment method update failed', {
         gatewayId: this.getId(),
         paymentMethodId: id,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
       throw error;
     }
@@ -224,20 +241,20 @@ export class SquareGateway extends PaymentGateway {
     try {
       logger.info('Deleting Square payment method', {
         gatewayId: this.getId(),
-        paymentMethodId: id
+        paymentMethodId: id,
       });
 
       await this.simulateApiCall();
 
       logger.info('Square payment method deleted successfully', {
         gatewayId: this.getId(),
-        paymentMethodId: id
+        paymentMethodId: id,
       });
     } catch (error) {
       logger.error('Square payment method deletion failed', {
         gatewayId: this.getId(),
         paymentMethodId: id,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
       throw error;
     }
@@ -247,7 +264,7 @@ export class SquareGateway extends PaymentGateway {
     try {
       logger.info('Retrieving Square payment method', {
         gatewayId: this.getId(),
-        paymentMethodId: id
+        paymentMethodId: id,
       });
 
       await this.simulateApiCall();
@@ -259,12 +276,12 @@ export class SquareGateway extends PaymentGateway {
         isDefault: false,
         metadata: { provider: 'square' },
         createdAt: new Date(Date.now() - 86400000),
-        updatedAt: new Date()
+        updatedAt: new Date(),
       };
 
       logger.info('Square payment method retrieved successfully', {
         gatewayId: this.getId(),
-        paymentMethodId: id
+        paymentMethodId: id,
       });
 
       return paymentMethod;
@@ -272,7 +289,7 @@ export class SquareGateway extends PaymentGateway {
       logger.error('Square payment method retrieval failed', {
         gatewayId: this.getId(),
         paymentMethodId: id,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
       throw error;
     }
@@ -282,11 +299,15 @@ export class SquareGateway extends PaymentGateway {
     try {
       // Simulate Square webhook signature verification
       // In a real implementation, this would use Square's webhook verification
-      return signature.length > 10 && payload.length > 0 && signature.startsWith('square_');
+      return (
+        signature.length > 10 &&
+        payload.length > 0 &&
+        signature.startsWith('square_')
+      );
     } catch (error) {
       logger.error('Square webhook verification failed', {
         gatewayId: this.getId(),
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
       return false;
     }
@@ -305,20 +326,20 @@ export class SquareGateway extends PaymentGateway {
         timestamp: new Date(),
         processed: false,
         retryCount: 0,
-        metadata: { source: 'square' }
+        metadata: { source: 'square' },
       };
 
       logger.info('Square webhook parsed successfully', {
         gatewayId: this.getId(),
         eventType: webhookEvent.type,
-        eventId: webhookEvent.id
+        eventId: webhookEvent.id,
       });
 
       return webhookEvent;
     } catch (error) {
       logger.error('Square webhook parsing failed', {
         gatewayId: this.getId(),
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
       throw error;
     }
@@ -327,7 +348,7 @@ export class SquareGateway extends PaymentGateway {
   async healthCheck(): Promise<boolean> {
     try {
       logger.debug('Performing Square health check', {
-        gatewayId: this.getId()
+        gatewayId: this.getId(),
       });
 
       await this.simulateApiCall(180);
@@ -337,14 +358,14 @@ export class SquareGateway extends PaymentGateway {
 
       logger.debug('Square health check completed', {
         gatewayId: this.getId(),
-        isHealthy
+        isHealthy,
       });
 
       return isHealthy;
     } catch (error) {
       logger.error('Square health check failed', {
         gatewayId: this.getId(),
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
       return false;
     }
@@ -357,7 +378,7 @@ export class SquareGateway extends PaymentGateway {
     } catch (error) {
       logger.error('Failed to get Square gateway status', {
         gatewayId: this.getId(),
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
       return 'error';
     }
@@ -365,7 +386,9 @@ export class SquareGateway extends PaymentGateway {
 
   private async simulateApiCall(delay = 220): Promise<void> {
     // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, delay + Math.random() * 120));
+    await new Promise(resolve =>
+      setTimeout(resolve, delay + Math.random() * 120)
+    );
 
     // Simulate occasional API errors (9% failure rate)
     if (Math.random() < 0.09) {

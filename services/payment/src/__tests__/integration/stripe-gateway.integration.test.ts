@@ -91,7 +91,7 @@ describe('StripeGateway Integration Tests', () => {
       mockStripe.paymentIntents.create.mockResolvedValue(mockPaymentIntent);
 
       const paymentRequest: PaymentRequest = {
-        amount: 20.00,
+        amount: 20.0,
         currency: 'USD',
         description: 'Test payment',
         userId: 'user_123',
@@ -156,7 +156,7 @@ describe('StripeGateway Integration Tests', () => {
       mockStripe.paymentIntents.create.mockResolvedValue(mockPaymentIntent);
 
       const paymentRequest: PaymentRequest = {
-        amount: 15.00,
+        amount: 15.0,
         currency: 'USD',
         description: 'Test payment with card',
         userId: 'user_456',
@@ -211,7 +211,7 @@ describe('StripeGateway Integration Tests', () => {
       mockStripe.paymentIntents.create.mockResolvedValue(mockPaymentIntent);
 
       const paymentRequest: PaymentRequest = {
-        amount: 30.00,
+        amount: 30.0,
         currency: 'USD',
         paymentMethodId: 'pm_test_3ds',
       };
@@ -241,11 +241,17 @@ describe('StripeGateway Integration Tests', () => {
 
       mockStripe.paymentIntents.capture.mockResolvedValue(mockPaymentIntent);
 
-      const result = await stripeGateway.capturePayment('pi_test_capture', 25.00);
+      const result = await stripeGateway.capturePayment(
+        'pi_test_capture',
+        25.0
+      );
 
-      expect(mockStripe.paymentIntents.capture).toHaveBeenCalledWith('pi_test_capture', {
-        amount_to_capture: 2500,
-      });
+      expect(mockStripe.paymentIntents.capture).toHaveBeenCalledWith(
+        'pi_test_capture',
+        {
+          amount_to_capture: 2500,
+        }
+      );
 
       expect(result.status).toBe('succeeded');
       expect(result.id).toBe('pi_test_capture');
@@ -265,7 +271,10 @@ describe('StripeGateway Integration Tests', () => {
 
       const result = await stripeGateway.capturePayment('pi_test_full_capture');
 
-      expect(mockStripe.paymentIntents.capture).toHaveBeenCalledWith('pi_test_full_capture', {});
+      expect(mockStripe.paymentIntents.capture).toHaveBeenCalledWith(
+        'pi_test_full_capture',
+        {}
+      );
       expect(result.status).toBe('succeeded');
     });
   });
@@ -285,7 +294,9 @@ describe('StripeGateway Integration Tests', () => {
 
       const result = await stripeGateway.cancelPayment('pi_test_cancel');
 
-      expect(mockStripe.paymentIntents.cancel).toHaveBeenCalledWith('pi_test_cancel');
+      expect(mockStripe.paymentIntents.cancel).toHaveBeenCalledWith(
+        'pi_test_cancel'
+      );
       expect(result.status).toBe('cancelled');
       expect(result.id).toBe('pi_test_cancel');
     });
@@ -328,7 +339,11 @@ describe('StripeGateway Integration Tests', () => {
 
       mockStripe.refunds.create.mockResolvedValue(mockRefund);
 
-      const result = await stripeGateway.refundPayment('pi_test_123', 10.00, 'duplicate');
+      const result = await stripeGateway.refundPayment(
+        'pi_test_123',
+        10.0,
+        'duplicate'
+      );
 
       expect(mockStripe.refunds.create).toHaveBeenCalledWith({
         payment_intent: 'pi_test_123',
@@ -376,9 +391,12 @@ describe('StripeGateway Integration Tests', () => {
         },
       });
 
-      expect(mockStripe.paymentMethods.attach).toHaveBeenCalledWith('pm_test_create', {
-        customer: 'cus_test_123',
-      });
+      expect(mockStripe.paymentMethods.attach).toHaveBeenCalledWith(
+        'pm_test_create',
+        {
+          customer: 'cus_test_123',
+        }
+      );
 
       expect(result.id).toBe('pm_test_create');
       expect(result.type).toBe('card');
@@ -406,7 +424,9 @@ describe('StripeGateway Integration Tests', () => {
 
       const result = await stripeGateway.getPaymentMethod('pm_test_retrieve');
 
-      expect(mockStripe.paymentMethods.retrieve).toHaveBeenCalledWith('pm_test_retrieve');
+      expect(mockStripe.paymentMethods.retrieve).toHaveBeenCalledWith(
+        'pm_test_retrieve'
+      );
       expect(result.id).toBe('pm_test_retrieve');
       expect(result.metadata.last4).toBe('1234');
       expect(result.metadata.brand).toBe('mastercard');
@@ -417,7 +437,9 @@ describe('StripeGateway Integration Tests', () => {
 
       await stripeGateway.deletePaymentMethod('pm_test_delete');
 
-      expect(mockStripe.paymentMethods.detach).toHaveBeenCalledWith('pm_test_delete');
+      expect(mockStripe.paymentMethods.detach).toHaveBeenCalledWith(
+        'pm_test_delete'
+      );
     });
   });
 
@@ -428,7 +450,10 @@ describe('StripeGateway Integration Tests', () => {
         type: 'payment_intent.succeeded',
       });
 
-      const payload = JSON.stringify({ id: 'evt_test', type: 'payment_intent.succeeded' });
+      const payload = JSON.stringify({
+        id: 'evt_test',
+        type: 'payment_intent.succeeded',
+      });
       const signature = 't=1234567890,v1=signature_hash';
 
       const isValid = stripeGateway.verifyWebhook(payload, signature);
@@ -446,7 +471,10 @@ describe('StripeGateway Integration Tests', () => {
         throw new Error('Invalid signature');
       });
 
-      const payload = JSON.stringify({ id: 'evt_test', type: 'payment_intent.succeeded' });
+      const payload = JSON.stringify({
+        id: 'evt_test',
+        type: 'payment_intent.succeeded',
+      });
       const signature = 'invalid_signature';
 
       const isValid = stripeGateway.verifyWebhook(payload, signature);
@@ -505,12 +533,14 @@ describe('StripeGateway Integration Tests', () => {
       mockStripe.paymentIntents.create.mockRejectedValue(stripeError);
 
       const paymentRequest: PaymentRequest = {
-        amount: 20.00,
+        amount: 20.0,
         currency: 'USD',
         paymentMethodId: 'pm_test_declined',
       };
 
-      await expect(stripeGateway.processPayment(paymentRequest)).rejects.toThrow();
+      await expect(
+        stripeGateway.processPayment(paymentRequest)
+      ).rejects.toThrow();
     });
 
     it('should retry on retryable errors', async () => {
@@ -528,7 +558,7 @@ describe('StripeGateway Integration Tests', () => {
         });
 
       const paymentRequest: PaymentRequest = {
-        amount: 10.00,
+        amount: 10.0,
         currency: 'USD',
         paymentMethodId: 'pm_test_retry',
       };

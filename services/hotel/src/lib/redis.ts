@@ -5,7 +5,7 @@ const redisClient: RedisClientType = createClient({
   password: process.env.REDIS_PASSWORD || undefined,
 });
 
-redisClient.on('error', (err) => {
+redisClient.on('error', err => {
   console.error('Redis Client Error:', err);
 });
 
@@ -22,7 +22,7 @@ redisClient.on('end', () => {
 });
 
 // Connect to Redis
-const connectRedis = () => {
+const connectRedis = async () => {
   try {
     if (!redisClient.isOpen) {
       await redisClient.connect();
@@ -33,13 +33,13 @@ const connectRedis = () => {
 };
 
 // Graceful shutdown
-process.on('SIGINT', () => {
+process.on('SIGINT', async () => {
   console.log('Closing Redis connection...');
   await redisClient.quit();
   process.exit(0);
 });
 
-process.on('SIGTERM', () => {
+process.on('SIGTERM', async () => {
   console.log('Closing Redis connection...');
   await redisClient.quit();
   process.exit(0);

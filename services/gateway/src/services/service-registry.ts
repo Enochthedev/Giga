@@ -8,7 +8,7 @@ import {
   ServiceEndpoint,
   ServiceEvent,
   ServiceInstance,
-  ServiceVersionConfig
+  ServiceVersionConfig,
 } from '../types/index.js';
 
 export class ServiceRegistry extends EventEmitter {
@@ -54,7 +54,9 @@ export class ServiceRegistry extends EventEmitter {
           type: 'discovery_error',
           serviceId: 'all',
           timestamp: new Date(),
-          data: { error: error instanceof Error ? error.message : 'Unknown error' },
+          data: {
+            error: error instanceof Error ? error.message : 'Unknown error',
+          },
         } as ServiceEvent);
       }
     }, this.discoveryConfig.interval);
@@ -98,7 +100,9 @@ export class ServiceRegistry extends EventEmitter {
           discoveredServices = await this.discoverFromStatic();
           break;
         default:
-          console.warn(`Unsupported discovery provider: ${this.discoveryConfig.provider}`);
+          console.warn(
+            `Unsupported discovery provider: ${this.discoveryConfig.provider}`
+          );
       }
 
       // Update registry with discovered services
@@ -122,7 +126,9 @@ export class ServiceRegistry extends EventEmitter {
     if (existingService) {
       // Update existing service if endpoints have changed
       const newUpstream = service.endpoints.map(ep => ep.url);
-      if (JSON.stringify(existingService.upstream) !== JSON.stringify(newUpstream)) {
+      if (
+        JSON.stringify(existingService.upstream) !== JSON.stringify(newUpstream)
+      ) {
         this.updateServiceEndpoints(service.id, service.endpoints);
       }
     } else {
@@ -134,7 +140,10 @@ export class ServiceRegistry extends EventEmitter {
   /**
    * Update service endpoints
    */
-  updateServiceEndpoints(serviceId: string, endpoints: ServiceEndpoint[]): void {
+  updateServiceEndpoints(
+    serviceId: string,
+    endpoints: ServiceEndpoint[]
+  ): void {
     const service = this.services.get(serviceId);
     if (!service) {
       throw new Error(`Service not found: ${serviceId}`);
@@ -144,17 +153,19 @@ export class ServiceRegistry extends EventEmitter {
     service.upstream = endpoints.map(ep => ep.url);
 
     // Create new instances
-    const newInstances: ServiceInstance[] = endpoints.map((endpoint, index) => ({
-      id: `${serviceId}-${index}`,
-      url: endpoint.url,
-      weight: endpoint.weight || 1,
-      currentConnections: 0,
-      responseTime: 0,
-      errorRate: 0,
-      isHealthy: true,
-      lastHealthCheck: new Date(),
-      metadata: endpoint.metadata || {},
-    }));
+    const newInstances: ServiceInstance[] = endpoints.map(
+      (endpoint, index) => ({
+        id: `${serviceId}-${index}`,
+        url: endpoint.url,
+        weight: endpoint.weight || 1,
+        currentConnections: 0,
+        responseTime: 0,
+        errorRate: 0,
+        isHealthy: true,
+        lastHealthCheck: new Date(),
+        metadata: endpoint.metadata || {},
+      })
+    );
 
     // Replace instances
     this.instances.set(serviceId, newInstances);
@@ -187,16 +198,22 @@ export class ServiceRegistry extends EventEmitter {
     }
 
     try {
-      const response = await fetch(`${this.discoveryConfig.endpoint}/v1/catalog/services`);
+      const response = await fetch(
+        `${this.discoveryConfig.endpoint}/v1/catalog/services`
+      );
       const services = await response.json();
 
       const discoveredServices: ServiceDefinition[] = [];
 
-      for (const [serviceName, tags] of Object.entries(services as Record<string, string[]>)) {
+      for (const [serviceName, tags] of Object.entries(
+        services as Record<string, string[]>
+      )) {
         // Skip if tags don't match filter
         if (this.discoveryConfig.tags && this.discoveryConfig.tags.length > 0) {
           const serviceTags = tags as string[];
-          const hasMatchingTag = this.discoveryConfig.tags.some((tag: string) => serviceTags.includes(tag));
+          const hasMatchingTag = this.discoveryConfig.tags.some((tag: string) =>
+            serviceTags.includes(tag)
+          );
           if (!hasMatchingTag) continue;
         }
 
@@ -206,11 +223,13 @@ export class ServiceRegistry extends EventEmitter {
         );
         const instances = await instancesResponse.json();
 
-        const endpoints: ServiceEndpoint[] = (instances as any[]).map((instance: any) => ({
-          url: `http://${instance.ServiceAddress || instance.Address}:${instance.ServicePort}`,
-          weight: 1,
-          metadata: instance.ServiceMeta || {},
-        }));
+        const endpoints: ServiceEndpoint[] = (instances as any[]).map(
+          (instance: any) => ({
+            url: `http://${instance.ServiceAddress || instance.Address}:${instance.ServicePort}`,
+            weight: 1,
+            metadata: instance.ServiceMeta || {},
+          })
+        );
 
         discoveredServices.push({
           id: serviceName,
@@ -289,17 +308,19 @@ export class ServiceRegistry extends EventEmitter {
     };
 
     // Create service instances
-    const instances: ServiceInstance[] = service.endpoints.map((endpoint, index) => ({
-      id: `${service.id}-${index}`,
-      url: endpoint.url,
-      weight: endpoint.weight || 1,
-      currentConnections: 0,
-      responseTime: 0,
-      errorRate: 0,
-      isHealthy: true,
-      lastHealthCheck: new Date(),
-      metadata: endpoint.metadata || {},
-    }));
+    const instances: ServiceInstance[] = service.endpoints.map(
+      (endpoint, index) => ({
+        id: `${service.id}-${index}`,
+        url: endpoint.url,
+        weight: endpoint.weight || 1,
+        currentConnections: 0,
+        responseTime: 0,
+        errorRate: 0,
+        isHealthy: true,
+        lastHealthCheck: new Date(),
+        metadata: endpoint.metadata || {},
+      })
+    );
 
     this.services.set(service.id, serviceConfig);
     this.instances.set(service.id, instances);
@@ -377,7 +398,11 @@ export class ServiceRegistry extends EventEmitter {
   /**
    * Update instance health status
    */
-  updateInstanceHealth(serviceId: string, instanceId: string, isHealthy: boolean): void {
+  updateInstanceHealth(
+    serviceId: string,
+    instanceId: string,
+    isHealthy: boolean
+  ): void {
     const instances = this.instances.get(serviceId);
     if (!instances) return;
 
@@ -405,7 +430,11 @@ export class ServiceRegistry extends EventEmitter {
   /**
    * Update instance metrics
    */
-  updateInstanceMetrics(serviceId: string, instanceId: string, metrics: InstanceMetrics): void {
+  updateInstanceMetrics(
+    serviceId: string,
+    instanceId: string,
+    metrics: InstanceMetrics
+  ): void {
     const instances = this.instances.get(serviceId);
     if (!instances) return;
 
@@ -419,7 +448,10 @@ export class ServiceRegistry extends EventEmitter {
   /**
    * Update service configuration
    */
-  updateServiceConfig(serviceId: string, updates: Partial<ServiceConfig>): void {
+  updateServiceConfig(
+    serviceId: string,
+    updates: Partial<ServiceConfig>
+  ): void {
     const service = this.services.get(serviceId);
     if (!service) {
       throw new Error(`Service not found: ${serviceId}`);
@@ -441,18 +473,23 @@ export class ServiceRegistry extends EventEmitter {
   /**
    * Register a service version
    */
-  registerServiceVersion(serviceId: string, versionConfig: ServiceVersionConfig): void {
+  registerServiceVersion(
+    serviceId: string,
+    versionConfig: ServiceVersionConfig
+  ): void {
     const versions = this.serviceVersions.get(serviceId) || [];
 
     // Remove existing version if it exists
-    const existingIndex = versions.findIndex(v => v.version === versionConfig.version);
+    const existingIndex = versions.findIndex(
+      v => v.version === versionConfig.version
+    );
     if (existingIndex >= 0) {
       versions.splice(existingIndex, 1);
     }
 
     // If this is set as default, unset other defaults
     if (versionConfig.isDefault) {
-      versions.forEach(v => v.isDefault = false);
+      versions.forEach(v => (v.isDefault = false));
     }
 
     versions.push(versionConfig);
@@ -465,13 +502,18 @@ export class ServiceRegistry extends EventEmitter {
       data: versionConfig,
     } as ServiceEvent);
 
-    console.log(`Registered version ${versionConfig.version} for service: ${serviceId}`);
+    console.log(
+      `Registered version ${versionConfig.version} for service: ${serviceId}`
+    );
   }
 
   /**
    * Get service version by version string
    */
-  getServiceVersion(serviceId: string, version: string): ServiceVersionConfig | null {
+  getServiceVersion(
+    serviceId: string,
+    version: string
+  ): ServiceVersionConfig | null {
     const versions = this.serviceVersions.get(serviceId) || [];
     return versions.find(v => v.version === version && v.isActive) || null;
   }
@@ -494,7 +536,11 @@ export class ServiceRegistry extends EventEmitter {
   /**
    * Deprecate a service version
    */
-  deprecateServiceVersion(serviceId: string, version: string, deprecationDate?: Date): void {
+  deprecateServiceVersion(
+    serviceId: string,
+    version: string,
+    deprecationDate?: Date
+  ): void {
     const versions = this.serviceVersions.get(serviceId) || [];
     const versionConfig = versions.find(v => v.version === version);
 
@@ -548,7 +594,9 @@ export class ServiceRegistry extends EventEmitter {
       return;
     }
 
-    const ruleIndex = service.pathRewriteRules.findIndex(rule => rule.pattern === pattern);
+    const ruleIndex = service.pathRewriteRules.findIndex(
+      rule => rule.pattern === pattern
+    );
     if (ruleIndex >= 0) {
       const removedRule = service.pathRewriteRules.splice(ruleIndex, 1)[0];
 
@@ -603,11 +651,14 @@ export class ServiceRegistry extends EventEmitter {
 
     if (!service || !instances) return;
 
-    const healthCheckPromises = instances.map((instance) => {
+    const healthCheckPromises = instances.map(instance => {
       try {
         const healthUrl = `${instance.url}${service.healthCheck.path}`;
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), service.healthCheck.timeout);
+        const timeoutId = setTimeout(
+          () => controller.abort(),
+          service.healthCheck.timeout
+        );
 
         const startTime = Date.now();
         const response = await fetch(healthUrl, {
@@ -621,12 +672,13 @@ export class ServiceRegistry extends EventEmitter {
         clearTimeout(timeoutId);
         const responseTime = Date.now() - startTime;
 
-        const isHealthy = service.healthCheck.expectedStatus.includes(response.status);
+        const isHealthy = service.healthCheck.expectedStatus.includes(
+          response.status
+        );
 
         // Update metrics
         instance.responseTime = responseTime;
         this.updateInstanceHealth(serviceId, instance.id, isHealthy);
-
       } catch (error) {
         console.error(`Health check failed for ${instance.id}:`, error);
         this.updateInstanceHealth(serviceId, instance.id, false);
@@ -650,7 +702,9 @@ export class ServiceRegistry extends EventEmitter {
 
     this.on('health_changed', (event: ServiceEvent) => {
       const { instanceId, isHealthy } = event.data;
-      console.log(`[ServiceRegistry] Health changed: ${instanceId} -> ${isHealthy ? 'healthy' : 'unhealthy'}`);
+      console.log(
+        `[ServiceRegistry] Health changed: ${instanceId} -> ${isHealthy ? 'healthy' : 'unhealthy'}`
+      );
     });
 
     this.on('config_updated', (event: ServiceEvent) => {

@@ -41,7 +41,7 @@ const startServer = async () => {
     process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
     // Handle uncaught exceptions
-    process.on('uncaughtException', (error) => {
+    process.on('uncaughtException', error => {
       logger.error('Uncaught exception', { error });
       process.exit(1);
     });
@@ -50,7 +50,6 @@ const startServer = async () => {
       logger.error('Unhandled rejection', { reason, promise });
       process.exit(1);
     });
-
   } catch (error) {
     logger.error('Failed to start server', { error });
     process.exit(1);

@@ -161,10 +161,7 @@ export class AccountLockoutMiddleware {
       const emailKey = `failed_attempts:email:${email.toLowerCase()}`;
       const ipKey = `failed_attempts:ip:${clientIp}`;
 
-      await Promise.all([
-        redisService.del(emailKey),
-        redisService.del(ipKey),
-      ]);
+      await Promise.all([redisService.del(emailKey), redisService.del(ipKey)]);
 
       console.info('Failed attempts cleared for successful login', {
         email,

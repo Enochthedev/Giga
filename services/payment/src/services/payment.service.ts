@@ -15,7 +15,7 @@ import {
 import {
   RefundError,
   TransactionNotFoundError,
-  ValidationError
+  ValidationError,
 } from '../utils/errors';
 import {
   validateAmount,
@@ -38,7 +38,9 @@ export class PaymentService implements IPaymentService {
   private async initializeGateways(): Promise<void> {
     try {
       // Initialize Stripe gateway
-      const { StripeGateway } = await import('./gateways/stripe-gateway.service');
+      const { StripeGateway } = await import(
+        './gateways/stripe-gateway.service'
+      );
 
       const stripeConfig = {
         id: 'stripe',
@@ -48,8 +50,10 @@ export class PaymentService implements IPaymentService {
         priority: 1,
         credentials: {
           secretKey: process.env.STRIPE_SECRET_KEY || 'sk_test_default',
-          publishableKey: process.env.STRIPE_PUBLISHABLE_KEY || 'pk_test_default',
-          webhookSecret: process.env.STRIPE_WEBHOOK_SECRET || 'whsec_test_default',
+          publishableKey:
+            process.env.STRIPE_PUBLISHABLE_KEY || 'pk_test_default',
+          webhookSecret:
+            process.env.STRIPE_WEBHOOK_SECRET || 'whsec_test_default',
         },
         settings: {
           supportedCurrencies: ['USD', 'EUR', 'GBP', 'CAD', 'AUD'],
@@ -76,7 +80,9 @@ export class PaymentService implements IPaymentService {
 
       // Initialize Paystack gateway
       if (process.env.PAYSTACK_SECRET_KEY) {
-        const { PaystackGateway } = await import('./gateways/paystack-gateway.service');
+        const { PaystackGateway } = await import(
+          './gateways/paystack-gateway.service'
+        );
 
         const paystackConfig = {
           id: 'paystack',
@@ -115,8 +121,13 @@ export class PaymentService implements IPaymentService {
       }
 
       // Initialize Flutterwave gateway
-      if (process.env.FLUTTERWAVE_SECRET_KEY && process.env.FLUTTERWAVE_PUBLIC_KEY) {
-        const { FlutterwaveGateway } = await import('./gateways/flutterwave-gateway.service');
+      if (
+        process.env.FLUTTERWAVE_SECRET_KEY &&
+        process.env.FLUTTERWAVE_PUBLIC_KEY
+      ) {
+        const { FlutterwaveGateway } = await import(
+          './gateways/flutterwave-gateway.service'
+        );
 
         const flutterwaveConfig = {
           id: 'flutterwave',
@@ -130,9 +141,32 @@ export class PaymentService implements IPaymentService {
             webhookSecret: process.env.FLUTTERWAVE_WEBHOOK_SECRET || '',
           },
           settings: {
-            supportedCurrencies: ['NGN', 'USD', 'EUR', 'GBP', 'GHS', 'KES', 'UGX', 'ZAR'],
-            supportedCountries: ['NG', 'GH', 'KE', 'UG', 'ZA', 'US', 'GB', 'CA'],
-            supportedPaymentMethods: ['card', 'bank_account', 'mobile_money', 'ussd'],
+            supportedCurrencies: [
+              'NGN',
+              'USD',
+              'EUR',
+              'GBP',
+              'GHS',
+              'KES',
+              'UGX',
+              'ZAR',
+            ],
+            supportedCountries: [
+              'NG',
+              'GH',
+              'KE',
+              'UG',
+              'ZA',
+              'US',
+              'GB',
+              'CA',
+            ],
+            supportedPaymentMethods: [
+              'card',
+              'bank_account',
+              'mobile_money',
+              'ussd',
+            ],
             minAmount: 1,
             maxAmount: 10000000,
           },
@@ -170,7 +204,7 @@ export class PaymentService implements IPaymentService {
 
       if (activeGateways.length < 2) {
         logger.warn('Insufficient gateways for failover setup', {
-          gatewayCount: activeGateways.length
+          gatewayCount: activeGateways.length,
         });
         return;
       }
@@ -200,7 +234,7 @@ export class PaymentService implements IPaymentService {
 
           logger.info('Failover chain configured', {
             primary: gatewayId,
-            fallbacks
+            fallbacks,
           });
         }
       }
@@ -224,7 +258,9 @@ export class PaymentService implements IPaymentService {
 
       // Validate currency
       if (!validateCurrency(validatedRequest.currency)) {
-        throw new ValidationError(`Unsupported currency: ${validatedRequest.currency}`);
+        throw new ValidationError(
+          `Unsupported currency: ${validatedRequest.currency}`
+        );
       }
 
       // Validate amount
@@ -236,7 +272,9 @@ export class PaymentService implements IPaymentService {
 
       // Check for duplicate transaction
       if (validatedRequest.internalReference) {
-        await this.checkDuplicateTransaction(validatedRequest.internalReference);
+        await this.checkDuplicateTransaction(
+          validatedRequest.internalReference
+        );
       }
 
       // Generate internal reference if not provided
@@ -266,7 +304,11 @@ export class PaymentService implements IPaymentService {
 
       // Process payment splits if provided
       if (validatedRequest.splits && validatedRequest.splits.length > 0) {
-        await this.processSplits(transaction.id, validatedRequest.splits, validatedRequest.currency);
+        await this.processSplits(
+          transaction.id,
+          validatedRequest.splits,
+          validatedRequest.currency
+        );
       }
 
       // Process payment through selected gateway with failover support
@@ -280,7 +322,8 @@ export class PaymentService implements IPaymentService {
       await this.transactionService.update(transaction.id, {
         gatewayTransactionId: paymentResult.id,
         status: paymentResult.status,
-        processedAt: paymentResult.status === 'succeeded' ? new Date() : undefined,
+        processedAt:
+          paymentResult.status === 'succeeded' ? new Date() : undefined,
         gatewayId: paymentResult.gatewayId || gateway.getId(), // Update if failover occurred
       });
 
@@ -307,20 +350,27 @@ export class PaymentService implements IPaymentService {
     }
   }
 
-  async capturePayment(transactionId: string, amount?: number): Promise<PaymentResponse> {
+  async capturePayment(
+    transactionId: string,
+    amount?: number
+  ): Promise<PaymentResponse> {
     try {
       logger.info('Capturing payment', { transactionId, amount });
 
       const transaction = await this.transactionService.getById(transactionId);
 
       if (!['pending', 'processing'].includes(transaction.status)) {
-        throw new ValidationError(`Cannot capture payment with status: ${transaction.status}`);
+        throw new ValidationError(
+          `Cannot capture payment with status: ${transaction.status}`
+        );
       }
 
       const captureAmount = amount ? new Decimal(amount) : transaction.amount;
 
       if (captureAmount.gt(transaction.amount)) {
-        throw new ValidationError('Capture amount cannot exceed original amount');
+        throw new ValidationError(
+          'Capture amount cannot exceed original amount'
+        );
       }
 
       // Get the gateway used for this transaction
@@ -338,7 +388,10 @@ export class PaymentService implements IPaymentService {
       );
 
       // Update transaction status
-      const updatedTransaction = await this.transactionService.updateStatus(transactionId, captureResult.status);
+      const updatedTransaction = await this.transactionService.updateStatus(
+        transactionId,
+        captureResult.status
+      );
 
       logger.info('Payment captured successfully', { transactionId });
 
@@ -351,7 +404,11 @@ export class PaymentService implements IPaymentService {
         createdAt: captureResult.createdAt || updatedTransaction.createdAt,
       };
     } catch (error) {
-      logger.error('Failed to capture payment', { error, transactionId, amount });
+      logger.error('Failed to capture payment', {
+        error,
+        transactionId,
+        amount,
+      });
       throw error;
     }
   }
@@ -363,7 +420,9 @@ export class PaymentService implements IPaymentService {
       const transaction = await this.transactionService.getById(transactionId);
 
       if (!['pending', 'processing'].includes(transaction.status)) {
-        throw new ValidationError(`Cannot cancel payment with status: ${transaction.status}`);
+        throw new ValidationError(
+          `Cannot cancel payment with status: ${transaction.status}`
+        );
       }
 
       // Get the gateway used for this transaction
@@ -381,7 +440,10 @@ export class PaymentService implements IPaymentService {
       );
 
       // Update transaction status
-      const updatedTransaction = await this.transactionService.updateStatus(transactionId, cancelResult.status);
+      const updatedTransaction = await this.transactionService.updateStatus(
+        transactionId,
+        cancelResult.status
+      );
 
       logger.info('Payment canceled successfully', { transactionId });
 
@@ -399,20 +461,28 @@ export class PaymentService implements IPaymentService {
     }
   }
 
-  async refundPayment(transactionId: string, amount?: number, reason?: string): Promise<Refund> {
+  async refundPayment(
+    transactionId: string,
+    amount?: number,
+    reason?: string
+  ): Promise<Refund> {
     try {
       logger.info('Processing refund', { transactionId, amount, reason });
 
       const transaction = await this.transactionService.getById(transactionId);
 
       if (transaction.status !== 'succeeded') {
-        throw new RefundError(`Cannot refund payment with status: ${transaction.status}`);
+        throw new RefundError(
+          `Cannot refund payment with status: ${transaction.status}`
+        );
       }
 
       const refundAmount = amount ? new Decimal(amount) : transaction.amount;
 
       if (refundAmount.gt(transaction.amount)) {
-        throw new ValidationError('Refund amount cannot exceed original amount');
+        throw new ValidationError(
+          'Refund amount cannot exceed original amount'
+        );
       }
 
       // Check existing refunds
@@ -423,7 +493,9 @@ export class PaymentService implements IPaymentService {
       );
 
       if (totalRefunded.plus(refundAmount).gt(transaction.amount)) {
-        throw new ValidationError('Total refund amount would exceed original amount');
+        throw new ValidationError(
+          'Total refund amount would exceed original amount'
+        );
       }
 
       // Get the gateway used for this transaction
@@ -436,7 +508,11 @@ export class PaymentService implements IPaymentService {
       const gatewayRefund = await this.executeGatewayOperationWithFailover(
         gateway,
         'refundPayment',
-        [transaction.gatewayTransactionId || transactionId, refundAmount.toNumber(), reason],
+        [
+          transaction.gatewayTransactionId || transactionId,
+          refundAmount.toNumber(),
+          reason,
+        ],
         transactionId
       );
 
@@ -445,14 +521,25 @@ export class PaymentService implements IPaymentService {
       if (newTotalRefunded.equals(transaction.amount)) {
         await this.transactionService.updateStatus(transactionId, 'refunded');
       } else if (newTotalRefunded.gt(new Decimal(0))) {
-        await this.transactionService.updateStatus(transactionId, 'partially_refunded');
+        await this.transactionService.updateStatus(
+          transactionId,
+          'partially_refunded'
+        );
       }
 
-      logger.info('Refund processed successfully', { transactionId, refundId: gatewayRefund.id });
+      logger.info('Refund processed successfully', {
+        transactionId,
+        refundId: gatewayRefund.id,
+      });
 
       return gatewayRefund;
     } catch (error) {
-      logger.error('Failed to process refund', { error, transactionId, amount, reason });
+      logger.error('Failed to process refund', {
+        error,
+        transactionId,
+        amount,
+        reason,
+      });
       throw error;
     }
   }
@@ -466,18 +553,26 @@ export class PaymentService implements IPaymentService {
     return this.transactionService.getById(transactionId);
   }
 
-  async getTransactions(filters: FilterParams): Promise<PaginatedResponse<Transaction>> {
+  async getTransactions(
+    filters: FilterParams
+  ): Promise<PaginatedResponse<Transaction>> {
     return this.transactionService.getByFilters(filters);
   }
 
-  async updateTransactionStatus(transactionId: string, status: PaymentStatus): Promise<Transaction> {
+  async updateTransactionStatus(
+    transactionId: string,
+    status: PaymentStatus
+  ): Promise<Transaction> {
     return this.transactionService.updateStatus(transactionId, status);
   }
 
   // Payment method management methods
   async createPaymentMethod(data: any): Promise<PaymentMethod> {
     try {
-      logger.info('Creating payment method', { userId: data.userId, type: data.type });
+      logger.info('Creating payment method', {
+        userId: data.userId,
+        type: data.type,
+      });
 
       // For now, use Stripe as the default gateway for payment methods
       // In a real implementation, this could be configurable per user/merchant
@@ -490,12 +585,15 @@ export class PaymentService implements IPaymentService {
 
       logger.info('Payment method created successfully', {
         paymentMethodId: paymentMethod.id,
-        userId: data.userId
+        userId: data.userId,
       });
 
       return paymentMethod;
     } catch (error) {
-      logger.error('Failed to create payment method', { error, userId: data.userId });
+      logger.error('Failed to create payment method', {
+        error,
+        userId: data.userId,
+      });
       throw error;
     }
   }
@@ -512,11 +610,16 @@ export class PaymentService implements IPaymentService {
 
       const paymentMethod = await gateway.getPaymentMethod(id);
 
-      logger.info('Payment method retrieved successfully', { paymentMethodId: id });
+      logger.info('Payment method retrieved successfully', {
+        paymentMethodId: id,
+      });
 
       return paymentMethod;
     } catch (error) {
-      logger.error('Failed to retrieve payment method', { error, paymentMethodId: id });
+      logger.error('Failed to retrieve payment method', {
+        error,
+        paymentMethodId: id,
+      });
       throw error;
     }
   }
@@ -533,11 +636,16 @@ export class PaymentService implements IPaymentService {
 
       const paymentMethod = await gateway.updatePaymentMethod(id, data);
 
-      logger.info('Payment method updated successfully', { paymentMethodId: id });
+      logger.info('Payment method updated successfully', {
+        paymentMethodId: id,
+      });
 
       return paymentMethod;
     } catch (error) {
-      logger.error('Failed to update payment method', { error, paymentMethodId: id });
+      logger.error('Failed to update payment method', {
+        error,
+        paymentMethodId: id,
+      });
       throw error;
     }
   }
@@ -554,9 +662,14 @@ export class PaymentService implements IPaymentService {
 
       await gateway.deletePaymentMethod(id);
 
-      logger.info('Payment method deleted successfully', { paymentMethodId: id });
+      logger.info('Payment method deleted successfully', {
+        paymentMethodId: id,
+      });
     } catch (error) {
-      logger.error('Failed to delete payment method', { error, paymentMethodId: id });
+      logger.error('Failed to delete payment method', {
+        error,
+        paymentMethodId: id,
+      });
       throw error;
     }
   }
@@ -602,12 +715,12 @@ export class PaymentService implements IPaymentService {
         transactionCount: 1,
         successRate: 1.0,
         errorRate: 0.0,
-        responseTime
+        responseTime,
       });
 
       return {
         ...result,
-        gatewayId: currentGateway.getId()
+        gatewayId: currentGateway.getId(),
       };
     } catch (error) {
       lastError = error as Error;
@@ -618,7 +731,7 @@ export class PaymentService implements IPaymentService {
         primaryGateway: currentGateway.getId(),
         error: lastError.message,
         transactionId,
-        responseTime
+        responseTime,
       });
 
       // Record failure metrics
@@ -626,7 +739,7 @@ export class PaymentService implements IPaymentService {
         transactionCount: 1,
         successRate: 0.0,
         errorRate: 1.0,
-        responseTime
+        responseTime,
       });
 
       // Attempt failover
@@ -639,7 +752,7 @@ export class PaymentService implements IPaymentService {
         logger.error('No fallback gateway available', {
           operation,
           primaryGateway: currentGateway.getId(),
-          transactionId
+          transactionId,
         });
         throw lastError;
       }
@@ -655,7 +768,7 @@ export class PaymentService implements IPaymentService {
           transactionCount: 1,
           successRate: 1.0,
           errorRate: 0.0,
-          responseTime: fallbackResponseTime
+          responseTime: fallbackResponseTime,
         });
 
         logger.info('Operation processed successfully via failover', {
@@ -663,12 +776,12 @@ export class PaymentService implements IPaymentService {
           primaryGateway: currentGateway.getId(),
           fallbackGateway: fallbackGateway.getId(),
           transactionId,
-          fallbackResponseTime
+          fallbackResponseTime,
         });
 
         return {
           ...result,
-          gatewayId: fallbackGateway.getId()
+          gatewayId: fallbackGateway.getId(),
         };
       } catch (failoverError) {
         const fallbackResponseTime = Date.now() - startTime;
@@ -679,7 +792,7 @@ export class PaymentService implements IPaymentService {
           fallbackGateway: fallbackGateway.getId(),
           error: (failoverError as Error).message,
           transactionId,
-          fallbackResponseTime
+          fallbackResponseTime,
         });
 
         // Record failover failure metrics
@@ -687,7 +800,7 @@ export class PaymentService implements IPaymentService {
           transactionCount: 1,
           successRate: 0.0,
           errorRate: 1.0,
-          responseTime: fallbackResponseTime
+          responseTime: fallbackResponseTime,
         });
 
         throw failoverError;
@@ -695,7 +808,9 @@ export class PaymentService implements IPaymentService {
     }
   }
 
-  private async checkDuplicateTransaction(internalReference: string): Promise<void> {
+  private async checkDuplicateTransaction(
+    internalReference: string
+  ): Promise<void> {
     try {
       const existingTransaction = await this.transactionService.getByFilters({
         page: 1,
@@ -728,6 +843,4 @@ export class PaymentService implements IPaymentService {
       });
     }
   }
-
-
 }

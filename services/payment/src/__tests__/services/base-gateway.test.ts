@@ -1,7 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { BaseGateway } from '../../services/gateways/base-gateway.service';
 import { GatewayConfig, GatewayError } from '../../types/gateway.types';
-import { PaymentMethod, PaymentRequest, PaymentResponse, Refund } from '../../types/payment.types';
+import {
+  PaymentMethod,
+  PaymentRequest,
+  PaymentResponse,
+  Refund,
+} from '../../types/payment.types';
 
 // Create a concrete implementation for testing
 class TestGateway extends BaseGateway {
@@ -9,7 +14,10 @@ class TestGateway extends BaseGateway {
     throw new Error('Not implemented');
   }
 
-  async capturePayment(transactionId: string, amount?: number): Promise<PaymentResponse> {
+  async capturePayment(
+    transactionId: string,
+    amount?: number
+  ): Promise<PaymentResponse> {
     throw new Error('Not implemented');
   }
 
@@ -17,7 +25,11 @@ class TestGateway extends BaseGateway {
     throw new Error('Not implemented');
   }
 
-  async refundPayment(transactionId: string, amount?: number, reason?: string): Promise<Refund> {
+  async refundPayment(
+    transactionId: string,
+    amount?: number,
+    reason?: string
+  ): Promise<Refund> {
     throw new Error('Not implemented');
   }
 
@@ -56,19 +68,19 @@ describe('BaseGateway', () => {
         supportedPaymentMethods: ['card'],
         minAmount: 1,
         maxAmount: 10000,
-        processingFee: { type: 'percentage', value: 2.9 }
+        processingFee: { type: 'percentage', value: 2.9 },
       },
       healthCheck: {
         interval: 60000,
         timeout: 5000,
-        retries: 3
+        retries: 3,
       },
       rateLimit: {
         requestsPerSecond: 10,
-        burstLimit: 50
+        burstLimit: 50,
       },
       createdAt: new Date(),
-      updatedAt: new Date()
+      updatedAt: new Date(),
     };
 
     gateway = new TestGateway(mockConfig);
@@ -89,7 +101,7 @@ describe('BaseGateway', () => {
     it('should throw error for empty supported currencies', () => {
       const invalidConfig = {
         ...mockConfig,
-        settings: { ...mockConfig.settings, supportedCurrencies: [] }
+        settings: { ...mockConfig.settings, supportedCurrencies: [] },
       };
       expect(() => new TestGateway(invalidConfig)).toThrow(
         'Gateway test-gateway must support at least one currency'
@@ -101,40 +113,55 @@ describe('BaseGateway', () => {
     it('should execute operation successfully on first attempt', async () => {
       const mockOperation = vi.fn().mockResolvedValue('success');
 
-      const result = await gateway['executeWithRetry'](mockOperation, 'test-operation');
+      const result = await gateway['executeWithRetry'](
+        mockOperation,
+        'test-operation'
+      );
 
       expect(result).toBe('success');
       expect(mockOperation).toHaveBeenCalledTimes(1);
     });
 
     it('should retry failed operations', async () => {
-      const mockOperation = vi.fn()
+      const mockOperation = vi
+        .fn()
         .mockRejectedValueOnce(new Error('First failure'))
         .mockRejectedValueOnce(new Error('Second failure'))
         .mockResolvedValueOnce('success');
 
-      const result = await gateway['executeWithRetry'](mockOperation, 'test-operation');
+      const result = await gateway['executeWithRetry'](
+        mockOperation,
+        'test-operation'
+      );
 
       expect(result).toBe('success');
       expect(mockOperation).toHaveBeenCalledTimes(3);
     });
 
     it('should fail after max retries', async () => {
-      const mockOperation = vi.fn().mockRejectedValue(new Error('Persistent failure'));
+      const mockOperation = vi
+        .fn()
+        .mockRejectedValue(new Error('Persistent failure'));
 
       await expect(
         gateway['executeWithRetry'](mockOperation, 'test-operation')
-      ).rejects.toThrow('Gateway test-gateway test-operation failed: Persistent failure');
+      ).rejects.toThrow(
+        'Gateway test-gateway test-operation failed: Persistent failure'
+      );
 
       expect(mockOperation).toHaveBeenCalledTimes(3); // Original + 2 retries
     });
 
     it('should not retry non-retryable errors', async () => {
-      const mockOperation = vi.fn().mockRejectedValue(new Error('Invalid credentials'));
+      const mockOperation = vi
+        .fn()
+        .mockRejectedValue(new Error('Invalid credentials'));
 
       await expect(
         gateway['executeWithRetry'](mockOperation, 'test-operation')
-      ).rejects.toThrow('Gateway test-gateway test-operation failed: Invalid credentials');
+      ).rejects.toThrow(
+        'Gateway test-gateway test-operation failed: Invalid credentials'
+      );
 
       expect(mockOperation).toHaveBeenCalledTimes(1); // No retries
     });
@@ -151,17 +178,25 @@ describe('BaseGateway', () => {
 
     it('should create gateway error with correct properties', () => {
       const originalError = new Error('Test error');
-      const gatewayError = gateway['createGatewayError'](originalError, 'test-operation');
+      const gatewayError = gateway['createGatewayError'](
+        originalError,
+        'test-operation'
+      );
 
       expect(gatewayError).toBeInstanceOf(Error);
-      expect(gatewayError.message).toContain('Gateway test-gateway test-operation failed: Test error');
+      expect(gatewayError.message).toContain(
+        'Gateway test-gateway test-operation failed: Test error'
+      );
       expect((gatewayError as GatewayError).gatewayId).toBe('test-gateway');
       expect((gatewayError as GatewayError).isRetryable).toBe(true);
     });
 
     it('should mark non-retryable errors correctly', () => {
       const nonRetryableError = new Error('Unauthorized access');
-      const gatewayError = gateway['createGatewayError'](nonRetryableError, 'test-operation');
+      const gatewayError = gateway['createGatewayError'](
+        nonRetryableError,
+        'test-operation'
+      );
 
       expect((gatewayError as GatewayError).isRetryable).toBe(false);
     });
@@ -199,10 +234,12 @@ describe('BaseGateway', () => {
         amount: 100,
         currency: 'USD',
         paymentMethodId: 'pm_test',
-        customerId: 'cus_test'
+        customerId: 'cus_test',
       };
 
-      expect(() => gateway['validatePaymentRequest'](validRequest)).not.toThrow();
+      expect(() =>
+        gateway['validatePaymentRequest'](validRequest)
+      ).not.toThrow();
     });
 
     it('should throw error for invalid amount', () => {
@@ -210,7 +247,7 @@ describe('BaseGateway', () => {
         amount: 0,
         currency: 'USD',
         paymentMethodId: 'pm_test',
-        customerId: 'cus_test'
+        customerId: 'cus_test',
       };
 
       expect(() => gateway['validatePaymentRequest'](invalidRequest)).toThrow(
@@ -223,7 +260,7 @@ describe('BaseGateway', () => {
         amount: 100,
         currency: '',
         paymentMethodId: 'pm_test',
-        customerId: 'cus_test'
+        customerId: 'cus_test',
       };
 
       expect(() => gateway['validatePaymentRequest'](invalidRequest)).toThrow(
@@ -236,7 +273,7 @@ describe('BaseGateway', () => {
         amount: 100,
         currency: 'JPY',
         paymentMethodId: 'pm_test',
-        customerId: 'cus_test'
+        customerId: 'cus_test',
       };
 
       expect(() => gateway['validatePaymentRequest'](invalidRequest)).toThrow(
@@ -249,7 +286,7 @@ describe('BaseGateway', () => {
         amount: 20000, // Above maxAmount of 10000
         currency: 'USD',
         paymentMethodId: 'pm_test',
-        customerId: 'cus_test'
+        customerId: 'cus_test',
       };
 
       expect(() => gateway['validatePaymentRequest'](invalidRequest)).toThrow(
@@ -260,7 +297,9 @@ describe('BaseGateway', () => {
 
   describe('Refund Request Validation', () => {
     it('should validate valid refund request', () => {
-      expect(() => gateway['validateRefundRequest']('txn_123', 50)).not.toThrow();
+      expect(() =>
+        gateway['validateRefundRequest']('txn_123', 50)
+      ).not.toThrow();
     });
 
     it('should throw error for missing transaction ID', () => {
@@ -334,7 +373,9 @@ describe('BaseGateway', () => {
 
     it('should handle health check error in status check', async () => {
       // Override health check to throw error
-      vi.spyOn(gateway, 'healthCheck').mockRejectedValue(new Error('Health check failed'));
+      vi.spyOn(gateway, 'healthCheck').mockRejectedValue(
+        new Error('Health check failed')
+      );
 
       const status = await gateway.getStatus();
       expect(status).toBe('error');
@@ -343,7 +384,7 @@ describe('BaseGateway', () => {
 
   describe('Logging Methods', () => {
     it('should log operations', () => {
-      const logSpy = vi.spyOn(console, 'log').mockImplementation(() => { });
+      const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
       gateway['logOperation']('test-operation', { key: 'value' });
 
@@ -352,9 +393,11 @@ describe('BaseGateway', () => {
     });
 
     it('should log errors', () => {
-      const logSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
+      const logSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-      gateway['logError']('test-operation', new Error('Test error'), { key: 'value' });
+      gateway['logError']('test-operation', new Error('Test error'), {
+        key: 'value',
+      });
 
       // Verify error logging was called (implementation depends on logger)
       logSpy.mockRestore();

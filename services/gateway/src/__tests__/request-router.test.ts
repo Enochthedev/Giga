@@ -17,9 +17,7 @@ describe('RequestRouter', () => {
       id: 'auth',
       name: 'auth',
       version: '1.0.0',
-      endpoints: [
-        { url: 'http://localhost:3001', weight: 1, metadata: {} },
-      ],
+      endpoints: [{ url: 'http://localhost:3001', weight: 1, metadata: {} }],
       healthCheck: {
         enabled: false,
         path: '/health',
@@ -35,9 +33,7 @@ describe('RequestRouter', () => {
       id: 'ecommerce',
       name: 'ecommerce',
       version: '1.0.0',
-      endpoints: [
-        { url: 'http://localhost:3002', weight: 1, metadata: {} },
-      ],
+      endpoints: [{ url: 'http://localhost:3002', weight: 1, metadata: {} }],
       healthCheck: {
         enabled: false,
         path: '/health',

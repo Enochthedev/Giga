@@ -8,7 +8,7 @@ import {
   Refund,
   Subscription,
   Transaction,
-  WebhookEvent
+  WebhookEvent,
 } from '../types';
 
 export interface IBaseRepository<T> {
@@ -21,17 +21,38 @@ export interface IBaseRepository<T> {
 }
 
 export interface ITransactionRepository extends IBaseRepository<Transaction> {
-  findByUserId(userId: string, filters?: FilterParams): Promise<PaginatedResponse<Transaction>>;
-  findByMerchantId(merchantId: string, filters?: FilterParams): Promise<PaginatedResponse<Transaction>>;
-  findByStatus(status: string, filters?: FilterParams): Promise<PaginatedResponse<Transaction>>;
-  findByGateway(gatewayId: string, filters?: FilterParams): Promise<PaginatedResponse<Transaction>>;
-  findByDateRange(startDate: Date, endDate: Date, filters?: FilterParams): Promise<PaginatedResponse<Transaction>>;
+  findByUserId(
+    userId: string,
+    filters?: FilterParams
+  ): Promise<PaginatedResponse<Transaction>>;
+  findByMerchantId(
+    merchantId: string,
+    filters?: FilterParams
+  ): Promise<PaginatedResponse<Transaction>>;
+  findByStatus(
+    status: string,
+    filters?: FilterParams
+  ): Promise<PaginatedResponse<Transaction>>;
+  findByGateway(
+    gatewayId: string,
+    filters?: FilterParams
+  ): Promise<PaginatedResponse<Transaction>>;
+  findByDateRange(
+    startDate: Date,
+    endDate: Date,
+    filters?: FilterParams
+  ): Promise<PaginatedResponse<Transaction>>;
   findByExternalReference(reference: string): Promise<Transaction | null>;
   updateStatus(id: string, status: string): Promise<Transaction>;
-  getVolumeByPeriod(startDate: Date, endDate: Date, groupBy: 'day' | 'week' | 'month'): Promise<any[]>;
+  getVolumeByPeriod(
+    startDate: Date,
+    endDate: Date,
+    groupBy: 'day' | 'week' | 'month'
+  ): Promise<any[]>;
 }
 
-export interface IPaymentMethodRepository extends IBaseRepository<PaymentMethod> {
+export interface IPaymentMethodRepository
+  extends IBaseRepository<PaymentMethod> {
   findByUserId(userId: string): Promise<PaymentMethod[]>;
   findByToken(token: string): Promise<PaymentMethod | null>;
   findDefault(userId: string): Promise<PaymentMethod | null>;
@@ -61,13 +82,15 @@ export interface IInvoiceRepository extends IBaseRepository<Invoice> {
   findUpcoming(days: number): Promise<Invoice[]>;
 }
 
-export interface IGatewayConfigRepository extends IBaseRepository<GatewayConfig> {
+export interface IGatewayConfigRepository
+  extends IBaseRepository<GatewayConfig> {
   findByType(type: string): Promise<GatewayConfig[]>;
   findActive(): Promise<GatewayConfig[]>;
   findByPriority(): Promise<GatewayConfig[]>;
 }
 
-export interface IFraudAssessmentRepository extends IBaseRepository<FraudAssessment> {
+export interface IFraudAssessmentRepository
+  extends IBaseRepository<FraudAssessment> {
   findByTransactionId(transactionId: string): Promise<FraudAssessment | null>;
   findByRiskLevel(riskLevel: string): Promise<FraudAssessment[]>;
   findByDateRange(startDate: Date, endDate: Date): Promise<FraudAssessment[]>;

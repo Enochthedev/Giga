@@ -64,14 +64,17 @@ export const groupBy = <T, K extends keyof never>(
   array: T[],
   key: (item: T) => K
 ): Record<K, T[]> => {
-  return array.reduce((groups, item) => {
-    const groupKey = key(item);
-    if (!groups[groupKey]) {
-      groups[groupKey] = [];
-    }
-    groups[groupKey].push(item);
-    return groups;
-  }, {} as Record<K, T[]>);
+  return array.reduce(
+    (groups, item) => {
+      const groupKey = key(item);
+      if (!groups[groupKey]) {
+        groups[groupKey] = [];
+      }
+      groups[groupKey].push(item);
+      return groups;
+    },
+    {} as Record<K, T[]>
+  );
 };
 
 export const omit = <T, K extends keyof T>(obj: T, keys: K[]): Omit<T, K> => {
@@ -80,7 +83,10 @@ export const omit = <T, K extends keyof T>(obj: T, keys: K[]): Omit<T, K> => {
   return result;
 };
 
-export const pick = <T extends object, K extends keyof T>(obj: T, keys: K[]): Pick<T, K> => {
+export const pick = <T extends object, K extends keyof T>(
+  obj: T,
+  keys: K[]
+): Pick<T, K> => {
   const result = {} as Pick<T, K>;
   keys.forEach(key => {
     if (key in obj) {
@@ -102,7 +108,10 @@ export const isNotEmpty = (value: any): boolean => {
   return !isEmpty(value);
 };
 
-export const formatCurrency = (amount: number, currency: string = 'USD'): string => {
+export const formatCurrency = (
+  amount: number,
+  currency: string = 'USD'
+): string => {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: currency,
@@ -117,7 +126,10 @@ export const formatDate = (date: Date, locale: string = 'en-US'): string => {
   }).format(date);
 };
 
-export const formatDateTime = (date: Date, locale: string = 'en-US'): string => {
+export const formatDateTime = (
+  date: Date,
+  locale: string = 'en-US'
+): string => {
   return new Intl.DateTimeFormat(locale, {
     year: 'numeric',
     month: 'long',
@@ -155,7 +167,11 @@ export const snakeToCamel = (str: string): string => {
   return str.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
 };
 
-export const truncate = (str: string, length: number, suffix: string = '...'): string => {
+export const truncate = (
+  str: string,
+  length: number,
+  suffix: string = '...'
+): string => {
   if (str.length <= length) return str;
   return str.substring(0, length - suffix.length) + suffix;
 };

@@ -200,14 +200,14 @@ export enum IdentificationType {
   PASSPORT = 'passport',
   DRIVERS_LICENSE = 'drivers_license',
   NATIONAL_ID = 'national_id',
-  OTHER = 'other'
+  OTHER = 'other',
 }
 
 export enum Gender {
   MALE = 'male',
   FEMALE = 'female',
   OTHER = 'other',
-  PREFER_NOT_TO_SAY = 'prefer_not_to_say'
+  PREFER_NOT_TO_SAY = 'prefer_not_to_say',
 }
 
 export enum MaritalStatus {
@@ -216,7 +216,7 @@ export enum MaritalStatus {
   DIVORCED = 'divorced',
   WIDOWED = 'widowed',
   SEPARATED = 'separated',
-  DOMESTIC_PARTNERSHIP = 'domestic_partnership'
+  DOMESTIC_PARTNERSHIP = 'domestic_partnership',
 }
 
 export enum FloorPreference {
@@ -224,7 +224,7 @@ export enum FloorPreference {
   HIGH = 'high',
   MIDDLE = 'middle',
   GROUND = 'ground',
-  TOP = 'top'
+  TOP = 'top',
 }
 
 export enum RoomView {
@@ -235,7 +235,7 @@ export enum RoomView {
   POOL = 'pool',
   COURTYARD = 'courtyard',
   STREET = 'street',
-  INTERIOR = 'interior'
+  INTERIOR = 'interior',
 }
 
 export enum BedType {
@@ -243,20 +243,20 @@ export enum BedType {
   DOUBLE = 'double',
   QUEEN = 'queen',
   KING = 'king',
-  TWIN = 'twin'
+  TWIN = 'twin',
 }
 
 export enum SmokingPreference {
   SMOKING = 'smoking',
   NON_SMOKING = 'non_smoking',
-  NO_PREFERENCE = 'no_preference'
+  NO_PREFERENCE = 'no_preference',
 }
 
 export enum RoomSizePreference {
   COMPACT = 'compact',
   STANDARD = 'standard',
   LARGE = 'large',
-  SUITE = 'suite'
+  SUITE = 'suite',
 }
 
 export enum HousekeepingPreference {
@@ -264,7 +264,7 @@ export enum HousekeepingPreference {
   EVERY_OTHER_DAY = 'every_other_day',
   WEEKLY = 'weekly',
   ON_REQUEST = 'on_request',
-  MINIMAL = 'minimal'
+  MINIMAL = 'minimal',
 }
 
 export enum CommunicationMethod {
@@ -272,7 +272,7 @@ export enum CommunicationMethod {
   SMS = 'sms',
   PHONE = 'phone',
   PUSH_NOTIFICATION = 'push_notification',
-  MAIL = 'mail'
+  MAIL = 'mail',
 }
 
 export enum LoyaltyTier {
@@ -280,7 +280,7 @@ export enum LoyaltyTier {
   SILVER = 'silver',
   GOLD = 'gold',
   PLATINUM = 'platinum',
-  DIAMOND = 'diamond'
+  DIAMOND = 'diamond',
 }
 
 export enum BenefitType {
@@ -294,7 +294,7 @@ export enum BenefitType {
   BONUS_POINTS = 'bonus_points',
   DISCOUNT = 'discount',
   FREE_PARKING = 'free_parking',
-  WELCOME_AMENITY = 'welcome_amenity'
+  WELCOME_AMENITY = 'welcome_amenity',
 }
 
 export enum VIPLevel {
@@ -302,7 +302,7 @@ export enum VIPLevel {
   SUPER_VIP = 'super_vip',
   CELEBRITY = 'celebrity',
   CORPORATE_VIP = 'corporate_vip',
-  REPEAT_GUEST = 'repeat_guest'
+  REPEAT_GUEST = 'repeat_guest',
 }
 
 // Request/Response types
@@ -348,7 +348,7 @@ export enum GuestSortBy {
   LAST_BOOKING_DATE = 'last_booking_date',
   TOTAL_BOOKINGS = 'total_bookings',
   TOTAL_SPENT = 'total_spent',
-  LOYALTY_POINTS = 'loyalty_points'
+  LOYALTY_POINTS = 'loyalty_points',
 }
 
 export interface GuestSearchResult {
@@ -405,5 +405,5 @@ export enum ActivityType {
   VIP_STATUS_ASSIGNED = 'vip_status_assigned',
   REVIEW_SUBMITTED = 'review_submitted',
   COMPLAINT_FILED = 'complaint_filed',
-  PREFERENCE_UPDATED = 'preference_updated'
+  PREFERENCE_UPDATED = 'preference_updated',
 }

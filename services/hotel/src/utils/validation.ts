@@ -5,7 +5,10 @@ import { ValidationError, ValidationResult } from '@/types';
  * Utility functions for data validation
  */
 
-export const validateSchema = <T>(schema: z.ZodSchema<T>, data: unknown): ValidationResult => {
+export const validateSchema = <T>(
+  schema: z.ZodSchema<T>,
+  data: unknown
+): ValidationResult => {
   try {
     schema.parse(data);
     return {
@@ -14,7 +17,7 @@ export const validateSchema = <T>(schema: z.ZodSchema<T>, data: unknown): Valida
     };
   } catch (error) {
     if (error instanceof z.ZodError) {
-      const validationErrors: ValidationError[] = error.errors.map((err) => ({
+      const validationErrors: ValidationError[] = error.errors.map(err => ({
         field: err.path.join('.'),
         message: err.message,
         code: err.code,
@@ -48,16 +51,15 @@ export const getNestedValue = (obj: any, path: (string | number)[]): any => {
 };
 
 // Common validation schemas
-export const dateRangeSchema = z.object({
-  start: z.date(),
-  end: z.date(),
-}).refine(
-  (data) => data.start < data.end,
-  {
+export const dateRangeSchema = z
+  .object({
+    start: z.date(),
+    end: z.date(),
+  })
+  .refine(data => data.start < data.end, {
     message: 'Start date must be before end date',
     path: ['end'],
-  }
-);
+  });
 
 export const paginationSchema = z.object({
   limit: z.number().min(1).max(100).optional().default(20),
@@ -85,14 +87,15 @@ export const addressSchema = z.object({
   region: z.string().max(100).optional(),
 });
 
-export const phoneSchema = z.string().regex(
-  /^\+?[1-9]\d{1,14}$/,
-  'Invalid phone number format'
-);
+export const phoneSchema = z
+  .string()
+  .regex(/^\+?[1-9]\d{1,14}$/, 'Invalid phone number format');
 
 export const emailSchema = z.string().email('Invalid email format');
 
-export const currencySchema = z.string().length(3, 'Currency must be a 3-letter ISO code');
+export const currencySchema = z
+  .string()
+  .length(3, 'Currency must be a 3-letter ISO code');
 
 export const priceSchema = z.number().min(0, 'Price must be non-negative');
 
@@ -107,7 +110,8 @@ export const isValidDateString = (dateString: string): boolean => {
 };
 
 export const isValidUUID = (uuid: string): boolean => {
-  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  const uuidRegex =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
   return uuidRegex.test(uuid);
 };
 

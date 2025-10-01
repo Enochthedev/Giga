@@ -16,11 +16,11 @@ export default defineConfig({
         '**/*.config.ts',
         '**/types/**',
         '**/interfaces/**',
-        '**/__tests__/**'
-      ]
+        '**/__tests__/**',
+      ],
     },
     testTimeout: 10000,
-    hookTimeout: 10000
+    hookTimeout: 10000,
   },
   resolve: {
     alias: {
@@ -31,7 +31,7 @@ export default defineConfig({
       '@/controllers': path.resolve(__dirname, './src/controllers'),
       '@/middleware': path.resolve(__dirname, './src/middleware'),
       '@/lib': path.resolve(__dirname, './src/lib'),
-      '@/utils': path.resolve(__dirname, './src/utils')
-    }
-  }
+      '@/utils': path.resolve(__dirname, './src/utils'),
+    },
+  },
 });

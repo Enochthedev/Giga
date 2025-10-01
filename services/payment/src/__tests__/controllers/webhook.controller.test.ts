@@ -63,17 +63,27 @@ describe('WebhookController', () => {
         retryCount: 0,
       };
 
-      mockRequest.headers = { 'stripe-signature': 't=1234567890,v1=signature_hash' };
+      mockRequest.headers = {
+        'stripe-signature': 't=1234567890,v1=signature_hash',
+      };
       mockRequest.body = webhookPayload;
 
-      mockGatewayManager.getGateway.mockReturnValue(mockGateway as PaymentGateway);
+      mockGatewayManager.getGateway.mockReturnValue(
+        mockGateway as PaymentGateway
+      );
       mockGateway.verifyWebhook!.mockReturnValue(true);
       mockGateway.parseWebhook!.mockReturnValue(webhookEvent);
 
-      await webhookController.handleStripeWebhook(mockRequest as Request, mockResponse as Response);
+      await webhookController.handleStripeWebhook(
+        mockRequest as Request,
+        mockResponse as Response
+      );
 
       expect(mockGatewayManager.getGateway).toHaveBeenCalledWith('stripe');
-      expect(mockGateway.verifyWebhook).toHaveBeenCalledWith(webhookPayload, 't=1234567890,v1=signature_hash');
+      expect(mockGateway.verifyWebhook).toHaveBeenCalledWith(
+        webhookPayload,
+        't=1234567890,v1=signature_hash'
+      );
       expect(mockGateway.parseWebhook).toHaveBeenCalledWith(webhookPayload);
       expect(mockResponse.status).toHaveBeenCalledWith(200);
       expect(mockResponse.json).toHaveBeenCalledWith({ received: true });
@@ -83,10 +93,15 @@ describe('WebhookController', () => {
       mockRequest.headers = {}; // No signature header
       mockRequest.body = JSON.stringify({ id: 'evt_test' });
 
-      await webhookController.handleStripeWebhook(mockRequest as Request, mockResponse as Response);
+      await webhookController.handleStripeWebhook(
+        mockRequest as Request,
+        mockResponse as Response
+      );
 
       expect(mockResponse.status).toHaveBeenCalledWith(400);
-      expect(mockResponse.json).toHaveBeenCalledWith({ error: 'Missing signature header' });
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        error: 'Missing signature header',
+      });
     });
 
     it('should reject webhook with invalid signature', async () => {
@@ -95,44 +110,70 @@ describe('WebhookController', () => {
       mockRequest.headers = { 'stripe-signature': 'invalid_signature' };
       mockRequest.body = webhookPayload;
 
-      mockGatewayManager.getGateway.mockReturnValue(mockGateway as PaymentGateway);
+      mockGatewayManager.getGateway.mockReturnValue(
+        mockGateway as PaymentGateway
+      );
       mockGateway.verifyWebhook!.mockReturnValue(false);
 
-      await webhookController.handleStripeWebhook(mockRequest as Request, mockResponse as Response);
+      await webhookController.handleStripeWebhook(
+        mockRequest as Request,
+        mockResponse as Response
+      );
 
-      expect(mockGateway.verifyWebhook).toHaveBeenCalledWith(webhookPayload, 'invalid_signature');
+      expect(mockGateway.verifyWebhook).toHaveBeenCalledWith(
+        webhookPayload,
+        'invalid_signature'
+      );
       expect(mockResponse.status).toHaveBeenCalledWith(400);
-      expect(mockResponse.json).toHaveBeenCalledWith({ error: 'Invalid signature' });
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        error: 'Invalid signature',
+      });
     });
 
     it('should handle gateway not found error', async () => {
-      mockRequest.headers = { 'stripe-signature': 't=1234567890,v1=signature_hash' };
+      mockRequest.headers = {
+        'stripe-signature': 't=1234567890,v1=signature_hash',
+      };
       mockRequest.body = JSON.stringify({ id: 'evt_test' });
 
       mockGatewayManager.getGateway.mockReturnValue(undefined);
 
-      await webhookController.handleStripeWebhook(mockRequest as Request, mockResponse as Response);
+      await webhookController.handleStripeWebhook(
+        mockRequest as Request,
+        mockResponse as Response
+      );
 
       expect(mockResponse.status).toHaveBeenCalledWith(500);
-      expect(mockResponse.json).toHaveBeenCalledWith({ error: 'Gateway not configured' });
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        error: 'Gateway not configured',
+      });
     });
 
     it('should handle webhook processing errors', async () => {
       const webhookPayload = JSON.stringify({ id: 'evt_test' });
 
-      mockRequest.headers = { 'stripe-signature': 't=1234567890,v1=signature_hash' };
+      mockRequest.headers = {
+        'stripe-signature': 't=1234567890,v1=signature_hash',
+      };
       mockRequest.body = webhookPayload;
 
-      mockGatewayManager.getGateway.mockReturnValue(mockGateway as PaymentGateway);
+      mockGatewayManager.getGateway.mockReturnValue(
+        mockGateway as PaymentGateway
+      );
       mockGateway.verifyWebhook!.mockReturnValue(true);
       mockGateway.parseWebhook!.mockImplementation(() => {
         throw new Error('Parsing failed');
       });
 
-      await webhookController.handleStripeWebhook(mockRequest as Request, mockResponse as Response);
+      await webhookController.handleStripeWebhook(
+        mockRequest as Request,
+        mockResponse as Response
+      );
 
       expect(mockResponse.status).toHaveBeenCalledWith(500);
-      expect(mockResponse.json).toHaveBeenCalledWith({ error: 'Webhook processing failed' });
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        error: 'Webhook processing failed',
+      });
     });
   });
 
@@ -155,7 +196,9 @@ describe('WebhookController', () => {
       };
 
       mockRequest.params = { gatewayId: 'paypal' };
-      mockRequest.headers = { 'paypal-transmission-sig': 'paypal_signature_hash' };
+      mockRequest.headers = {
+        'paypal-transmission-sig': 'paypal_signature_hash',
+      };
       mockRequest.body = webhookPayload;
 
       const mockPayPalGateway = {
@@ -163,14 +206,22 @@ describe('WebhookController', () => {
         getId: vi.fn().mockReturnValue('paypal'),
       };
 
-      mockGatewayManager.getGateway.mockReturnValue(mockPayPalGateway as PaymentGateway);
+      mockGatewayManager.getGateway.mockReturnValue(
+        mockPayPalGateway as PaymentGateway
+      );
       mockPayPalGateway.verifyWebhook!.mockReturnValue(true);
       mockPayPalGateway.parseWebhook!.mockReturnValue(webhookEvent);
 
-      await webhookController.handleWebhook(mockRequest as Request, mockResponse as Response);
+      await webhookController.handleWebhook(
+        mockRequest as Request,
+        mockResponse as Response
+      );
 
       expect(mockGatewayManager.getGateway).toHaveBeenCalledWith('paypal');
-      expect(mockPayPalGateway.verifyWebhook).toHaveBeenCalledWith(webhookPayload, 'paypal_signature_hash');
+      expect(mockPayPalGateway.verifyWebhook).toHaveBeenCalledWith(
+        webhookPayload,
+        'paypal_signature_hash'
+      );
       expect(mockResponse.status).toHaveBeenCalledWith(200);
       expect(mockResponse.json).toHaveBeenCalledWith({ received: true });
     });
@@ -178,10 +229,15 @@ describe('WebhookController', () => {
     it('should reject webhook with missing gateway ID', async () => {
       mockRequest.params = {}; // No gatewayId
 
-      await webhookController.handleWebhook(mockRequest as Request, mockResponse as Response);
+      await webhookController.handleWebhook(
+        mockRequest as Request,
+        mockResponse as Response
+      );
 
       expect(mockResponse.status).toHaveBeenCalledWith(400);
-      expect(mockResponse.json).toHaveBeenCalledWith({ error: 'Gateway ID is required' });
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        error: 'Gateway ID is required',
+      });
     });
 
     it('should reject webhook for unknown gateway', async () => {
@@ -190,18 +246,37 @@ describe('WebhookController', () => {
 
       mockGatewayManager.getGateway.mockReturnValue(undefined);
 
-      await webhookController.handleWebhook(mockRequest as Request, mockResponse as Response);
+      await webhookController.handleWebhook(
+        mockRequest as Request,
+        mockResponse as Response
+      );
 
-      expect(mockGatewayManager.getGateway).toHaveBeenCalledWith('unknown_gateway');
+      expect(mockGatewayManager.getGateway).toHaveBeenCalledWith(
+        'unknown_gateway'
+      );
       expect(mockResponse.status).toHaveBeenCalledWith(404);
-      expect(mockResponse.json).toHaveBeenCalledWith({ error: 'Gateway not found' });
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        error: 'Gateway not found',
+      });
     });
 
     it('should handle different signature headers for different gateways', async () => {
       const testCases = [
-        { gatewayId: 'stripe', headerName: 'stripe-signature', headerValue: 'stripe_sig' },
-        { gatewayId: 'paypal', headerName: 'paypal-transmission-sig', headerValue: 'paypal_sig' },
-        { gatewayId: 'square', headerName: 'x-signature', headerValue: 'square_sig' },
+        {
+          gatewayId: 'stripe',
+          headerName: 'stripe-signature',
+          headerValue: 'stripe_sig',
+        },
+        {
+          gatewayId: 'paypal',
+          headerName: 'paypal-transmission-sig',
+          headerValue: 'paypal_sig',
+        },
+        {
+          gatewayId: 'square',
+          headerName: 'x-signature',
+          headerValue: 'square_sig',
+        },
       ];
 
       for (const testCase of testCases) {
@@ -216,7 +291,9 @@ describe('WebhookController', () => {
           getId: vi.fn().mockReturnValue(testCase.gatewayId),
         };
 
-        mockGatewayManager.getGateway.mockReturnValue(mockTestGateway as PaymentGateway);
+        mockGatewayManager.getGateway.mockReturnValue(
+          mockTestGateway as PaymentGateway
+        );
         mockTestGateway.verifyWebhook!.mockReturnValue(true);
         mockTestGateway.parseWebhook!.mockReturnValue({
           id: 'test_event',
@@ -229,7 +306,10 @@ describe('WebhookController', () => {
           retryCount: 0,
         });
 
-        await webhookController.handleWebhook(mockRequest as Request, mockResponse as Response);
+        await webhookController.handleWebhook(
+          mockRequest as Request,
+          mockResponse as Response
+        );
 
         expect(mockTestGateway.verifyWebhook).toHaveBeenCalledWith(
           JSON.stringify({ id: 'test_event' }),
@@ -242,7 +322,10 @@ describe('WebhookController', () => {
 
   describe('handlePayPalWebhook', () => {
     it('should acknowledge PayPal webhook (not implemented)', async () => {
-      await webhookController.handlePayPalWebhook(mockRequest as Request, mockResponse as Response);
+      await webhookController.handlePayPalWebhook(
+        mockRequest as Request,
+        mockResponse as Response
+      );
 
       expect(mockResponse.status).toHaveBeenCalledWith(200);
       expect(mockResponse.json).toHaveBeenCalledWith({ received: true });
@@ -276,14 +359,21 @@ describe('WebhookController', () => {
           retryCount: 0,
         };
 
-        mockRequest.headers = { 'stripe-signature': 't=1234567890,v1=signature_hash' };
+        mockRequest.headers = {
+          'stripe-signature': 't=1234567890,v1=signature_hash',
+        };
         mockRequest.body = JSON.stringify({ type: eventType });
 
-        mockGatewayManager.getGateway.mockReturnValue(mockGateway as PaymentGateway);
+        mockGatewayManager.getGateway.mockReturnValue(
+          mockGateway as PaymentGateway
+        );
         mockGateway.verifyWebhook!.mockReturnValue(true);
         mockGateway.parseWebhook!.mockReturnValue(webhookEvent);
 
-        await webhookController.handleStripeWebhook(mockRequest as Request, mockResponse as Response);
+        await webhookController.handleStripeWebhook(
+          mockRequest as Request,
+          mockResponse as Response
+        );
 
         expect(mockResponse.status).toHaveBeenCalledWith(200);
         expect(mockResponse.json).toHaveBeenCalledWith({ received: true });
@@ -302,14 +392,21 @@ describe('WebhookController', () => {
         retryCount: 0,
       };
 
-      mockRequest.headers = { 'stripe-signature': 't=1234567890,v1=signature_hash' };
+      mockRequest.headers = {
+        'stripe-signature': 't=1234567890,v1=signature_hash',
+      };
       mockRequest.body = JSON.stringify({ type: 'unknown.event.type' });
 
-      mockGatewayManager.getGateway.mockReturnValue(mockGateway as PaymentGateway);
+      mockGatewayManager.getGateway.mockReturnValue(
+        mockGateway as PaymentGateway
+      );
       mockGateway.verifyWebhook!.mockReturnValue(true);
       mockGateway.parseWebhook!.mockReturnValue(webhookEvent);
 
-      await webhookController.handleStripeWebhook(mockRequest as Request, mockResponse as Response);
+      await webhookController.handleStripeWebhook(
+        mockRequest as Request,
+        mockResponse as Response
+      );
 
       expect(mockResponse.status).toHaveBeenCalledWith(200);
       expect(mockResponse.json).toHaveBeenCalledWith({ received: true });

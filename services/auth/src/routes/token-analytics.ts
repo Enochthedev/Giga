@@ -285,7 +285,9 @@ router.get(
   '/system',
   authenticateToken,
   requireAdmin,
-  tokenAnalyticsController.getSystemTokenAnalytics.bind(tokenAnalyticsController)
+  tokenAnalyticsController.getSystemTokenAnalytics.bind(
+    tokenAnalyticsController
+  )
 );
 
 export default router;

@@ -6,23 +6,35 @@ import {
   PaymentResponse,
   PaymentStatus,
   Refund,
-  Transaction
+  Transaction,
 } from '../types';
 
 export interface IPaymentService {
   // Core payment operations
   processPayment(request: PaymentRequest): Promise<PaymentResponse>;
-  capturePayment(transactionId: string, amount?: number): Promise<PaymentResponse>;
+  capturePayment(
+    transactionId: string,
+    amount?: number
+  ): Promise<PaymentResponse>;
   cancelPayment(transactionId: string): Promise<PaymentResponse>;
 
   // Refund operations
-  refundPayment(transactionId: string, amount?: number, reason?: string): Promise<Refund>;
+  refundPayment(
+    transactionId: string,
+    amount?: number,
+    reason?: string
+  ): Promise<Refund>;
   getRefund(refundId: string): Promise<Refund>;
 
   // Transaction management
   getTransaction(transactionId: string): Promise<Transaction>;
-  getTransactions(filters: FilterParams): Promise<PaginatedResponse<Transaction>>;
-  updateTransactionStatus(transactionId: string, status: PaymentStatus): Promise<Transaction>;
+  getTransactions(
+    filters: FilterParams
+  ): Promise<PaginatedResponse<Transaction>>;
+  updateTransactionStatus(
+    transactionId: string,
+    status: PaymentStatus
+  ): Promise<Transaction>;
 
   // Payment method management
   createPaymentMethod(data: any): Promise<PaymentMethod>;
@@ -54,7 +66,11 @@ export interface ITransactionService {
 }
 
 export interface IRefundService {
-  create(transactionId: string, amount?: number, reason?: string): Promise<Refund>;
+  create(
+    transactionId: string,
+    amount?: number,
+    reason?: string
+  ): Promise<Refund>;
   getById(id: string): Promise<Refund>;
   getByTransactionId(transactionId: string): Promise<Refund[]>;
   process(refundId: string): Promise<Refund>;

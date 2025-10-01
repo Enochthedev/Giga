@@ -5,7 +5,10 @@ import { GatewayManager } from '../../services/gateway-manager.service';
 import { GatewayMetricsCollector } from '../../services/gateway-metrics-collector.service';
 import { PayPalGateway } from '../../services/gateways/paypal-gateway.service';
 import { StripeGateway } from '../../services/gateways/stripe-gateway.service';
-import { GatewayConfig, GatewaySelectionCriteria } from '../../types/gateway.types';
+import {
+  GatewayConfig,
+  GatewaySelectionCriteria,
+} from '../../types/gateway.types';
 
 // Mock the dependencies
 vi.mock('../../services/gateway-health-monitor.service');
@@ -22,7 +25,9 @@ describe('GatewayManager', () => {
   let mockStripeGateway: vi.Mocked<StripeGateway>;
   let mockPayPalGateway: vi.Mocked<PayPalGateway>;
 
-  const createMockGatewayConfig = (overrides: Partial<GatewayConfig> = {}): GatewayConfig => ({
+  const createMockGatewayConfig = (
+    overrides: Partial<GatewayConfig> = {}
+  ): GatewayConfig => ({
     id: 'test-gateway',
     type: 'stripe',
     name: 'Test Gateway',
@@ -35,20 +40,20 @@ describe('GatewayManager', () => {
       supportedPaymentMethods: ['card'],
       minAmount: 1,
       maxAmount: 10000,
-      processingFee: { type: 'percentage', value: 2.9 }
+      processingFee: { type: 'percentage', value: 2.9 },
     },
     healthCheck: {
       interval: 60000,
       timeout: 5000,
-      retries: 3
+      retries: 3,
     },
     rateLimit: {
       requestsPerSecond: 10,
-      burstLimit: 50
+      burstLimit: 50,
     },
     createdAt: new Date(),
     updatedAt: new Date(),
-    ...overrides
+    ...overrides,
   });
 
   beforeEach(() => {
@@ -61,46 +66,58 @@ describe('GatewayManager', () => {
       checkHealth: vi.fn(),
       getHealthStatus: vi.fn(),
       recordFailure: vi.fn(),
-      recordSuccess: vi.fn()
+      recordSuccess: vi.fn(),
     } as any;
 
     mockMetricsCollector = {
       recordMetrics: vi.fn(),
       getMetrics: vi.fn(),
       getLatestMetrics: vi.fn(),
-      recordError: vi.fn()
+      recordError: vi.fn(),
     } as any;
 
     mockFailoverManager = {
       executeFailover: vi.fn(),
       enableFailover: vi.fn(),
-      disableFailover: vi.fn()
+      disableFailover: vi.fn(),
     } as any;
 
     // Mock constructors to return our mock instances
     vi.mocked(GatewayHealthMonitor).mockImplementation(() => mockHealthMonitor);
-    vi.mocked(GatewayMetricsCollector).mockImplementation(() => mockMetricsCollector);
-    vi.mocked(GatewayFailoverManager).mockImplementation(() => mockFailoverManager);
+    vi.mocked(GatewayMetricsCollector).mockImplementation(
+      () => mockMetricsCollector
+    );
+    vi.mocked(GatewayFailoverManager).mockImplementation(
+      () => mockFailoverManager
+    );
 
     // Create mock gateways
     mockStripeGateway = {
       getId: vi.fn().mockReturnValue('stripe-1'),
       getType: vi.fn().mockReturnValue('stripe'),
-      getConfig: vi.fn().mockReturnValue(createMockGatewayConfig({ id: 'stripe-1', type: 'stripe' })),
+      getConfig: vi
+        .fn()
+        .mockReturnValue(
+          createMockGatewayConfig({ id: 'stripe-1', type: 'stripe' })
+        ),
       isActive: vi.fn().mockReturnValue(true),
       supportsCurrency: vi.fn().mockReturnValue(true),
       supportsAmount: vi.fn().mockReturnValue(true),
-      healthCheck: vi.fn().mockResolvedValue(true)
+      healthCheck: vi.fn().mockResolvedValue(true),
     } as any;
 
     mockPayPalGateway = {
       getId: vi.fn().mockReturnValue('paypal-1'),
       getType: vi.fn().mockReturnValue('paypal'),
-      getConfig: vi.fn().mockReturnValue(createMockGatewayConfig({ id: 'paypal-1', type: 'paypal' })),
+      getConfig: vi
+        .fn()
+        .mockReturnValue(
+          createMockGatewayConfig({ id: 'paypal-1', type: 'paypal' })
+        ),
       isActive: vi.fn().mockReturnValue(true),
       supportsCurrency: vi.fn().mockReturnValue(true),
       supportsAmount: vi.fn().mockReturnValue(true),
-      healthCheck: vi.fn().mockResolvedValue(true)
+      healthCheck: vi.fn().mockResolvedValue(true),
     } as any;
 
     gatewayManager = new GatewayManager();
@@ -153,7 +170,7 @@ describe('GatewayManager', () => {
         gatewayId: 'stripe-1',
         status: 'active',
         lastCheck: new Date(),
-        consecutiveFailures: 0
+        consecutiveFailures: 0,
       });
 
       mockMetricsCollector.getLatestMetrics.mockResolvedValue({
@@ -165,14 +182,14 @@ describe('GatewayManager', () => {
         transactionCount: 100,
         transactionVolume: { toNumber: () => 10000 } as any,
         statusCounts: { success: 95, error: 5 },
-        errorTypes: {}
+        errorTypes: {},
       });
     });
 
     it('should select gateway based on criteria', async () => {
       const criteria: GatewaySelectionCriteria = {
         amount: 100,
-        currency: 'USD'
+        currency: 'USD',
       };
 
       const selection = await gatewayManager.selectGateway(criteria);
@@ -192,7 +209,7 @@ describe('GatewayManager', () => {
     it('should throw error when no eligible gateways available', async () => {
       const criteria: GatewaySelectionCriteria = {
         amount: 100,
-        currency: 'JPY' // Not supported by mock gateways
+        currency: 'JPY', // Not supported by mock gateways
       };
 
       mockStripeGateway.supportsCurrency.mockReturnValue(false);
@@ -214,7 +231,7 @@ describe('GatewayManager', () => {
         gatewayId: 'stripe-1',
         status: 'active' as const,
         lastCheck: new Date(),
-        consecutiveFailures: 0
+        consecutiveFailures: 0,
       };
 
       mockHealthMonitor.checkHealth.mockResolvedValue(mockHealthStatus);
@@ -235,7 +252,10 @@ describe('GatewayManager', () => {
       const error = new Error('Gateway timeout');
       mockFailoverManager.executeFailover.mockResolvedValue(mockPayPalGateway);
 
-      const fallbackGateway = await gatewayManager.handleGatewayFailure('stripe-1', error);
+      const fallbackGateway = await gatewayManager.handleGatewayFailure(
+        'stripe-1',
+        error
+      );
 
       expect(fallbackGateway).toBe(mockPayPalGateway);
       expect(mockMetricsCollector.recordError).toHaveBeenCalledWith(
@@ -243,18 +263,28 @@ describe('GatewayManager', () => {
         'Error',
         'Gateway timeout'
       );
-      expect(mockHealthMonitor.recordFailure).toHaveBeenCalledWith('stripe-1', error);
-      expect(mockFailoverManager.executeFailover).toHaveBeenCalledWith('stripe-1', { error });
+      expect(mockHealthMonitor.recordFailure).toHaveBeenCalledWith(
+        'stripe-1',
+        error
+      );
+      expect(mockFailoverManager.executeFailover).toHaveBeenCalledWith(
+        'stripe-1',
+        { error }
+      );
     });
 
     it('should enable failover for gateway', async () => {
       await gatewayManager.enableFailover('stripe-1');
-      expect(mockFailoverManager.enableFailover).toHaveBeenCalledWith('stripe-1');
+      expect(mockFailoverManager.enableFailover).toHaveBeenCalledWith(
+        'stripe-1'
+      );
     });
 
     it('should disable failover for gateway', async () => {
       await gatewayManager.disableFailover('stripe-1');
-      expect(mockFailoverManager.disableFailover).toHaveBeenCalledWith('stripe-1');
+      expect(mockFailoverManager.disableFailover).toHaveBeenCalledWith(
+        'stripe-1'
+      );
     });
   });
 });

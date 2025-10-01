@@ -19,7 +19,12 @@ export type WebhookEventType =
   | 'customer.updated'
   | 'customer.deleted';
 
-export type WebhookStatus = 'pending' | 'processing' | 'succeeded' | 'failed' | 'retrying';
+export type WebhookStatus =
+  | 'pending'
+  | 'processing'
+  | 'succeeded'
+  | 'failed'
+  | 'retrying';
 
 export interface WebhookEndpoint {
   id: string;

@@ -2,7 +2,12 @@ import { ITransactionService } from '../interfaces/payment.interface';
 import { Decimal } from '../lib/decimal';
 import { logger } from '../lib/logger';
 import { prisma } from '../lib/prisma';
-import { FilterParams, PaginatedResponse, PaymentStatus, Transaction } from '../types';
+import {
+  FilterParams,
+  PaginatedResponse,
+  PaymentStatus,
+  Transaction,
+} from '../types';
 import { TransactionNotFoundError } from '../utils/errors';
 
 export class TransactionService implements ITransactionService {
@@ -11,7 +16,7 @@ export class TransactionService implements ITransactionService {
       logger.info('Creating new transaction', {
         amount: data.amount?.toString(),
         currency: data.currency,
-        userId: data.userId
+        userId: data.userId,
       });
 
       const transaction = await prisma.transaction.create({
@@ -29,8 +34,12 @@ export class TransactionService implements ITransactionService {
           gatewayTransactionId: data.gatewayTransactionId,
           internalReference: data.internalReference,
           externalReference: data.externalReference,
-          platformFee: data.platformFee ? new Decimal(data.platformFee.toString()) : undefined,
-          gatewayFee: data.gatewayFee ? new Decimal(data.gatewayFee.toString()) : undefined,
+          platformFee: data.platformFee
+            ? new Decimal(data.platformFee.toString())
+            : undefined,
+          gatewayFee: data.gatewayFee
+            ? new Decimal(data.gatewayFee.toString())
+            : undefined,
           riskScore: data.riskScore,
           fraudFlags: data.fraudFlags || [],
           metadata: data.metadata || {},
@@ -50,7 +59,9 @@ export class TransactionService implements ITransactionService {
         },
       });
 
-      logger.info('Transaction created successfully', { transactionId: transaction.id });
+      logger.info('Transaction created successfully', {
+        transactionId: transaction.id,
+      });
       return this.mapPrismaToTransaction(transaction);
     } catch (error) {
       logger.error('Failed to create transaction', { error, data });
@@ -80,12 +91,17 @@ export class TransactionService implements ITransactionService {
 
       return this.mapPrismaToTransaction(transaction);
     } catch (error) {
-      logger.error('Failed to get transaction by ID', { error, transactionId: id });
+      logger.error('Failed to get transaction by ID', {
+        error,
+        transactionId: id,
+      });
       throw error;
     }
   }
 
-  async getByFilters(filters: FilterParams): Promise<PaginatedResponse<Transaction>> {
+  async getByFilters(
+    filters: FilterParams
+  ): Promise<PaginatedResponse<Transaction>> {
     try {
       const {
         userId,
@@ -170,9 +186,12 @@ export class TransactionService implements ITransactionService {
 
       if (data.status) updateData.status = data.status;
       if (data.description) updateData.description = data.description;
-      if (data.gatewayTransactionId) updateData.gatewayTransactionId = data.gatewayTransactionId;
-      if (data.platformFee) updateData.platformFee = new Decimal(data.platformFee.toString());
-      if (data.gatewayFee) updateData.gatewayFee = new Decimal(data.gatewayFee.toString());
+      if (data.gatewayTransactionId)
+        updateData.gatewayTransactionId = data.gatewayTransactionId;
+      if (data.platformFee)
+        updateData.platformFee = new Decimal(data.platformFee.toString());
+      if (data.gatewayFee)
+        updateData.gatewayFee = new Decimal(data.gatewayFee.toString());
       if (data.riskScore !== undefined) updateData.riskScore = data.riskScore;
       if (data.fraudFlags) updateData.fraudFlags = data.fraudFlags;
       if (data.metadata) updateData.metadata = data.metadata;
@@ -197,7 +216,11 @@ export class TransactionService implements ITransactionService {
       logger.info('Transaction updated successfully', { transactionId: id });
       return this.mapPrismaToTransaction(transaction);
     } catch (error) {
-      logger.error('Failed to update transaction', { error, transactionId: id, data });
+      logger.error('Failed to update transaction', {
+        error,
+        transactionId: id,
+        data,
+      });
       throw error;
     }
   }
@@ -233,10 +256,17 @@ export class TransactionService implements ITransactionService {
         },
       });
 
-      logger.info('Transaction status updated successfully', { transactionId: id, status });
+      logger.info('Transaction status updated successfully', {
+        transactionId: id,
+        status,
+      });
       return this.mapPrismaToTransaction(transaction);
     } catch (error) {
-      logger.error('Failed to update transaction status', { error, transactionId: id, status });
+      logger.error('Failed to update transaction status', {
+        error,
+        transactionId: id,
+        status,
+      });
       throw error;
     }
   }
@@ -259,7 +289,11 @@ export class TransactionService implements ITransactionService {
 
       logger.info('Payment split added successfully', { transactionId });
     } catch (error) {
-      logger.error('Failed to add payment split', { error, transactionId, split });
+      logger.error('Failed to add payment split', {
+        error,
+        transactionId,
+        split,
+      });
       throw error;
     }
   }
@@ -295,7 +329,10 @@ export class TransactionService implements ITransactionService {
 
       logger.info('Payment splits processed successfully', { transactionId });
     } catch (error) {
-      logger.error('Failed to process payment splits', { error, transactionId });
+      logger.error('Failed to process payment splits', {
+        error,
+        transactionId,
+      });
       throw error;
     }
   }
@@ -317,8 +354,12 @@ export class TransactionService implements ITransactionService {
       metadata: prismaTransaction.metadata,
       internalReference: prismaTransaction.internalReference,
       externalReference: prismaTransaction.externalReference,
-      platformFee: prismaTransaction.platformFee ? new Decimal(prismaTransaction.platformFee.toString()) : undefined,
-      gatewayFee: prismaTransaction.gatewayFee ? new Decimal(prismaTransaction.gatewayFee.toString()) : undefined,
+      platformFee: prismaTransaction.platformFee
+        ? new Decimal(prismaTransaction.platformFee.toString())
+        : undefined,
+      gatewayFee: prismaTransaction.gatewayFee
+        ? new Decimal(prismaTransaction.gatewayFee.toString())
+        : undefined,
       riskScore: prismaTransaction.riskScore,
       fraudFlags: prismaTransaction.fraudFlags,
       processedAt: prismaTransaction.processedAt,
@@ -362,8 +403,12 @@ export class TransactionService implements ITransactionService {
         status: split.status,
         processedAt: split.processedAt,
       })),
-      parent: prismaTransaction.parent ? this.mapPrismaToTransaction(prismaTransaction.parent) : undefined,
-      children: prismaTransaction.children?.map(this.mapPrismaToTransaction.bind(this)),
+      parent: prismaTransaction.parent
+        ? this.mapPrismaToTransaction(prismaTransaction.parent)
+        : undefined,
+      children: prismaTransaction.children?.map(
+        this.mapPrismaToTransaction.bind(this)
+      ),
     } as Transaction;
   }
 }

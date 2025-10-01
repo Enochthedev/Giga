@@ -1,5 +1,13 @@
 import request from 'supertest';
-import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest';
 import { app } from '../../app';
 import { PrismaClient } from '../../generated/prisma-client';
 import { TestDataFactory, setupTestMocks } from '../utils/test-helpers';
@@ -57,11 +65,7 @@ describe('E2E: Security and Rate Limiting Features', () => {
       // Make multiple failed login attempts
       const attempts = [];
       for (let i = 0; i < 6; i++) {
-        attempts.push(
-          request(app)
-            .post('/api/v1/auth/login')
-            .send(loginData)
-        );
+        attempts.push(request(app).post('/api/v1/auth/login').send(loginData));
       }
 
       const responses = await Promise.all(attempts);
@@ -115,11 +119,9 @@ describe('E2E: Security and Rate Limiting Features', () => {
 
       for (let i = 0; i < 4; i++) {
         resetAttempts.push(
-          request(app)
-            .post('/api/v1/auth/forgot-password')
-            .send({
-              email: verifiedUser.email,
-            })
+          request(app).post('/api/v1/auth/forgot-password').send({
+            email: verifiedUser.email,
+          })
         );
       }
 
@@ -143,9 +145,7 @@ describe('E2E: Security and Rate Limiting Features', () => {
 
       // Exhaust rate limit
       for (let i = 0; i < 5; i++) {
-        await request(app)
-          .post('/api/v1/auth/login')
-          .send(loginData);
+        await request(app).post('/api/v1/auth/login').send(loginData);
       }
 
       // Next attempt should be rate limited
@@ -184,12 +184,10 @@ describe('E2E: Security and Rate Limiting Features', () => {
 
       // Make multiple failed attempts to trigger account lockout
       for (let i = 0; i < 10; i++) {
-        await request(app)
-          .post('/api/v1/auth/login')
-          .send({
-            email: testUser.email,
-            password: wrongPassword,
-          });
+        await request(app).post('/api/v1/auth/login').send({
+          email: testUser.email,
+          password: wrongPassword,
+        });
       }
 
       // Account should be locked, even with correct password
@@ -208,12 +206,10 @@ describe('E2E: Security and Rate Limiting Features', () => {
     it('should unlock account after lockout period', () => {
       // Trigger account lockout
       for (let i = 0; i < 10; i++) {
-        await request(app)
-          .post('/api/v1/auth/login')
-          .send({
-            email: testUser.email,
-            password: 'WrongPassword123!',
-          });
+        await request(app).post('/api/v1/auth/login').send({
+          email: testUser.email,
+          password: 'WrongPassword123!',
+        });
       }
 
       // Mock time passage for lockout period
@@ -236,12 +232,10 @@ describe('E2E: Security and Rate Limiting Features', () => {
     it('should reset failed attempts counter on successful login', () => {
       // Make some failed attempts (but not enough to lock)
       for (let i = 0; i < 3; i++) {
-        await request(app)
-          .post('/api/v1/auth/login')
-          .send({
-            email: testUser.email,
-            password: 'WrongPassword123!',
-          });
+        await request(app).post('/api/v1/auth/login').send({
+          email: testUser.email,
+          password: 'WrongPassword123!',
+        });
       }
 
       // Successful login should reset counter
@@ -364,7 +358,9 @@ describe('E2E: Security and Rate Limiting Features', () => {
             password: payload,
           });
 
-        expect([400, 401].includes(passwordInjectionResponse.status)).toBe(true);
+        expect([400, 401].includes(passwordInjectionResponse.status)).toBe(
+          true
+        );
         expect(passwordInjectionResponse.body.success).toBe(false);
       }
     });
@@ -472,9 +468,7 @@ describe('E2E: Security and Rate Limiting Features', () => {
 
   describe('CORS and Security Headers', () => {
     it('should set appropriate security headers', () => {
-      const response = await request(app)
-        .get('/health')
-        .expect(200);
+      const response = await request(app).get('/health').expect(200);
 
       // Check for security headers
       expect(response.headers).toHaveProperty('x-content-type-options');
@@ -491,9 +485,15 @@ describe('E2E: Security and Rate Limiting Features', () => {
         .set('Access-Control-Request-Headers', 'Content-Type,Authorization')
         .expect(200);
 
-      expect(preflightResponse.headers).toHaveProperty('access-control-allow-origin');
-      expect(preflightResponse.headers).toHaveProperty('access-control-allow-methods');
-      expect(preflightResponse.headers).toHaveProperty('access-control-allow-headers');
+      expect(preflightResponse.headers).toHaveProperty(
+        'access-control-allow-origin'
+      );
+      expect(preflightResponse.headers).toHaveProperty(
+        'access-control-allow-methods'
+      );
+      expect(preflightResponse.headers).toHaveProperty(
+        'access-control-allow-headers'
+      );
     });
 
     it('should reject requests from unauthorized origins', () => {
@@ -524,14 +524,14 @@ describe('E2E: Security and Rate Limiting Features', () => {
 
     it('should track concurrent sessions', () => {
       // Create multiple sessions for the same user
-      const loginPromises = Array(3).fill(null).map(() =>
-        request(app)
-          .post('/api/v1/auth/login')
-          .send({
+      const loginPromises = Array(3)
+        .fill(null)
+        .map(() =>
+          request(app).post('/api/v1/auth/login').send({
             email: testUser.email,
             password: 'TestPassword123!',
           })
-      );
+        );
 
       const responses = await Promise.all(loginPromises);
 
@@ -605,19 +605,25 @@ describe('E2E: Security and Rate Limiting Features', () => {
     it('should detect and handle suspicious activity patterns', () => {
       const suspiciousPatterns = [
         // Rapid-fire requests
-        () => Promise.all(Array(50).fill(null).map(() =>
-          request(app).get('/api/v1/auth/profile')
-        )),
+        () =>
+          Promise.all(
+            Array(50)
+              .fill(null)
+              .map(() => request(app).get('/api/v1/auth/profile'))
+          ),
 
         // Multiple failed login attempts from same IP
-        () => Promise.all(Array(10).fill(null).map(() =>
-          request(app)
-            .post('/api/v1/auth/login')
-            .send({
-              email: 'nonexistent@example.com',
-              password: 'wrongpassword',
-            })
-        )),
+        () =>
+          Promise.all(
+            Array(10)
+              .fill(null)
+              .map(() =>
+                request(app).post('/api/v1/auth/login').send({
+                  email: 'nonexistent@example.com',
+                  password: 'wrongpassword',
+                })
+              )
+          ),
       ];
 
       for (const pattern of suspiciousPatterns) {
@@ -633,22 +639,20 @@ describe('E2E: Security and Rate Limiting Features', () => {
     it('should log security events for audit', () => {
       const securityEvents = [
         // Failed login attempt
-        () => request(app)
-          .post('/api/v1/auth/login')
-          .send({
+        () =>
+          request(app).post('/api/v1/auth/login').send({
             email: 'test@example.com',
             password: 'wrongpassword',
           }),
 
         // Invalid token usage
-        () => request(app)
-          .get('/api/v1/auth/profile')
-          .set('Authorization', 'Bearer invalid-token'),
+        () =>
+          request(app)
+            .get('/api/v1/auth/profile')
+            .set('Authorization', 'Bearer invalid-token'),
 
         // Malformed request
-        () => request(app)
-          .post('/api/v1/auth/register')
-          .send('invalid-json'),
+        () => request(app).post('/api/v1/auth/register').send('invalid-json'),
       ];
 
       for (const event of securityEvents) {
@@ -666,9 +670,9 @@ describe('E2E: Security and Rate Limiting Features', () => {
       const startTime = Date.now();
 
       // Simulate high load
-      const highLoadRequests = Array(100).fill(null).map(() =>
-        request(app).get('/health')
-      );
+      const highLoadRequests = Array(100)
+        .fill(null)
+        .map(() => request(app).get('/health'));
 
       const responses = await Promise.all(highLoadRequests);
       const endTime = Date.now();
@@ -684,14 +688,16 @@ describe('E2E: Security and Rate Limiting Features', () => {
 
     it('should gracefully degrade under extreme load', () => {
       // Simulate extreme load on authentication endpoints
-      const extremeLoadRequests = Array(200).fill(null).map((_, index) =>
-        request(app)
-          .post('/api/v1/auth/login')
-          .send({
-            email: `user${index}@example.com`,
-            password: 'password',
-          })
-      );
+      const extremeLoadRequests = Array(200)
+        .fill(null)
+        .map((_, index) =>
+          request(app)
+            .post('/api/v1/auth/login')
+            .send({
+              email: `user${index}@example.com`,
+              password: 'password',
+            })
+        );
 
       const responses = await Promise.all(extremeLoadRequests);
 

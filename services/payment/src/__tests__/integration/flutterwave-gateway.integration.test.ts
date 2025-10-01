@@ -8,21 +8,21 @@ vi.mock('flutterwave-node-v3', () => {
   return {
     default: vi.fn().mockImplementation(() => ({
       StandardSubaccount: {
-        create: vi.fn()
+        create: vi.fn(),
       },
       Transaction: {
         verify: vi.fn(),
-        refund: vi.fn()
+        refund: vi.fn(),
       },
       Customer: {
         create: vi.fn(),
         update: vi.fn(),
-        fetch: vi.fn()
+        fetch: vi.fn(),
       },
       Misc: {
-        balance: vi.fn()
-      }
-    }))
+        balance: vi.fn(),
+      },
+    })),
   };
 });
 
@@ -44,26 +44,26 @@ describe('FlutterwaveGateway Integration Tests', () => {
       credentials: {
         secretKey: 'FLWSECK_TEST-secret-key',
         publicKey: 'FLWPUBK_TEST-public-key',
-        webhookSecret: 'flw-webhook-secret'
+        webhookSecret: 'flw-webhook-secret',
       },
       settings: {
         supportedCurrencies: ['NGN', 'USD', 'EUR', 'GBP', 'GHS'],
         supportedCountries: ['NG', 'GH', 'KE', 'UG', 'ZA'],
         supportedPaymentMethods: ['card', 'bank_account', 'mobile_money'],
         minAmount: 1,
-        maxAmount: 10000000
+        maxAmount: 10000000,
       },
       healthCheck: {
         interval: 60000,
         timeout: 5000,
-        retries: 3
+        retries: 3,
       },
       rateLimit: {
         requestsPerSecond: 50,
-        burstLimit: 100
+        burstLimit: 100,
       },
       createdAt: new Date(),
-      updatedAt: new Date()
+      updatedAt: new Date(),
     };
 
     flutterwaveGateway = new FlutterwaveGateway(gatewayConfig);
@@ -76,21 +76,21 @@ describe('FlutterwaveGateway Integration Tests', () => {
   describe('Payment Processing', () => {
     it('should process payment successfully', async () => {
       const paymentRequest: PaymentRequest = {
-        amount: 100.00,
+        amount: 100.0,
         currency: 'NGN',
         userId: 'user-123',
         customerEmail: 'test@example.com',
         customerName: 'John Doe',
         description: 'Test payment',
-        internalReference: 'test-ref-123'
+        internalReference: 'test-ref-123',
       };
 
       const mockResponse = {
         status: 'success',
         message: 'Hosted Link',
         data: {
-          link: 'https://checkout.flutterwave.com/v3/hosted/pay/test-link'
-        }
+          link: 'https://checkout.flutterwave.com/v3/hosted/pay/test-link',
+        },
       };
 
       mockFlutterwave.StandardSubaccount.create.mockResolvedValue(mockResponse);
@@ -102,21 +102,24 @@ describe('FlutterwaveGateway Integration Tests', () => {
         status: 'pending',
         amount: expect.any(Object), // Decimal object
         currency: 'NGN',
-        clientSecret: 'https://checkout.flutterwave.com/v3/hosted/pay/test-link',
+        clientSecret:
+          'https://checkout.flutterwave.com/v3/hosted/pay/test-link',
         requiresAction: true,
         nextAction: {
           type: 'redirect',
-          redirectUrl: 'https://checkout.flutterwave.com/v3/hosted/pay/test-link'
+          redirectUrl:
+            'https://checkout.flutterwave.com/v3/hosted/pay/test-link',
         },
         metadata: {
           flutterwaveReference: 'test-ref-123',
-          paymentLink: 'https://checkout.flutterwave.com/v3/hosted/pay/test-link',
+          paymentLink:
+            'https://checkout.flutterwave.com/v3/hosted/pay/test-link',
           userId: 'user-123',
           merchantId: '',
           internalReference: 'test-ref-123',
-          externalReference: ''
+          externalReference: '',
         },
-        createdAt: expect.any(Date)
+        createdAt: expect.any(Date),
       });
 
       expect(mockFlutterwave.StandardSubaccount.create).toHaveBeenCalledWith({
@@ -127,40 +130,41 @@ describe('FlutterwaveGateway Integration Tests', () => {
         customer: {
           email: 'test@example.com',
           phonenumber: '',
-          name: 'John Doe'
+          name: 'John Doe',
         },
         customizations: {
           title: 'Payment',
           description: 'Test payment',
-          logo: undefined
+          logo: undefined,
         },
         meta: {
           userId: 'user-123',
           merchantId: '',
           internalReference: 'test-ref-123',
-          externalReference: ''
-        }
+          externalReference: '',
+        },
       });
     });
 
     it('should handle payment processing failure', async () => {
       const paymentRequest: PaymentRequest = {
-        amount: 100.00,
+        amount: 100.0,
         currency: 'NGN',
         userId: 'user-123',
         customerEmail: 'test@example.com',
-        description: 'Test payment'
+        description: 'Test payment',
       };
 
       const mockResponse = {
         status: 'error',
-        message: 'Invalid currency'
+        message: 'Invalid currency',
       };
 
       mockFlutterwave.StandardSubaccount.create.mockResolvedValue(mockResponse);
 
-      await expect(flutterwaveGateway.processPayment(paymentRequest))
-        .rejects.toThrow('Invalid currency');
+      await expect(
+        flutterwaveGateway.processPayment(paymentRequest)
+      ).rejects.toThrow('Invalid currency');
     });
   });
 
@@ -186,8 +190,8 @@ describe('FlutterwaveGateway Integration Tests', () => {
           auth_model: 'PIN',
           ip: '127.0.0.1',
           narration: 'Test payment',
-          created_at: '2023-01-01T00:00:00.000Z'
-        }
+          created_at: '2023-01-01T00:00:00.000Z',
+        },
       };
 
       mockFlutterwave.Transaction.verify.mockResolvedValue(mockResponse);
@@ -210,19 +214,21 @@ describe('FlutterwaveGateway Integration Tests', () => {
           authModel: 'PIN',
           ip: '127.0.0.1',
           narration: 'Test payment',
-          createdAt: '2023-01-01T00:00:00.000Z'
+          createdAt: '2023-01-01T00:00:00.000Z',
         },
-        createdAt: new Date('2023-01-01T00:00:00.000Z')
+        createdAt: new Date('2023-01-01T00:00:00.000Z'),
       });
 
-      expect(mockFlutterwave.Transaction.verify).toHaveBeenCalledWith({ id: transactionId });
+      expect(mockFlutterwave.Transaction.verify).toHaveBeenCalledWith({
+        id: transactionId,
+      });
     });
   });
 
   describe('Refund Processing', () => {
     it('should process refund successfully', async () => {
       const transactionId = 'test-ref-123';
-      const refundAmount = 50.00;
+      const refundAmount = 50.0;
       const reason = 'Customer request';
 
       // Mock transaction verification
@@ -231,8 +237,8 @@ describe('FlutterwaveGateway Integration Tests', () => {
         data: {
           id: 12345,
           amount: 100,
-          currency: 'NGN'
-        }
+          currency: 'NGN',
+        },
       };
 
       // Mock refund creation
@@ -247,14 +253,18 @@ describe('FlutterwaveGateway Integration Tests', () => {
           refunded_at: '2023-01-01T00:00:00.000Z',
           created_at: '2023-01-01T00:00:00.000Z',
           comments: reason,
-          settlement_id: 'SETTLE_123'
-        }
+          settlement_id: 'SETTLE_123',
+        },
       };
 
       mockFlutterwave.Transaction.verify.mockResolvedValue(mockVerifyResponse);
       mockFlutterwave.Transaction.refund.mockResolvedValue(mockRefundResponse);
 
-      const result = await flutterwaveGateway.refundPayment(transactionId, refundAmount, reason);
+      const result = await flutterwaveGateway.refundPayment(
+        transactionId,
+        refundAmount,
+        reason
+      );
 
       expect(result).toEqual({
         id: 'flw_refund_67890',
@@ -269,17 +279,17 @@ describe('FlutterwaveGateway Integration Tests', () => {
           refundedBy: 'test@example.com',
           refundedAt: '2023-01-01T00:00:00.000Z',
           comments: reason,
-          settlementId: 'SETTLE_123'
+          settlementId: 'SETTLE_123',
         },
         processedAt: new Date('2023-01-01T00:00:00.000Z'),
         createdAt: new Date('2023-01-01T00:00:00.000Z'),
-        updatedAt: expect.any(Date)
+        updatedAt: expect.any(Date),
       });
 
       expect(mockFlutterwave.Transaction.refund).toHaveBeenCalledWith({
         id: 12345,
         amount: 50,
-        comments: reason
+        comments: reason,
       });
     });
   });
@@ -291,7 +301,7 @@ describe('FlutterwaveGateway Integration Tests', () => {
         email: 'test@example.com',
         firstName: 'John',
         lastName: 'Doe',
-        phone: '+2348012345678'
+        phone: '+2348012345678',
       };
 
       const mockResponse = {
@@ -302,13 +312,14 @@ describe('FlutterwaveGateway Integration Tests', () => {
           email: 'test@example.com',
           full_name: 'John Doe',
           phone_number: '+2348012345678',
-          created_at: '2023-01-01T00:00:00.000Z'
-        }
+          created_at: '2023-01-01T00:00:00.000Z',
+        },
       };
 
       mockFlutterwave.Customer.create.mockResolvedValue(mockResponse);
 
-      const result = await flutterwaveGateway.createPaymentMethod(paymentMethodData);
+      const result =
+        await flutterwaveGateway.createPaymentMethod(paymentMethodData);
 
       expect(result).toEqual({
         id: 'flw_pm_12345',
@@ -321,17 +332,17 @@ describe('FlutterwaveGateway Integration Tests', () => {
           customerId: 12345,
           email: 'test@example.com',
           fullName: 'John Doe',
-          phoneNumber: '+2348012345678'
+          phoneNumber: '+2348012345678',
         },
         isActive: true,
         createdAt: new Date('2023-01-01T00:00:00.000Z'),
-        updatedAt: expect.any(Date)
+        updatedAt: expect.any(Date),
       });
 
       expect(mockFlutterwave.Customer.create).toHaveBeenCalledWith({
         email: 'test@example.com',
         full_name: 'John Doe',
-        phone_number: '+2348012345678'
+        phone_number: '+2348012345678',
       });
     });
   });
@@ -342,13 +353,14 @@ describe('FlutterwaveGateway Integration Tests', () => {
         event: 'charge.completed',
         data: {
           id: 12345,
-          tx_ref: 'test-ref-123'
-        }
+          tx_ref: 'test-ref-123',
+        },
       });
 
       // Mock crypto module
       const crypto = require('crypto');
-      const expectedHash = crypto.createHmac('sha256', gatewayConfig.credentials.webhookSecret)
+      const expectedHash = crypto
+        .createHmac('sha256', gatewayConfig.credentials.webhookSecret)
         .update(payload)
         .digest('hex');
 
@@ -365,8 +377,8 @@ describe('FlutterwaveGateway Integration Tests', () => {
           id: 12345,
           tx_ref: 'test-ref-123',
           amount: 100,
-          currency: 'NGN'
-        }
+          currency: 'NGN',
+        },
       });
 
       const webhookEvent = flutterwaveGateway.parseWebhook(payload);
@@ -380,15 +392,15 @@ describe('FlutterwaveGateway Integration Tests', () => {
           id: 12345,
           tx_ref: 'test-ref-123',
           amount: 100,
-          currency: 'NGN'
+          currency: 'NGN',
         },
         timestamp: expect.any(Date),
         processed: false,
         retryCount: 0,
         metadata: {
           flutterwaveEvent: 'charge.completed',
-          eventType: 'CARD_TRANSACTION'
-        }
+          eventType: 'CARD_TRANSACTION',
+        },
       });
     });
   });
@@ -400,8 +412,8 @@ describe('FlutterwaveGateway Integration Tests', () => {
         message: 'Balance retrieved successfully',
         data: {
           currency: 'NGN',
-          balance: 1000
-        }
+          balance: 1000,
+        },
       };
 
       mockFlutterwave.Misc.balance.mockResolvedValue(mockResponse);
@@ -409,13 +421,15 @@ describe('FlutterwaveGateway Integration Tests', () => {
       const isHealthy = await flutterwaveGateway.healthCheck();
 
       expect(isHealthy).toBe(true);
-      expect(mockFlutterwave.Misc.balance).toHaveBeenCalledWith({ currency: 'NGN' });
+      expect(mockFlutterwave.Misc.balance).toHaveBeenCalledWith({
+        currency: 'NGN',
+      });
     });
 
     it('should handle health check failure', async () => {
       const mockResponse = {
         status: 'error',
-        message: 'API error'
+        message: 'API error',
       };
 
       mockFlutterwave.Misc.balance.mockResolvedValue(mockResponse);
@@ -430,7 +444,7 @@ describe('FlutterwaveGateway Integration Tests', () => {
     it('should return active status when healthy', async () => {
       const mockResponse = {
         status: 'success',
-        data: { balance: 1000 }
+        data: { balance: 1000 },
       };
 
       mockFlutterwave.Misc.balance.mockResolvedValue(mockResponse);
@@ -441,7 +455,9 @@ describe('FlutterwaveGateway Integration Tests', () => {
     });
 
     it('should return error status when unhealthy', async () => {
-      mockFlutterwave.Misc.balance.mockRejectedValue(new Error('Network error'));
+      mockFlutterwave.Misc.balance.mockRejectedValue(
+        new Error('Network error')
+      );
 
       const status = await flutterwaveGateway.getStatus();
 

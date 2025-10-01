@@ -9,10 +9,10 @@ beforeAll(() => {
   // Mock console methods to reduce noise in tests
   global.console = {
     ...console,
-    log: () => { },
-    info: () => { },
-    warn: () => { },
-    error: () => { },
+    log: () => {},
+    info: () => {},
+    warn: () => {},
+    error: () => {},
   };
 });
 
@@ -21,7 +21,10 @@ afterAll(() => {
 });
 
 // Mock fetch for testing
-global.fetch = async (url: string | URL | Request, init?: RequestInit): Promise<Response> => {
+global.fetch = async (
+  url: string | URL | Request,
+  init?: RequestInit
+): Promise<Response> => {
   await Promise.resolve(); // Ensure async function has await
   const urlString = typeof url === 'string' ? url : url.toString();
 
@@ -34,8 +37,11 @@ global.fetch = async (url: string | URL | Request, init?: RequestInit): Promise<
   }
 
   // Mock service responses
-  return new Response(JSON.stringify({ success: true, data: 'mock response' }), {
-    status: 200,
-    headers: { 'content-type': 'application/json' },
-  });
+  return new Response(
+    JSON.stringify({ success: true, data: 'mock response' }),
+    {
+      status: 200,
+      headers: { 'content-type': 'application/json' },
+    }
+  );
 };

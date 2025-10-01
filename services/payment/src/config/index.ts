@@ -9,7 +9,9 @@ export const config = {
   nodeEnv: process.env.NODE_ENV || 'development',
 
   // Database
-  databaseUrl: process.env.DATABASE_URL || 'postgresql://username:password@localhost:5432/payment_db',
+  databaseUrl:
+    process.env.DATABASE_URL ||
+    'postgresql://username:password@localhost:5432/payment_db',
 
   // Redis
   redis: {
@@ -46,13 +48,15 @@ export const config = {
   // Service URLs
   services: {
     auth: process.env.AUTH_SERVICE_URL || 'http://localhost:3001',
-    notification: process.env.NOTIFICATION_SERVICE_URL || 'http://localhost:3005',
+    notification:
+      process.env.NOTIFICATION_SERVICE_URL || 'http://localhost:3005',
     analytics: process.env.ANALYTICS_SERVICE_URL || 'http://localhost:3006',
   },
 
   // Security
   security: {
-    encryptionKey: process.env.ENCRYPTION_KEY || 'your-32-character-encryption-key',
+    encryptionKey:
+      process.env.ENCRYPTION_KEY || 'your-32-character-encryption-key',
     apiKeySecret: process.env.API_KEY_SECRET || 'your-api-key-secret',
   },
 
@@ -71,14 +75,18 @@ export const config = {
   // Fraud Detection
   fraud: {
     enabled: process.env.FRAUD_DETECTION_ENABLED === 'true',
-    maxTransactionAmount: parseFloat(process.env.MAX_TRANSACTION_AMOUNT || '10000'),
+    maxTransactionAmount: parseFloat(
+      process.env.MAX_TRANSACTION_AMOUNT || '10000'
+    ),
     velocityCheckEnabled: process.env.VELOCITY_CHECK_ENABLED === 'true',
   },
 
   // Currency
   currency: {
     default: process.env.DEFAULT_CURRENCY || 'USD',
-    supported: (process.env.SUPPORTED_CURRENCIES || 'USD,EUR,GBP,CAD,AUD').split(','),
+    supported: (
+      process.env.SUPPORTED_CURRENCIES || 'USD,EUR,GBP,CAD,AUD'
+    ).split(','),
   },
 
   // Webhooks

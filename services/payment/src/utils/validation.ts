@@ -1,16 +1,21 @@
-
 // Simple validation functions without Zod for now
 export const validatePaymentRequest = (data: any) => {
   if (!data.amount || typeof data.amount !== 'number' || data.amount <= 0) {
     throw new Error('Amount must be a positive number');
   }
 
-  if (!data.currency || typeof data.currency !== 'string' || data.currency.length !== 3) {
+  if (
+    !data.currency ||
+    typeof data.currency !== 'string' ||
+    data.currency.length !== 3
+  ) {
     throw new Error('Currency must be a 3-letter ISO code');
   }
 
   if (!data.paymentMethodId && !data.paymentMethodData) {
-    throw new Error('Either paymentMethodId or paymentMethodData must be provided');
+    throw new Error(
+      'Either paymentMethodId or paymentMethodData must be provided'
+    );
   }
 
   return data;
@@ -58,7 +63,8 @@ export const validateAddress = (data: any) => {
   if (!data.line1) throw new Error('Address line 1 is required');
   if (!data.city) throw new Error('City is required');
   if (!data.postalCode) throw new Error('Postal code is required');
-  if (!data.country || data.country.length !== 2) throw new Error('Country must be a 2-letter ISO code');
+  if (!data.country || data.country.length !== 2)
+    throw new Error('Country must be a 2-letter ISO code');
 
   return data;
 };
@@ -89,7 +95,18 @@ export const validateCard = (data: any) => {
 
 // Currency validation
 export const validateCurrency = (currency: string): boolean => {
-  const supportedCurrencies = ['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'JPY', 'CHF', 'SEK', 'NOK', 'DKK'];
+  const supportedCurrencies = [
+    'USD',
+    'EUR',
+    'GBP',
+    'CAD',
+    'AUD',
+    'JPY',
+    'CHF',
+    'SEK',
+    'NOK',
+    'DKK',
+  ];
   return supportedCurrencies.includes(currency.toUpperCase());
 };
 
@@ -168,4 +185,96 @@ export const validateExpiryDate = (month: number, year: number): boolean => {
   if (year > currentYear + 20) return false; // Cards typically don't expire more than 20 years in the future
 
   return true;
+};
+
+// Payment method data validation
+export const validatePaymentMethodData = (data: any) => {
+  if (!data.userId) {
+    throw new Error('User ID is required');
+  }
+
+  if (!data.type) {
+    throw new Error('Payment method type is required');
+  }
+
+  const validTypes = [
+    'card',
+    'bank_account',
+    'digital_wallet',
+    'crypto',
+    'buy_now_pay_later',
+  ];
+  if (!validTypes.includes(data.type)) {
+    throw new Error(`Invalid payment method type: ${data.type}`);
+  }
+
+  // Validate card data
+  if (data.type === 'card' && data.card) {
+    validateCard(data.card);
+  }
+
+  // Validate bank account data
+  if (data.type === 'bank_account' && data.bankAccount) {
+    validateBankAccount(data.bankAccount);
+  }
+
+  // Validate digital wallet data
+  if (data.type === 'digital_wallet' && data.digitalWallet) {
+    validateDigitalWallet(data.digitalWallet);
+  }
+
+  return data;
+};
+
+// Bank account validation
+export const validateBankAccount = (data: any) => {
+  if (!data.accountNumber || !/^\d{4,17}$/.test(data.accountNumber)) {
+    throw new Error('Invalid account number');
+  }
+
+  if (!data.routingNumber || !/^\d{9}$/.test(data.routingNumber)) {
+    throw new Error('Invalid routing number');
+  }
+
+  if (
+    !data.accountType ||
+    !['checking', 'savings'].includes(data.accountType)
+  ) {
+    throw new Error('Account type must be checking or savings');
+  }
+
+  if (!data.accountHolderName) {
+    throw new Error('Account holder name is required');
+  }
+
+  if (!data.bankName) {
+    throw new Error('Bank name is required');
+  }
+
+  return data;
+};
+
+// Digital wallet validation
+export const validateDigitalWallet = (data: any) => {
+  if (!data.walletType) {
+    throw new Error('Wallet type is required');
+  }
+
+  const validWalletTypes = ['paypal', 'apple_pay', 'google_pay', 'amazon_pay'];
+  if (!validWalletTypes.includes(data.walletType)) {
+    throw new Error(`Invalid wallet type: ${data.walletType}`);
+  }
+
+  if (!data.walletId) {
+    throw new Error('Wallet ID is required');
+  }
+
+  // Email validation for PayPal
+  if (data.walletType === 'paypal' && data.email) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
+      throw new Error('Invalid email address');
+    }
+  }
+
+  return data;
 };

@@ -1,7 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { PrismaClient } from '../generated/prisma-client';
 import { SecurityMonitoringService } from '../services/security-monitoring.service';
-import { DeviceInfo, TokenManagementService } from '../services/token-management.service';
+import {
+  DeviceInfo,
+  TokenManagementService,
+} from '../services/token-management.service';
 
 // Mock Prisma
 const mockPrisma = {
@@ -176,7 +179,10 @@ describe('TokenManagementService', () => {
       mockPrisma.tokenEvent.create.mockResolvedValue({});
 
       // Mock the generateDeviceTokens method to return expected tokens
-      const generateDeviceTokensSpy = vi.spyOn(tokenManagementService, 'generateDeviceTokens' as any);
+      const generateDeviceTokensSpy = vi.spyOn(
+        tokenManagementService,
+        'generateDeviceTokens' as any
+      );
       generateDeviceTokensSpy.mockResolvedValue({
         accessToken: 'mock-access-token',
         refreshToken: 'mock-refresh-token',
@@ -329,10 +335,10 @@ describe('TokenManagementService', () => {
 
       mockPrisma.tokenEvent.count
         .mockResolvedValueOnce(100) // totalEvents
-        .mockResolvedValueOnce(50)  // tokenGenerations
-        .mockResolvedValueOnce(40)  // tokenRefreshes
-        .mockResolvedValueOnce(5)   // suspiciousEvents
-        .mockResolvedValueOnce(2);  // rateLimitEvents
+        .mockResolvedValueOnce(50) // tokenGenerations
+        .mockResolvedValueOnce(40) // tokenRefreshes
+        .mockResolvedValueOnce(5) // suspiciousEvents
+        .mockResolvedValueOnce(2); // rateLimitEvents
 
       mockPrisma.tokenEvent.groupBy.mockResolvedValue([
         { deviceId: 'device1', _count: { id: 25 } },
@@ -473,8 +479,8 @@ describe('SecurityMonitoringService', () => {
 
       mockPrisma.securityEvent.count
         .mockResolvedValueOnce(200) // totalEvents
-        .mockResolvedValueOnce(15)  // highRiskEvents
-        .mockResolvedValueOnce(5)   // blockedAttempts
+        .mockResolvedValueOnce(15) // highRiskEvents
+        .mockResolvedValueOnce(5) // blockedAttempts
         .mockResolvedValueOnce(10); // suspiciousActivities
 
       mockPrisma.securityEvent.groupBy.mockResolvedValue([

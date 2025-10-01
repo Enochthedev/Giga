@@ -4,7 +4,11 @@ import { DeviceInfo } from '../services/token-management.service';
 /**
  * Middleware to extract and parse device information from request headers
  */
-export function extractDeviceInfo(_req: Request, res: Response, next: NextFunction): void {
+export function extractDeviceInfo(
+  _req: Request,
+  res: Response,
+  next: NextFunction
+): void {
   try {
     const userAgent = req.headers['user-agent'] || 'unknown';
     const acceptLanguage = req.headers['accept-language'] || 'en-US';
@@ -17,7 +21,7 @@ export function extractDeviceInfo(_req: Request, res: Response, next: NextFuncti
     const language = parseLanguage(acceptLanguage);
 
     // Get timezone from headers if available
-    const timezone = req.headers['x-timezone'] as string || 'UTC';
+    const timezone = (req.headers['x-timezone'] as string) || 'UTC';
 
     // Get screen resolution if provided
     const screenHeader = req.headers['x-screen-resolution'] as string;
@@ -87,7 +91,8 @@ function parsePlatform(userAgent: string): string {
   if (ua.includes('macintosh') || ua.includes('mac os')) return 'macOS';
   if (ua.includes('linux')) return 'Linux';
   if (ua.includes('android')) return 'Android';
-  if (ua.includes('iphone') || ua.includes('ipad') || ua.includes('ipod')) return 'iOS';
+  if (ua.includes('iphone') || ua.includes('ipad') || ua.includes('ipod'))
+    return 'iOS';
   if (ua.includes('chrome os')) return 'Chrome OS';
 
   return 'Unknown';
@@ -109,7 +114,9 @@ function parseLanguage(acceptLanguage: string): string {
 /**
  * Parse screen resolution from custom header
  */
-function parseScreenResolution(screenHeader?: string): { width: number; height: number } | undefined {
+function parseScreenResolution(
+  screenHeader?: string
+): { width: number; height: number } | undefined {
   if (!screenHeader) return undefined;
 
   try {
@@ -128,7 +135,11 @@ function parseScreenResolution(screenHeader?: string): { width: number; height: 
 /**
  * Middleware to validate device fingerprint consistency
  */
-export function validateDeviceFingerprint(_req: Request, res: Response, next: NextFunction): void {
+export function validateDeviceFingerprint(
+  _req: Request,
+  res: Response,
+  next: NextFunction
+): void {
   try {
     const storedFingerprint = req.headers['x-device-fingerprint'] as string;
 
@@ -148,7 +159,10 @@ export function validateDeviceFingerprint(_req: Request, res: Response, next: Ne
 /**
  * Rate limiting middleware for token operations per device
  */
-export function deviceTokenRateLimit(maxRequests: number = 10, windowMinutes: number = 5) {
+export function deviceTokenRateLimit(
+  maxRequests: number = 10,
+  windowMinutes: number = 5
+) {
   return (_req: Request, res: Response, next: NextFunction) => {
     try {
       if (!req.deviceInfo || !req.clientIp) {
@@ -174,7 +188,11 @@ export function deviceTokenRateLimit(maxRequests: number = 10, windowMinutes: nu
 function generateDeviceId(deviceInfo: DeviceInfo): string {
   const crypto = require('crypto');
   const deviceString = `${deviceInfo.userAgent}|${deviceInfo.platform}|${deviceInfo.language}`;
-  return crypto.createHash('sha256').update(deviceString).digest('hex').substring(0, 16);
+  return crypto
+    .createHash('sha256')
+    .update(deviceString)
+    .digest('hex')
+    .substring(0, 16);
 }
 
 // Extend Express Request interface

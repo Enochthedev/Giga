@@ -7,7 +7,7 @@ import {
   GatewayStatus,
   GatewayType,
   PaymentGateway,
-  WebhookEvent
+  WebhookEvent,
 } from '../types/gateway.types';
 import { PayPalGateway } from './gateways/paypal-gateway.service';
 import { SquareGateway } from './gateways/square-gateway.service';
@@ -22,7 +22,7 @@ export class GatewayService implements IGatewayService {
     try {
       logger.info('Creating gateway configuration', {
         type: config.type,
-        name: config.name
+        name: config.name,
       });
 
       const gatewayConfig = await prisma.gatewayConfig.create({
@@ -35,15 +35,15 @@ export class GatewayService implements IGatewayService {
           settings: config.settings as any,
           healthCheck: config.healthCheck as any,
           rateLimit: config.rateLimit as any,
-          metadata: config.metadata || {}
-        }
+          metadata: config.metadata || {},
+        },
       });
 
       const result = this.mapPrismaToGatewayConfig(gatewayConfig);
 
       logger.info('Gateway configuration created successfully', {
         id: result.id,
-        type: result.type
+        type: result.type,
       });
 
       return result;
@@ -53,7 +53,10 @@ export class GatewayService implements IGatewayService {
     }
   }
 
-  async updateConfig(id: string, config: Partial<GatewayConfig>): Promise<GatewayConfig> {
+  async updateConfig(
+    id: string,
+    config: Partial<GatewayConfig>
+  ): Promise<GatewayConfig> {
     try {
       logger.info('Updating gateway configuration', { id, updates: config });
 
@@ -70,7 +73,7 @@ export class GatewayService implements IGatewayService {
 
       const gatewayConfig = await prisma.gatewayConfig.update({
         where: { id },
-        data: updateData
+        data: updateData,
       });
 
       const result = this.mapPrismaToGatewayConfig(gatewayConfig);
@@ -83,7 +86,11 @@ export class GatewayService implements IGatewayService {
       logger.info('Gateway configuration updated successfully', { id });
       return result;
     } catch (error) {
-      logger.error('Failed to update gateway configuration', { error, id, config });
+      logger.error('Failed to update gateway configuration', {
+        error,
+        id,
+        config,
+      });
       throw error;
     }
   }
@@ -91,7 +98,7 @@ export class GatewayService implements IGatewayService {
   async getConfig(id: string): Promise<GatewayConfig> {
     try {
       const gatewayConfig = await prisma.gatewayConfig.findUnique({
-        where: { id }
+        where: { id },
       });
 
       if (!gatewayConfig) {
@@ -108,10 +115,7 @@ export class GatewayService implements IGatewayService {
   async getAllConfigs(): Promise<GatewayConfig[]> {
     try {
       const gatewayConfigs = await prisma.gatewayConfig.findMany({
-        orderBy: [
-          { priority: 'desc' },
-          { createdAt: 'asc' }
-        ]
+        orderBy: [{ priority: 'desc' }, { createdAt: 'asc' }],
       });
 
       return gatewayConfigs.map(this.mapPrismaToGatewayConfig);
@@ -129,7 +133,7 @@ export class GatewayService implements IGatewayService {
       this.gatewayInstances.delete(id);
 
       await prisma.gatewayConfig.delete({
-        where: { id }
+        where: { id },
       });
 
       logger.info('Gateway configuration deleted successfully', { id });
@@ -143,7 +147,7 @@ export class GatewayService implements IGatewayService {
     try {
       logger.info('Initializing payment gateway', {
         id: config.id,
-        type: config.type
+        type: config.type,
       });
 
       let gateway: PaymentGateway;
@@ -167,7 +171,7 @@ export class GatewayService implements IGatewayService {
 
       logger.info('Payment gateway initialized successfully', {
         id: config.id,
-        type: config.type
+        type: config.type,
       });
 
       return gateway;
@@ -175,7 +179,7 @@ export class GatewayService implements IGatewayService {
       logger.error('Failed to initialize payment gateway', {
         error,
         configId: config.id,
-        type: config.type
+        type: config.type,
       });
       throw error;
     }
@@ -199,8 +203,8 @@ export class GatewayService implements IGatewayService {
         success: false,
         error: {
           code: 'TEST_FAILED',
-          message: error instanceof Error ? error.message : 'Unknown error'
-        }
+          message: error instanceof Error ? error.message : 'Unknown error',
+        },
       };
     }
   }
@@ -233,7 +237,7 @@ export class GatewayService implements IGatewayService {
       logger.info('Webhook processed successfully', {
         gatewayId,
         eventId: storedEvent.id,
-        eventType: storedEvent.type
+        eventType: storedEvent.type,
       });
 
       return storedEvent;
@@ -274,17 +278,22 @@ export class GatewayService implements IGatewayService {
       logger.info('Initializing all gateways');
 
       const configs = await this.getAllConfigs();
-      const activeConfigs = configs.filter(config => config.status === 'active');
+      const activeConfigs = configs.filter(
+        config => config.status === 'active'
+      );
 
       for (const config of activeConfigs) {
         try {
           await this.initializeGateway(config);
         } catch (error) {
-          logger.error('Failed to initialize gateway during bulk initialization', {
-            error,
-            gatewayId: config.id,
-            type: config.type
-          });
+          logger.error(
+            'Failed to initialize gateway during bulk initialization',
+            {
+              error,
+              gatewayId: config.id,
+              type: config.type,
+            }
+          );
           // Continue with other gateways even if one fails
         }
       }
@@ -292,7 +301,7 @@ export class GatewayService implements IGatewayService {
       logger.info('Gateway initialization completed', {
         total: configs.length,
         active: activeConfigs.length,
-        initialized: this.gatewayInstances.size
+        initialized: this.gatewayInstances.size,
       });
     } catch (error) {
       logger.error('Failed to initialize all gateways', { error });
@@ -300,7 +309,9 @@ export class GatewayService implements IGatewayService {
     }
   }
 
-  private async performGatewayTest(gateway: PaymentGateway): Promise<GatewayResponse> {
+  private async performGatewayTest(
+    gateway: PaymentGateway
+  ): Promise<GatewayResponse> {
     try {
       // Perform health check
       const isHealthy = await gateway.healthCheck();
@@ -310,8 +321,8 @@ export class GatewayService implements IGatewayService {
           success: false,
           error: {
             code: 'HEALTH_CHECK_FAILED',
-            message: 'Gateway health check failed'
-          }
+            message: 'Gateway health check failed',
+          },
         };
       }
 
@@ -324,16 +335,16 @@ export class GatewayService implements IGatewayService {
           status,
           gatewayId: gateway.getId(),
           type: gateway.getType(),
-          timestamp: new Date().toISOString()
-        }
+          timestamp: new Date().toISOString(),
+        },
       };
     } catch (error) {
       return {
         success: false,
         error: {
           code: 'TEST_ERROR',
-          message: error instanceof Error ? error.message : 'Unknown error'
-        }
+          message: error instanceof Error ? error.message : 'Unknown error',
+        },
       };
     }
   }
@@ -348,8 +359,8 @@ export class GatewayService implements IGatewayService {
           data: event.data as any,
           processed: event.processed || false,
           retryCount: event.retryCount || 0,
-          metadata: event.metadata || {}
-        }
+          metadata: event.metadata || {},
+        },
       });
 
       return {
@@ -361,7 +372,7 @@ export class GatewayService implements IGatewayService {
         timestamp: storedEvent.createdAt,
         processed: storedEvent.processed,
         retryCount: storedEvent.retryCount,
-        metadata: storedEvent.metadata as Record<string, any>
+        metadata: storedEvent.metadata as Record<string, any>,
       };
     } catch (error) {
       logger.error('Failed to store webhook event', { error, event });
@@ -380,24 +391,25 @@ export class GatewayService implements IGatewayService {
       settings: {
         supportedCurrencies: prismaConfig.settings.supportedCurrencies || [],
         supportedCountries: prismaConfig.settings.supportedCountries || [],
-        supportedPaymentMethods: prismaConfig.settings.supportedPaymentMethods || [],
+        supportedPaymentMethods:
+          prismaConfig.settings.supportedPaymentMethods || [],
         minAmount: prismaConfig.settings.minAmount,
         maxAmount: prismaConfig.settings.maxAmount,
-        processingFee: prismaConfig.settings.processingFee
+        processingFee: prismaConfig.settings.processingFee,
       },
       healthCheck: {
         url: prismaConfig.healthCheck.url,
         interval: prismaConfig.healthCheck.interval || 60000,
         timeout: prismaConfig.healthCheck.timeout || 5000,
-        retries: prismaConfig.healthCheck.retries || 3
+        retries: prismaConfig.healthCheck.retries || 3,
       },
       rateLimit: {
         requestsPerSecond: prismaConfig.rateLimit.requestsPerSecond || 10,
-        burstLimit: prismaConfig.rateLimit.burstLimit || 50
+        burstLimit: prismaConfig.rateLimit.burstLimit || 50,
       },
       metadata: prismaConfig.metadata as Record<string, any>,
       createdAt: prismaConfig.createdAt,
-      updatedAt: prismaConfig.updatedAt
+      updatedAt: prismaConfig.updatedAt,
     };
   }
 }

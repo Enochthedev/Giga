@@ -1,11 +1,14 @@
 # End-to-End Tests for Authentication Service
 
-This directory contains comprehensive end-to-end tests for the authentication service, covering all major workflows and security features.
+This directory contains comprehensive end-to-end tests for the authentication service, covering all
+major workflows and security features.
 
 ## Test Files
 
 ### 1. `user-registration-flow.e2e.test.ts`
+
 Tests the complete user registration workflow including:
+
 - Standard user registration with default CUSTOMER role
 - Multi-role user registration
 - Email verification process
@@ -15,7 +18,9 @@ Tests the complete user registration workflow including:
 - Performance under load
 
 ### 2. `multi-role-scenarios.e2e.test.ts`
+
 Tests multi-role user functionality including:
+
 - Role switching between assigned roles
 - Role-specific profile management
 - Role assignment and removal
@@ -24,7 +29,9 @@ Tests multi-role user functionality including:
 - Concurrent role operations
 
 ### 3. `password-management.e2e.test.ts`
+
 Tests password-related workflows including:
+
 - Password change with current password validation
 - Password reset via email workflow
 - Password strength validation
@@ -33,7 +40,9 @@ Tests password-related workflows including:
 - Rate limiting for password operations
 
 ### 4. `admin-user-management.e2e.test.ts`
+
 Tests administrative user management features including:
+
 - User listing with pagination and filtering
 - Individual user management (view, update status)
 - Role assignment and removal by admins
@@ -42,7 +51,9 @@ Tests administrative user management features including:
 - Admin access control and permissions
 
 ### 5. `security-rate-limiting.e2e.test.ts`
+
 Tests security features and rate limiting including:
+
 - Authentication rate limiting (login, registration, password reset)
 - Account lockout protection after failed attempts
 - Input validation and XSS prevention
@@ -55,6 +66,7 @@ Tests security features and rate limiting including:
 ## Test Setup
 
 ### Prerequisites
+
 - PostgreSQL test database
 - Redis test instance
 - Environment variables configured for testing
@@ -78,6 +90,7 @@ npm run test -- --watch src/__tests__/e2e/
 ### Test Configuration
 
 Tests use the following configuration:
+
 - **Test timeout**: 15 seconds per test
 - **Setup timeout**: 15 seconds for beforeAll/afterAll hooks
 - **Database**: Separate test database with automatic cleanup
@@ -87,7 +100,9 @@ Tests use the following configuration:
 ## Test Data Management
 
 ### Test Data Factory
+
 The `TestDataFactory` class provides utilities for creating test data:
+
 - `createTestUser()` - Creates a user with default CUSTOMER role
 - `createMultiRoleUser()` - Creates a user with multiple roles
 - `createAdminUser()` - Creates a user with ADMIN role
@@ -96,7 +111,9 @@ The `TestDataFactory` class provides utilities for creating test data:
 - `generateExpiredJWT()` - Generates expired JWT tokens
 
 ### Data Cleanup
+
 Each test automatically cleans up data:
+
 - **Before each test**: Removes all test data from database and Redis
 - **After all tests**: Disconnects from database and Redis
 - **Isolation**: Each test runs with a clean slate
@@ -104,17 +121,20 @@ Each test automatically cleans up data:
 ## Mocking Strategy
 
 ### External Services
+
 - **Email Service**: Mocked to prevent actual email sending
 - **SMS Service**: Mocked to prevent actual SMS sending
 - **Redis**: Uses test Redis instance with automatic cleanup
 
 ### Time-based Operations
+
 - Uses `vi.useFakeTimers()` for testing time-dependent features
 - Advances time with `vi.advanceTimersByTime()` for rate limiting tests
 
 ## Coverage Requirements
 
 E2E tests should cover:
+
 - ✅ All user registration flows
 - ✅ Complete authentication workflows
 - ✅ Multi-role user scenarios
@@ -127,22 +147,26 @@ E2E tests should cover:
 ## Best Practices
 
 ### Test Structure
+
 1. **Arrange**: Set up test data and conditions
 2. **Act**: Execute the operation being tested
 3. **Assert**: Verify the expected outcomes
 
 ### Assertions
+
 - Use specific assertions for better error messages
 - Test both success and failure scenarios
 - Verify database state changes
 - Check response structure and content
 
 ### Performance
+
 - Tests should complete within reasonable time limits
 - Use concurrent operations where appropriate
 - Clean up resources properly to prevent memory leaks
 
 ### Security
+
 - Test with malicious inputs (XSS, SQL injection)
 - Verify rate limiting and account lockout
 - Test token security and validation

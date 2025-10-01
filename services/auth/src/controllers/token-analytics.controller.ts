@@ -27,7 +27,9 @@ export class TokenAnalyticsController {
 
       const { days = 30 } = req.query;
       const timeRange = {
-        from: new Date(Date.now() - parseInt(days as string) * 24 * 60 * 60 * 1000),
+        from: new Date(
+          Date.now() - parseInt(days as string) * 24 * 60 * 60 * 1000
+        ),
         to: new Date(),
       };
 
@@ -73,7 +75,9 @@ export class TokenAnalyticsController {
 
       const { days = 30 } = req.query;
       const timeRange = {
-        from: new Date(Date.now() - parseInt(days as string) * 24 * 60 * 60 * 1000),
+        from: new Date(
+          Date.now() - parseInt(days as string) * 24 * 60 * 60 * 1000
+        ),
         to: new Date(),
       };
 
@@ -264,10 +268,14 @@ export class TokenAnalyticsController {
       // Revoke all other devices
       for (const token of tokensToRevoke) {
         if (token.deviceId) {
-          await this.tokenManagementService.revokeTokens(req.prisma, req.user.sub, {
-            deviceId: token.deviceId,
-            reason: 'user_revoked_other_devices',
-          });
+          await this.tokenManagementService.revokeTokens(
+            req.prisma,
+            req.user.sub,
+            {
+              deviceId: token.deviceId,
+              reason: 'user_revoked_other_devices',
+            }
+          );
         }
       }
 
@@ -354,13 +362,22 @@ export class TokenAnalyticsController {
 
       const { days = 30 } = req.query;
       const timeRange = {
-        from: new Date(Date.now() - parseInt(days as string) * 24 * 60 * 60 * 1000),
+        from: new Date(
+          Date.now() - parseInt(days as string) * 24 * 60 * 60 * 1000
+        ),
         to: new Date(),
       };
 
       const [tokenAnalytics, securityMetrics] = await Promise.all([
-        this.tokenManagementService.getTokenAnalytics(req.prisma, undefined, timeRange),
-        this.securityMonitoringService.getSecurityMetrics(req.prisma, timeRange),
+        this.tokenManagementService.getTokenAnalytics(
+          req.prisma,
+          undefined,
+          timeRange
+        ),
+        this.securityMonitoringService.getSecurityMetrics(
+          req.prisma,
+          timeRange
+        ),
       ]);
 
       res.json({
@@ -390,7 +407,11 @@ export class TokenAnalyticsController {
     if (req.deviceInfo) {
       const crypto = require('crypto');
       const deviceString = `${req.deviceInfo.userAgent}|${req.deviceInfo.platform}|${req.deviceInfo.language}`;
-      return crypto.createHash('sha256').update(deviceString).digest('hex').substring(0, 16);
+      return crypto
+        .createHash('sha256')
+        .update(deviceString)
+        .digest('hex')
+        .substring(0, 16);
     }
     return undefined;
   }

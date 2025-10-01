@@ -108,7 +108,7 @@ export enum TaxType {
   GST = 'gst',
   SERVICE_TAX = 'service_tax',
   OCCUPANCY_TAX = 'occupancy_tax',
-  RESORT_TAX = 'resort_tax'
+  RESORT_TAX = 'resort_tax',
 }
 
 export enum FeeType {
@@ -121,7 +121,7 @@ export enum FeeType {
   PET_FEE = 'pet_fee',
   EXTRA_PERSON_FEE = 'extra_person_fee',
   EARLY_CHECKIN_FEE = 'early_checkin_fee',
-  LATE_CHECKOUT_FEE = 'late_checkout_fee'
+  LATE_CHECKOUT_FEE = 'late_checkout_fee',
 }
 
 export enum DiscountType {
@@ -134,7 +134,7 @@ export enum DiscountType {
   CORPORATE = 'corporate',
   GROUP = 'group',
   SEASONAL = 'seasonal',
-  PROMOTIONAL = 'promotional'
+  PROMOTIONAL = 'promotional',
 }
 
 export enum AdjustmentType {
@@ -145,7 +145,7 @@ export enum AdjustmentType {
   LENGTH_OF_STAY = 'length_of_stay',
   DAY_OF_WEEK = 'day_of_week',
   SPECIAL_EVENT = 'special_event',
-  COMPETITOR_BASED = 'competitor_based'
+  COMPETITOR_BASED = 'competitor_based',
 }
 
 // Rate Management Types
@@ -172,7 +172,7 @@ export enum RateType {
   CORPORATE = 'corporate',
   GROUP = 'group',
   PACKAGE = 'package',
-  LAST_MINUTE = 'last_minute'
+  LAST_MINUTE = 'last_minute',
 }
 
 export interface RateRestriction {
@@ -188,7 +188,7 @@ export enum RestrictionType {
   CLOSED_TO_ARRIVAL = 'closed_to_arrival',
   CLOSED_TO_DEPARTURE = 'closed_to_departure',
   BOOKING_WINDOW = 'booking_window',
-  AGE_RESTRICTION = 'age_restriction'
+  AGE_RESTRICTION = 'age_restriction',
 }
 
 export interface RateUpdate {
@@ -232,7 +232,7 @@ export enum DynamicPricingType {
   EVENT_BASED = 'event_based',
   ADVANCE_BOOKING = 'advance_booking',
   LENGTH_OF_STAY = 'length_of_stay',
-  DAY_OF_WEEK = 'day_of_week'
+  DAY_OF_WEEK = 'day_of_week',
 }
 
 export interface PricingCondition {
@@ -250,7 +250,7 @@ export enum ConditionType {
   SEASON = 'season',
   DEMAND_SCORE = 'demand_score',
   COMPETITOR_RATE = 'competitor_rate',
-  BOOKING_PACE = 'booking_pace'
+  BOOKING_PACE = 'booking_pace',
 }
 
 export enum ConditionOperator {
@@ -262,7 +262,7 @@ export enum ConditionOperator {
   LESS_THAN_OR_EQUAL = 'less_than_or_equal',
   IN = 'in',
   NOT_IN = 'not_in',
-  BETWEEN = 'between'
+  BETWEEN = 'between',
 }
 
 export interface PricingAdjustment {
@@ -278,7 +278,7 @@ export enum AdjustmentMethod {
   PERCENTAGE = 'percentage',
   FIXED_AMOUNT = 'fixed_amount',
   MULTIPLIER = 'multiplier',
-  SET_RATE = 'set_rate'
+  SET_RATE = 'set_rate',
 }
 
 // Seasonal Pricing Types
@@ -330,7 +330,7 @@ export enum PromotionType {
   LOYALTY = 'loyalty',
   CORPORATE = 'corporate',
   GROUP = 'group',
-  FLASH_SALE = 'flash_sale'
+  FLASH_SALE = 'flash_sale',
 }
 
 export interface PromotionCondition {
@@ -347,7 +347,7 @@ export enum PromotionConditionType {
   GUEST_TYPE = 'guest_type',
   BOOKING_SOURCE = 'booking_source',
   MINIMUM_AMOUNT = 'minimum_amount',
-  BLACKOUT_DATES = 'blackout_dates'
+  BLACKOUT_DATES = 'blackout_dates',
 }
 
 export interface PromotionUsage {

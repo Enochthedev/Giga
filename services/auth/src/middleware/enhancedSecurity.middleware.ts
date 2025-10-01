@@ -373,8 +373,8 @@ export class EnhancedSecurityMiddleware {
       allowedHosts.push(...productionHosts);
     }
 
-    return allowedHosts.some(allowedHost =>
-      host === allowedHost || host.startsWith(allowedHost)
+    return allowedHosts.some(
+      allowedHost => host === allowedHost || host.startsWith(allowedHost)
     );
   }
 

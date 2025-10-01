@@ -2,7 +2,11 @@
  * Template management types and interfaces
  */
 
-import { NotificationCategory, NotificationChannel, TemplateVariables } from './notification.types';
+import {
+  NotificationCategory,
+  NotificationChannel,
+  TemplateVariables,
+} from './notification.types';
 
 export interface Template {
   id: string;

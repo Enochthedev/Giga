@@ -134,10 +134,13 @@ describe('LoadBalancer', () => {
       }
 
       // Count selections per instance
-      const counts = selections.reduce((acc, id) => {
-        acc[id] = (acc[id] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>);
+      const counts = selections.reduce(
+        (acc, id) => {
+          acc[id] = (acc[id] || 0) + 1;
+          return acc;
+        },
+        {} as Record<string, number>
+      );
 
       // Instance-2 should be selected twice as often due to weight=2
       expect(counts['instance-2']).toBeGreaterThan(counts['instance-1']);
@@ -147,7 +150,9 @@ describe('LoadBalancer', () => {
 
   describe('least-connections algorithm', () => {
     it('should select instance with fewest connections', () => {
-      const strategy: LoadBalancingStrategy = { algorithm: 'least-connections' };
+      const strategy: LoadBalancingStrategy = {
+        algorithm: 'least-connections',
+      };
       const mockRequest = {} as FastifyRequest;
 
       const selected = loadBalancer.selectInstance(
@@ -168,7 +173,9 @@ describe('LoadBalancer', () => {
         currentConnections: 3,
       }));
 
-      const strategy: LoadBalancingStrategy = { algorithm: 'least-connections' };
+      const strategy: LoadBalancingStrategy = {
+        algorithm: 'least-connections',
+      };
       const mockRequest = {} as FastifyRequest;
 
       const selected = loadBalancer.selectInstance(
@@ -205,7 +212,7 @@ describe('LoadBalancer', () => {
       modifiedInstances[0] = {
         ...modifiedInstances[0],
         responseTime: 50, // Better than instance-3
-        errorRate: 0.5,   // Much worse error rate
+        errorRate: 0.5, // Much worse error rate
       };
 
       const strategy: LoadBalancingStrategy = { algorithm: 'response-time' };
@@ -354,8 +361,18 @@ describe('LoadBalancer', () => {
       const strategy: LoadBalancingStrategy = { algorithm: 'round-robin' };
       const mockRequest = {} as FastifyRequest;
 
-      loadBalancer.selectInstance('service-1', mockInstances, strategy, mockRequest);
-      loadBalancer.selectInstance('service-2', mockInstances, strategy, mockRequest);
+      loadBalancer.selectInstance(
+        'service-1',
+        mockInstances,
+        strategy,
+        mockRequest
+      );
+      loadBalancer.selectInstance(
+        'service-2',
+        mockInstances,
+        strategy,
+        mockRequest
+      );
 
       const _stats = loadBalancer.getStats();
 
@@ -372,7 +389,12 @@ describe('LoadBalancer', () => {
       const strategy: LoadBalancingStrategy = { algorithm: 'round-robin' };
       const mockRequest = {} as FastifyRequest;
 
-      loadBalancer.selectInstance('service-1', mockInstances, strategy, mockRequest);
+      loadBalancer.selectInstance(
+        'service-1',
+        mockInstances,
+        strategy,
+        mockRequest
+      );
 
       let stats = loadBalancer.getStats();
       expect(Object.keys(stats.roundRobinCounters)).toHaveLength(1);

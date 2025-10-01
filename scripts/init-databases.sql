@@ -33,6 +33,16 @@ CREATE DATABASE notification_db;
 \c notification_db;
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
+-- Upload Database
+CREATE DATABASE upload_db;
+\c upload_db;
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- Upload Test Database
+CREATE DATABASE upload_test_db;
+\c upload_test_db;
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
 -- File Database
 CREATE DATABASE file_db;
 \c file_db;
@@ -65,6 +75,8 @@ GRANT ALL PRIVILEGES ON DATABASE taxi_db TO platform_user;
 GRANT ALL PRIVILEGES ON DATABASE hotel_db TO platform_user;
 GRANT ALL PRIVILEGES ON DATABASE payment_db TO platform_user;
 GRANT ALL PRIVILEGES ON DATABASE notification_db TO platform_user;
+GRANT ALL PRIVILEGES ON DATABASE upload_db TO platform_user;
+GRANT ALL PRIVILEGES ON DATABASE upload_test_db TO platform_user;
 GRANT ALL PRIVILEGES ON DATABASE file_db TO platform_user;
 GRANT ALL PRIVILEGES ON DATABASE analytics_db TO platform_user;
 GRANT ALL PRIVILEGES ON DATABASE admin_db TO platform_user;

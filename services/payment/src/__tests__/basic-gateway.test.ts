@@ -3,7 +3,15 @@ import { describe, expect, it } from 'vitest';
 describe('Basic Gateway Tests', () => {
   it('should import gateway types correctly', () => {
     // Test that the gateway types are properly defined
-    const gatewayTypes = ['stripe', 'paypal', 'square', 'adyen', 'braintree', 'paystack', 'flutterwave'];
+    const gatewayTypes = [
+      'stripe',
+      'paypal',
+      'square',
+      'adyen',
+      'braintree',
+      'paystack',
+      'flutterwave',
+    ];
 
     expect(gatewayTypes).toContain('paystack');
     expect(gatewayTypes).toContain('flutterwave');
@@ -28,7 +36,7 @@ describe('Basic Gateway Tests', () => {
         supportedPaymentMethods: ['card', 'bank_account', 'ussd', 'qr'],
         minAmount: 1,
         maxAmount: 10000000,
-      }
+      },
     };
 
     expect(paystackConfig.type).toBe('paystack');
@@ -49,16 +57,32 @@ describe('Basic Gateway Tests', () => {
         webhookSecret: 'test-webhook-secret',
       },
       settings: {
-        supportedCurrencies: ['NGN', 'USD', 'EUR', 'GBP', 'GHS', 'KES', 'UGX', 'ZAR'],
+        supportedCurrencies: [
+          'NGN',
+          'USD',
+          'EUR',
+          'GBP',
+          'GHS',
+          'KES',
+          'UGX',
+          'ZAR',
+        ],
         supportedCountries: ['NG', 'GH', 'KE', 'UG', 'ZA', 'US', 'GB', 'CA'],
-        supportedPaymentMethods: ['card', 'bank_account', 'mobile_money', 'ussd'],
+        supportedPaymentMethods: [
+          'card',
+          'bank_account',
+          'mobile_money',
+          'ussd',
+        ],
         minAmount: 1,
         maxAmount: 10000000,
-      }
+      },
     };
 
     expect(flutterwaveConfig.type).toBe('flutterwave');
     expect(flutterwaveConfig.settings.supportedCurrencies).toContain('NGN');
-    expect(flutterwaveConfig.settings.supportedPaymentMethods).toContain('mobile_money');
+    expect(flutterwaveConfig.settings.supportedPaymentMethods).toContain(
+      'mobile_money'
+    );
   });
 });

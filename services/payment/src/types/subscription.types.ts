@@ -200,7 +200,10 @@ export interface SubscriptionRequest {
 
   // Options
   options?: {
-    paymentBehavior?: 'default_incomplete' | 'error_if_incomplete' | 'allow_incomplete';
+    paymentBehavior?:
+      | 'default_incomplete'
+      | 'error_if_incomplete'
+      | 'allow_incomplete';
     expandImmediatelyCollect?: boolean;
   };
 }

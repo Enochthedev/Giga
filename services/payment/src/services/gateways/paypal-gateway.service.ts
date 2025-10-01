@@ -1,7 +1,17 @@
 import { Decimal } from '../../lib/decimal';
 import { logger } from '../../lib/logger';
-import { GatewayConfig, GatewayStatus, PaymentGateway, WebhookEvent } from '../../types/gateway.types';
-import { PaymentMethod, PaymentRequest, PaymentResponse, Refund } from '../../types/payment.types';
+import {
+  GatewayConfig,
+  GatewayStatus,
+  PaymentGateway,
+  WebhookEvent,
+} from '../../types/gateway.types';
+import {
+  PaymentMethod,
+  PaymentRequest,
+  PaymentResponse,
+  Refund,
+} from '../../types/payment.types';
 
 export class PayPalGateway extends PaymentGateway {
   constructor(config: GatewayConfig) {
@@ -14,7 +24,7 @@ export class PayPalGateway extends PaymentGateway {
       logger.info('Processing PayPal payment', {
         gatewayId: this.getId(),
         amount: request.amount,
-        currency: request.currency
+        currency: request.currency,
       });
 
       await this.simulateApiCall();
@@ -27,30 +37,33 @@ export class PayPalGateway extends PaymentGateway {
         confirmationUrl: `https://www.paypal.com/checkoutnow?token=EC${Date.now()}`,
         requiresAction: false,
         metadata: request.metadata || {},
-        createdAt: new Date()
+        createdAt: new Date(),
       };
 
       logger.info('PayPal payment processed successfully', {
         gatewayId: this.getId(),
-        paymentId: response.id
+        paymentId: response.id,
       });
 
       return response;
     } catch (error) {
       logger.error('PayPal payment processing failed', {
         gatewayId: this.getId(),
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
       throw error;
     }
   }
 
-  async capturePayment(transactionId: string, amount?: number): Promise<PaymentResponse> {
+  async capturePayment(
+    transactionId: string,
+    amount?: number
+  ): Promise<PaymentResponse> {
     try {
       logger.info('Capturing PayPal payment', {
         gatewayId: this.getId(),
         transactionId,
-        amount
+        amount,
       });
 
       await this.simulateApiCall();
@@ -61,12 +74,12 @@ export class PayPalGateway extends PaymentGateway {
         amount: new Decimal(amount || 0),
         currency: 'USD',
         metadata: {},
-        createdAt: new Date()
+        createdAt: new Date(),
       };
 
       logger.info('PayPal payment captured successfully', {
         gatewayId: this.getId(),
-        transactionId
+        transactionId,
       });
 
       return response;
@@ -74,7 +87,7 @@ export class PayPalGateway extends PaymentGateway {
       logger.error('PayPal payment capture failed', {
         gatewayId: this.getId(),
         transactionId,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
       throw error;
     }
@@ -84,7 +97,7 @@ export class PayPalGateway extends PaymentGateway {
     try {
       logger.info('Canceling PayPal payment', {
         gatewayId: this.getId(),
-        transactionId
+        transactionId,
       });
 
       await this.simulateApiCall();
@@ -95,12 +108,12 @@ export class PayPalGateway extends PaymentGateway {
         amount: new Decimal(0),
         currency: 'USD',
         metadata: {},
-        createdAt: new Date()
+        createdAt: new Date(),
       };
 
       logger.info('PayPal payment canceled successfully', {
         gatewayId: this.getId(),
-        transactionId
+        transactionId,
       });
 
       return response;
@@ -108,19 +121,23 @@ export class PayPalGateway extends PaymentGateway {
       logger.error('PayPal payment cancellation failed', {
         gatewayId: this.getId(),
         transactionId,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
       throw error;
     }
   }
 
-  async refundPayment(transactionId: string, amount?: number, reason?: string): Promise<Refund> {
+  async refundPayment(
+    transactionId: string,
+    amount?: number,
+    reason?: string
+  ): Promise<Refund> {
     try {
       logger.info('Processing PayPal refund', {
         gatewayId: this.getId(),
         transactionId,
         amount,
-        reason
+        reason,
       });
 
       await this.simulateApiCall();
@@ -134,12 +151,12 @@ export class PayPalGateway extends PaymentGateway {
         status: 'succeeded',
         processedAt: new Date(),
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
       };
 
       logger.info('PayPal refund processed successfully', {
         gatewayId: this.getId(),
-        refundId: refund.id
+        refundId: refund.id,
       });
 
       return refund;
@@ -147,7 +164,7 @@ export class PayPalGateway extends PaymentGateway {
       logger.error('PayPal refund processing failed', {
         gatewayId: this.getId(),
         transactionId,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
       throw error;
     }
@@ -157,7 +174,7 @@ export class PayPalGateway extends PaymentGateway {
     try {
       logger.info('Creating PayPal payment method', {
         gatewayId: this.getId(),
-        type: data.type
+        type: data.type,
       });
 
       await this.simulateApiCall();
@@ -169,19 +186,19 @@ export class PayPalGateway extends PaymentGateway {
         isDefault: data.isDefault || false,
         metadata: { ...data.metadata, provider: 'paypal' },
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
       };
 
       logger.info('PayPal payment method created successfully', {
         gatewayId: this.getId(),
-        paymentMethodId: paymentMethod.id
+        paymentMethodId: paymentMethod.id,
       });
 
       return paymentMethod;
     } catch (error) {
       logger.error('PayPal payment method creation failed', {
         gatewayId: this.getId(),
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
       throw error;
     }
@@ -191,7 +208,7 @@ export class PayPalGateway extends PaymentGateway {
     try {
       logger.info('Updating PayPal payment method', {
         gatewayId: this.getId(),
-        paymentMethodId: id
+        paymentMethodId: id,
       });
 
       await this.simulateApiCall();
@@ -203,12 +220,12 @@ export class PayPalGateway extends PaymentGateway {
         isDefault: data.isDefault || false,
         metadata: { ...data.metadata, provider: 'paypal' },
         createdAt: new Date(Date.now() - 86400000),
-        updatedAt: new Date()
+        updatedAt: new Date(),
       };
 
       logger.info('PayPal payment method updated successfully', {
         gatewayId: this.getId(),
-        paymentMethodId: id
+        paymentMethodId: id,
       });
 
       return paymentMethod;
@@ -216,7 +233,7 @@ export class PayPalGateway extends PaymentGateway {
       logger.error('PayPal payment method update failed', {
         gatewayId: this.getId(),
         paymentMethodId: id,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
       throw error;
     }
@@ -226,20 +243,20 @@ export class PayPalGateway extends PaymentGateway {
     try {
       logger.info('Deleting PayPal payment method', {
         gatewayId: this.getId(),
-        paymentMethodId: id
+        paymentMethodId: id,
       });
 
       await this.simulateApiCall();
 
       logger.info('PayPal payment method deleted successfully', {
         gatewayId: this.getId(),
-        paymentMethodId: id
+        paymentMethodId: id,
       });
     } catch (error) {
       logger.error('PayPal payment method deletion failed', {
         gatewayId: this.getId(),
         paymentMethodId: id,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
       throw error;
     }
@@ -249,7 +266,7 @@ export class PayPalGateway extends PaymentGateway {
     try {
       logger.info('Retrieving PayPal payment method', {
         gatewayId: this.getId(),
-        paymentMethodId: id
+        paymentMethodId: id,
       });
 
       await this.simulateApiCall();
@@ -261,12 +278,12 @@ export class PayPalGateway extends PaymentGateway {
         isDefault: false,
         metadata: { provider: 'paypal' },
         createdAt: new Date(Date.now() - 86400000),
-        updatedAt: new Date()
+        updatedAt: new Date(),
       };
 
       logger.info('PayPal payment method retrieved successfully', {
         gatewayId: this.getId(),
-        paymentMethodId: id
+        paymentMethodId: id,
       });
 
       return paymentMethod;
@@ -274,7 +291,7 @@ export class PayPalGateway extends PaymentGateway {
       logger.error('PayPal payment method retrieval failed', {
         gatewayId: this.getId(),
         paymentMethodId: id,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
       throw error;
     }
@@ -288,7 +305,7 @@ export class PayPalGateway extends PaymentGateway {
     } catch (error) {
       logger.error('PayPal webhook verification failed', {
         gatewayId: this.getId(),
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
       return false;
     }
@@ -307,20 +324,20 @@ export class PayPalGateway extends PaymentGateway {
         timestamp: new Date(),
         processed: false,
         retryCount: 0,
-        metadata: { source: 'paypal' }
+        metadata: { source: 'paypal' },
       };
 
       logger.info('PayPal webhook parsed successfully', {
         gatewayId: this.getId(),
         eventType: webhookEvent.type,
-        eventId: webhookEvent.id
+        eventId: webhookEvent.id,
       });
 
       return webhookEvent;
     } catch (error) {
       logger.error('PayPal webhook parsing failed', {
         gatewayId: this.getId(),
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
       throw error;
     }
@@ -329,7 +346,7 @@ export class PayPalGateway extends PaymentGateway {
   async healthCheck(): Promise<boolean> {
     try {
       logger.debug('Performing PayPal health check', {
-        gatewayId: this.getId()
+        gatewayId: this.getId(),
       });
 
       await this.simulateApiCall(150);
@@ -339,14 +356,14 @@ export class PayPalGateway extends PaymentGateway {
 
       logger.debug('PayPal health check completed', {
         gatewayId: this.getId(),
-        isHealthy
+        isHealthy,
       });
 
       return isHealthy;
     } catch (error) {
       logger.error('PayPal health check failed', {
         gatewayId: this.getId(),
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
       return false;
     }
@@ -359,7 +376,7 @@ export class PayPalGateway extends PaymentGateway {
     } catch (error) {
       logger.error('Failed to get PayPal gateway status', {
         gatewayId: this.getId(),
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
       return 'error';
     }
@@ -367,7 +384,9 @@ export class PayPalGateway extends PaymentGateway {
 
   private async simulateApiCall(delay = 250): Promise<void> {
     // Simulate network delay (PayPal typically slower than Stripe)
-    await new Promise(resolve => setTimeout(resolve, delay + Math.random() * 150));
+    await new Promise(resolve =>
+      setTimeout(resolve, delay + Math.random() * 150)
+    );
 
     // Simulate occasional API errors (7% failure rate)
     if (Math.random() < 0.07) {

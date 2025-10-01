@@ -2,7 +2,11 @@
  * Analytics and tracking types and interfaces
  */
 
-import { NotificationCategory, NotificationChannel, NotificationStatus } from './notification.types';
+import {
+  NotificationCategory,
+  NotificationChannel,
+  NotificationStatus,
+} from './notification.types';
 
 export interface DeliveryAnalytics {
   notificationId: string;
@@ -75,7 +79,7 @@ export enum EngagementEventType {
   BOUNCED = 'bounced',
   COMPLAINED = 'complained',
   UNSUBSCRIBED = 'unsubscribed',
-  FAILED = 'failed'
+  FAILED = 'failed',
 }
 
 export interface DeviceInfo {
@@ -114,7 +118,7 @@ export enum AnalyticsReportType {
   PROVIDER_PERFORMANCE = 'provider_performance',
   TEMPLATE_PERFORMANCE = 'template_performance',
   USER_ENGAGEMENT = 'user_engagement',
-  CAMPAIGN_ANALYSIS = 'campaign_analysis'
+  CAMPAIGN_ANALYSIS = 'campaign_analysis',
 }
 
 export interface DateRange {
@@ -292,7 +296,7 @@ export enum WidgetType {
   BAR_CHART = 'bar_chart',
   PIE_CHART = 'pie_chart',
   TABLE = 'table',
-  HEATMAP = 'heatmap'
+  HEATMAP = 'heatmap',
 }
 
 export interface WidgetPosition {

@@ -30,7 +30,7 @@ class ConnectionPoolService {
     queuedRequests: 0,
     totalAcquired: 0,
     totalReleased: 0,
-    averageAcquireTime: 0
+    averageAcquireTime: 0,
   };
 
   private acquireTimes: number[] = [];
@@ -41,7 +41,7 @@ class ConnectionPoolService {
     minConnections: parseInt(process.env.DB_MIN_CONNECTIONS || '2'),
     acquireTimeoutMs: parseInt(process.env.DB_ACQUIRE_TIMEOUT || '30000'),
     idleTimeoutMs: parseInt(process.env.DB_IDLE_TIMEOUT || '300000'),
-    maxLifetimeMs: parseInt(process.env.DB_MAX_LIFETIME || '3600000')
+    maxLifetimeMs: parseInt(process.env.DB_MAX_LIFETIME || '3600000'),
   };
 
   constructor() {
@@ -62,14 +62,14 @@ class ConnectionPoolService {
             client = new PrismaClient({
               datasources: {
                 db: {
-                  url: this.buildConnectionUrl()
-                }
+                  url: this.buildConnectionUrl(),
+                },
               },
               log: [
                 { level: 'query', emit: 'event' },
                 { level: 'error', emit: 'event' },
-                { level: 'warn', emit: 'event' }
-              ]
+                { level: 'warn', emit: 'event' },
+              ],
             });
 
             // Setup event listeners for monitoring
@@ -89,7 +89,11 @@ class ConnectionPoolService {
 
           return client;
         } catch (error) {
-          logger.error('Failed to acquire database connection', error as Error, { context });
+          logger.error(
+            'Failed to acquire database connection',
+            error as Error,
+            { context }
+          );
           throw error;
         }
       },
@@ -101,11 +105,16 @@ class ConnectionPoolService {
   releaseClient(context = 'default'): Promise<void> {
     try {
       this.connectionStats.totalReleased++;
-      this.connectionStats.activeConnections = Math.max(0, this.connectionStats.activeConnections - 1);
+      this.connectionStats.activeConnections = Math.max(
+        0,
+        this.connectionStats.activeConnections - 1
+      );
 
       logger.debug('Database connection released', { context });
     } catch (error) {
-      logger.error('Failed to release database connection', error as Error, { context });
+      logger.error('Failed to release database connection', error as Error, {
+        context,
+      });
     }
   }
 
@@ -114,7 +123,7 @@ class ConnectionPoolService {
     return {
       ...this.connectionStats,
       totalConnections: this.prismaInstances.size,
-      averageAcquireTime: this.calculateAverageAcquireTime()
+      averageAcquireTime: this.calculateAverageAcquireTime(),
     };
   }
 
@@ -149,14 +158,14 @@ class ConnectionPoolService {
       return {
         isHealthy: issues.length === 0,
         stats,
-        issues
+        issues,
       };
     } catch (error) {
       issues.push(`Connection test failed: ${(error as Error).message}`);
       return {
         isHealthy: false,
         stats,
-        issues
+        issues,
       };
     }
   }
@@ -174,7 +183,7 @@ class ConnectionPoolService {
       // Log optimization results
       logger.info('Connection pool optimized', {
         beforeOptimization: stats,
-        afterOptimization: this.getConnectionStats()
+        afterOptimization: this.getConnectionStats(),
       });
     } catch (error) {
       logger.error('Failed to optimize connection pool', error as Error);
@@ -198,7 +207,7 @@ class ConnectionPoolService {
         queuedRequests: 0,
         totalAcquired: this.connectionStats.totalAcquired,
         totalReleased: this.connectionStats.totalReleased,
-        averageAcquireTime: this.connectionStats.averageAcquireTime
+        averageAcquireTime: this.connectionStats.averageAcquireTime,
       };
 
       logger.info('All database connections closed');
@@ -213,8 +222,14 @@ class ConnectionPoolService {
     const params = new URLSearchParams();
 
     // Add connection pool parameters
-    params.set('connection_limit', this.defaultConfig.maxConnections.toString());
-    params.set('pool_timeout', Math.floor(this.defaultConfig.acquireTimeoutMs / 1000).toString());
+    params.set(
+      'connection_limit',
+      this.defaultConfig.maxConnections.toString()
+    );
+    params.set(
+      'pool_timeout',
+      Math.floor(this.defaultConfig.acquireTimeoutMs / 1000).toString()
+    );
 
     // Add performance optimizations
     params.set('statement_cache_size', '100');
@@ -225,7 +240,7 @@ class ConnectionPoolService {
 
   private setupClientMonitoring(client: PrismaClient, context: string): void {
     // Monitor query events
-    client.$on('query', (event) => {
+    client.$on('query', event => {
       metricsService.recordDatabaseQuery(
         event.duration,
         'query',
@@ -236,26 +251,26 @@ class ConnectionPoolService {
         logger.warn('Slow database query detected', {
           context,
           duration: event.duration,
-          query: event.query.substring(0, 100) + '...'
+          query: event.query.substring(0, 100) + '...',
         });
       }
     });
 
     // Monitor error events
-    client.$on('error', (event) => {
+    client.$on('error', event => {
       logger.error('Database error', new Error(event.message), {
         context,
-        target: event.target
+        target: event.target,
       });
       metricsService.recordDatabaseError();
     });
 
     // Monitor warning events
-    client.$on('warn', (event) => {
+    client.$on('warn', event => {
       logger.warn('Database warning', {
         context,
         message: event.message,
-        target: event.target
+        target: event.target,
       });
     });
   }
@@ -283,7 +298,10 @@ class ConnectionPoolService {
     // and close connections that haven't been used recently
     // For now, we'll implement a simple strategy
 
-    const connectionsToClose = Math.max(0, this.prismaInstances.size - this.defaultConfig.maxConnections);
+    const connectionsToClose = Math.max(
+      0,
+      this.prismaInstances.size - this.defaultConfig.maxConnections
+    );
 
     if (connectionsToClose > 0) {
       const contexts = Array.from(this.prismaInstances.keys());
@@ -307,15 +325,30 @@ class ConnectionPoolService {
         const _stats = this.getConnectionStats();
 
         // Record metrics
-        metricsService.recordMetric('db_active_connections', stats.activeConnections, 'count');
-        metricsService.recordMetric('db_total_connections', stats.totalConnections, 'count');
-        metricsService.recordMetric('db_average_acquire_time', stats.averageAcquireTime, 'ms');
+        metricsService.recordMetric(
+          'db_active_connections',
+          stats.activeConnections,
+          'count'
+        );
+        metricsService.recordMetric(
+          'db_total_connections',
+          stats.totalConnections,
+          'count'
+        );
+        metricsService.recordMetric(
+          'db_average_acquire_time',
+          stats.averageAcquireTime,
+          'ms'
+        );
 
         // Log stats periodically
         logger.debug('Connection pool stats', stats);
 
         // Auto-optimize if needed
-        if (stats.averageAcquireTime > 10000 || stats.totalConnections > this.defaultConfig.maxConnections) {
+        if (
+          stats.averageAcquireTime > 10000 ||
+          stats.totalConnections > this.defaultConfig.maxConnections
+        ) {
           await this.optimizePool();
         }
       } catch (error) {

@@ -34,14 +34,14 @@ export class APICacheMiddleware {
             'X-Cache-Key': cacheKey,
             'X-Cache-TTL': ttlSeconds.toString(),
             'Cache-Control': `public, max-age=${ttlSeconds}`,
-            'ETag': APICacheMiddleware.generateETag(parsed.data)
+            ETag: APICacheMiddleware.generateETag(parsed.data),
           });
 
           logger.debug('Cache hit for request', {
             method: req.method,
             path: req.path,
             cacheKey,
-            userId: req.user?.sub
+            userId: req.user?.sub,
           });
 
           metricsService.recordCacheHit('api_response');
@@ -65,15 +65,16 @@ export class APICacheMiddleware {
             const cacheData = {
               statusCode,
               data,
-              timestamp: new Date().toISOString()
+              timestamp: new Date().toISOString(),
             };
 
             // Cache the response asynchronously
-            redisService.set(cacheKey, JSON.stringify(cacheData), ttlSeconds)
+            redisService
+              .set(cacheKey, JSON.stringify(cacheData), ttlSeconds)
               .catch(error => {
                 logger.error('Failed to cache response', error, {
                   cacheKey,
-                  path: req.path
+                  path: req.path,
                 });
               });
 
@@ -83,7 +84,7 @@ export class APICacheMiddleware {
               'X-Cache-Key': cacheKey,
               'X-Cache-TTL': ttlSeconds.toString(),
               'Cache-Control': `public, max-age=${ttlSeconds}`,
-              'ETag': APICacheMiddleware.generateETag(data)
+              ETag: APICacheMiddleware.generateETag(data),
             });
 
             logger.debug('Response cached', {
@@ -91,7 +92,7 @@ export class APICacheMiddleware {
               path: req.path,
               cacheKey,
               statusCode,
-              userId: req.user?.sub
+              userId: req.user?.sub,
             });
 
             metricsService.recordCacheMiss('api_response');
@@ -106,7 +107,7 @@ export class APICacheMiddleware {
       } catch (error) {
         logger.error('Cache middleware error', error as Error, {
           path: req.path,
-          method: req.method
+          method: req.method,
         });
 
         res.set('X-Cache-Status', 'ERROR');
@@ -120,7 +121,9 @@ export class APICacheMiddleware {
    */
   private static generateCacheKey(req: Request): string {
     const baseKey = `api_cache:${req.method}:${req.path}`;
-    const queryString = new URLSearchParams(req.query as Record<string, string>).toString();
+    const queryString = new URLSearchParams(
+      req.query as Record<string, string>
+    ).toString();
     const userContext = req.user ? `:user:${req.user.sub}` : '';
 
     return `${baseKey}${queryString ? `:${queryString}` : ''}${userContext}`;
@@ -131,7 +134,10 @@ export class APICacheMiddleware {
    */
   private static generateETag(data: any): string {
     const crypto = require('crypto');
-    const hash = crypto.createHash('md5').update(JSON.stringify(data)).digest('hex');
+    const hash = crypto
+      .createHash('md5')
+      .update(JSON.stringify(data))
+      .digest('hex');
     return `"${hash}"`;
   }
 
@@ -150,7 +156,7 @@ export class APICacheMiddleware {
           ).catch(error => {
             logger.error('Cache invalidation failed', error as Error, {
               patterns,
-              path: req.path
+              path: req.path,
             });
           });
         }
@@ -181,7 +187,9 @@ export class ResponseOptimizationMiddleware {
         'X-XSS-Protection': '1; mode=block',
         'Referrer-Policy': 'strict-origin-when-cross-origin',
         'X-API-Version': '1.0.0',
-        'X-Request-ID': req.headers['x-request-id'] || `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+        'X-Request-ID':
+          req.headers['x-request-id'] ||
+          `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       });
 
       // Add response time header after response
@@ -230,7 +238,10 @@ export class ResponseOptimizationMiddleware {
    */
   static generateETag(data: any): string {
     const crypto = require('crypto');
-    const hash = crypto.createHash('md5').update(JSON.stringify(data)).digest('hex');
+    const hash = crypto
+      .createHash('md5')
+      .update(JSON.stringify(data))
+      .digest('hex');
     return `"${hash}"`;
   }
 
@@ -244,19 +255,22 @@ export class ResponseOptimizationMiddleware {
       res.json = function (data: any) {
         // Add pagination headers if data contains pagination info
         if (data.success && data.data && data.meta) {
-          const { page, limit, total, totalPages, hasNext, hasPrev } = data.meta;
+          const { page, limit, total, totalPages, hasNext, hasPrev } =
+            data.meta;
 
           res.set({
             'X-Pagination-Page': page?.toString(),
             'X-Pagination-Limit': limit?.toString(),
             'X-Pagination-Total': total?.toString(),
-            'X-Pagination-Total-Pages': totalPages?.toString()
+            'X-Pagination-Total-Pages': totalPages?.toString(),
           });
 
           // Add Link header for pagination navigation
           const links = [];
           const baseUrl = `${req.protocol}://${req.get('host')}${req.path}`;
-          const query = new URLSearchParams(req.query as Record<string, string>);
+          const query = new URLSearchParams(
+            req.query as Record<string, string>
+          );
 
           if (hasPrev && page > 1) {
             query.set('page', (page - 1).toString());
@@ -309,17 +323,35 @@ export class APIAnalyticsMiddleware {
         ip: req.ip,
         userId: req.user?.sub,
         timestamp,
-        date
+        date,
       };
 
       // Increment counters asynchronously
       Promise.all([
-        redisService.incrementCounter(`analytics:requests:total:${date}`, 86400),
-        redisService.incrementCounter(`analytics:requests:endpoint:${analyticsData.endpoint}:${date}`, 86400),
-        redisService.incrementCounter(`analytics:requests:method:${req.method}:${date}`, 86400),
-        req.user ? redisService.incrementCounter(`analytics:users:${req.user.sub}:${date}`, 86400) : Promise.resolve(0)
+        redisService.incrementCounter(
+          `analytics:requests:total:${date}`,
+          86400
+        ),
+        redisService.incrementCounter(
+          `analytics:requests:endpoint:${analyticsData.endpoint}:${date}`,
+          86400
+        ),
+        redisService.incrementCounter(
+          `analytics:requests:method:${req.method}:${date}`,
+          86400
+        ),
+        req.user
+          ? redisService.incrementCounter(
+              `analytics:users:${req.user.sub}:${date}`,
+              86400
+            )
+          : Promise.resolve(0),
       ]).catch(error => {
-        logger.error('Analytics tracking failed', error as Error, analyticsData);
+        logger.error(
+          'Analytics tracking failed',
+          error as Error,
+          analyticsData
+        );
       });
 
       // Track response after completion
@@ -330,15 +362,28 @@ export class APIAnalyticsMiddleware {
 
         // Track response metrics
         Promise.all([
-          redisService.incrementCounter(`analytics:responses:status:${statusCode}:${date}`, 86400),
-          redisService.incrementCounter(`analytics:responses:total:${date}`, 86400),
-          statusCode >= 400 ? redisService.incrementCounter(`analytics:errors:${date}`, 86400) : Promise.resolve(0),
-          statusCode === 429 ? redisService.incrementCounter(`analytics:rate_limits:${date}`, 86400) : Promise.resolve(0)
+          redisService.incrementCounter(
+            `analytics:responses:status:${statusCode}:${date}`,
+            86400
+          ),
+          redisService.incrementCounter(
+            `analytics:responses:total:${date}`,
+            86400
+          ),
+          statusCode >= 400
+            ? redisService.incrementCounter(`analytics:errors:${date}`, 86400)
+            : Promise.resolve(0),
+          statusCode === 429
+            ? redisService.incrementCounter(
+                `analytics:rate_limits:${date}`,
+                86400
+              )
+            : Promise.resolve(0),
         ]).catch(error => {
           logger.error('Response analytics tracking failed', error as Error, {
             ...analyticsData,
             statusCode,
-            responseTime
+            responseTime,
           });
         });
 
@@ -349,7 +394,7 @@ export class APIAnalyticsMiddleware {
           ...analyticsData,
           statusCode,
           responseTime,
-          success: statusCode < 400
+          success: statusCode < 400,
         });
 
         return originalSend.call(this, data);
@@ -373,45 +418,50 @@ export class APIAnalyticsMiddleware {
         errorRate: 0,
         rateLimitHits: 0,
         uniqueUsers: 0,
-        timeRange: { start: startDate, end: endDate }
+        timeRange: { start: startDate, end: endDate },
       };
 
       // Aggregate data across date range
       for (const date of dates) {
-        const [
-          totalRequests,
-          totalErrors,
-          rateLimits
-        ] = await Promise.all([
+        const [totalRequests, totalErrors, rateLimits] = await Promise.all([
           redisService.getCounter(`analytics:requests:total:${date}`),
           redisService.getCounter(`analytics:errors:${date}`),
-          redisService.getCounter(`analytics:rate_limits:${date}`)
+          redisService.getCounter(`analytics:rate_limits:${date}`),
         ]);
 
         analytics.totalRequests += totalRequests;
         analytics.rateLimitHits += rateLimits;
 
         // Get endpoint and method breakdowns
-        const endpointKeys = await redisService.keys(`analytics:requests:endpoint:*:${date}`);
-        const methodKeys = await redisService.keys(`analytics:requests:method:*:${date}`);
-        const statusKeys = await redisService.keys(`analytics:responses:status:*:${date}`);
+        const endpointKeys = await redisService.keys(
+          `analytics:requests:endpoint:*:${date}`
+        );
+        const methodKeys = await redisService.keys(
+          `analytics:requests:method:*:${date}`
+        );
+        const statusKeys = await redisService.keys(
+          `analytics:responses:status:*:${date}`
+        );
 
         for (const key of endpointKeys) {
           const endpoint = key.split(':')[3];
           const count = await redisService.getCounter(key);
-          analytics.requestsByEndpoint[endpoint] = (analytics.requestsByEndpoint[endpoint] || 0) + count;
+          analytics.requestsByEndpoint[endpoint] =
+            (analytics.requestsByEndpoint[endpoint] || 0) + count;
         }
 
         for (const key of methodKeys) {
           const method = key.split(':')[3];
           const count = await redisService.getCounter(key);
-          analytics.requestsByMethod[method] = (analytics.requestsByMethod[method] || 0) + count;
+          analytics.requestsByMethod[method] =
+            (analytics.requestsByMethod[method] || 0) + count;
         }
 
         for (const key of statusKeys) {
           const status = key.split(':')[3];
           const count = await redisService.getCounter(key);
-          analytics.requestsByStatus[status] = (analytics.requestsByStatus[status] || 0) + count;
+          analytics.requestsByStatus[status] =
+            (analytics.requestsByStatus[status] || 0) + count;
         }
       }
 
@@ -420,9 +470,10 @@ export class APIAnalyticsMiddleware {
         .filter(([status]) => parseInt(status) >= 400)
         .reduce((sum, [, count]) => sum + count, 0);
 
-      analytics.errorRate = analytics.totalRequests > 0
-        ? (totalErrors / analytics.totalRequests) * 100
-        : 0;
+      analytics.errorRate =
+        analytics.totalRequests > 0
+          ? (totalErrors / analytics.totalRequests) * 100
+          : 0;
 
       return analytics;
     } catch (error) {

@@ -20,9 +20,7 @@ describe('ServiceRegistry', () => {
         id: 'test-service',
         name: 'test',
         version: '1.0.0',
-        endpoints: [
-          { url: 'http://localhost:3001', weight: 1, metadata: {} },
-        ],
+        endpoints: [{ url: 'http://localhost:3001', weight: 1, metadata: {} }],
         healthCheck: {
           enabled: false,
           path: '/health',
@@ -81,9 +79,7 @@ describe('ServiceRegistry', () => {
         id: 'event-test-service',
         name: 'event-test',
         version: '1.0.0',
-        endpoints: [
-          { url: 'http://localhost:3001', weight: 1, metadata: {} },
-        ],
+        endpoints: [{ url: 'http://localhost:3001', weight: 1, metadata: {} }],
         healthCheck: {
           enabled: false,
           path: '/health',
@@ -114,9 +110,7 @@ describe('ServiceRegistry', () => {
         id: 'temp-service',
         name: 'temp',
         version: '1.0.0',
-        endpoints: [
-          { url: 'http://localhost:3001', weight: 1, metadata: {} },
-        ],
+        endpoints: [{ url: 'http://localhost:3001', weight: 1, metadata: {} }],
         healthCheck: {
           enabled: false,
           path: '/health',
@@ -147,9 +141,7 @@ describe('ServiceRegistry', () => {
         id: 'deregister-test',
         name: 'deregister-test',
         version: '1.0.0',
-        endpoints: [
-          { url: 'http://localhost:3001', weight: 1, metadata: {} },
-        ],
+        endpoints: [{ url: 'http://localhost:3001', weight: 1, metadata: {} }],
         healthCheck: {
           enabled: false,
           path: '/health',
@@ -205,9 +197,15 @@ describe('ServiceRegistry', () => {
       expect(allInstances).toHaveLength(2);
 
       // Mark one instance as unhealthy
-      registry.updateInstanceHealth('health-test-service', allInstances[0].id, false);
+      registry.updateInstanceHealth(
+        'health-test-service',
+        allInstances[0].id,
+        false
+      );
 
-      const healthyInstances = registry.getHealthyInstances('health-test-service');
+      const healthyInstances = registry.getHealthyInstances(
+        'health-test-service'
+      );
       expect(healthyInstances).toHaveLength(1);
       expect(healthyInstances[0].isHealthy).toBe(true);
     });
@@ -220,9 +218,7 @@ describe('ServiceRegistry', () => {
         id: 'update-health-service',
         name: 'update-health',
         version: '1.0.0',
-        endpoints: [
-          { url: 'http://localhost:3001', weight: 1, metadata: {} },
-        ],
+        endpoints: [{ url: 'http://localhost:3001', weight: 1, metadata: {} }],
         healthCheck: {
           enabled: false,
           path: '/health',
@@ -243,7 +239,9 @@ describe('ServiceRegistry', () => {
 
       registry.updateInstanceHealth('update-health-service', instanceId, false);
 
-      const updatedInstances = registry.getAllInstances('update-health-service');
+      const updatedInstances = registry.getAllInstances(
+        'update-health-service'
+      );
       expect(updatedInstances[0].isHealthy).toBe(false);
     });
 
@@ -253,9 +251,7 @@ describe('ServiceRegistry', () => {
         id: 'health-event-service',
         name: 'health-event',
         version: '1.0.0',
-        endpoints: [
-          { url: 'http://localhost:3001', weight: 1, metadata: {} },
-        ],
+        endpoints: [{ url: 'http://localhost:3001', weight: 1, metadata: {} }],
         healthCheck: {
           enabled: false,
           path: '/health',
@@ -317,9 +313,7 @@ describe('ServiceRegistry', () => {
         id: 'stats-service-2',
         name: 'stats2',
         version: '1.0.0',
-        endpoints: [
-          { url: 'http://localhost:3003', weight: 1, metadata: {} },
-        ],
+        endpoints: [{ url: 'http://localhost:3003', weight: 1, metadata: {} }],
         healthCheck: {
           enabled: false,
           path: '/health',

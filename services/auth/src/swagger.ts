@@ -70,12 +70,12 @@ For API support, please contact the development team or refer to the integration
       contact: {
         name: 'API Support',
         url: 'https://platform.example.com/support',
-        email: 'api-support@platform.example.com'
+        email: 'api-support@platform.example.com',
       },
       license: {
         name: 'MIT',
-        url: 'https://opensource.org/licenses/MIT'
-      }
+        url: 'https://opensource.org/licenses/MIT',
+      },
     },
     servers: [
       {
@@ -93,7 +93,7 @@ For API support, please contact the development team or refer to the integration
     ],
     externalDocs: {
       description: 'Find more info here',
-      url: 'https://docs.platform.example.com'
+      url: 'https://docs.platform.example.com',
     },
     components: {
       securitySchemes: {
@@ -260,21 +260,21 @@ For API support, please contact the development team or refer to the integration
             code: {
               type: 'string',
               example: 'VALIDATION_ERROR',
-              description: 'Machine-readable error code'
+              description: 'Machine-readable error code',
             },
             fields: {
               type: 'object',
               additionalProperties: {
                 type: 'array',
                 items: {
-                  type: 'string'
-                }
+                  type: 'string',
+                },
               },
               example: {
                 email: ['Invalid email format'],
-                password: ['Password must be at least 8 characters']
+                password: ['Password must be at least 8 characters'],
               },
-              description: 'Field-specific validation errors'
+              description: 'Field-specific validation errors',
             },
             timestamp: {
               type: 'string',
@@ -283,8 +283,8 @@ For API support, please contact the development team or refer to the integration
             requestId: {
               type: 'string',
               example: 'req_123456789',
-              description: 'Unique request identifier for debugging'
-            }
+              description: 'Unique request identifier for debugging',
+            },
           },
         },
         ValidationErrorResponse: {
@@ -307,18 +307,18 @@ For API support, please contact the development team or refer to the integration
               additionalProperties: {
                 type: 'array',
                 items: {
-                  type: 'string'
-                }
+                  type: 'string',
+                },
               },
               example: {
                 email: ['Invalid email format'],
-                password: ['Password must be at least 8 characters']
-              }
+                password: ['Password must be at least 8 characters'],
+              },
             },
             timestamp: {
               type: 'string',
               format: 'date-time',
-            }
+            },
           },
         },
         RateLimitErrorResponse: {
@@ -338,29 +338,29 @@ For API support, please contact the development team or refer to the integration
             },
             message: {
               type: 'string',
-              example: 'Rate limit exceeded. Try again in 15 minutes.'
+              example: 'Rate limit exceeded. Try again in 15 minutes.',
             },
             details: {
               type: 'object',
               properties: {
                 limit: {
                   type: 'number',
-                  example: 5
+                  example: 5,
                 },
                 window: {
                   type: 'string',
-                  example: '15 minutes'
+                  example: '15 minutes',
                 },
                 retryAfter: {
                   type: 'number',
-                  example: 900
-                }
-              }
+                  example: 900,
+                },
+              },
             },
             timestamp: {
               type: 'string',
               format: 'date-time',
-            }
+            },
           },
         },
         UnauthorizedErrorResponse: {
@@ -381,7 +381,7 @@ For API support, please contact the development team or refer to the integration
             timestamp: {
               type: 'string',
               format: 'date-time',
-            }
+            },
           },
         },
         ForbiddenErrorResponse: {
@@ -402,7 +402,7 @@ For API support, please contact the development team or refer to the integration
             timestamp: {
               type: 'string',
               format: 'date-time',
-            }
+            },
           },
         },
         NotFoundErrorResponse: {
@@ -423,7 +423,7 @@ For API support, please contact the development team or refer to the integration
             timestamp: {
               type: 'string',
               format: 'date-time',
-            }
+            },
           },
         },
         ConflictErrorResponse: {
@@ -444,7 +444,7 @@ For API support, please contact the development team or refer to the integration
             timestamp: {
               type: 'string',
               format: 'date-time',
-            }
+            },
           },
         },
         VerifyEmailRequest: {
@@ -896,191 +896,191 @@ For API support, please contact the development team or refer to the integration
           properties: {
             status: {
               type: 'string',
-              enum: ['pass', 'fail', 'warn']
+              enum: ['pass', 'fail', 'warn'],
             },
             responseTime: {
-              type: 'number'
+              type: 'number',
             },
             message: {
-              type: 'string'
+              type: 'string',
             },
             details: {
-              type: 'object'
-            }
-          }
+              type: 'object',
+            },
+          },
         },
         PerformanceMetrics: {
           type: 'object',
           properties: {
             requestCount: {
-              type: 'number'
+              type: 'number',
             },
             averageResponseTime: {
-              type: 'number'
+              type: 'number',
             },
             errorRate: {
-              type: 'number'
+              type: 'number',
             },
             activeConnections: {
-              type: 'number'
+              type: 'number',
             },
             memoryUsage: {
-              type: 'object'
+              type: 'object',
             },
             cpuUsage: {
-              type: 'number'
-            }
-          }
+              type: 'number',
+            },
+          },
         },
         DatabaseMetrics: {
           type: 'object',
           properties: {
             connectionCount: {
-              type: 'number'
+              type: 'number',
             },
             queryCount: {
-              type: 'number'
+              type: 'number',
             },
             averageQueryTime: {
-              type: 'number'
+              type: 'number',
             },
             slowQueries: {
-              type: 'number'
+              type: 'number',
             },
             connectionErrors: {
-              type: 'number'
-            }
-          }
+              type: 'number',
+            },
+          },
         },
         RedisMetrics: {
           type: 'object',
           properties: {
             connectionCount: {
-              type: 'number'
+              type: 'number',
             },
             operationCount: {
-              type: 'number'
+              type: 'number',
             },
             averageOperationTime: {
-              type: 'number'
+              type: 'number',
             },
             cacheHitRate: {
-              type: 'number'
+              type: 'number',
             },
             connectionErrors: {
-              type: 'number'
-            }
-          }
+              type: 'number',
+            },
+          },
         },
         APIUsageAnalytics: {
           type: 'object',
           properties: {
             totalRequests: {
               type: 'number',
-              description: 'Total number of API requests'
+              description: 'Total number of API requests',
             },
             requestsByEndpoint: {
               type: 'object',
               additionalProperties: {
-                type: 'number'
+                type: 'number',
               },
-              description: 'Request count by endpoint'
+              description: 'Request count by endpoint',
             },
             requestsByMethod: {
               type: 'object',
               additionalProperties: {
-                type: 'number'
+                type: 'number',
               },
-              description: 'Request count by HTTP method'
+              description: 'Request count by HTTP method',
             },
             requestsByStatus: {
               type: 'object',
               additionalProperties: {
-                type: 'number'
+                type: 'number',
               },
-              description: 'Request count by status code'
+              description: 'Request count by status code',
             },
             averageResponseTime: {
               type: 'number',
-              description: 'Average response time in milliseconds'
+              description: 'Average response time in milliseconds',
             },
             errorRate: {
               type: 'number',
-              description: 'Error rate as percentage'
+              description: 'Error rate as percentage',
             },
             rateLimitHits: {
               type: 'number',
-              description: 'Number of rate limit violations'
+              description: 'Number of rate limit violations',
             },
             uniqueUsers: {
               type: 'number',
-              description: 'Number of unique users'
+              description: 'Number of unique users',
             },
             timeRange: {
               type: 'object',
               properties: {
                 start: {
                   type: 'string',
-                  format: 'date-time'
+                  format: 'date-time',
                 },
                 end: {
                   type: 'string',
-                  format: 'date-time'
-                }
-              }
-            }
-          }
+                  format: 'date-time',
+                },
+              },
+            },
+          },
         },
         CacheInfo: {
           type: 'object',
           properties: {
             cached: {
               type: 'boolean',
-              description: 'Whether the response was served from cache'
+              description: 'Whether the response was served from cache',
             },
             cacheKey: {
               type: 'string',
-              description: 'Cache key used for this response'
+              description: 'Cache key used for this response',
             },
             ttl: {
               type: 'number',
-              description: 'Time to live in seconds'
+              description: 'Time to live in seconds',
             },
             generatedAt: {
               type: 'string',
               format: 'date-time',
-              description: 'When the cached response was generated'
-            }
-          }
+              description: 'When the cached response was generated',
+            },
+          },
         },
         PaginationMeta: {
           type: 'object',
           properties: {
             page: {
               type: 'number',
-              description: 'Current page number'
+              description: 'Current page number',
             },
             limit: {
               type: 'number',
-              description: 'Items per page'
+              description: 'Items per page',
             },
             total: {
               type: 'number',
-              description: 'Total number of items'
+              description: 'Total number of items',
             },
             totalPages: {
               type: 'number',
-              description: 'Total number of pages'
+              description: 'Total number of pages',
             },
             hasNext: {
               type: 'boolean',
-              description: 'Whether there is a next page'
+              description: 'Whether there is a next page',
             },
             hasPrev: {
               type: 'boolean',
-              description: 'Whether there is a previous page'
-            }
-          }
+              description: 'Whether there is a previous page',
+            },
+          },
         },
         APIVersionInfo: {
           type: 'object',
@@ -1088,41 +1088,41 @@ For API support, please contact the development team or refer to the integration
             version: {
               type: 'string',
               example: '1.0.0',
-              description: 'Current API version'
+              description: 'Current API version',
             },
             deprecated: {
               type: 'boolean',
               example: false,
-              description: 'Whether this version is deprecated'
+              description: 'Whether this version is deprecated',
             },
             deprecationDate: {
               type: 'string',
               format: 'date',
-              description: 'When this version will be deprecated'
+              description: 'When this version will be deprecated',
             },
             sunsetDate: {
               type: 'string',
               format: 'date',
-              description: 'When this version will be removed'
+              description: 'When this version will be removed',
             },
             supportedVersions: {
               type: 'array',
               items: {
-                type: 'string'
+                type: 'string',
               },
               example: ['1.0.0', '1.1.0'],
-              description: 'List of supported API versions'
+              description: 'List of supported API versions',
             },
             latestVersion: {
               type: 'string',
               example: '1.1.0',
-              description: 'Latest available API version'
+              description: 'Latest available API version',
             },
             changelog: {
               type: 'string',
-              description: 'URL to version changelog'
-            }
-          }
+              description: 'URL to version changelog',
+            },
+          },
         },
       },
       parameters: {
@@ -1133,8 +1133,8 @@ For API support, please contact the development team or refer to the integration
           schema: {
             type: 'integer',
             minimum: 1,
-            default: 1
-          }
+            default: 1,
+          },
         },
         LimitParam: {
           name: 'limit',
@@ -1144,8 +1144,8 @@ For API support, please contact the development team or refer to the integration
             type: 'integer',
             minimum: 1,
             maximum: 100,
-            default: 10
-          }
+            default: 10,
+          },
         },
         SortParam: {
           name: 'sort',
@@ -1153,17 +1153,17 @@ For API support, please contact the development team or refer to the integration
           description: 'Sort field and direction (e.g., createdAt:desc)',
           schema: {
             type: 'string',
-            pattern: '^[a-zA-Z]+:(asc|desc)$'
-          }
+            pattern: '^[a-zA-Z]+:(asc|desc)$',
+          },
         },
         FilterParam: {
           name: 'filter',
           in: 'query',
           description: 'JSON string of filter criteria',
           schema: {
-            type: 'string'
-          }
-        }
+            type: 'string',
+          },
+        },
       },
       responses: {
         BadRequest: {
@@ -1171,206 +1171,206 @@ For API support, please contact the development team or refer to the integration
           content: {
             'application/json': {
               schema: {
-                $ref: '#/components/schemas/ValidationErrorResponse'
-              }
-            }
+                $ref: '#/components/schemas/ValidationErrorResponse',
+              },
+            },
           },
           headers: {
             'X-Request-ID': {
               description: 'Unique request identifier',
               schema: {
-                type: 'string'
-              }
-            }
-          }
+                type: 'string',
+              },
+            },
+          },
         },
         Unauthorized: {
           description: 'Unauthorized - Invalid or missing authentication',
           content: {
             'application/json': {
               schema: {
-                $ref: '#/components/schemas/UnauthorizedErrorResponse'
-              }
-            }
+                $ref: '#/components/schemas/UnauthorizedErrorResponse',
+              },
+            },
           },
           headers: {
             'WWW-Authenticate': {
               description: 'Authentication scheme required',
               schema: {
                 type: 'string',
-                example: 'Bearer'
-              }
-            }
-          }
+                example: 'Bearer',
+              },
+            },
+          },
         },
         Forbidden: {
           description: 'Forbidden - Insufficient permissions',
           content: {
             'application/json': {
               schema: {
-                $ref: '#/components/schemas/ForbiddenErrorResponse'
-              }
-            }
-          }
+                $ref: '#/components/schemas/ForbiddenErrorResponse',
+              },
+            },
+          },
         },
         NotFound: {
           description: 'Not Found - Resource does not exist',
           content: {
             'application/json': {
               schema: {
-                $ref: '#/components/schemas/NotFoundErrorResponse'
-              }
-            }
-          }
+                $ref: '#/components/schemas/NotFoundErrorResponse',
+              },
+            },
+          },
         },
         Conflict: {
           description: 'Conflict - Resource already exists',
           content: {
             'application/json': {
               schema: {
-                $ref: '#/components/schemas/ConflictErrorResponse'
-              }
-            }
-          }
+                $ref: '#/components/schemas/ConflictErrorResponse',
+              },
+            },
+          },
         },
         TooManyRequests: {
           description: 'Too Many Requests - Rate limit exceeded',
           content: {
             'application/json': {
               schema: {
-                $ref: '#/components/schemas/RateLimitErrorResponse'
-              }
-            }
+                $ref: '#/components/schemas/RateLimitErrorResponse',
+              },
+            },
           },
           headers: {
             'X-RateLimit-Limit': {
               description: 'Request limit per time window',
               schema: {
-                type: 'integer'
-              }
+                type: 'integer',
+              },
             },
             'X-RateLimit-Remaining': {
               description: 'Requests remaining in current window',
               schema: {
-                type: 'integer'
-              }
+                type: 'integer',
+              },
             },
             'X-RateLimit-Reset': {
               description: 'Time when rate limit resets',
               schema: {
                 type: 'string',
-                format: 'date-time'
-              }
+                format: 'date-time',
+              },
             },
             'Retry-After': {
               description: 'Seconds to wait before retrying',
               schema: {
-                type: 'integer'
-              }
-            }
-          }
+                type: 'integer',
+              },
+            },
+          },
         },
         InternalServerError: {
           description: 'Internal Server Error',
           content: {
             'application/json': {
               schema: {
-                $ref: '#/components/schemas/ErrorResponse'
-              }
-            }
-          }
-        }
+                $ref: '#/components/schemas/ErrorResponse',
+              },
+            },
+          },
+        },
       },
       headers: {
         'X-Request-ID': {
           description: 'Unique request identifier for tracking',
           schema: {
-            type: 'string'
-          }
+            type: 'string',
+          },
         },
         'X-Response-Time': {
           description: 'Response time in milliseconds',
           schema: {
-            type: 'string'
-          }
+            type: 'string',
+          },
         },
         'X-API-Version': {
           description: 'API version used for this request',
           schema: {
-            type: 'string'
-          }
+            type: 'string',
+          },
         },
         'X-Cache-Status': {
           description: 'Cache status (HIT, MISS, BYPASS)',
           schema: {
             type: 'string',
-            enum: ['HIT', 'MISS', 'BYPASS']
-          }
-        }
-      }
+            enum: ['HIT', 'MISS', 'BYPASS'],
+          },
+        },
+      },
     },
     tags: [
       {
         name: 'Authentication',
-        description: 'User authentication and token management'
+        description: 'User authentication and token management',
       },
       {
         name: 'Profile',
-        description: 'User profile management and updates'
+        description: 'User profile management and updates',
       },
       {
         name: 'Role Management',
-        description: 'Role switching and role-based operations'
+        description: 'Role switching and role-based operations',
       },
       {
         name: 'Email Verification',
-        description: 'Email verification workflows'
+        description: 'Email verification workflows',
       },
       {
         name: 'Phone Verification',
-        description: 'Phone number verification workflows'
+        description: 'Phone number verification workflows',
       },
       {
         name: 'Password Reset',
-        description: 'Password reset and recovery operations'
+        description: 'Password reset and recovery operations',
       },
       {
         name: 'Security',
-        description: 'Security-related operations and settings'
+        description: 'Security-related operations and settings',
       },
       {
         name: 'User Management',
-        description: 'Administrative user management operations'
+        description: 'Administrative user management operations',
       },
       {
         name: 'Bulk Operations',
-        description: 'Bulk operations for administrative tasks'
+        description: 'Bulk operations for administrative tasks',
       },
       {
         name: 'Audit',
-        description: 'Audit logging and reporting'
+        description: 'Audit logging and reporting',
       },
       {
         name: 'Reports',
-        description: 'Administrative reports and analytics'
+        description: 'Administrative reports and analytics',
       },
       {
         name: 'Statistics',
-        description: 'Usage statistics and metrics'
+        description: 'Usage statistics and metrics',
       },
       {
         name: 'Data Export',
-        description: 'Data export functionality'
+        description: 'Data export functionality',
       },
       {
         name: 'Health',
-        description: 'Service health monitoring and metrics'
+        description: 'Service health monitoring and metrics',
       },
       {
         name: 'API Management',
-        description: 'API versioning and usage analytics'
-      }
-    ]
+        description: 'API versioning and usage analytics',
+      },
+    ],
   },
   apis: ['./src/routes/*.ts'], // Path to the API docs
 };

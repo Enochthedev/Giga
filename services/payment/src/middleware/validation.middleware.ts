@@ -2,7 +2,30 @@ import { NextFunction, Request, Response } from 'express';
 import { ValidationError } from '../utils/errors';
 
 // Simple validation middleware without express-validator for now
-export const validatePaymentRequest = (req: Request, res: Response, next: NextFunction) => {
+export const validateRequest = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  // Basic request validation - can be extended as needed
+  try {
+    next();
+  } catch (error) {
+    const validationError = new ValidationError('Request validation failed');
+    res.status(validationError.statusCode).json({
+      success: false,
+      error: {
+        code: validationError.code,
+        message: validationError.message,
+      },
+    });
+  }
+};
+export const validatePaymentRequest = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   const { amount, currency } = req.body;
 
   if (!amount || typeof amount !== 'number' || amount <= 0) {
@@ -16,7 +39,11 @@ export const validatePaymentRequest = (req: Request, res: Response, next: NextFu
   next();
 };
 
-export const validateRefundRequest = (req: Request, res: Response, next: NextFunction) => {
+export const validateRefundRequest = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   const { transactionId } = req.params;
   const { amount } = req.body;
 
@@ -31,7 +58,11 @@ export const validateRefundRequest = (req: Request, res: Response, next: NextFun
   next();
 };
 
-export const validateTransactionId = (req: Request, res: Response, next: NextFunction) => {
+export const validateTransactionId = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   const { transactionId } = req.params;
 
   if (!transactionId) {
@@ -41,7 +72,11 @@ export const validateTransactionId = (req: Request, res: Response, next: NextFun
   next();
 };
 
-export const validateStatusUpdate = (req: Request, res: Response, next: NextFunction) => {
+export const validateStatusUpdate = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   const { transactionId } = req.params;
   const { status } = req.body;
 
@@ -53,7 +88,17 @@ export const validateStatusUpdate = (req: Request, res: Response, next: NextFunc
     throw new ValidationError('Status is required');
   }
 
-  const validStatuses = ['pending', 'processing', 'succeeded', 'failed', 'cancelled', 'refunded', 'partially_refunded', 'disputed', 'expired'];
+  const validStatuses = [
+    'pending',
+    'processing',
+    'succeeded',
+    'failed',
+    'cancelled',
+    'refunded',
+    'partially_refunded',
+    'disputed',
+    'expired',
+  ];
   if (!validStatuses.includes(status)) {
     throw new ValidationError('Invalid payment status');
   }
@@ -61,21 +106,32 @@ export const validateStatusUpdate = (req: Request, res: Response, next: NextFunc
   next();
 };
 
-export const validateTransactionFilters = (req: Request, res: Response, next: NextFunction) => {
+export const validateTransactionFilters = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   const { page, limit } = req.query;
 
   if (page && (isNaN(Number(page)) || Number(page) < 1)) {
     throw new ValidationError('Page must be a positive integer');
   }
 
-  if (limit && (isNaN(Number(limit)) || Number(limit) < 1 || Number(limit) > 100)) {
+  if (
+    limit &&
+    (isNaN(Number(limit)) || Number(limit) < 1 || Number(limit) > 100)
+  ) {
     throw new ValidationError('Limit must be between 1 and 100');
   }
 
   next();
 };
 
-export const validateCaptureRequest = (req: Request, res: Response, next: NextFunction) => {
+export const validateCaptureRequest = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   const { transactionId } = req.params;
   const { amount } = req.body;
 
@@ -90,11 +146,17 @@ export const validateCaptureRequest = (req: Request, res: Response, next: NextFu
   next();
 };
 
-export const validatePaymentBusinessRules = (req: Request, res: Response, next: NextFunction) => {
+export const validatePaymentBusinessRules = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   const { paymentMethodId, paymentMethodData, splits } = req.body;
 
   if (!paymentMethodId && !paymentMethodData) {
-    throw new ValidationError('Either paymentMethodId or paymentMethodData must be provided');
+    throw new ValidationError(
+      'Either paymentMethodId or paymentMethodData must be provided'
+    );
   }
 
   if (splits && Array.isArray(splits)) {
@@ -111,7 +173,9 @@ export const validatePaymentBusinessRules = (req: Request, res: Response, next: 
       const hasPercentage = split.percentage !== undefined;
 
       if (hasAmount === hasPercentage) {
-        throw new ValidationError('Each split must have either amount or percentage, but not both');
+        throw new ValidationError(
+          'Each split must have either amount or percentage, but not both'
+        );
       }
     }
   }

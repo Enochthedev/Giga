@@ -97,5 +97,8 @@ export interface PaymentResponse {
 }
 
 // Re-export from payment.types for convenience
-export type { PaymentMethodType, PaymentStatus, TransactionType } from './payment.types';
-
+export type {
+  PaymentMethodType,
+  PaymentStatus,
+  TransactionType,
+} from './payment.types';

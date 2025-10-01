@@ -1,8 +1,19 @@
 import { Paystack } from 'paystack';
 import { Decimal } from '../../lib/decimal';
 import { logger } from '../../lib/logger';
-import { GatewayConfig, GatewayStatus, WebhookEvent } from '../../types/gateway.types';
-import { PaymentMethod, PaymentMethodType, PaymentRequest, PaymentResponse, PaymentStatus, Refund } from '../../types/payment.types';
+import {
+  GatewayConfig,
+  GatewayStatus,
+  WebhookEvent,
+} from '../../types/gateway.types';
+import {
+  PaymentMethod,
+  PaymentMethodType,
+  PaymentRequest,
+  PaymentResponse,
+  PaymentStatus,
+  Refund,
+} from '../../types/payment.types';
 import { BaseGateway } from './base-gateway.service';
 
 export class PaystackGateway extends BaseGateway {
@@ -20,7 +31,7 @@ export class PaystackGateway extends BaseGateway {
     this.paystack = new Paystack(secretKey);
 
     logger.info('Paystack gateway initialized', {
-      gatewayId: this.getId()
+      gatewayId: this.getId(),
     });
   }
 
@@ -31,7 +42,7 @@ export class PaystackGateway extends BaseGateway {
       this.logOperation('processPayment', {
         amount: request.amount,
         currency: request.currency,
-        paymentMethodId: request.paymentMethodId
+        paymentMethodId: request.paymentMethodId,
       });
 
       try {
@@ -42,16 +53,20 @@ export class PaystackGateway extends BaseGateway {
         const transactionParams: any = {
           amount: amountInKobo,
           currency: request.currency.toUpperCase(),
-          email: request.metadata?.customerEmail || `customer-${request.userId}@example.com`,
-          reference: request.internalReference || `ref_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          email:
+            request.metadata?.customerEmail ||
+            `customer-${request.userId}@example.com`,
+          reference:
+            request.internalReference ||
+            `ref_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
           callback_url: request.metadata?.callbackUrl,
           metadata: {
             userId: request.userId || '',
             merchantId: request.merchantId || '',
             internalReference: request.internalReference || '',
             externalReference: request.externalReference || '',
-            ...request.metadata
-          }
+            ...request.metadata,
+          },
         };
 
         // Add channels if specified
@@ -60,10 +75,13 @@ export class PaystackGateway extends BaseGateway {
         }
 
         // Initialize transaction
-        const response = await this.paystack.transaction.initialize(transactionParams);
+        const response =
+          await this.paystack.transaction.initialize(transactionParams);
 
         if (!response.status) {
-          throw new Error(response.message || 'Transaction initialization failed');
+          throw new Error(
+            response.message || 'Transaction initialization failed'
+          );
         }
 
         const paymentResponse: PaymentResponse = {
@@ -75,38 +93,48 @@ export class PaystackGateway extends BaseGateway {
           requiresAction: true,
           nextAction: {
             type: 'redirect',
-            redirectUrl: response.data.authorization_url
+            redirectUrl: response.data.authorization_url,
           },
           metadata: {
             paystackReference: response.data.reference,
             accessCode: response.data.access_code,
-            ...transactionParams.metadata
+            ...transactionParams.metadata,
           },
-          createdAt: new Date()
+          createdAt: new Date(),
         };
 
         this.logOperation('processPayment completed', {
           paymentId: paymentResponse.id,
           status: paymentResponse.status,
-          paystackReference: response.data.reference
+          paystackReference: response.data.reference,
         });
 
         return paymentResponse;
       } catch (error) {
-        this.logError('processPayment', error instanceof Error ? error : new Error('Unknown error'), {
-          amount: request.amount,
-          currency: request.currency
-        });
-        throw this.createGatewayError(error instanceof Error ? error : new Error('Unknown error'), 'processPayment');
+        this.logError(
+          'processPayment',
+          error instanceof Error ? error : new Error('Unknown error'),
+          {
+            amount: request.amount,
+            currency: request.currency,
+          }
+        );
+        throw this.createGatewayError(
+          error instanceof Error ? error : new Error('Unknown error'),
+          'processPayment'
+        );
       }
     }, 'processPayment');
   }
 
-  async capturePayment(transactionId: string, amount?: number): Promise<PaymentResponse> {
+  async capturePayment(
+    transactionId: string,
+    amount?: number
+  ): Promise<PaymentResponse> {
     return this.executeWithRetry(async () => {
       this.logOperation('capturePayment', {
         transactionId,
-        amount
+        amount,
       });
 
       try {
@@ -114,7 +142,9 @@ export class PaystackGateway extends BaseGateway {
         const response = await this.paystack.transaction.verify(transactionId);
 
         if (!response.status) {
-          throw new Error(response.message || 'Transaction verification failed');
+          throw new Error(
+            response.message || 'Transaction verification failed'
+          );
         }
 
         const transaction = response.data;
@@ -128,23 +158,30 @@ export class PaystackGateway extends BaseGateway {
             paystackId: transaction.id,
             gatewayResponse: transaction.gateway_response,
             paidAt: transaction.paid_at,
-            channel: transaction.channel
+            channel: transaction.channel,
           },
-          createdAt: new Date(transaction.created_at)
+          createdAt: new Date(transaction.created_at),
         };
 
         this.logOperation('capturePayment completed', {
           transactionId,
-          status: paymentResponse.status
+          status: paymentResponse.status,
         });
 
         return paymentResponse;
       } catch (error) {
-        this.logError('capturePayment', error instanceof Error ? error : new Error('Unknown error'), {
-          transactionId,
-          amount
-        });
-        throw this.createGatewayError(error instanceof Error ? error : new Error('Unknown error'), 'capturePayment');
+        this.logError(
+          'capturePayment',
+          error instanceof Error ? error : new Error('Unknown error'),
+          {
+            transactionId,
+            amount,
+          }
+        );
+        throw this.createGatewayError(
+          error instanceof Error ? error : new Error('Unknown error'),
+          'capturePayment'
+        );
       }
     }, 'capturePayment');
   }
@@ -152,7 +189,7 @@ export class PaystackGateway extends BaseGateway {
   async cancelPayment(transactionId: string): Promise<PaymentResponse> {
     return this.executeWithRetry(async () => {
       this.logOperation('cancelPayment', {
-        transactionId
+        transactionId,
       });
 
       try {
@@ -161,7 +198,9 @@ export class PaystackGateway extends BaseGateway {
         const response = await this.paystack.transaction.verify(transactionId);
 
         if (!response.status) {
-          throw new Error(response.message || 'Transaction verification failed');
+          throw new Error(
+            response.message || 'Transaction verification failed'
+          );
         }
 
         const transaction = response.data;
@@ -174,48 +213,62 @@ export class PaystackGateway extends BaseGateway {
           metadata: {
             paystackId: transaction.id,
             originalStatus: transaction.status,
-            cancelledAt: new Date().toISOString()
+            cancelledAt: new Date().toISOString(),
           },
-          createdAt: new Date(transaction.created_at)
+          createdAt: new Date(transaction.created_at),
         };
 
         this.logOperation('cancelPayment completed', {
           transactionId,
-          status: paymentResponse.status
+          status: paymentResponse.status,
         });
 
         return paymentResponse;
       } catch (error) {
-        this.logError('cancelPayment', error instanceof Error ? error : new Error('Unknown error'), {
-          transactionId
-        });
-        throw this.createGatewayError(error instanceof Error ? error : new Error('Unknown error'), 'cancelPayment');
+        this.logError(
+          'cancelPayment',
+          error instanceof Error ? error : new Error('Unknown error'),
+          {
+            transactionId,
+          }
+        );
+        throw this.createGatewayError(
+          error instanceof Error ? error : new Error('Unknown error'),
+          'cancelPayment'
+        );
       }
     }, 'cancelPayment');
   }
 
-  async refundPayment(transactionId: string, amount?: number, reason?: string): Promise<Refund> {
+  async refundPayment(
+    transactionId: string,
+    amount?: number,
+    reason?: string
+  ): Promise<Refund> {
     return this.executeWithRetry(async () => {
       this.logOperation('refundPayment', {
         transactionId,
         amount,
-        reason
+        reason,
       });
 
       try {
         // First verify the transaction exists
-        const verifyResponse = await this.paystack.transaction.verify(transactionId);
+        const verifyResponse =
+          await this.paystack.transaction.verify(transactionId);
         if (!verifyResponse.status) {
           throw new Error('Transaction not found');
         }
 
         const transaction = verifyResponse.data;
-        const refundAmount = amount ? Math.round(amount * 100) : transaction.amount;
+        const refundAmount = amount
+          ? Math.round(amount * 100)
+          : transaction.amount;
 
         // Create refund
         const refundParams: any = {
           transaction: transactionId,
-          amount: refundAmount
+          amount: refundAmount,
         };
 
         if (reason) {
@@ -243,26 +296,36 @@ export class PaystackGateway extends BaseGateway {
             paystackRefundId: refundData.id,
             customerNote: refundData.customer_note,
             merchantNote: refundData.merchant_note,
-            refundedBy: refundData.refunded_by
+            refundedBy: refundData.refunded_by,
           },
-          processedAt: refundData.status === 'processed' && refundData.refunded_at ? new Date(refundData.refunded_at) : undefined,
+          processedAt:
+            refundData.status === 'processed' && refundData.refunded_at
+              ? new Date(refundData.refunded_at)
+              : undefined,
           createdAt: new Date(refundData.created_at),
-          updatedAt: new Date()
+          updatedAt: new Date(),
         };
 
         this.logOperation('refundPayment completed', {
           refundId: refund.id,
-          status: refund.status
+          status: refund.status,
         });
 
         return refund;
       } catch (error) {
-        this.logError('refundPayment', error instanceof Error ? error : new Error('Unknown error'), {
-          transactionId,
-          amount,
-          reason
-        });
-        throw this.createGatewayError(error instanceof Error ? error : new Error('Unknown error'), 'refundPayment');
+        this.logError(
+          'refundPayment',
+          error instanceof Error ? error : new Error('Unknown error'),
+          {
+            transactionId,
+            amount,
+            reason,
+          }
+        );
+        throw this.createGatewayError(
+          error instanceof Error ? error : new Error('Unknown error'),
+          'refundPayment'
+        );
       }
     }, 'refundPayment');
   }
@@ -271,7 +334,7 @@ export class PaystackGateway extends BaseGateway {
     return this.executeWithRetry(async () => {
       this.logOperation('createPaymentMethod', {
         type: data.type,
-        userId: data.userId
+        userId: data.userId,
       });
 
       try {
@@ -281,7 +344,7 @@ export class PaystackGateway extends BaseGateway {
           email: data.email || `customer-${data.userId}@example.com`,
           first_name: data.firstName || 'Customer',
           last_name: data.lastName || 'User',
-          phone: data.phone
+          phone: data.phone,
         };
 
         const response = await this.paystack.customer.create(customerParams);
@@ -302,24 +365,31 @@ export class PaystackGateway extends BaseGateway {
           metadata: {
             customerCode: customer.customer_code,
             customerId: customer.id,
-            email: customer.email
+            email: customer.email,
           } as any,
           isActive: true,
           createdAt: new Date(customer.created_at),
-          updatedAt: new Date()
+          updatedAt: new Date(),
         };
 
         this.logOperation('createPaymentMethod completed', {
           paymentMethodId: paymentMethod.id,
-          type: paymentMethod.type
+          type: paymentMethod.type,
         });
 
         return paymentMethod;
       } catch (error) {
-        this.logError('createPaymentMethod', error instanceof Error ? error : new Error('Unknown error'), {
-          type: data.type
-        });
-        throw this.createGatewayError(error instanceof Error ? error : new Error('Unknown error'), 'createPaymentMethod');
+        this.logError(
+          'createPaymentMethod',
+          error instanceof Error ? error : new Error('Unknown error'),
+          {
+            type: data.type,
+          }
+        );
+        throw this.createGatewayError(
+          error instanceof Error ? error : new Error('Unknown error'),
+          'createPaymentMethod'
+        );
       }
     }, 'createPaymentMethod');
   }
@@ -327,7 +397,7 @@ export class PaystackGateway extends BaseGateway {
   async updatePaymentMethod(id: string, data: any): Promise<PaymentMethod> {
     return this.executeWithRetry(async () => {
       this.logOperation('updatePaymentMethod', {
-        paymentMethodId: id
+        paymentMethodId: id,
       });
 
       try {
@@ -339,7 +409,10 @@ export class PaystackGateway extends BaseGateway {
         if (data.lastName) updateParams.last_name = data.lastName;
         if (data.phone) updateParams.phone = data.phone;
 
-        const response = await this.paystack.customer.update(customerCode, updateParams);
+        const response = await this.paystack.customer.update(
+          customerCode,
+          updateParams
+        );
 
         if (!response.status) {
           throw new Error(response.message || 'Customer update failed');
@@ -360,23 +433,30 @@ export class PaystackGateway extends BaseGateway {
             email: customer.email,
             firstName: customer.first_name,
             lastName: customer.last_name,
-            phone: customer.phone
+            phone: customer.phone,
           } as any,
           isActive: true,
           createdAt: new Date(customer.created_at),
-          updatedAt: new Date()
+          updatedAt: new Date(),
         };
 
         this.logOperation('updatePaymentMethod completed', {
-          paymentMethodId: id
+          paymentMethodId: id,
         });
 
         return paymentMethod;
       } catch (error) {
-        this.logError('updatePaymentMethod', error instanceof Error ? error : new Error('Unknown error'), {
-          paymentMethodId: id
-        });
-        throw this.createGatewayError(error instanceof Error ? error : new Error('Unknown error'), 'updatePaymentMethod');
+        this.logError(
+          'updatePaymentMethod',
+          error instanceof Error ? error : new Error('Unknown error'),
+          {
+            paymentMethodId: id,
+          }
+        );
+        throw this.createGatewayError(
+          error instanceof Error ? error : new Error('Unknown error'),
+          'updatePaymentMethod'
+        );
       }
     }, 'updatePaymentMethod');
   }
@@ -384,7 +464,7 @@ export class PaystackGateway extends BaseGateway {
   async deletePaymentMethod(id: string): Promise<void> {
     return this.executeWithRetry(async () => {
       this.logOperation('deletePaymentMethod', {
-        paymentMethodId: id
+        paymentMethodId: id,
       });
 
       try {
@@ -400,13 +480,20 @@ export class PaystackGateway extends BaseGateway {
         }
 
         this.logOperation('deletePaymentMethod completed', {
-          paymentMethodId: id
+          paymentMethodId: id,
         });
       } catch (error) {
-        this.logError('deletePaymentMethod', error instanceof Error ? error : new Error('Unknown error'), {
-          paymentMethodId: id
-        });
-        throw this.createGatewayError(error instanceof Error ? error : new Error('Unknown error'), 'deletePaymentMethod');
+        this.logError(
+          'deletePaymentMethod',
+          error instanceof Error ? error : new Error('Unknown error'),
+          {
+            paymentMethodId: id,
+          }
+        );
+        throw this.createGatewayError(
+          error instanceof Error ? error : new Error('Unknown error'),
+          'deletePaymentMethod'
+        );
       }
     }, 'deletePaymentMethod');
   }
@@ -414,7 +501,7 @@ export class PaystackGateway extends BaseGateway {
   async getPaymentMethod(id: string): Promise<PaymentMethod> {
     return this.executeWithRetry(async () => {
       this.logOperation('getPaymentMethod', {
-        paymentMethodId: id
+        paymentMethodId: id,
       });
 
       try {
@@ -442,24 +529,31 @@ export class PaystackGateway extends BaseGateway {
             email: customer.email,
             firstName: customer.first_name,
             lastName: customer.last_name,
-            phone: customer.phone
+            phone: customer.phone,
           } as unknown,
           isActive: true,
           createdAt: new Date(customer.created_at),
-          updatedAt: new Date()
+          updatedAt: new Date(),
         };
 
         this.logOperation('getPaymentMethod completed', {
           paymentMethodId: id,
-          type: paymentMethod.type
+          type: paymentMethod.type,
         });
 
         return paymentMethod;
       } catch (error) {
-        this.logError('getPaymentMethod', error instanceof Error ? error : new Error('Unknown error'), {
-          paymentMethodId: id
-        });
-        throw this.createGatewayError(error instanceof Error ? error : new Error('Unknown error'), 'getPaymentMethod');
+        this.logError(
+          'getPaymentMethod',
+          error instanceof Error ? error : new Error('Unknown error'),
+          {
+            paymentMethodId: id,
+          }
+        );
+        throw this.createGatewayError(
+          error instanceof Error ? error : new Error('Unknown error'),
+          'getPaymentMethod'
+        );
       }
     }, 'getPaymentMethod');
   }
@@ -469,26 +563,29 @@ export class PaystackGateway extends BaseGateway {
       const webhookSecret = this.config.credentials.webhookSecret;
       if (!webhookSecret) {
         logger.error('Webhook secret not configured for Paystack gateway', {
-          gatewayId: this.getId()
+          gatewayId: this.getId(),
         });
         return false;
       }
 
       // Paystack uses HMAC SHA512 for webhook verification
       const crypto = require('crypto');
-      const hash = crypto.createHmac('sha512', webhookSecret).update(payload).digest('hex');
+      const hash = crypto
+        .createHmac('sha512', webhookSecret)
+        .update(payload)
+        .digest('hex');
 
       const isValid = hash === signature;
 
       if (isValid) {
         logger.debug('Paystack webhook signature verified successfully', {
-          gatewayId: this.getId()
+          gatewayId: this.getId(),
         });
       } else {
         logger.error('Paystack webhook verification failed', {
           gatewayId: this.getId(),
           expectedHash: hash,
-          receivedSignature: signature
+          receivedSignature: signature,
         });
       }
 
@@ -496,7 +593,7 @@ export class PaystackGateway extends BaseGateway {
     } catch (error) {
       logger.error('Paystack webhook verification failed', {
         gatewayId: this.getId(),
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
       return false;
     }
@@ -510,29 +607,30 @@ export class PaystackGateway extends BaseGateway {
         id: `paystack_${paystackEvent.data?.id || Date.now()}`,
         type: this.mapPaystackEventType(paystackEvent.event),
         gatewayId: this.getId(),
-        gatewayEventId: paystackEvent.data?.id?.toString() || `unknown_${Date.now()}`,
+        gatewayEventId:
+          paystackEvent.data?.id?.toString() || `unknown_${Date.now()}`,
         data: paystackEvent.data,
         timestamp: new Date(),
         processed: false,
         retryCount: 0,
         metadata: {
           paystackEvent: paystackEvent.event,
-          domain: paystackEvent.domain
-        }
+          domain: paystackEvent.domain,
+        },
       };
 
       logger.info('Paystack webhook parsed successfully', {
         gatewayId: this.getId(),
         eventType: webhookEvent.type,
         paystackEvent: paystackEvent.event,
-        eventId: webhookEvent.id
+        eventId: webhookEvent.id,
       });
 
       return webhookEvent;
     } catch (error) {
       logger.error('Paystack webhook parsing failed', {
         gatewayId: this.getId(),
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
       throw error;
     }
@@ -541,7 +639,7 @@ export class PaystackGateway extends BaseGateway {
   async healthCheck(): Promise<boolean> {
     try {
       logger.debug('Performing Paystack health check', {
-        gatewayId: this.getId()
+        gatewayId: this.getId(),
       });
 
       // Perform a simple API call to check connectivity
@@ -551,12 +649,12 @@ export class PaystackGateway extends BaseGateway {
 
       if (isHealthy) {
         logger.debug('Paystack health check completed successfully', {
-          gatewayId: this.getId()
+          gatewayId: this.getId(),
         });
       } else {
         logger.error('Paystack health check failed', {
           gatewayId: this.getId(),
-          response: response.message
+          response: response.message,
         });
       }
 
@@ -564,7 +662,7 @@ export class PaystackGateway extends BaseGateway {
     } catch (error) {
       logger.error('Paystack health check failed', {
         gatewayId: this.getId(),
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
       return false;
     }
@@ -577,7 +675,7 @@ export class PaystackGateway extends BaseGateway {
     } catch (error) {
       logger.error('Failed to get Paystack gateway status', {
         gatewayId: this.getId(),
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
       return 'error';
     }
@@ -633,7 +731,7 @@ export class PaystackGateway extends BaseGateway {
       'invoice.update': 'invoice.updated',
       'invoice.payment_failed': 'invoice.payment_failed',
       'subscription.create': 'subscription.created',
-      'subscription.disable': 'subscription.cancelled'
+      'subscription.disable': 'subscription.cancelled',
     };
 
     return eventMap[paystackEventType] || paystackEventType;

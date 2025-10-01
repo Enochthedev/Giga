@@ -5,7 +5,7 @@ import {
   GatewayResponse,
   GatewaySelection,
   PaymentGateway,
-  WebhookEvent
+  WebhookEvent,
 } from '../types';
 
 export interface IGatewayManager {
@@ -24,19 +24,33 @@ export interface IGatewayManager {
   checkAllGatewaysHealth(): Promise<GatewayHealthStatus[]>;
 
   // Metrics
-  recordMetrics(gatewayId: string, metrics: Partial<GatewayMetrics>): Promise<void>;
-  getGatewayMetrics(gatewayId: string, period?: { start: Date; end: Date }): Promise<GatewayMetrics[]>;
+  recordMetrics(
+    gatewayId: string,
+    metrics: Partial<GatewayMetrics>
+  ): Promise<void>;
+  getGatewayMetrics(
+    gatewayId: string,
+    period?: { start: Date; end: Date }
+  ): Promise<GatewayMetrics[]>;
 
   // Failover
-  handleGatewayFailure(gatewayId: string, error: Error): Promise<PaymentGateway | null>;
+  handleGatewayFailure(
+    gatewayId: string,
+    error: Error
+  ): Promise<PaymentGateway | null>;
   enableFailover(gatewayId: string): Promise<void>;
   disableFailover(gatewayId: string): Promise<void>;
 }
 
 export interface IGatewayService {
   // Configuration
-  createConfig(config: Omit<GatewayConfig, 'id' | 'createdAt' | 'updatedAt'>): Promise<GatewayConfig>;
-  updateConfig(id: string, config: Partial<GatewayConfig>): Promise<GatewayConfig>;
+  createConfig(
+    config: Omit<GatewayConfig, 'id' | 'createdAt' | 'updatedAt'>
+  ): Promise<GatewayConfig>;
+  updateConfig(
+    id: string,
+    config: Partial<GatewayConfig>
+  ): Promise<GatewayConfig>;
   getConfig(id: string): Promise<GatewayConfig>;
   getAllConfigs(): Promise<GatewayConfig[]>;
   deleteConfig(id: string): Promise<void>;
@@ -46,8 +60,16 @@ export interface IGatewayService {
   testGateway(gatewayId: string): Promise<GatewayResponse>;
 
   // Webhook handling
-  processWebhook(gatewayId: string, payload: string, signature: string): Promise<WebhookEvent>;
-  verifyWebhookSignature(gatewayId: string, payload: string, signature: string): Promise<boolean>;
+  processWebhook(
+    gatewayId: string,
+    payload: string,
+    signature: string
+  ): Promise<WebhookEvent>;
+  verifyWebhookSignature(
+    gatewayId: string,
+    payload: string,
+    signature: string
+  ): Promise<boolean>;
 }
 
 export interface IGatewayHealthMonitor {
@@ -60,10 +82,21 @@ export interface IGatewayHealthMonitor {
 }
 
 export interface IGatewayMetricsCollector {
-  recordTransaction(gatewayId: string, success: boolean, responseTime: number, amount: number): void;
+  recordTransaction(
+    gatewayId: string,
+    success: boolean,
+    responseTime: number,
+    amount: number
+  ): void;
   recordError(gatewayId: string, errorType: string, errorMessage: string): void;
-  getMetrics(gatewayId: string, period?: { start: Date; end: Date }): Promise<GatewayMetrics>;
-  getAggregatedMetrics(period?: { start: Date; end: Date }): Promise<Record<string, GatewayMetrics>>;
+  getMetrics(
+    gatewayId: string,
+    period?: { start: Date; end: Date }
+  ): Promise<GatewayMetrics>;
+  getAggregatedMetrics(period?: {
+    start: Date;
+    end: Date;
+  }): Promise<Record<string, GatewayMetrics>>;
 }
 
 export interface GatewaySelectionCriteria {
@@ -82,7 +115,10 @@ export interface IGatewayFailoverManager {
   getFailoverChain(gatewayId: string): string[];
 
   // Failover execution
-  executeFailover(failedGatewayId: string, context: any): Promise<PaymentGateway | null>;
+  executeFailover(
+    failedGatewayId: string,
+    context: any
+  ): Promise<PaymentGateway | null>;
 
   // Circuit breaker
   isCircuitOpen(gatewayId: string): boolean;

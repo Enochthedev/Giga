@@ -1,14 +1,17 @@
 # Service Orchestration Guide
 
-This document explains how to run and manage all platform services, both currently and as the platform evolves.
+This document explains how to run and manage all platform services, both currently and as the
+platform evolves.
 
 ## Current Service Architecture
 
 ### 🏗️ **Infrastructure Services**
+
 - **PostgreSQL** (Port 5433) - Primary database
 - **Redis** (Port 6380) - Caching and queues
 
 ### 🚀 **Application Services**
+
 - **API Gateway** (Port 3000) - Request routing and load balancing
 - **Auth Service** (Port 3001) - Authentication and authorization
 - **Ecommerce Service** (Port 3002) - Product catalog and orders
@@ -33,11 +36,13 @@ pnpm dev
 ### 🔧 **Development Mode Options**
 
 #### 1. Interactive Development Script
+
 ```bash
 ./scripts/dev-interactive.sh
 ```
 
 This provides a menu with options:
+
 - **All services** - Full platform
 - **Frontend essentials** - Gateway + Auth + Core services
 - **Ecommerce development** - Gateway + Auth + Ecommerce + Notification
@@ -45,6 +50,7 @@ This provides a menu with options:
 - **Individual services** - Run specific services only
 
 #### 2. Individual Service Development
+
 ```bash
 # Gateway only
 cd services/gateway && pnpm dev
@@ -63,6 +69,7 @@ cd services/notification && pnpm dev
 ```
 
 #### 3. Service Groups
+
 ```bash
 # Core services (Gateway + Auth)
 (cd services/gateway && pnpm dev) &
@@ -84,30 +91,34 @@ cd services/notification && pnpm dev
 ## Service URLs and Documentation
 
 ### 🌐 **Service Endpoints**
-| Service | URL | Documentation | Health Check |
-|---------|-----|---------------|--------------|
-| API Gateway | http://localhost:3000 | - | /health |
-| Auth Service | http://localhost:3001 | /docs | /health |
-| Ecommerce Service | http://localhost:3002 | /docs | /health |
-| Hotel Service | http://localhost:3003 | /api-docs | /health |
-| Notification Service | http://localhost:3004 | /api-docs | /health |
+
+| Service              | URL                   | Documentation | Health Check |
+| -------------------- | --------------------- | ------------- | ------------ |
+| API Gateway          | http://localhost:3000 | -             | /health      |
+| Auth Service         | http://localhost:3001 | /docs         | /health      |
+| Ecommerce Service    | http://localhost:3002 | /docs         | /health      |
+| Hotel Service        | http://localhost:3003 | /api-docs     | /health      |
+| Notification Service | http://localhost:3004 | /api-docs     | /health      |
 
 ### 🗄️ **Infrastructure**
-| Service | URL | Credentials |
-|---------|-----|-------------|
+
+| Service    | URL            | Credentials                              |
+| ---------- | -------------- | ---------------------------------------- |
 | PostgreSQL | localhost:5433 | user: platform_user, pass: platform_pass |
-| Redis | localhost:6380 | No auth (development) |
+| Redis      | localhost:6380 | No auth (development)                    |
 
 ## Future Service Architecture
 
 As the platform grows, here's how the service orchestration will evolve:
 
 ### 📈 **Phase 2 Services** (Coming Soon)
+
 - **Payment Service** (Port 3005) - Payment processing and billing
 - **Upload Service** (Port 3006) - File upload and media management
 - **Analytics Service** (Port 3007) - Business intelligence and reporting
 
 ### 🚀 **Phase 3 Services** (Planned)
+
 - **Taxi Service** (Port 3008) - Ride-hailing functionality
 - **Admin Dashboard Service** (Port 3009) - Administrative interface
 - **Real-time Service** (Port 3010) - WebSocket connections and live updates
@@ -152,6 +163,7 @@ Once the API Gateway is fully implemented, the architecture will look like:
 ## Service Dependencies
 
 ### 🔗 **Current Dependencies**
+
 ```
 Infrastructure (PostgreSQL + Redis)
     ↓
@@ -165,6 +177,7 @@ Notification (3004) ←─┴─────────────────
 ```
 
 ### 📊 **Service Communication**
+
 - **Gateway** → Routes to all services
 - **Auth** → Validates tokens for all services
 - **Ecommerce/Hotel** → Sends notifications via Notification Service
@@ -174,6 +187,7 @@ Notification (3004) ←─┴─────────────────
 ## Testing Services
 
 ### 🧪 **Health Checks**
+
 ```bash
 # Test all services
 ./test-services.sh
@@ -187,6 +201,7 @@ curl http://localhost:3004/health  # Notification
 ```
 
 ### 🔍 **Service Status Monitoring**
+
 ```bash
 # Check running processes
 ps aux | grep "pnpm dev"
@@ -201,6 +216,7 @@ lsof -i :3000-3010
 ## Environment Configuration
 
 ### 🔧 **Development Environment**
+
 ```bash
 # Copy environment template
 cp .env.example .env
@@ -213,11 +229,13 @@ cp services/notification/.env.example services/notification/.env
 ```
 
 ### 🐳 **Docker Environment**
+
 All environment variables are configured in `docker-compose.yml` for containerized deployment.
 
 ## Scaling and Production
 
 ### 🚀 **Production Deployment**
+
 ```bash
 # Build all services
 pnpm build
@@ -233,6 +251,7 @@ docker build -t platform/notification services/notification
 ```
 
 ### 📈 **Horizontal Scaling**
+
 With the API Gateway, services can be scaled independently:
 
 ```yaml
@@ -254,19 +273,21 @@ services:
 ### 🔧 **Common Issues**
 
 1. **Port Conflicts**
+
    ```bash
    # Check what's using ports
    lsof -i :3000-3010
-   
+
    # Kill processes on specific ports
    kill -9 $(lsof -t -i:3001)
    ```
 
 2. **Database Connection Issues**
+
    ```bash
    # Check PostgreSQL status
    docker-compose ps postgres
-   
+
    # Restart database
    docker-compose restart postgres
    ```
@@ -283,6 +304,7 @@ services:
    ```
 
 ### 📋 **Service Logs**
+
 ```bash
 # View all logs
 docker-compose logs -f
@@ -298,13 +320,13 @@ tail -f services/notification/logs/app.log
 
 ## Scripts Reference
 
-| Script | Purpose |
-|--------|---------|
-| `./start-services.sh` | Start all services in development mode |
-| `./test-services.sh` | Test all service health endpoints |
-| `./scripts/dev-interactive.sh` | Interactive service selection menu |
-| `./scripts/setup.sh` | Initial platform setup |
-| `./scripts/seed-all-services.sh` | Seed all databases with test data |
+| Script                           | Purpose                                |
+| -------------------------------- | -------------------------------------- |
+| `./start-services.sh`            | Start all services in development mode |
+| `./test-services.sh`             | Test all service health endpoints      |
+| `./scripts/dev-interactive.sh`   | Interactive service selection menu     |
+| `./scripts/setup.sh`             | Initial platform setup                 |
+| `./scripts/seed-all-services.sh` | Seed all databases with test data      |
 
 ## Next Steps
 

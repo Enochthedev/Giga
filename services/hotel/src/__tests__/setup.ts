@@ -1,6 +1,6 @@
+import { redisClient } from '@/lib/redis';
 import { afterAll, afterEach, beforeAll, beforeEach } from 'vitest';
 import { PrismaClient } from '../generated/prisma-client';
-import { redisClient } from '@/lib/redis';
 
 // Test database instance
 const prisma = new PrismaClient({
@@ -12,7 +12,7 @@ const prisma = new PrismaClient({
 });
 
 // Global test setup
-beforeAll(() => {
+beforeAll(async () => {
   // Connect to test database
   await prisma.$connect();
 
@@ -25,7 +25,7 @@ beforeAll(() => {
 });
 
 // Global test teardown
-afterAll(() => {
+afterAll(async () => {
   // Disconnect from database
   await prisma.$disconnect();
 
@@ -38,7 +38,7 @@ afterAll(() => {
 });
 
 // Clean up before each test
-beforeEach(() => {
+beforeEach(async () => {
   // Clear Redis cache
   if (redisClient.isOpen) {
     await redisClient.flushAll();
@@ -46,7 +46,7 @@ beforeEach(() => {
 });
 
 // Clean up after each test
-afterEach(() => {
+afterEach(async () => {
   // Clean up test data from database
   // Note: In a real implementation, you might want to use transactions
   // or a test database that gets reset between tests
@@ -61,7 +61,7 @@ afterEach(() => {
 export { prisma };
 
 // Test helper functions
-export const createTestProperty = (overrides: any = {}) => {
+export const createTestProperty = async (overrides: any = {}) => {
   return prisma.property.create({
     data: {
       name: 'Test Hotel',
@@ -76,7 +76,7 @@ export const createTestProperty = (overrides: any = {}) => {
       }),
       coordinates: JSON.stringify({
         latitude: 40.7128,
-        longitude: -74.0060,
+        longitude: -74.006,
       }),
       timezone: 'America/New_York',
       amenities: JSON.stringify(['wifi', 'parking', 'pool']),
@@ -101,7 +101,10 @@ export const createTestProperty = (overrides: any = {}) => {
   });
 };
 
-export const createTestRoomType = (propertyId: string, overrides: unknown = {}) => {
+export const createTestRoomType = async (
+  propertyId: string,
+  overrides: unknown = {}
+) => {
   return prisma.roomType.create({
     data: {
       propertyId,
@@ -122,7 +125,10 @@ export const createTestRoomType = (propertyId: string, overrides: unknown = {}) 
   });
 };
 
-export const createTestBooking = (propertyId: string, overrides: unknown = {}) => {
+export const createTestBooking = async (
+  propertyId: string,
+  overrides: unknown = {}
+) => {
   const checkInDate = new Date();
   checkInDate.setDate(checkInDate.getDate() + 1);
   const checkOutDate = new Date();
@@ -142,13 +148,15 @@ export const createTestBooking = (propertyId: string, overrides: unknown = {}) =
       checkInDate,
       checkOutDate,
       nights: 2,
-      rooms: JSON.stringify([{
-        roomTypeId: 'test-room-type-id',
-        quantity: 1,
-        guestCount: 2,
-        rate: 100,
-        totalPrice: 200,
-      }]),
+      rooms: JSON.stringify([
+        {
+          roomTypeId: 'test-room-type-id',
+          quantity: 1,
+          guestCount: 2,
+          rate: 100,
+          totalPrice: 200,
+        },
+      ]),
       pricing: JSON.stringify({
         roomTotal: 200,
         taxes: [],
@@ -171,7 +179,7 @@ export const createTestBooking = (propertyId: string, overrides: unknown = {}) =
   });
 };
 
-export const cleanupTestData = () => {
+export const cleanupTestData = async () => {
   // Clean up in reverse order of dependencies
   await prisma.booking.deleteMany({});
   await prisma.roomType.deleteMany({});

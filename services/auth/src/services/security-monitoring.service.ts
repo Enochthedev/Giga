@@ -32,7 +32,10 @@ export class SecurityMonitoringService {
     let riskScore = 0;
 
     // Check for rapid login attempts
-    const recentAttempts = await this.getRecentLoginAttempts(attempt.ipAddress, 300); // 5 minutes
+    const recentAttempts = await this.getRecentLoginAttempts(
+      attempt.ipAddress,
+      300
+    ); // 5 minutes
     if (recentAttempts > 5) {
       riskFactors.push({
         type: 'rapid_login_attempts',
@@ -44,7 +47,10 @@ export class SecurityMonitoringService {
     }
 
     // Check for failed attempts from same IP
-    const failedAttempts = await this.getFailedLoginAttempts(attempt.ipAddress, 3600); // 1 hour
+    const failedAttempts = await this.getFailedLoginAttempts(
+      attempt.ipAddress,
+      3600
+    ); // 1 hour
     if (failedAttempts > 10) {
       riskFactors.push({
         type: 'excessive_failed_attempts',
@@ -56,7 +62,10 @@ export class SecurityMonitoringService {
     }
 
     // Check for unusual location (simplified - would use GeoIP in production)
-    const isUnusualLocation = await this.checkUnusualLocation(attempt.userId, attempt.ipAddress);
+    const isUnusualLocation = await this.checkUnusualLocation(
+      attempt.userId,
+      attempt.ipAddress
+    );
     if (isUnusualLocation) {
       riskFactors.push({
         type: 'unusual_location',
@@ -68,7 +77,10 @@ export class SecurityMonitoringService {
     }
 
     // Check for unusual device
-    const isUnusualDevice = await this.checkUnusualDevice(attempt.userId, attempt.deviceFingerprint);
+    const isUnusualDevice = await this.checkUnusualDevice(
+      attempt.userId,
+      attempt.deviceFingerprint
+    );
     if (isUnusualDevice) {
       riskFactors.push({
         type: 'unusual_device',
@@ -147,7 +159,8 @@ export class SecurityMonitoringService {
       `refresh_count:${refresh.userId}:${refresh.deviceId}`
     );
 
-    if (recentRefreshes > 20) { // More than 20 refreshes in tracking window
+    if (recentRefreshes > 20) {
+      // More than 20 refreshes in tracking window
       riskFactors.push({
         type: 'excessive_token_refresh',
         severity: 'high',
@@ -163,7 +176,10 @@ export class SecurityMonitoringService {
       refresh.deviceId
     );
 
-    if (storedFingerprint && storedFingerprint.deviceFingerprint !== refresh.deviceFingerprint) {
+    if (
+      storedFingerprint &&
+      storedFingerprint.deviceFingerprint !== refresh.deviceFingerprint
+    ) {
       riskFactors.push({
         type: 'device_fingerprint_change',
         severity: 'high',
@@ -174,7 +190,10 @@ export class SecurityMonitoringService {
     }
 
     // Check for IP address changes
-    if (storedFingerprint && storedFingerprint.ipAddress !== this.hashIP(refresh.ipAddress)) {
+    if (
+      storedFingerprint &&
+      storedFingerprint.ipAddress !== this.hashIP(refresh.ipAddress)
+    ) {
       riskFactors.push({
         type: 'ip_address_change',
         severity: 'medium',
@@ -191,7 +210,8 @@ export class SecurityMonitoringService {
 
     if (lastRefreshTime) {
       const timeDiff = Date.now() - parseInt(lastRefreshTime);
-      if (timeDiff < 60000) { // Less than 1 minute
+      if (timeDiff < 60000) {
+        // Less than 1 minute
         riskFactors.push({
           type: 'rapid_token_refresh',
           severity: 'medium',
@@ -290,7 +310,10 @@ export class SecurityMonitoringService {
   /**
    * Check if IP address is from unusual location for user
    */
-  private checkUnusualLocation(userId?: string, ipAddress?: string): Promise<boolean> {
+  private checkUnusualLocation(
+    userId?: string,
+    ipAddress?: string
+  ): Promise<boolean> {
     if (!userId || !ipAddress) return false;
 
     // In production, this would use GeoIP lookup and compare with user's historical locations
@@ -301,11 +324,16 @@ export class SecurityMonitoringService {
   /**
    * Check if device is unusual for user
    */
-  private async checkUnusualDevice(userId?: string, deviceFingerprint?: string): Promise<boolean> {
+  private async checkUnusualDevice(
+    userId?: string,
+    deviceFingerprint?: string
+  ): Promise<boolean> {
     if (!userId || !deviceFingerprint) return false;
 
     // Check if this device fingerprint has been seen before for this user
-    const knownDevice = await this.redisService.get(`known_device:${userId}:${deviceFingerprint}`);
+    const knownDevice = await this.redisService.get(
+      `known_device:${userId}:${deviceFingerprint}`
+    );
 
     if (!knownDevice) {
       // Mark as known device for future reference
@@ -332,7 +360,10 @@ export class SecurityMonitoringService {
   /**
    * Get recent login attempts count
    */
-  private async getRecentLoginAttempts(ipAddress: string, windowSeconds: number): Promise<number> {
+  private async getRecentLoginAttempts(
+    ipAddress: string,
+    windowSeconds: number
+  ): Promise<number> {
     const _key = `login_attempts:${this.hashIP(ipAddress)}`;
     return this.redisService.getCounter(key);
   }
@@ -340,7 +371,10 @@ export class SecurityMonitoringService {
   /**
    * Get failed login attempts count
    */
-  private async getFailedLoginAttempts(ipAddress: string, windowSeconds: number): Promise<number> {
+  private async getFailedLoginAttempts(
+    ipAddress: string,
+    windowSeconds: number
+  ): Promise<number> {
     const _key = `failed_attempts:${this.hashIP(ipAddress)}`;
     return this.redisService.getCounter(key);
   }
@@ -359,7 +393,9 @@ export class SecurityMonitoringService {
   /**
    * Calculate risk level from score
    */
-  private calculateRiskLevel(riskScore: number): 'low' | 'medium' | 'high' | 'critical' {
+  private calculateRiskLevel(
+    riskScore: number
+  ): 'low' | 'medium' | 'high' | 'critical' {
     if (riskScore >= 80) return 'critical';
     if (riskScore >= 60) return 'high';
     if (riskScore >= 30) return 'medium';
@@ -380,13 +416,20 @@ export class SecurityMonitoringService {
    * Hash IP address for privacy
    */
   private hashIP(ipAddress: string): string {
-    return crypto.createHash('sha256').update(ipAddress).digest('hex').substring(0, 16);
+    return crypto
+      .createHash('sha256')
+      .update(ipAddress)
+      .digest('hex')
+      .substring(0, 16);
   }
 
   /**
    * Log security event
    */
-  private async logSecurityEvent(_prisma: PrismaClient, event: SecurityEventData): Promise<void> {
+  private async logSecurityEvent(
+    _prisma: PrismaClient,
+    event: SecurityEventData
+  ): Promise<void> {
     try {
       await prisma.securityEvent.create({
         data: {

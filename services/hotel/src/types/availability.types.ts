@@ -125,7 +125,7 @@ export enum PromotionType {
   LOYALTY = 'loyalty',
   CORPORATE = 'corporate',
   GROUP = 'group',
-  FLASH_SALE = 'flash_sale'
+  FLASH_SALE = 'flash_sale',
 }
 
 export interface AppliedFilters {
@@ -174,7 +174,7 @@ export enum InventoryReservationStatus {
   CONFIRMED = 'confirmed',
   EXPIRED = 'expired',
   CANCELLED = 'cancelled',
-  RELEASED = 'released'
+  RELEASED = 'released',
 }
 
 export interface InventoryLock {
@@ -227,7 +227,7 @@ export enum BlockReason {
   SEASONAL_CLOSURE = 'seasonal_closure',
   STAFF_TRAINING = 'staff_training',
   INVENTORY_MANAGEMENT = 'inventory_management',
-  OTHER = 'other'
+  OTHER = 'other',
 }
 
 export interface InventoryStatus {
@@ -296,5 +296,5 @@ export enum ConsistencyIssueType {
   INVENTORY_MISMATCH = 'inventory_mismatch',
   ORPHANED_RESERVATION = 'orphaned_reservation',
   EXPIRED_LOCK = 'expired_lock',
-  RATE_INCONSISTENCY = 'rate_inconsistency'
+  RATE_INCONSISTENCY = 'rate_inconsistency',
 }

@@ -58,7 +58,9 @@ describe('E2E: Multi-Role User Scenarios', () => {
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(200);
 
-      expect(initialProfileResponse.body.data.activeRole).toBe(RoleName.CUSTOMER);
+      expect(initialProfileResponse.body.data.activeRole).toBe(
+        RoleName.CUSTOMER
+      );
 
       // Switch to VENDOR role
       const switchToVendorResponse = await request(app)
@@ -68,9 +70,12 @@ describe('E2E: Multi-Role User Scenarios', () => {
         .expect(200);
 
       expect(switchToVendorResponse.body.success).toBe(true);
-      expect(switchToVendorResponse.body.data.tokens).toHaveProperty('accessToken');
+      expect(switchToVendorResponse.body.data.tokens).toHaveProperty(
+        'accessToken'
+      );
 
-      const newVendorToken = switchToVendorResponse.body.data.tokens.accessToken;
+      const newVendorToken =
+        switchToVendorResponse.body.data.tokens.accessToken;
 
       // Verify role switch was successful
       const vendorProfileResponse = await request(app)
@@ -89,7 +94,8 @@ describe('E2E: Multi-Role User Scenarios', () => {
 
       expect(switchToDriverResponse.body.success).toBe(true);
 
-      const newDriverToken = switchToDriverResponse.body.data.tokens.accessToken;
+      const newDriverToken =
+        switchToDriverResponse.body.data.tokens.accessToken;
 
       // Verify driver role switch
       const driverProfileResponse = await request(app)
@@ -175,7 +181,9 @@ describe('E2E: Multi-Role User Scenarios', () => {
         .set('Authorization', `Bearer ${customerToken}`)
         .expect(200);
 
-      expect(customerProfileResponse.body.data.preferences.newsletter).toBe(true);
+      expect(customerProfileResponse.body.data.preferences.newsletter).toBe(
+        true
+      );
 
       // Switch back to vendor and verify vendor profile data
       const switchToVendorAgainResponse = await request(app)
@@ -184,14 +192,17 @@ describe('E2E: Multi-Role User Scenarios', () => {
         .send({ role: RoleName.VENDOR })
         .expect(200);
 
-      const vendorToken2 = switchToVendorAgainResponse.body.data.tokens.accessToken;
+      const vendorToken2 =
+        switchToVendorAgainResponse.body.data.tokens.accessToken;
 
       const vendorProfileResponse = await request(app)
         .get('/api/v1/profiles/vendor')
         .set('Authorization', `Bearer ${vendorToken2}`)
         .expect(200);
 
-      expect(vendorProfileResponse.body.data.businessName).toBe('Updated Business Name');
+      expect(vendorProfileResponse.body.data.businessName).toBe(
+        'Updated Business Name'
+      );
     });
   });
 
@@ -379,7 +390,9 @@ describe('E2E: Multi-Role User Scenarios', () => {
         .expect(200);
 
       expect(updatedProfileResponse.body.data.roles).toHaveLength(2);
-      expect(updatedProfileResponse.body.data.roles).toContain(RoleName.CUSTOMER);
+      expect(updatedProfileResponse.body.data.roles).toContain(
+        RoleName.CUSTOMER
+      );
       expect(updatedProfileResponse.body.data.roles).toContain(RoleName.VENDOR);
 
       // Should be able to switch to new role
@@ -447,7 +460,9 @@ describe('E2E: Multi-Role User Scenarios', () => {
           .set('Authorization', `Bearer ${currentToken}`)
           .expect(200);
 
-        expect(vendorProfileResponse.body.data.activeRole).toBe(RoleName.VENDOR);
+        expect(vendorProfileResponse.body.data.activeRole).toBe(
+          RoleName.VENDOR
+        );
 
         // Switch back to customer
         const switchToCustomerResponse = await request(app)
@@ -464,7 +479,9 @@ describe('E2E: Multi-Role User Scenarios', () => {
           .set('Authorization', `Bearer ${currentToken}`)
           .expect(200);
 
-        expect(customerProfileResponse.body.data.activeRole).toBe(RoleName.CUSTOMER);
+        expect(customerProfileResponse.body.data.activeRole).toBe(
+          RoleName.CUSTOMER
+        );
       }
     });
 
@@ -640,7 +657,9 @@ describe('E2E: Multi-Role User Scenarios', () => {
       });
 
       expect(userWithProfiles!.vendorProfile!.subscriptionTier).toBe('PREMIUM');
-      expect(userWithProfiles!.driverProfile!.subscriptionTier).toBe('PROFESSIONAL');
+      expect(userWithProfiles!.driverProfile!.subscriptionTier).toBe(
+        'PROFESSIONAL'
+      );
     });
   });
 });

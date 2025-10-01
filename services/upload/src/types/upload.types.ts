@@ -11,6 +11,40 @@ export interface UploadResult {
   code?: string;
 }
 
+export interface BatchResult {
+  success: boolean;
+  results: Array<{
+    id: string;
+    success: boolean;
+    error?: string;
+  }>;
+  totalProcessed: number;
+  successCount: number;
+  errorCount: number;
+}
+
+export interface ImageUploadResult extends UploadResult {
+  data?: UploadResult['data'] & {
+    thumbnails: ThumbnailInfo[];
+    optimizedVersions: OptimizedVersion[];
+  };
+}
+
+export interface DocumentUploadResult extends UploadResult {
+  data?: UploadResult['data'] & {
+    documentType: string;
+    pageCount?: number;
+    textExtracted?: boolean;
+  };
+}
+
+export interface OptimizedVersion {
+  format: string;
+  url: string;
+  size: number;
+  quality: number;
+}
+
 export interface FileMetadata {
   id: string;
   originalName: string;
@@ -45,26 +79,26 @@ export interface FileMetadata {
 }
 
 export enum EntityType {
-  USER_PROFILE = 'user_profile',
-  PRODUCT = 'product',
-  PROPERTY = 'property',
-  VEHICLE = 'vehicle',
-  DOCUMENT = 'document',
-  ADVERTISEMENT = 'advertisement'
+  USER_PROFILE = 'USER_PROFILE',
+  PRODUCT = 'PRODUCT',
+  PROPERTY = 'PROPERTY',
+  VEHICLE = 'VEHICLE',
+  DOCUMENT = 'DOCUMENT',
+  ADVERTISEMENT = 'ADVERTISEMENT',
 }
 
 export enum FileStatus {
-  UPLOADING = 'uploading',
-  PROCESSING = 'processing',
-  READY = 'ready',
-  FAILED = 'failed',
-  DELETED = 'deleted'
+  UPLOADING = 'UPLOADING',
+  PROCESSING = 'PROCESSING',
+  READY = 'READY',
+  FAILED = 'FAILED',
+  DELETED = 'DELETED',
 }
 
 export enum AccessLevel {
-  PUBLIC = 'public',
-  PRIVATE = 'private',
-  RESTRICTED = 'restricted'
+  PUBLIC = 'PUBLIC',
+  PRIVATE = 'PRIVATE',
+  RESTRICTED = 'RESTRICTED',
 }
 
 export interface ThumbnailInfo {
@@ -143,7 +177,7 @@ export enum UploadErrorCode {
   PERMISSION_DENIED = 'PERMISSION_DENIED',
   QUOTA_EXCEEDED = 'QUOTA_EXCEEDED',
   SERVICE_UNAVAILABLE = 'SERVICE_UNAVAILABLE',
-  INVALID_REQUEST = 'INVALID_REQUEST'
+  INVALID_REQUEST = 'INVALID_REQUEST',
 }
 
 export interface UploadError {
@@ -151,4 +185,71 @@ export interface UploadError {
   message: string;
   details?: Record<string, any>;
   retryable: boolean;
+}
+
+// Re-export job types for convenience
+export * from './job.types';
+
+// Retention and compliance types
+export interface RetentionPolicy {
+  id: string;
+  name: string;
+  entityType: EntityType;
+  retentionPeriodDays: number;
+  jurisdiction: string;
+  isActive: boolean;
+  description?: string;
+  legalBasis?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface LegalHold {
+  id: string;
+  name: string;
+  description: string;
+  entityType?: EntityType;
+  entityIds: string[];
+  fileIds: string[];
+  isActive: boolean;
+  createdBy: string;
+  createdAt: Date;
+  expiresAt?: Date;
+}
+
+export interface DataDeletionRequest {
+  id: string;
+  requestType: 'user_request' | 'gdpr_request' | 'policy_expiration' | 'legal_hold_release';
+  entityType: EntityType;
+  entityId: string;
+  requestedBy: string;
+  status: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
+  scheduledAt: Date;
+  processedAt?: Date;
+  filesDeleted: number;
+  errorMessage?: string;
+  metadata?: Record<string, any>;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export enum SecurityEventSeverity {
+  LOW = 'LOW',
+  MEDIUM = 'MEDIUM',
+  HIGH = 'HIGH',
+  CRITICAL = 'CRITICAL',
+}
+
+// Request interface extensions
+declare global {
+  namespace Express {
+    interface Request {
+      user?: {
+        id: string;
+        email?: string;
+        role: string;
+        permissions: string[];
+      };
+    }
+  }
 }

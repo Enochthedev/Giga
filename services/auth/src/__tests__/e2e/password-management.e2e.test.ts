@@ -89,7 +89,9 @@ describe('E2E: Password Management Workflows', () => {
         .expect(200);
 
       expect(newPasswordLoginResponse.body.success).toBe(true);
-      expect(newPasswordLoginResponse.body.data.tokens).toHaveProperty('accessToken');
+      expect(newPasswordLoginResponse.body.data.tokens).toHaveProperty(
+        'accessToken'
+      );
     });
 
     it('should reject password change with incorrect current password', () => {
@@ -151,8 +153,12 @@ describe('E2E: Password Management Workflows', () => {
 
     it('should invalidate all refresh tokens after password change', () => {
       // Create some refresh tokens
-      const refreshToken1 = await testDataFactory.createRefreshToken(testUser.id);
-      const refreshToken2 = await testDataFactory.createRefreshToken(testUser.id);
+      const refreshToken1 = await testDataFactory.createRefreshToken(
+        testUser.id
+      );
+      const refreshToken2 = await testDataFactory.createRefreshToken(
+        testUser.id
+      );
 
       // Verify tokens exist
       const tokensBefore = await prisma.refreshToken.findMany({
@@ -522,11 +528,17 @@ describe('E2E: Password Management Workflows', () => {
       expect(userInDb!.passwordHash.startsWith('$2b$')).toBe(true);
 
       // Verify hash can be verified
-      const isValidHash = await bcrypt.compare(password, userInDb!.passwordHash);
+      const isValidHash = await bcrypt.compare(
+        password,
+        userInDb!.passwordHash
+      );
       expect(isValidHash).toBe(true);
 
       // Verify wrong password fails
-      const isInvalidHash = await bcrypt.compare('wrongpassword', userInDb!.passwordHash);
+      const isInvalidHash = await bcrypt.compare(
+        'wrongpassword',
+        userInDb!.passwordHash
+      );
       expect(isInvalidHash).toBe(false);
     });
 
@@ -631,11 +643,9 @@ describe('E2E: Password Management Workflows', () => {
 
       // Create multiple reset requests
       for (let i = 0; i < 3; i++) {
-        await request(app)
-          .post('/api/v1/auth/forgot-password')
-          .send({
-            email: testUser.email,
-          });
+        await request(app).post('/api/v1/auth/forgot-password').send({
+          email: testUser.email,
+        });
 
         // Wait a bit to avoid rate limiting in test
         await new Promise(resolve => setTimeout(resolve, 100));
@@ -648,8 +658,8 @@ describe('E2E: Password Management Workflows', () => {
       expect(tokensBefore.length).toBeGreaterThan(1);
 
       // Use the latest token
-      const latestToken = tokensBefore.sort((a, b) =>
-        b.createdAt.getTime() - a.createdAt.getTime()
+      const latestToken = tokensBefore.sort(
+        (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
       )[0];
 
       // Reset password

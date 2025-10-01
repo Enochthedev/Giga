@@ -2,7 +2,9 @@
 
 ## Overview
 
-This guide provides comprehensive instructions for integrating with the Authentication Service API. The service provides multi-role authentication, JWT token management, and extensive security features.
+This guide provides comprehensive instructions for integrating with the Authentication Service API.
+The service provides multi-role authentication, JWT token management, and extensive security
+features.
 
 ## Quick Start
 
@@ -31,7 +33,7 @@ Authorization: Bearer <your-jwt-token>
 const registerResponse = await fetch('/api/v1/auth/register', {
   method: 'POST',
   headers: {
-    'Content-Type': 'application/json'
+    'Content-Type': 'application/json',
   },
   body: JSON.stringify({
     email: 'user@example.com',
@@ -39,8 +41,8 @@ const registerResponse = await fetch('/api/v1/auth/register', {
     firstName: 'John',
     lastName: 'Doe',
     roles: ['CUSTOMER'],
-    acceptTerms: true
-  })
+    acceptTerms: true,
+  }),
 });
 
 const { data } = await registerResponse.json();
@@ -62,9 +64,9 @@ async function registerUser(userData) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-API-Version': '1.0.0'
+        'X-API-Version': '1.0.0',
       },
-      body: JSON.stringify(userData)
+      body: JSON.stringify(userData),
     });
 
     if (!response.ok) {
@@ -87,7 +89,7 @@ const newUser = await registerUser({
   lastName: 'Doe',
   phone: '+1234567890',
   roles: ['CUSTOMER', 'VENDOR'],
-  acceptTerms: true
+  acceptTerms: true,
 });
 ```
 
@@ -99,9 +101,9 @@ async function loginUser(email, password) {
     const response = await fetch('/api/v1/auth/login', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ email, password })
+      body: JSON.stringify({ email, password }),
     });
 
     if (!response.ok) {
@@ -110,11 +112,11 @@ async function loginUser(email, password) {
     }
 
     const data = await response.json();
-    
+
     // Store tokens
     localStorage.setItem('accessToken', data.data.tokens.accessToken);
     localStorage.setItem('refreshToken', data.data.tokens.refreshToken);
-    
+
     return data.data.user;
   } catch (error) {
     console.error('Login failed:', error);
@@ -128,7 +130,7 @@ async function loginUser(email, password) {
 ```javascript
 async function refreshAccessToken() {
   const refreshToken = localStorage.getItem('refreshToken');
-  
+
   if (!refreshToken) {
     throw new Error('No refresh token available');
   }
@@ -137,9 +139,9 @@ async function refreshAccessToken() {
     const response = await fetch('/api/v1/auth/refresh', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ refreshToken })
+      body: JSON.stringify({ refreshToken }),
     });
 
     if (!response.ok) {
@@ -151,11 +153,11 @@ async function refreshAccessToken() {
     }
 
     const data = await response.json();
-    
+
     // Update stored tokens
     localStorage.setItem('accessToken', data.data.tokens.accessToken);
     localStorage.setItem('refreshToken', data.data.tokens.refreshToken);
-    
+
     return data.data.tokens.accessToken;
   } catch (error) {
     console.error('Token refresh failed:', error);
@@ -191,15 +193,12 @@ class AuthAPIClient {
     localStorage.setItem('refreshToken', refreshToken);
   }
 
-  private async makeRequest(
-    endpoint: string, 
-    options: RequestInit = {}
-  ): Promise<any> {
+  private async makeRequest(endpoint: string, options: RequestInit = {}): Promise<any> {
     const url = `${this.baseURL}${endpoint}`;
     const headers = {
       'Content-Type': 'application/json',
       'X-API-Version': '1.0.0',
-      ...options.headers
+      ...options.headers,
     };
 
     // Add authorization header if token exists
@@ -210,7 +209,7 @@ class AuthAPIClient {
     try {
       const response = await fetch(url, {
         ...options,
-        headers
+        headers,
       });
 
       // Handle token expiration
@@ -232,16 +231,13 @@ class AuthAPIClient {
   async register(userData: RegisterData): Promise<AuthResponse> {
     const response = await this.makeRequest('/api/v1/auth/register', {
       method: 'POST',
-      body: JSON.stringify(userData)
+      body: JSON.stringify(userData),
     });
 
     const data = await response.json();
-    
+
     if (data.success) {
-      this.saveTokens(
-        data.data.tokens.accessToken,
-        data.data.tokens.refreshToken
-      );
+      this.saveTokens(data.data.tokens.accessToken, data.data.tokens.refreshToken);
     }
 
     return data;
@@ -250,16 +246,13 @@ class AuthAPIClient {
   async login(email: string, password: string): Promise<AuthResponse> {
     const response = await this.makeRequest('/api/v1/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ email, password })
+      body: JSON.stringify({ email, password }),
     });
 
     const data = await response.json();
-    
+
     if (data.success) {
-      this.saveTokens(
-        data.data.tokens.accessToken,
-        data.data.tokens.refreshToken
-      );
+      this.saveTokens(data.data.tokens.accessToken, data.data.tokens.refreshToken);
     }
 
     return data;
@@ -273,7 +266,7 @@ class AuthAPIClient {
   async updateProfile(updates: ProfileUpdates): Promise<UserProfile> {
     const response = await this.makeRequest('/api/v1/auth/profile', {
       method: 'PUT',
-      body: JSON.stringify(updates)
+      body: JSON.stringify(updates),
     });
     return response.json();
   }
@@ -281,16 +274,13 @@ class AuthAPIClient {
   async switchRole(role: string): Promise<AuthResponse> {
     const response = await this.makeRequest('/api/v1/auth/switch-role', {
       method: 'POST',
-      body: JSON.stringify({ role })
+      body: JSON.stringify({ role }),
     });
 
     const data = await response.json();
-    
+
     if (data.success) {
-      this.saveTokens(
-        data.data.tokens.accessToken,
-        data.data.tokens.refreshToken
-      );
+      this.saveTokens(data.data.tokens.accessToken, data.data.tokens.refreshToken);
     }
 
     return data;
@@ -300,7 +290,7 @@ class AuthAPIClient {
     if (this.refreshToken) {
       await this.makeRequest('/api/v1/auth/logout', {
         method: 'POST',
-        body: JSON.stringify({ refreshToken: this.refreshToken })
+        body: JSON.stringify({ refreshToken: this.refreshToken }),
       });
     }
 
@@ -317,18 +307,15 @@ class AuthAPIClient {
       const response = await fetch(`${this.baseURL}/api/v1/auth/refresh`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ refreshToken: this.refreshToken })
+        body: JSON.stringify({ refreshToken: this.refreshToken }),
       });
 
       if (!response.ok) return null;
 
       const data = await response.json();
-      this.saveTokens(
-        data.data.tokens.accessToken,
-        data.data.tokens.refreshToken
-      );
+      this.saveTokens(data.data.tokens.accessToken, data.data.tokens.refreshToken);
 
       return data.data.tokens.accessToken;
     } catch (error) {
@@ -348,7 +335,7 @@ await authClient.register({
   firstName: 'John',
   lastName: 'Doe',
   roles: ['CUSTOMER'],
-  acceptTerms: true
+  acceptTerms: true,
 });
 
 // Login
@@ -404,7 +391,7 @@ async function handleAPICall(apiCall) {
       // Handle generic errors
       console.error('API Error:', error.error);
     }
-    
+
     throw error;
   }
 }
@@ -428,10 +415,10 @@ function checkRateLimit(response) {
   const limit = response.headers.get('X-RateLimit-Limit');
   const remaining = response.headers.get('X-RateLimit-Remaining');
   const reset = response.headers.get('X-RateLimit-Reset');
-  
+
   console.log(`Rate limit: ${remaining}/${limit} remaining`);
   console.log(`Resets at: ${reset}`);
-  
+
   if (remaining < 10) {
     console.warn('Approaching rate limit!');
   }
@@ -445,23 +432,23 @@ async function makeRequestWithRetry(apiCall, maxRetries = 3) {
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       const response = await apiCall();
-      
+
       if (response.status === 429) {
         const retryAfter = response.headers.get('Retry-After');
         const delay = retryAfter ? parseInt(retryAfter) * 1000 : Math.pow(2, attempt) * 1000;
-        
+
         console.warn(`Rate limited. Retrying in ${delay}ms (attempt ${attempt}/${maxRetries})`);
-        
+
         if (attempt < maxRetries) {
           await new Promise(resolve => setTimeout(resolve, delay));
           continue;
         }
       }
-      
+
       return response;
     } catch (error) {
       if (attempt === maxRetries) throw error;
-      
+
       const delay = Math.pow(2, attempt) * 1000;
       await new Promise(resolve => setTimeout(resolve, delay));
     }
@@ -481,12 +468,12 @@ class SecureTokenStorage {
     document.cookie = `accessToken=${accessToken}; Secure; HttpOnly; SameSite=Strict`;
     document.cookie = `refreshToken=${refreshToken}; Secure; HttpOnly; SameSite=Strict`;
   }
-  
+
   static getAccessToken() {
     // Implement secure token retrieval
     return this.getCookie('accessToken');
   }
-  
+
   static clearTokens() {
     document.cookie = 'accessToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
     document.cookie = 'refreshToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
@@ -503,7 +490,7 @@ localStorage.setItem('accessToken', token); // Vulnerable to XSS
 // Always validate SSL certificates
 const client = new AuthAPIClient('https://api.platform.example.com', {
   validateSSL: true,
-  timeout: 30000
+  timeout: 30000,
 });
 
 // Use CSRF protection
@@ -518,34 +505,34 @@ headers['X-CSRF-Token'] = csrfToken;
 ```javascript
 describe('AuthAPIClient', () => {
   let client;
-  
+
   beforeEach(() => {
     client = new AuthAPIClient('https://api.test.com');
   });
-  
+
   test('should register user successfully', async () => {
     const mockResponse = {
       success: true,
       data: {
         user: { id: '123', email: 'test@example.com' },
-        tokens: { accessToken: 'token123', refreshToken: 'refresh123' }
-      }
+        tokens: { accessToken: 'token123', refreshToken: 'refresh123' },
+      },
     };
-    
+
     global.fetch = jest.fn().mockResolvedValue({
       ok: true,
-      json: () => Promise.resolve(mockResponse)
+      json: () => Promise.resolve(mockResponse),
     });
-    
+
     const result = await client.register({
       email: 'test@example.com',
       password: 'password123',
       firstName: 'Test',
       lastName: 'User',
       roles: ['CUSTOMER'],
-      acceptTerms: true
+      acceptTerms: true,
     });
-    
+
     expect(result.success).toBe(true);
     expect(result.data.user.email).toBe('test@example.com');
   });
@@ -558,7 +545,7 @@ describe('AuthAPIClient', () => {
 describe('Authentication Flow', () => {
   test('complete user journey', async () => {
     const client = new AuthAPIClient(process.env.TEST_API_URL);
-    
+
     // Register
     const registerResult = await client.register({
       email: `test-${Date.now()}@example.com`,
@@ -566,23 +553,23 @@ describe('Authentication Flow', () => {
       firstName: 'Test',
       lastName: 'User',
       roles: ['CUSTOMER'],
-      acceptTerms: true
+      acceptTerms: true,
     });
-    
+
     expect(registerResult.success).toBe(true);
-    
+
     // Get profile
     const profile = await client.getProfile();
     expect(profile.success).toBe(true);
-    
+
     // Update profile
     const updateResult = await client.updateProfile({
-      firstName: 'Updated'
+      firstName: 'Updated',
     });
-    
+
     expect(updateResult.success).toBe(true);
     expect(updateResult.data.firstName).toBe('Updated');
-    
+
     // Logout
     await client.logout();
   });
@@ -621,12 +608,12 @@ const client = new AuthAPIClient('https://api.platform.example.com', {
   onRequest: (url, options) => {
     console.log('API Request:', url, options);
   },
-  onResponse: (response) => {
+  onResponse: response => {
     console.log('API Response:', response.status, response.headers);
   },
-  onError: (error) => {
+  onError: error => {
     console.error('API Error:', error);
-  }
+  },
 });
 ```
 
@@ -642,6 +629,7 @@ For additional support:
 ## Changelog
 
 ### v1.0.0
+
 - Initial release
 - Multi-role authentication
 - JWT token management

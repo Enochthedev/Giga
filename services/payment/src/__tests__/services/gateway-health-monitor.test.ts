@@ -20,7 +20,7 @@ describe('GatewayHealthMonitor', () => {
       const config = {
         interval: 60000,
         timeout: 5000,
-        retries: 3
+        retries: 3,
       };
 
       healthMonitor.addGateway('test-gateway', config);
@@ -36,7 +36,7 @@ describe('GatewayHealthMonitor', () => {
       const config = {
         interval: 60000,
         timeout: 5000,
-        retries: 3
+        retries: 3,
       };
 
       healthMonitor.addGateway('test-gateway', config);
@@ -50,7 +50,7 @@ describe('GatewayHealthMonitor', () => {
       const config = {
         interval: 60000,
         timeout: 5000,
-        retries: 3
+        retries: 3,
       };
 
       healthMonitor.addGateway('gateway-1', config);
@@ -68,14 +68,16 @@ describe('GatewayHealthMonitor', () => {
       const config = {
         interval: 60000,
         timeout: 5000,
-        retries: 3
+        retries: 3,
       };
       healthMonitor.addGateway('test-gateway', config);
     });
 
     it('should perform successful health check', async () => {
       // Mock successful health check
-      vi.spyOn(healthMonitor as any, 'performHealthCheck').mockResolvedValue(true);
+      vi.spyOn(healthMonitor as any, 'performHealthCheck').mockResolvedValue(
+        true
+      );
 
       const status = await healthMonitor.checkHealth('test-gateway');
 
@@ -118,10 +120,15 @@ describe('GatewayHealthMonitor', () => {
     });
 
     it('should reset consecutive failures on success after failure', async () => {
-      const performHealthCheckSpy = vi.spyOn(healthMonitor as any, 'performHealthCheck');
+      const performHealthCheckSpy = vi.spyOn(
+        healthMonitor as any,
+        'performHealthCheck'
+      );
 
       // First failure
-      performHealthCheckSpy.mockRejectedValueOnce(new Error('Health check failed'));
+      performHealthCheckSpy.mockRejectedValueOnce(
+        new Error('Health check failed')
+      );
       await healthMonitor.checkHealth('test-gateway');
       let status = healthMonitor.getHealthStatus('test-gateway');
       expect(status?.consecutiveFailures).toBe(1);
@@ -139,7 +146,9 @@ describe('GatewayHealthMonitor', () => {
 
       expect(status.gatewayId).toBe('unknown-gateway');
       expect(status.status).toBe('error');
-      expect(status.errorMessage).toContain('No health check configuration found');
+      expect(status.errorMessage).toContain(
+        'No health check configuration found'
+      );
     });
   });
 
@@ -148,13 +157,14 @@ describe('GatewayHealthMonitor', () => {
       const config = {
         interval: 1000, // 1 second for testing
         timeout: 5000,
-        retries: 3
+        retries: 3,
       };
 
       healthMonitor.addGateway('test-gateway', config);
 
       // Mock health check
-      const performHealthCheckSpy = vi.spyOn(healthMonitor as any, 'performHealthCheck')
+      const performHealthCheckSpy = vi
+        .spyOn(healthMonitor as any, 'performHealthCheck')
         .mockResolvedValue(true);
 
       healthMonitor.startMonitoring();
@@ -169,7 +179,7 @@ describe('GatewayHealthMonitor', () => {
       const config = {
         interval: 1000,
         timeout: 5000,
-        retries: 3
+        retries: 3,
       };
 
       healthMonitor.addGateway('test-gateway', config);
@@ -206,7 +216,7 @@ describe('GatewayHealthMonitor', () => {
       const config = {
         interval: 60000,
         timeout: 5000,
-        retries: 3
+        retries: 3,
       };
 
       healthMonitor.addGateway('test-gateway', config);
@@ -224,7 +234,7 @@ describe('GatewayHealthMonitor', () => {
       expect(callback).toHaveBeenCalledWith(
         expect.objectContaining({
           gatewayId: 'test-gateway',
-          status: 'error'
+          status: 'error',
         })
       );
     });
@@ -233,7 +243,7 @@ describe('GatewayHealthMonitor', () => {
       const config = {
         interval: 60000,
         timeout: 5000,
-        retries: 3
+        retries: 3,
       };
 
       healthMonitor.addGateway('test-gateway', config);
@@ -242,7 +252,9 @@ describe('GatewayHealthMonitor', () => {
       healthMonitor.onHealthChange(callback);
 
       // Mock successful health check
-      vi.spyOn(healthMonitor as any, 'performHealthCheck').mockResolvedValue(true);
+      vi.spyOn(healthMonitor as any, 'performHealthCheck').mockResolvedValue(
+        true
+      );
 
       // First check (status changes from inactive to active)
       await healthMonitor.checkHealth('test-gateway');
@@ -257,7 +269,7 @@ describe('GatewayHealthMonitor', () => {
       const config = {
         interval: 60000,
         timeout: 5000,
-        retries: 3
+        retries: 3,
       };
 
       healthMonitor.addGateway('test-gateway', config);
@@ -268,10 +280,14 @@ describe('GatewayHealthMonitor', () => {
       healthMonitor.onHealthChange(faultyCallback);
 
       // Mock health check
-      vi.spyOn(healthMonitor as any, 'performHealthCheck').mockResolvedValue(true);
+      vi.spyOn(healthMonitor as any, 'performHealthCheck').mockResolvedValue(
+        true
+      );
 
       // Should not throw despite callback error
-      await expect(healthMonitor.checkHealth('test-gateway')).resolves.toBeDefined();
+      await expect(
+        healthMonitor.checkHealth('test-gateway')
+      ).resolves.toBeDefined();
     });
   });
 
@@ -280,7 +296,7 @@ describe('GatewayHealthMonitor', () => {
       const config = {
         interval: 60000,
         timeout: 5000,
-        retries: 3
+        retries: 3,
       };
       healthMonitor.addGateway('test-gateway', config);
     });
@@ -297,7 +313,10 @@ describe('GatewayHealthMonitor', () => {
 
     it('should record success manually', async () => {
       // First record a failure
-      await healthMonitor.recordFailure('test-gateway', new Error('Test error'));
+      await healthMonitor.recordFailure(
+        'test-gateway',
+        new Error('Test error')
+      );
       let status = healthMonitor.getHealthStatus('test-gateway');
       expect(status?.status).toBe('error');
 
@@ -324,7 +343,7 @@ describe('GatewayHealthMonitor', () => {
       const config = {
         interval: 60000,
         timeout: 5000,
-        retries: 3
+        retries: 3,
       };
       healthMonitor.addGateway('test-gateway', config);
     });
@@ -335,10 +354,11 @@ describe('GatewayHealthMonitor', () => {
         url: 'https://api.test.com/health',
         interval: 60000,
         timeout: 5000,
-        retries: 3
+        retries: 3,
       });
 
-      const simulateHealthCheckSpy = vi.spyOn(healthMonitor as any, 'simulateHealthCheck')
+      const simulateHealthCheckSpy = vi
+        .spyOn(healthMonitor as any, 'simulateHealthCheck')
         .mockRejectedValueOnce(new Error('First failure'))
         .mockRejectedValueOnce(new Error('Second failure'))
         .mockResolvedValueOnce(true); // Success on third attempt
@@ -355,10 +375,11 @@ describe('GatewayHealthMonitor', () => {
         url: 'https://api.test.com/health',
         interval: 60000,
         timeout: 5000,
-        retries: 3
+        retries: 3,
       });
 
-      const simulateHealthCheckSpy = vi.spyOn(healthMonitor as any, 'simulateHealthCheck')
+      const simulateHealthCheckSpy = vi
+        .spyOn(healthMonitor as any, 'simulateHealthCheck')
         .mockRejectedValue(new Error('Persistent failure'));
 
       const status = await healthMonitor.checkHealth('test-gateway-with-url');

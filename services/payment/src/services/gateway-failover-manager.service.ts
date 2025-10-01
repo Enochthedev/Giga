@@ -37,7 +37,7 @@ export class GatewayFailoverManager implements IGatewayFailoverManager {
     if (!this.circuitBreakers.has(primary)) {
       this.circuitBreakers.set(primary, {
         isOpen: false,
-        failureCount: 0
+        failureCount: 0,
       });
     }
 
@@ -46,7 +46,7 @@ export class GatewayFailoverManager implements IGatewayFailoverManager {
       if (!this.circuitBreakers.has(gatewayId)) {
         this.circuitBreakers.set(gatewayId, {
           isOpen: false,
-          failureCount: 0
+          failureCount: 0,
         });
       }
     });
@@ -56,13 +56,18 @@ export class GatewayFailoverManager implements IGatewayFailoverManager {
     return this.failoverChains.get(gatewayId) || [];
   }
 
-  async executeFailover(failedGatewayId: string, context: any): Promise<PaymentGateway | null> {
+  async executeFailover(
+    failedGatewayId: string,
+    context: any
+  ): Promise<PaymentGateway | null> {
     try {
       logger.info('Executing failover', { failedGatewayId, context });
 
       // Check if failover is enabled for this gateway
       if (!this.failoverEnabled.has(failedGatewayId)) {
-        logger.warn('Failover not enabled for gateway', { gatewayId: failedGatewayId });
+        logger.warn('Failover not enabled for gateway', {
+          gatewayId: failedGatewayId,
+        });
         return null;
       }
 
@@ -106,25 +111,28 @@ export class GatewayFailoverManager implements IGatewayFailoverManager {
 
           logger.info('Failover successful', {
             failedGateway: failedGatewayId,
-            fallbackGateway: fallbackId
+            fallbackGateway: fallbackId,
           });
 
           return fallbackGateway;
         } catch (error) {
           logger.warn('Fallback gateway health check error', {
             fallbackId,
-            error: error instanceof Error ? error.message : 'Unknown error'
+            error: error instanceof Error ? error.message : 'Unknown error',
           });
           continue;
         }
       }
 
-      logger.error('All fallback gateways unavailable', { failedGatewayId, fallbacks });
+      logger.error('All fallback gateways unavailable', {
+        failedGatewayId,
+        fallbacks,
+      });
       return null;
     } catch (error) {
       logger.error('Error during failover execution', {
         failedGatewayId,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
       return null;
     }
@@ -137,7 +145,11 @@ export class GatewayFailoverManager implements IGatewayFailoverManager {
     }
 
     // Check if circuit should be closed due to recovery timeout
-    if (state.isOpen && state.nextRetryTime && new Date() >= state.nextRetryTime) {
+    if (
+      state.isOpen &&
+      state.nextRetryTime &&
+      new Date() >= state.nextRetryTime
+    ) {
       logger.info('Circuit breaker entering half-open state', { gatewayId });
       state.isOpen = false;
       state.nextRetryTime = undefined;
@@ -161,7 +173,7 @@ export class GatewayFailoverManager implements IGatewayFailoverManager {
     logger.warn('Circuit breaker opened', {
       gatewayId,
       failureCount: state.failureCount,
-      nextRetryTime: state.nextRetryTime
+      nextRetryTime: state.nextRetryTime,
     });
   }
 
@@ -197,13 +209,15 @@ export class GatewayFailoverManager implements IGatewayFailoverManager {
         logger.info('Gateway recovery successful', { gatewayId });
         return true;
       } else {
-        logger.warn('Gateway recovery failed - health check failed', { gatewayId });
+        logger.warn('Gateway recovery failed - health check failed', {
+          gatewayId,
+        });
         return false;
       }
     } catch (error) {
       logger.error('Error during gateway recovery attempt', {
         gatewayId,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
       return false;
     }
@@ -218,7 +232,7 @@ export class GatewayFailoverManager implements IGatewayFailoverManager {
       } catch (error) {
         logger.error('Error in scheduled recovery check', {
           gatewayId,
-          error: error instanceof Error ? error.message : 'Unknown error'
+          error: error instanceof Error ? error.message : 'Unknown error',
         });
       }
     }, delay);
@@ -274,7 +288,7 @@ export class GatewayFailoverManager implements IGatewayFailoverManager {
     logger.warn('Gateway failure recorded', {
       gatewayId,
       failureCount: state.failureCount,
-      error: error.message
+      error: error.message,
     });
 
     // Open circuit breaker if failure threshold is reached

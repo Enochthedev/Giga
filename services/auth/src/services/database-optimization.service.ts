@@ -41,7 +41,7 @@ class DatabaseOptimizationService {
           query: `${params.model}.${params.action}`,
           duration,
           timestamp: startTime,
-          params: this.sanitizeParams(params.args)
+          params: this.sanitizeParams(params.args),
         });
 
         // Log slow queries
@@ -50,12 +50,16 @@ class DatabaseOptimizationService {
             model: params.model,
             action: params.action,
             duration,
-            args: this.sanitizeParams(params.args)
+            args: this.sanitizeParams(params.args),
           });
         }
 
         // Record general query metrics
-        metricsService.recordDatabaseQuery(duration, params.action, params.model || 'unknown');
+        metricsService.recordDatabaseQuery(
+          duration,
+          params.action,
+          params.model || 'unknown'
+        );
 
         return result;
       } catch (error) {
@@ -65,7 +69,7 @@ class DatabaseOptimizationService {
           model: params.model,
           action: params.action,
           duration,
-          args: this.sanitizeParams(params.args)
+          args: this.sanitizeParams(params.args),
         });
 
         metricsService.recordDatabaseError();
@@ -108,12 +112,12 @@ class DatabaseOptimizationService {
                     select: {
                       id: true,
                       name: true,
-                      description: true
-                    }
-                  }
-                }
-              }
-            }
+                      description: true,
+                    },
+                  },
+                },
+              },
+            },
           },
           customerProfile: {
             select: {
@@ -126,10 +130,10 @@ class DatabaseOptimizationService {
                   address: true,
                   city: true,
                   country: true,
-                  isDefault: true
-                }
-              }
-            }
+                  isDefault: true,
+                },
+              },
+            },
           },
           vendorProfile: {
             select: {
@@ -143,8 +147,8 @@ class DatabaseOptimizationService {
               commissionRate: true,
               isVerified: true,
               rating: true,
-              totalSales: true
-            }
+              totalSales: true,
+            },
           },
           driverProfile: {
             select: {
@@ -156,8 +160,8 @@ class DatabaseOptimizationService {
               rating: true,
               totalRides: true,
               isVerified: true,
-              subscriptionTier: true
-            }
+              subscriptionTier: true,
+            },
           },
           hostProfile: {
             select: {
@@ -169,8 +173,8 @@ class DatabaseOptimizationService {
               isVerified: true,
               subscriptionTier: true,
               responseRate: true,
-              responseTime: true
-            }
+              responseTime: true,
+            },
           },
           advertiserProfile: {
             select: {
@@ -179,10 +183,10 @@ class DatabaseOptimizationService {
               industry: true,
               website: true,
               totalSpend: true,
-              isVerified: true
-            }
-          }
-        }
+              isVerified: true,
+            },
+          },
+        },
       });
 
       const duration = Date.now() - startTime;
@@ -212,7 +216,7 @@ class DatabaseOptimizationService {
       status,
       search,
       sortBy = 'createdAt',
-      sortOrder = 'desc'
+      sortOrder = 'desc',
     } = options;
 
     const skip = (page - 1) * limit;
@@ -230,7 +234,7 @@ class DatabaseOptimizationService {
         where.OR = [
           { email: { contains: search, mode: 'insensitive' } },
           { firstName: { contains: search, mode: 'insensitive' } },
-          { lastName: { contains: search, mode: 'insensitive' } }
+          { lastName: { contains: search, mode: 'insensitive' } },
         ];
       }
 
@@ -238,9 +242,9 @@ class DatabaseOptimizationService {
         where.roles = {
           some: {
             role: {
-              name: role
-            }
-          }
+              name: role,
+            },
+          },
         };
       }
 
@@ -261,17 +265,17 @@ class DatabaseOptimizationService {
               select: {
                 role: {
                   select: {
-                    name: true
-                  }
-                }
-              }
-            }
+                    name: true,
+                  },
+                },
+              },
+            },
           },
           orderBy: { [sortBy]: sortOrder },
           skip,
-          take: limit
+          take: limit,
         }),
-        this.prisma.user.count({ where })
+        this.prisma.user.count({ where }),
       ]);
 
       const duration = Date.now() - startTime;
@@ -280,7 +284,7 @@ class DatabaseOptimizationService {
         limit,
         totalCount,
         duration,
-        filters: { role, status, search }
+        filters: { role, status, search },
       });
 
       return {
@@ -291,8 +295,8 @@ class DatabaseOptimizationService {
           totalCount,
           totalPages: Math.ceil(totalCount / limit),
           hasNext: page * limit < totalCount,
-          hasPrev: page > 1
-        }
+          hasPrev: page > 1,
+        },
       };
     } catch (error) {
       logger.error('Optimized user listing failed', error as Error, options);
@@ -308,13 +312,13 @@ class DatabaseOptimizationService {
       const result = await this.prisma.user.updateMany({
         where: {
           id: {
-            in: userIds
-          }
+            in: userIds,
+          },
         },
         data: {
           isActive,
-          updatedAt: new Date()
-        }
+          updatedAt: new Date(),
+        },
       });
 
       const duration = Date.now() - startTime;
@@ -322,12 +326,15 @@ class DatabaseOptimizationService {
         userCount: userIds.length,
         isActive,
         duration,
-        updatedCount: result.count
+        updatedCount: result.count,
       });
 
       return result;
     } catch (error) {
-      logger.error('Batch user status update failed', error as Error, { userIds, isActive });
+      logger.error('Batch user status update failed', error as Error, {
+        userIds,
+        isActive,
+      });
       throw error;
     }
   }
@@ -342,7 +349,7 @@ class DatabaseOptimizationService {
         idleConnections: 0,
         totalConnections: 1,
         maxConnections: 10, // Default Prisma connection limit
-        queuedRequests: 0
+        queuedRequests: 0,
       };
     } catch (error) {
       logger.error('Failed to get connection pool stats', error as Error);
@@ -351,7 +358,7 @@ class DatabaseOptimizationService {
         idleConnections: 0,
         totalConnections: 0,
         maxConnections: 10,
-        queuedRequests: 0
+        queuedRequests: 0,
       };
     }
   }
@@ -372,19 +379,24 @@ class DatabaseOptimizationService {
       metric => metric.duration > this.SLOW_QUERY_THRESHOLD
     );
 
-    const totalDuration = recentMetrics.reduce((sum, metric) => sum + metric.duration, 0);
-    const averageQueryTime = recentMetrics.length > 0 ? totalDuration / recentMetrics.length : 0;
+    const totalDuration = recentMetrics.reduce(
+      (sum, metric) => sum + metric.duration,
+      0
+    );
+    const averageQueryTime =
+      recentMetrics.length > 0 ? totalDuration / recentMetrics.length : 0;
 
     const queryDistribution: Record<string, number> = {};
     recentMetrics.forEach(metric => {
-      queryDistribution[metric.query] = (queryDistribution[metric.query] || 0) + 1;
+      queryDistribution[metric.query] =
+        (queryDistribution[metric.query] || 0) + 1;
     });
 
     return {
       slowQueries: slowQueries.slice(0, 10), // Top 10 slow queries
       averageQueryTime,
       totalQueries: recentMetrics.length,
-      queryDistribution
+      queryDistribution,
     };
   }
 
@@ -423,7 +435,7 @@ class DatabaseOptimizationService {
         isHealthy: errors.length === 0,
         connectionTime,
         queryTime,
-        errors
+        errors,
       };
     } catch (error) {
       errors.push(`Database error: ${(error as Error).message}`);
@@ -431,7 +443,7 @@ class DatabaseOptimizationService {
         isHealthy: false,
         connectionTime,
         queryTime,
-        errors
+        errors,
       };
     }
   }
@@ -470,11 +482,15 @@ class DatabaseOptimizationService {
     // Analyze slow queries for index opportunities
     report.slowQueries.forEach(query => {
       if (query.query.includes('user.findMany') && query.duration > 2000) {
-        recommendations.push('Consider adding composite index on (isActive, createdAt) for user queries');
+        recommendations.push(
+          'Consider adding composite index on (isActive, createdAt) for user queries'
+        );
       }
 
       if (query.query.includes('role') && query.duration > 1000) {
-        recommendations.push('Consider adding index on role.name for role-based queries');
+        recommendations.push(
+          'Consider adding index on role.name for role-based queries'
+        );
       }
     });
 

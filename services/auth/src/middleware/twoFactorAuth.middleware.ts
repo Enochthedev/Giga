@@ -165,10 +165,7 @@ export class TwoFactorAuthMiddleware {
       };
 
       // For now, store in Redis (move to database when implementing full 2FA)
-      await redisService.set(
-        `user_2fa:${userId}`,
-        JSON.stringify(user2FAData)
-      );
+      await redisService.set(`user_2fa:${userId}`, JSON.stringify(user2FAData));
 
       // Clean up setup data
       await redisService.del(`2fa_setup:${userId}`);
@@ -214,7 +211,10 @@ export class TwoFactorAuthMiddleware {
   /**
    * Verify TOTP token
    */
-  private static async verifyTOTPToken(_userId: string, token: string): Promise<boolean> {
+  private static async verifyTOTPToken(
+    _userId: string,
+    token: string
+  ): Promise<boolean> {
     try {
       const user2FAData = await redisService.get(`user_2fa:${userId}`);
       if (!user2FAData) {
@@ -248,7 +248,10 @@ export class TwoFactorAuthMiddleware {
   /**
    * Verify backup code
    */
-  private static async verifyBackupCode(_userId: string, code: string): Promise<boolean> {
+  private static async verifyBackupCode(
+    _userId: string,
+    code: string
+  ): Promise<boolean> {
     try {
       const user2FAData = await redisService.get(`user_2fa:${userId}`);
       if (!user2FAData) {
@@ -268,10 +271,7 @@ export class TwoFactorAuthMiddleware {
       user2FA.backupCodes.splice(codeIndex, 1);
       user2FA.lastBackupCodeUsed = Date.now();
 
-      await redisService.set(
-        `user_2fa:${userId}`,
-        JSON.stringify(user2FA)
-      );
+      await redisService.set(`user_2fa:${userId}`, JSON.stringify(user2FA));
 
       await this.log2FAEvent(userId, '2FA_BACKUP_CODE_SUCCESS');
 
@@ -322,7 +322,9 @@ export class TwoFactorAuthMiddleware {
    */
   private static async check2FASessionStatus(sessionId: string) {
     try {
-      const verificationData = await redisService.get(`2fa_verified:${sessionId}`);
+      const verificationData = await redisService.get(
+        `2fa_verified:${sessionId}`
+      );
 
       if (!verificationData) {
         return { isVerified: false };
@@ -392,7 +394,8 @@ export class TwoFactorAuthMiddleware {
 
     return sensitive2FAEndpoints.some(
       endpoint =>
-        endpoint.path.test(path) && endpoint.methods.includes(method.toUpperCase())
+        endpoint.path.test(path) &&
+        endpoint.methods.includes(method.toUpperCase())
     );
   }
 
@@ -493,13 +496,12 @@ export class TwoFactorAuthMiddleware {
       const user2FA = JSON.parse(user2FAData);
       const newBackupCodes = this.generateBackupCodes();
 
-      user2FA.backupCodes = newBackupCodes.map(code => this.hashBackupCode(code));
+      user2FA.backupCodes = newBackupCodes.map(code =>
+        this.hashBackupCode(code)
+      );
       user2FA.backupCodesGeneratedAt = Date.now();
 
-      await redisService.set(
-        `user_2fa:${userId}`,
-        JSON.stringify(user2FA)
-      );
+      await redisService.set(`user_2fa:${userId}`, JSON.stringify(user2FA));
 
       console.info('New backup codes generated', {
         userId,
@@ -531,7 +533,8 @@ export class TwoFactorAuthMiddleware {
       const eventKeys = await redisService.keys(`2fa_event:${userId}:*`);
       const events = [];
 
-      for (const key of eventKeys.slice(-50)) { // Last 50 events
+      for (const key of eventKeys.slice(-50)) {
+        // Last 50 events
         const eventData = await redisService.get(key);
         if (eventData) {
           events.push(JSON.parse(eventData));

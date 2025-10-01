@@ -36,7 +36,7 @@ export class GatewayMetricsCollector implements IGatewayMetricsCollector {
         timestamp: new Date(),
         responseTime,
         success,
-        amount
+        amount,
       };
 
       this.addToBuffer(gatewayId, metricsData);
@@ -45,7 +45,7 @@ export class GatewayMetricsCollector implements IGatewayMetricsCollector {
         gatewayId,
         success,
         responseTime,
-        amount
+        amount,
       });
     } catch (error) {
       logger.error('Failed to record transaction metrics', {
@@ -53,12 +53,16 @@ export class GatewayMetricsCollector implements IGatewayMetricsCollector {
         gatewayId,
         success,
         responseTime,
-        amount
+        amount,
       });
     }
   }
 
-  recordError(gatewayId: string, errorType: string, errorMessage: string): void {
+  recordError(
+    gatewayId: string,
+    errorType: string,
+    errorMessage: string
+  ): void {
     try {
       const metricsData: MetricsData = {
         gatewayId,
@@ -67,7 +71,7 @@ export class GatewayMetricsCollector implements IGatewayMetricsCollector {
         success: false,
         amount: 0,
         errorType,
-        errorMessage
+        errorMessage,
       };
 
       this.addToBuffer(gatewayId, metricsData);
@@ -75,14 +79,14 @@ export class GatewayMetricsCollector implements IGatewayMetricsCollector {
       logger.debug('Recorded error metrics', {
         gatewayId,
         errorType,
-        errorMessage
+        errorMessage,
       });
     } catch (error) {
       logger.error('Failed to record error metrics', {
         error,
         gatewayId,
         errorType,
-        errorMessage
+        errorMessage,
       });
     }
   }
@@ -97,8 +101,8 @@ export class GatewayMetricsCollector implements IGatewayMetricsCollector {
       // Filter by period if provided
       let filteredData = buffer;
       if (period) {
-        filteredData = buffer.filter(data =>
-          data.timestamp >= period.start && data.timestamp <= period.end
+        filteredData = buffer.filter(
+          data => data.timestamp >= period.start && data.timestamp <= period.end
         );
       }
 
@@ -107,19 +111,24 @@ export class GatewayMetricsCollector implements IGatewayMetricsCollector {
       logger.debug('Retrieved gateway metrics', {
         gatewayId,
         period,
-        dataPoints: filteredData.length
+        dataPoints: filteredData.length,
       });
 
       return metrics;
     } catch (error) {
-      logger.error('Failed to get gateway metrics', { error, gatewayId, period });
+      logger.error('Failed to get gateway metrics', {
+        error,
+        gatewayId,
+        period,
+      });
       throw error;
     }
   }
 
-  async getAggregatedMetrics(
-    period?: { start: Date; end: Date }
-  ): Promise<Record<string, GatewayMetrics>> {
+  async getAggregatedMetrics(period?: {
+    start: Date;
+    end: Date;
+  }): Promise<Record<string, GatewayMetrics>> {
     try {
       const result: Record<string, GatewayMetrics> = {};
 
@@ -129,7 +138,7 @@ export class GatewayMetricsCollector implements IGatewayMetricsCollector {
 
       logger.debug('Retrieved aggregated metrics', {
         period,
-        gatewayCount: Object.keys(result).length
+        gatewayCount: Object.keys(result).length,
       });
 
       return result;
@@ -161,7 +170,10 @@ export class GatewayMetricsCollector implements IGatewayMetricsCollector {
     }
   }
 
-  async recordMetrics(gatewayId: string, metrics: Partial<GatewayMetrics>): Promise<void> {
+  async recordMetrics(
+    gatewayId: string,
+    metrics: Partial<GatewayMetrics>
+  ): Promise<void> {
     try {
       const existing = this.aggregatedMetrics.get(gatewayId);
       const updated: GatewayMetrics = {
@@ -170,10 +182,14 @@ export class GatewayMetricsCollector implements IGatewayMetricsCollector {
         responseTime: metrics.responseTime || existing?.responseTime || 0,
         successRate: metrics.successRate || existing?.successRate || 0,
         errorRate: metrics.errorRate || existing?.errorRate || 0,
-        transactionCount: metrics.transactionCount || existing?.transactionCount || 0,
-        transactionVolume: metrics.transactionVolume || existing?.transactionVolume || new Decimal(0),
+        transactionCount:
+          metrics.transactionCount || existing?.transactionCount || 0,
+        transactionVolume:
+          metrics.transactionVolume ||
+          existing?.transactionVolume ||
+          new Decimal(0),
         statusCounts: metrics.statusCounts || existing?.statusCounts || {},
-        errorTypes: metrics.errorTypes || existing?.errorTypes || {}
+        errorTypes: metrics.errorTypes || existing?.errorTypes || {},
       };
 
       this.aggregatedMetrics.set(gatewayId, updated);
@@ -226,7 +242,10 @@ export class GatewayMetricsCollector implements IGatewayMetricsCollector {
     }
   }
 
-  private calculateMetrics(gatewayId: string, data: MetricsData[]): GatewayMetrics {
+  private calculateMetrics(
+    gatewayId: string,
+    data: MetricsData[]
+  ): GatewayMetrics {
     if (data.length === 0) {
       return {
         gatewayId,
@@ -237,7 +256,7 @@ export class GatewayMetricsCollector implements IGatewayMetricsCollector {
         transactionCount: 0,
         transactionVolume: new Decimal(0),
         statusCounts: {},
-        errorTypes: {}
+        errorTypes: {},
       };
     }
 
@@ -245,13 +264,17 @@ export class GatewayMetricsCollector implements IGatewayMetricsCollector {
     const failedTransactions = data.filter(d => !d.success);
 
     // Calculate response time (average of successful transactions)
-    const avgResponseTime = successfulTransactions.length > 0
-      ? successfulTransactions.reduce((sum, d) => sum + d.responseTime, 0) / successfulTransactions.length
-      : 0;
+    const avgResponseTime =
+      successfulTransactions.length > 0
+        ? successfulTransactions.reduce((sum, d) => sum + d.responseTime, 0) /
+          successfulTransactions.length
+        : 0;
 
     // Calculate success and error rates
-    const successRate = data.length > 0 ? successfulTransactions.length / data.length : 0;
-    const errorRate = data.length > 0 ? failedTransactions.length / data.length : 0;
+    const successRate =
+      data.length > 0 ? successfulTransactions.length / data.length : 0;
+    const errorRate =
+      data.length > 0 ? failedTransactions.length / data.length : 0;
 
     // Calculate transaction volume
     const transactionVolume = data.reduce(
@@ -262,7 +285,7 @@ export class GatewayMetricsCollector implements IGatewayMetricsCollector {
     // Count status types
     const statusCounts: Record<string, number> = {
       success: successfulTransactions.length,
-      error: failedTransactions.length
+      error: failedTransactions.length,
     };
 
     // Count error types
@@ -282,7 +305,7 @@ export class GatewayMetricsCollector implements IGatewayMetricsCollector {
       transactionCount: data.length,
       transactionVolume,
       statusCounts,
-      errorTypes
+      errorTypes,
     };
   }
 
@@ -292,7 +315,7 @@ export class GatewayMetricsCollector implements IGatewayMetricsCollector {
     }, this.aggregationInterval);
 
     logger.debug('Started metrics aggregation', {
-      interval: this.aggregationInterval
+      interval: this.aggregationInterval,
     });
   }
 
@@ -310,7 +333,7 @@ export class GatewayMetricsCollector implements IGatewayMetricsCollector {
       }
 
       logger.debug('Metrics aggregation completed', {
-        gatewayCount: this.aggregatedMetrics.size
+        gatewayCount: this.aggregatedMetrics.size,
       });
     } catch (error) {
       logger.error('Error during metrics aggregation', { error });

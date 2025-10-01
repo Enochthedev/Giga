@@ -14,7 +14,7 @@ describe('Validation Utils', () => {
   describe('validatePaymentRequest', () => {
     it('should validate a valid payment request', () => {
       const validRequest = {
-        amount: 100.00,
+        amount: 100.0,
         currency: 'USD',
         description: 'Test payment',
         userId: 'user-123',
@@ -27,7 +27,7 @@ describe('Validation Utils', () => {
 
     it('should validate payment request with card data', () => {
       const validRequest = {
-        amount: 100.00,
+        amount: 100.0,
         currency: 'USD',
         paymentMethodData: {
           type: 'card',
@@ -46,7 +46,7 @@ describe('Validation Utils', () => {
 
     it('should validate payment request with splits', () => {
       const validRequest = {
-        amount: 100.00,
+        amount: 100.0,
         currency: 'USD',
         paymentMethodId: 'pm-123',
         splits: [
@@ -118,7 +118,7 @@ describe('Validation Utils', () => {
     it('should validate a valid refund request', () => {
       const validRequest = {
         transactionId: 'txn-123',
-        amount: 50.00,
+        amount: 50.0,
         reason: 'Customer request',
         metadata: { refundId: 'ref-123' },
       };
@@ -225,19 +225,19 @@ describe('Validation Utils', () => {
 
   describe('validateAmount', () => {
     it('should validate amounts above minimum', () => {
-      expect(validateAmount(1.00, 'USD')).toBe(true);
-      expect(validateAmount(5.00, 'EUR')).toBe(true);
+      expect(validateAmount(1.0, 'USD')).toBe(true);
+      expect(validateAmount(5.0, 'EUR')).toBe(true);
       expect(validateAmount(100, 'JPY')).toBe(true);
     });
 
     it('should reject amounts below minimum', () => {
       expect(validateAmount(0.01, 'USD')).toBe(false); // Below $0.50 minimum
-      expect(validateAmount(0.10, 'EUR')).toBe(false); // Below €0.50 minimum
+      expect(validateAmount(0.1, 'EUR')).toBe(false); // Below €0.50 minimum
       expect(validateAmount(10, 'JPY')).toBe(false); // Below ¥50 minimum
     });
 
     it('should handle unknown currencies with default minimum', () => {
-      expect(validateAmount(1.00, 'UNKNOWN')).toBe(true);
+      expect(validateAmount(1.0, 'UNKNOWN')).toBe(true);
       expect(validateAmount(0.01, 'UNKNOWN')).toBe(false);
     });
   });

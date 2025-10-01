@@ -42,7 +42,14 @@ export interface FraudRule {
 
 export interface FraudCondition {
   field: string;
-  operator: 'equals' | 'not_equals' | 'greater_than' | 'less_than' | 'contains' | 'in' | 'not_in';
+  operator:
+    | 'equals'
+    | 'not_equals'
+    | 'greater_than'
+    | 'less_than'
+    | 'contains'
+    | 'in'
+    | 'not_in';
   value: any;
   logicalOperator?: 'and' | 'or';
 }

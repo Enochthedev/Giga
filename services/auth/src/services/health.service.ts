@@ -49,11 +49,14 @@ class HealthService {
 
       // Check if response time is acceptable
       const status = responseTime > 5000 ? 'warn' : 'pass';
-      const message = responseTime > 5000 ? 'Database response time is slow' : 'Database is healthy';
+      const message =
+        responseTime > 5000
+          ? 'Database response time is slow'
+          : 'Database is healthy';
 
       logger.debug('Database health check completed', {
         responseTime,
-        status
+        status,
       });
 
       return {
@@ -62,14 +65,14 @@ class HealthService {
         message,
         details: {
           connectionPool: 'active',
-          queryTime: responseTime
-        }
+          queryTime: responseTime,
+        },
       };
     } catch (error) {
       const responseTime = Date.now() - startTime;
 
       logger.error('Database health check failed', error as Error, {
-        responseTime
+        responseTime,
       });
 
       metricsService.recordDatabaseError();
@@ -79,8 +82,8 @@ class HealthService {
         responseTime,
         message: 'Database connection failed',
         details: {
-          error: (error as Error).message
-        }
+          error: (error as Error).message,
+        },
       };
     }
   }
@@ -109,11 +112,14 @@ class HealthService {
       }
 
       const status = responseTime > 1000 ? 'warn' : 'pass';
-      const message = responseTime > 1000 ? 'Redis response time is slow' : 'Redis is healthy';
+      const message =
+        responseTime > 1000
+          ? 'Redis response time is slow'
+          : 'Redis is healthy';
 
       logger.debug('Redis health check completed', {
         responseTime,
-        status
+        status,
       });
 
       return {
@@ -122,14 +128,14 @@ class HealthService {
         message,
         details: {
           connection: 'active',
-          operationTime: responseTime
-        }
+          operationTime: responseTime,
+        },
       };
     } catch (error) {
       const responseTime = Date.now() - startTime;
 
       logger.error('Redis health check failed', error as Error, {
-        responseTime
+        responseTime,
       });
 
       metricsService.recordRedisError();
@@ -139,8 +145,8 @@ class HealthService {
         responseTime,
         message: 'Redis connection failed',
         details: {
-          error: (error as Error).message
-        }
+          error: (error as Error).message,
+        },
       };
     }
   }
@@ -169,7 +175,7 @@ class HealthService {
 
       logger.debug('Memory health check completed', {
         memoryUsagePercent,
-        status
+        status,
       });
 
       return {
@@ -181,8 +187,8 @@ class HealthService {
           heapTotal: Math.round(totalMemory / 1024 / 1024), // MB
           usagePercent: Math.round(memoryUsagePercent),
           external: Math.round(memoryUsage.external / 1024 / 1024), // MB
-          rss: Math.round(memoryUsage.rss / 1024 / 1024) // MB
-        }
+          rss: Math.round(memoryUsage.rss / 1024 / 1024), // MB
+        },
       };
     } catch (error) {
       const responseTime = Date.now() - startTime;
@@ -194,8 +200,8 @@ class HealthService {
         responseTime,
         message: 'Memory check failed',
         details: {
-          error: (error as Error).message
-        }
+          error: (error as Error).message,
+        },
       };
     }
   }
@@ -211,7 +217,7 @@ class HealthService {
       const responseTime = Date.now() - startTime;
 
       logger.debug('Disk health check completed', {
-        responseTime
+        responseTime,
       });
 
       return {
@@ -220,8 +226,8 @@ class HealthService {
         message: 'Disk access is healthy',
         details: {
           accessible: true,
-          checkTime: responseTime
-        }
+          checkTime: responseTime,
+        },
       };
     } catch (error) {
       const responseTime = Date.now() - startTime;
@@ -233,8 +239,8 @@ class HealthService {
         responseTime,
         message: 'Disk access failed',
         details: {
-          error: (error as Error).message
-        }
+          error: (error as Error).message,
+        },
       };
     }
   }
@@ -246,15 +252,21 @@ class HealthService {
 
     try {
       // Run all health checks in parallel
-      const [databaseCheck, redisCheck, memoryCheck, diskCheck] = await Promise.all([
-        this.checkDatabase(),
-        this.checkRedis(),
-        this.checkMemory(),
-        this.checkDisk()
-      ]);
+      const [databaseCheck, redisCheck, memoryCheck, diskCheck] =
+        await Promise.all([
+          this.checkDatabase(),
+          this.checkRedis(),
+          this.checkMemory(),
+          this.checkDisk(),
+        ]);
 
       // Determine overall status
-      const checks = { database: databaseCheck, redis: redisCheck, memory: memoryCheck, disk: diskCheck };
+      const checks = {
+        database: databaseCheck,
+        redis: redisCheck,
+        memory: memoryCheck,
+        disk: diskCheck,
+      };
       const overallStatus = this.determineOverallStatus(checks);
 
       // Get current metrics
@@ -272,8 +284,8 @@ class HealthService {
         metrics: {
           performance: performanceMetrics,
           database: databaseMetrics,
-          redis: redisMetrics
-        }
+          redis: redisMetrics,
+        },
       };
 
       const totalTime = Date.now() - startTime;
@@ -281,7 +293,7 @@ class HealthService {
       logger.info('Health check completed', {
         overallStatus,
         totalTime,
-        checksCompleted: Object.keys(checks).length
+        checksCompleted: Object.keys(checks).length,
       });
 
       return healthStatus;
@@ -295,21 +307,39 @@ class HealthService {
         version: process.env.npm_package_version || '1.0.0',
         environment: process.env.NODE_ENV || 'development',
         checks: {
-          database: { status: 'fail', responseTime: 0, message: 'Health check failed' },
-          redis: { status: 'fail', responseTime: 0, message: 'Health check failed' },
-          memory: { status: 'fail', responseTime: 0, message: 'Health check failed' },
-          disk: { status: 'fail', responseTime: 0, message: 'Health check failed' }
+          database: {
+            status: 'fail',
+            responseTime: 0,
+            message: 'Health check failed',
+          },
+          redis: {
+            status: 'fail',
+            responseTime: 0,
+            message: 'Health check failed',
+          },
+          memory: {
+            status: 'fail',
+            responseTime: 0,
+            message: 'Health check failed',
+          },
+          disk: {
+            status: 'fail',
+            responseTime: 0,
+            message: 'Health check failed',
+          },
         },
         metrics: {
           performance: {},
           database: {},
-          redis: {}
-        }
+          redis: {},
+        },
       };
     }
   }
 
-  private determineOverallStatus(checks: Record<string, HealthCheck>): 'healthy' | 'degraded' | 'unhealthy' {
+  private determineOverallStatus(
+    checks: Record<string, HealthCheck>
+  ): 'healthy' | 'degraded' | 'unhealthy' {
     const statuses = Object.values(checks).map(check => check.status);
 
     if (statuses.includes('fail')) {
@@ -338,7 +368,7 @@ class HealthService {
     try {
       const [dbCheck, redisCheck] = await Promise.all([
         this.checkDatabase(),
-        this.checkRedis()
+        this.checkRedis(),
       ]);
 
       return dbCheck.status !== 'fail' && redisCheck.status !== 'fail';

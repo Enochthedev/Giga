@@ -2,6 +2,7 @@ import express from 'express';
 import { config } from './config';
 import { logger } from './lib/logger';
 import { errorHandler, notFoundHandler } from './middleware/error.middleware';
+import paymentMethodsRouter from './routes/payment-methods';
 import paymentsRouter from './routes/payments';
 import webhooksRouter from './routes/webhooks';
 
@@ -41,6 +42,7 @@ app.get('/health', (req, res) => {
 
 // API routes
 app.use('/api/v1/payments', paymentsRouter);
+app.use('/api/v1/payment-methods', paymentMethodsRouter);
 app.use('/api/v1/webhooks', webhooksRouter);
 
 // 404 handler

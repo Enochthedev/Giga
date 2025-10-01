@@ -58,7 +58,11 @@ export class PaymentController {
    *       500:
    *         description: Internal server error
    */
-  processPayment = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  processPayment = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
     try {
       logger.info('Processing payment request', { body: req.body });
 
@@ -104,21 +108,31 @@ export class PaymentController {
    *       404:
    *         description: Transaction not found
    */
-  capturePayment = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  capturePayment = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
     try {
       const { transactionId } = req.params;
       const { amount } = req.body;
 
       logger.info('Capturing payment', { transactionId, amount });
 
-      const result = await this.paymentService.capturePayment(transactionId!, amount);
+      const result = await this.paymentService.capturePayment(
+        transactionId!,
+        amount
+      );
 
       res.status(200).json({
         success: true,
         data: result,
       });
     } catch (error) {
-      logger.error('Payment capture failed', { error, transactionId: req.params.transactionId });
+      logger.error('Payment capture failed', {
+        error,
+        transactionId: req.params.transactionId,
+      });
       next(error);
     }
   };
@@ -144,7 +158,11 @@ export class PaymentController {
    *       404:
    *         description: Transaction not found
    */
-  cancelPayment = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  cancelPayment = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
     try {
       const { transactionId } = req.params;
 
@@ -157,7 +175,10 @@ export class PaymentController {
         data: result,
       });
     } catch (error) {
-      logger.error('Payment cancellation failed', { error, transactionId: req.params.transactionId });
+      logger.error('Payment cancellation failed', {
+        error,
+        transactionId: req.params.transactionId,
+      });
       next(error);
     }
   };
@@ -196,21 +217,32 @@ export class PaymentController {
    *       404:
    *         description: Transaction not found
    */
-  refundPayment = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  refundPayment = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
     try {
       const { transactionId } = req.params;
       const { amount, reason } = req.body;
 
       logger.info('Processing refund', { transactionId, amount, reason });
 
-      const result = await this.paymentService.refundPayment(transactionId!, amount, reason);
+      const result = await this.paymentService.refundPayment(
+        transactionId!,
+        amount,
+        reason
+      );
 
       res.status(200).json({
         success: true,
         data: result,
       });
     } catch (error) {
-      logger.error('Refund processing failed', { error, transactionId: req.params.transactionId });
+      logger.error('Refund processing failed', {
+        error,
+        transactionId: req.params.transactionId,
+      });
       next(error);
     }
   };
@@ -234,20 +266,29 @@ export class PaymentController {
    *       404:
    *         description: Transaction not found
    */
-  getTransaction = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  getTransaction = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
     try {
       const { transactionId } = req.params;
 
       logger.info('Getting transaction', { transactionId });
 
-      const transaction = await this.paymentService.getTransaction(transactionId!);
+      const transaction = await this.paymentService.getTransaction(
+        transactionId!
+      );
 
       res.status(200).json({
         success: true,
         data: transaction,
       });
     } catch (error) {
-      logger.error('Failed to get transaction', { error, transactionId: req.params.transactionId });
+      logger.error('Failed to get transaction', {
+        error,
+        transactionId: req.params.transactionId,
+      });
       next(error);
     }
   };
@@ -323,7 +364,11 @@ export class PaymentController {
    *       400:
    *         description: Invalid query parameters
    */
-  getTransactions = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  getTransactions = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
     try {
       logger.info('Getting transactions', { query: req.query });
 
@@ -375,14 +420,21 @@ export class PaymentController {
    *       404:
    *         description: Transaction not found
    */
-  updateTransactionStatus = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  updateTransactionStatus = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
     try {
       const { transactionId } = req.params;
       const { status } = req.body;
 
       logger.info('Updating transaction status', { transactionId, status });
 
-      const transaction = await this.paymentService.updateTransactionStatus(transactionId!, status);
+      const transaction = await this.paymentService.updateTransactionStatus(
+        transactionId!,
+        status
+      );
 
       res.status(200).json({
         success: true,
@@ -392,7 +444,7 @@ export class PaymentController {
       logger.error('Failed to update transaction status', {
         error,
         transactionId: req.params.transactionId,
-        status: req.body.status
+        status: req.body.status,
       });
       next(error);
     }

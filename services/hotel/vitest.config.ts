@@ -16,11 +16,11 @@ export default defineConfig({
         '**/*.d.ts',
         '**/*.config.ts',
         'src/generated/',
-        'prisma/'
-      ]
+        'prisma/',
+      ],
     },
     testTimeout: 10000,
-    hookTimeout: 10000
+    hookTimeout: 10000,
   },
   resolve: {
     alias: {
@@ -31,7 +31,7 @@ export default defineConfig({
       '@/middleware': path.resolve(__dirname, './src/middleware'),
       '@/routes': path.resolve(__dirname, './src/routes'),
       '@/lib': path.resolve(__dirname, './src/lib'),
-      '@/utils': path.resolve(__dirname, './src/utils')
-    }
-  }
+      '@/utils': path.resolve(__dirname, './src/utils'),
+    },
+  },
 });

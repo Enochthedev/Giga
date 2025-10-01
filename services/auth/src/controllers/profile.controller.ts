@@ -21,7 +21,8 @@ export class ProfileController {
         });
       }
 
-      const { firstName, lastName, phone, dateOfBirth, gender, avatar } = req.body;
+      const { firstName, lastName, phone, dateOfBirth, gender, avatar } =
+        req.body;
       const updateData: any = {};
 
       // Sanitize and validate inputs
@@ -72,8 +73,8 @@ export class ProfileController {
           const existingUser = await req.prisma.user.findFirst({
             where: {
               phone: phoneValidation.formatted,
-              id: { not: req.user.sub }
-            }
+              id: { not: req.user.sub },
+            },
           });
 
           if (existingUser) {
@@ -89,7 +90,7 @@ export class ProfileController {
           // Reset phone verification if phone number changed
           const currentUser = await req.prisma.user.findUnique({
             where: { id: req.user.sub },
-            select: { phone: true }
+            select: { phone: true },
           });
 
           if (currentUser?.phone !== phoneValidation.formatted) {
@@ -176,13 +177,15 @@ export class ProfileController {
           isEmailVerified: true,
           isPhoneVerified: true,
           updatedAt: true,
-        }
+        },
       });
 
       // Format phone for response
       const responseData = {
         ...updatedUser,
-        phone: updatedUser.phone ? PhoneNumberValidator.formatForDisplay(updatedUser.phone) : null,
+        phone: updatedUser.phone
+          ? PhoneNumberValidator.formatForDisplay(updatedUser.phone)
+          : null,
       };
 
       res.json({
@@ -239,7 +242,9 @@ export class ProfileController {
           email: userWithProfiles.email,
           firstName: userWithProfiles.firstName,
           lastName: userWithProfiles.lastName,
-          phone: userWithProfiles.phone ? PhoneNumberValidator.formatForDisplay(userWithProfiles.phone) : null,
+          phone: userWithProfiles.phone
+            ? PhoneNumberValidator.formatForDisplay(userWithProfiles.phone)
+            : null,
           avatar: userWithProfiles.avatar,
           dateOfBirth: userWithProfiles.dateOfBirth,
           gender: userWithProfiles.gender,

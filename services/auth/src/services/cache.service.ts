@@ -29,14 +29,18 @@ class CacheService {
   private readonly SESSION_TTL = 86400; // 24 hours
 
   // User profile caching
-  async cacheUserProfile(userId: string, userData: UserCacheData, options?: CacheOptions): Promise<void> {
+  async cacheUserProfile(
+    userId: string,
+    userData: UserCacheData,
+    options?: CacheOptions
+  ): Promise<void> {
     const key = this.getUserCacheKey(userId);
     const ttl = options?.ttl || this.USER_PROFILE_TTL;
 
     try {
       const cacheData = {
         ...userData,
-        lastCached: Date.now()
+        lastCached: Date.now(),
       };
 
       await redisService.set(key, JSON.stringify(cacheData), ttl);
@@ -44,7 +48,7 @@ class CacheService {
       logger.debug('User profile cached', {
         userId,
         ttl,
-        profileTypes: Object.keys(userData.profiles)
+        profileTypes: Object.keys(userData.profiles),
       });
 
       metricsService.recordCacheOperation('SET', 'user_profile', true);
@@ -76,13 +80,15 @@ class CacheService {
 
       logger.debug('User profile cache hit', {
         userId,
-        cacheAge: Math.round(cacheAge / 1000)
+        cacheAge: Math.round(cacheAge / 1000),
       });
 
       metricsService.recordCacheOperation('GET', 'user_profile', true);
       return userData;
     } catch (error) {
-      logger.error('Failed to get cached user profile', error as Error, { userId });
+      logger.error('Failed to get cached user profile', error as Error, {
+        userId,
+      });
       metricsService.recordCacheOperation('GET', 'user_profile', false);
       return null;
     }
@@ -95,19 +101,25 @@ class CacheService {
       await redisService.del(key);
       logger.debug('User cache invalidated', { userId });
     } catch (error) {
-      logger.error('Failed to invalidate user cache', error as Error, { userId });
+      logger.error('Failed to invalidate user cache', error as Error, {
+        userId,
+      });
     }
   }
 
   // Role-based caching
-  async cacheUserRoles(_userId: string, roles: (UserRole & { role: Role })[], options?: CacheOptions): Promise<void> {
+  async cacheUserRoles(
+    _userId: string,
+    roles: (UserRole & { role: Role })[],
+    options?: CacheOptions
+  ): Promise<void> {
     const _key = this.getUserRolesKey(userId);
     const ttl = options?.ttl || this.ROLE_TTL;
 
     try {
       const cacheData = {
         roles,
-        lastCached: Date.now()
+        lastCached: Date.now(),
       };
 
       await redisService.set(key, JSON.stringify(cacheData), ttl);
@@ -115,7 +127,7 @@ class CacheService {
       logger.debug('User roles cached', {
         userId,
         roleCount: roles.length,
-        ttl
+        ttl,
       });
 
       metricsService.recordCacheOperation('SET', 'user_roles', true);
@@ -125,7 +137,9 @@ class CacheService {
     }
   }
 
-  async getCachedUserRoles(_userId: string): Promise<(UserRole & { role: Role })[] | null> {
+  async getCachedUserRoles(
+    _userId: string
+  ): Promise<(UserRole & { role: Role })[] | null> {
     const _key = this.getUserRolesKey(userId);
 
     try {
@@ -139,13 +153,15 @@ class CacheService {
 
       logger.debug('User roles cache hit', {
         userId,
-        roleCount: data.roles.length
+        roleCount: data.roles.length,
       });
 
       metricsService.recordCacheOperation('GET', 'user_roles', true);
       return data.roles;
     } catch (error) {
-      logger.error('Failed to get cached user roles', error as Error, { userId });
+      logger.error('Failed to get cached user roles', error as Error, {
+        userId,
+      });
       metricsService.recordCacheOperation('GET', 'user_roles', false);
       return null;
     }
@@ -194,16 +210,22 @@ class CacheService {
       await this.cacheUserRoles(userId, userData.roles);
 
       // Cache individual profile types for faster access
-      for (const [profileType, profileData] of Object.entries(userData.profiles)) {
+      for (const [profileType, profileData] of Object.entries(
+        userData.profiles
+      )) {
         if (profileData) {
           const profileKey = `profile:${profileType}:${userId}`;
-          await this.cacheFrequentData(profileKey, profileData, this.USER_PROFILE_TTL);
+          await this.cacheFrequentData(
+            profileKey,
+            profileData,
+            this.USER_PROFILE_TTL
+          );
         }
       }
 
       logger.debug('Cache warmed for user', {
         userId,
-        profileTypes: Object.keys(userData.profiles)
+        profileTypes: Object.keys(userData.profiles),
       });
     } catch (error) {
       logger.error('Failed to warm cache', error as Error, { userId });
@@ -215,15 +237,19 @@ class CacheService {
     try {
       const keys = userIds.flatMap(userId => [
         this.getUserCacheKey(userId),
-        this.getUserRolesKey(userId)
+        this.getUserRolesKey(userId),
       ]);
 
       if (keys.length > 0) {
         await Promise.all(keys.map(key => redisService.del(key)));
-        logger.debug('Batch invalidated user caches', { count: userIds.length });
+        logger.debug('Batch invalidated user caches', {
+          count: userIds.length,
+        });
       }
     } catch (error) {
-      logger.error('Failed to batch invalidate user caches', error as Error, { userIds });
+      logger.error('Failed to batch invalidate user caches', error as Error, {
+        userIds,
+      });
     }
   }
 
@@ -247,14 +273,14 @@ class CacheService {
       return {
         hitRate: metrics.cacheHitRate,
         totalOperations: metrics.operationCount,
-        cacheSize
+        cacheSize,
       };
     } catch (error) {
       logger.error('Failed to get cache stats', error as Error);
       return {
         hitRate: 0,
         totalOperations: 0,
-        cacheSize: 0
+        cacheSize: 0,
       };
     }
   }
@@ -266,7 +292,9 @@ class CacheService {
       const expiredKeys = await redisService.keys('*:expired:*');
       if (expiredKeys.length > 0) {
         await Promise.all(expiredKeys.map(key => redisService.del(key)));
-        logger.info('Cleaned up expired cache entries', { count: expiredKeys.length });
+        logger.info('Cleaned up expired cache entries', {
+          count: expiredKeys.length,
+        });
       }
     } catch (error) {
       logger.error('Failed to cleanup expired cache', error as Error);
@@ -283,7 +311,12 @@ class CacheService {
   }
 
   // Advanced caching strategies
-  async cacheWithTags(key: string, data: any, ttl: number, tags: string[]): Promise<void> {
+  async cacheWithTags(
+    key: string,
+    data: any,
+    ttl: number,
+    tags: string[]
+  ): Promise<void> {
     try {
       // Store the main data
       await redisService.set(key, JSON.stringify(data), ttl);
@@ -315,13 +348,18 @@ class CacheService {
         const keys = JSON.parse(taggedKeys);
         await Promise.all([
           ...keys.map((key: string) => redisService.del(key)),
-          redisService.del(tagKey)
+          redisService.del(tagKey),
         ]);
 
-        logger.debug('Cache invalidated by tag', { tag, keysInvalidated: keys.length });
+        logger.debug('Cache invalidated by tag', {
+          tag,
+          keysInvalidated: keys.length,
+        });
       }
     } catch (error) {
-      logger.error('Failed to invalidate cache by tag', error as Error, { tag });
+      logger.error('Failed to invalidate cache by tag', error as Error, {
+        tag,
+      });
     }
   }
 
@@ -333,12 +371,14 @@ class CacheService {
         redisService.del(this.getUserRolesKey(userId)),
         redisService.deletePattern(`profile:*:${userId}`),
         redisService.deletePattern(`session:${userId}*`),
-        this.invalidateByTag(`user:${userId}`)
+        this.invalidateByTag(`user:${userId}`),
       ]);
 
       logger.debug('Invalidated all user-related cache', { userId });
     } catch (error) {
-      logger.error('Failed to invalidate user-related cache', error as Error, { userId });
+      logger.error('Failed to invalidate user-related cache', error as Error, {
+        userId,
+      });
     }
   }
 
@@ -362,14 +402,14 @@ class CacheService {
       return {
         avgResponseTime: redisMetrics.averageOperationTime,
         hitRate: stats.hitRate,
-        memoryUsage
+        memoryUsage,
       };
     } catch (error) {
       logger.error('Failed to monitor cache performance', error as Error);
       return {
         avgResponseTime: 0,
         hitRate: 0,
-        memoryUsage: 0
+        memoryUsage: 0,
       };
     }
   }
@@ -381,18 +421,27 @@ class CacheService {
 
       // Preload active user roles
       const activeUsers = await this.getActiveUserIds();
-      const preloadPromises = activeUsers.slice(0, 100).map(async (userId) => {
+      const preloadPromises = activeUsers.slice(0, 100).map(async userId => {
         try {
           // This would typically fetch from database and cache
           // For now, we'll just warm the cache keys
-          await this.cacheFrequentData(`user_active:${userId}`, { active: true }, 3600);
+          await this.cacheFrequentData(
+            `user_active:${userId}`,
+            { active: true },
+            3600
+          );
         } catch (error) {
-          logger.warn('Failed to preload user data', { userId, error: (error as Error).message });
+          logger.warn('Failed to preload user data', {
+            userId,
+            error: (error as Error).message,
+          });
         }
       });
 
       await Promise.all(preloadPromises);
-      logger.info('Cache preload completed', { usersPreloaded: activeUsers.length });
+      logger.info('Cache preload completed', {
+        usersPreloaded: activeUsers.length,
+      });
     } catch (error) {
       logger.error('Cache preload failed', error as Error);
     }
@@ -419,18 +468,30 @@ class CacheService {
       if (jsonString.length > 1024) {
         const zlib = require('zlib');
         const compressed = zlib.gzipSync(jsonString);
-        await redisService.set(`${key}:compressed`, compressed.toString('base64'), ttl);
-        await redisService.set(`${key}:meta`, JSON.stringify({ compressed: true, originalSize: jsonString.length }), ttl);
+        await redisService.set(
+          `${key}:compressed`,
+          compressed.toString('base64'),
+          ttl
+        );
+        await redisService.set(
+          `${key}:meta`,
+          JSON.stringify({ compressed: true, originalSize: jsonString.length }),
+          ttl
+        );
 
         logger.debug('Data cached with compression', {
           key,
           originalSize: jsonString.length,
           compressedSize: compressed.length,
-          compressionRatio: (1 - compressed.length / jsonString.length) * 100
+          compressionRatio: (1 - compressed.length / jsonString.length) * 100,
         });
       } else {
         await redisService.set(key, jsonString, ttl);
-        await redisService.set(`${key}:meta`, JSON.stringify({ compressed: false }), ttl);
+        await redisService.set(
+          `${key}:meta`,
+          JSON.stringify({ compressed: false }),
+          ttl
+        );
       }
     } catch (error) {
       logger.error('Failed to cache compressed data', error as Error, { key });
@@ -457,7 +518,9 @@ class CacheService {
         return data ? JSON.parse(data) : null;
       }
     } catch (error) {
-      logger.error('Failed to get cached compressed data', error as Error, { key });
+      logger.error('Failed to get cached compressed data', error as Error, {
+        key,
+      });
       return null;
     }
   }

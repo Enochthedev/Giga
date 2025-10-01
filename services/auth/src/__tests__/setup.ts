@@ -19,7 +19,10 @@ beforeAll(() => {
   // Try to initialize test Redis connection, but don't fail if Redis is not available
   try {
     redis = Redis.createClient({
-      url: process.env.TEST_REDIS_URL || process.env.REDIS_URL || 'redis://localhost:6379',
+      url:
+        process.env.TEST_REDIS_URL ||
+        process.env.REDIS_URL ||
+        'redis://localhost:6379',
     });
 
     await redis.connect();

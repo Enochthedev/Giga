@@ -13,7 +13,8 @@ export class GatewayHealthMonitor implements IGatewayHealthMonitor {
   private healthStatuses: Map<string, GatewayHealthStatus> = new Map();
   private healthCheckConfigs: Map<string, HealthCheckConfig> = new Map();
   private healthCheckIntervals: Map<string, NodeJS.Timeout> = new Map();
-  private healthChangeCallbacks: Array<(status: GatewayHealthStatus) => void> = [];
+  private healthChangeCallbacks: Array<(status: GatewayHealthStatus) => void> =
+    [];
   private isMonitoring = false;
 
   startMonitoring(): void {
@@ -59,7 +60,7 @@ export class GatewayHealthMonitor implements IGatewayHealthMonitor {
       gatewayId,
       status: 'inactive',
       lastCheck: new Date(),
-      consecutiveFailures: 0
+      consecutiveFailures: 0,
     };
     this.healthStatuses.set(gatewayId, initialStatus);
 
@@ -90,7 +91,9 @@ export class GatewayHealthMonitor implements IGatewayHealthMonitor {
 
       const config = this.healthCheckConfigs.get(gatewayId);
       if (!config) {
-        throw new Error(`No health check configuration found for gateway ${gatewayId}`);
+        throw new Error(
+          `No health check configuration found for gateway ${gatewayId}`
+        );
       }
 
       const startTime = Date.now();
@@ -109,9 +112,8 @@ export class GatewayHealthMonitor implements IGatewayHealthMonitor {
 
       const responseTime = Date.now() - startTime;
       const currentStatus = this.healthStatuses.get(gatewayId);
-      const consecutiveFailures = status === 'error'
-        ? (currentStatus?.consecutiveFailures || 0) + 1
-        : 0;
+      const consecutiveFailures =
+        status === 'error' ? (currentStatus?.consecutiveFailures || 0) + 1 : 0;
 
       const healthStatus: GatewayHealthStatus = {
         gatewayId,
@@ -119,7 +121,7 @@ export class GatewayHealthMonitor implements IGatewayHealthMonitor {
         lastCheck: new Date(),
         responseTime,
         errorMessage,
-        consecutiveFailures
+        consecutiveFailures,
       };
 
       this.healthStatuses.set(gatewayId, healthStatus);
@@ -129,7 +131,11 @@ export class GatewayHealthMonitor implements IGatewayHealthMonitor {
         this.notifyHealthChange(healthStatus);
       }
 
-      logger.debug('Health check completed', { gatewayId, status, responseTime });
+      logger.debug('Health check completed', {
+        gatewayId,
+        status,
+        responseTime,
+      });
       return healthStatus;
     } catch (error) {
       logger.error('Failed to perform health check', { gatewayId, error });
@@ -139,7 +145,8 @@ export class GatewayHealthMonitor implements IGatewayHealthMonitor {
         status: 'error',
         lastCheck: new Date(),
         errorMessage: error instanceof Error ? error.message : 'Unknown error',
-        consecutiveFailures: (this.healthStatuses.get(gatewayId)?.consecutiveFailures || 0) + 1
+        consecutiveFailures:
+          (this.healthStatuses.get(gatewayId)?.consecutiveFailures || 0) + 1,
       };
 
       this.healthStatuses.set(gatewayId, errorStatus);
@@ -171,7 +178,7 @@ export class GatewayHealthMonitor implements IGatewayHealthMonitor {
       status: 'error',
       lastCheck: new Date(),
       errorMessage: error.message,
-      consecutiveFailures: currentStatus.consecutiveFailures + 1
+      consecutiveFailures: currentStatus.consecutiveFailures + 1,
     };
 
     this.healthStatuses.set(gatewayId, updatedStatus);
@@ -180,7 +187,7 @@ export class GatewayHealthMonitor implements IGatewayHealthMonitor {
     logger.warn('Recorded gateway failure', {
       gatewayId,
       consecutiveFailures: updatedStatus.consecutiveFailures,
-      error: error.message
+      error: error.message,
     });
   }
 
@@ -197,7 +204,7 @@ export class GatewayHealthMonitor implements IGatewayHealthMonitor {
       lastCheck: new Date(),
       responseTime,
       errorMessage: undefined,
-      consecutiveFailures: 0
+      consecutiveFailures: 0,
     };
 
     this.healthStatuses.set(gatewayId, updatedStatus);
@@ -210,7 +217,10 @@ export class GatewayHealthMonitor implements IGatewayHealthMonitor {
     logger.debug('Recorded gateway success', { gatewayId, responseTime });
   }
 
-  private startHealthCheckForGateway(gatewayId: string, config: HealthCheckConfig): void {
+  private startHealthCheckForGateway(
+    gatewayId: string,
+    config: HealthCheckConfig
+  ): void {
     // Clear existing interval if any
     const existingInterval = this.healthCheckIntervals.get(gatewayId);
     if (existingInterval) {
@@ -233,11 +243,14 @@ export class GatewayHealthMonitor implements IGatewayHealthMonitor {
 
     logger.debug('Started health check for gateway', {
       gatewayId,
-      interval: config.interval
+      interval: config.interval,
     });
   }
 
-  private async performHealthCheck(gatewayId: string, config: HealthCheckConfig): Promise<boolean> {
+  private async performHealthCheck(
+    gatewayId: string,
+    config: HealthCheckConfig
+  ): Promise<boolean> {
     // If no URL is provided, assume the gateway is healthy
     // In a real implementation, this would call the gateway's health endpoint
     if (!config.url) {
@@ -250,7 +263,10 @@ export class GatewayHealthMonitor implements IGatewayHealthMonitor {
     for (let attempt = 1; attempt <= config.retries; attempt++) {
       try {
         // Simulate HTTP health check
-        const isHealthy = await this.simulateHealthCheck(config.url, config.timeout);
+        const isHealthy = await this.simulateHealthCheck(
+          config.url,
+          config.timeout
+        );
         if (isHealthy) {
           return true;
         }
@@ -260,7 +276,7 @@ export class GatewayHealthMonitor implements IGatewayHealthMonitor {
         logger.debug('Health check attempt failed', {
           gatewayId,
           attempt,
-          error: lastError.message
+          error: lastError.message,
         });
 
         // Wait before retry (except for last attempt)
@@ -273,7 +289,10 @@ export class GatewayHealthMonitor implements IGatewayHealthMonitor {
     throw lastError || new Error('All health check attempts failed');
   }
 
-  private async simulateHealthCheck(url: string, timeout: number): Promise<boolean> {
+  private async simulateHealthCheck(
+    url: string,
+    timeout: number
+  ): Promise<boolean> {
     // Simulate network call with timeout
     return new Promise((resolve, reject) => {
       const timer = setTimeout(() => {
@@ -294,7 +313,7 @@ export class GatewayHealthMonitor implements IGatewayHealthMonitor {
     logger.info('Gateway health status changed', {
       gatewayId: status.gatewayId,
       status: status.status,
-      consecutiveFailures: status.consecutiveFailures
+      consecutiveFailures: status.consecutiveFailures,
     });
 
     for (const callback of this.healthChangeCallbacks) {

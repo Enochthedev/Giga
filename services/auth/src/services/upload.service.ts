@@ -69,7 +69,11 @@ export class UploadService {
         if (this.allowedMimeTypes.includes(file.mimetype)) {
           cb(null, true);
         } else {
-          cb(new Error('Invalid file type. Only JPEG, PNG, and WebP are allowed.'));
+          cb(
+            new Error(
+              'Invalid file type. Only JPEG, PNG, and WebP are allowed.'
+            )
+          );
         }
       },
     });
@@ -78,7 +82,10 @@ export class UploadService {
   /**
    * Process and save avatar image
    */
-  async processAvatar(file: Express.Multer.File, _userId: string): Promise<UploadResult> {
+  async processAvatar(
+    file: Express.Multer.File,
+    _userId: string
+  ): Promise<UploadResult> {
     try {
       if (!file) {
         return { success: false, error: 'No file provided' };
@@ -110,7 +117,8 @@ export class UploadService {
       console.error('Avatar processing error:', error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Failed to process image',
+        error:
+          error instanceof Error ? error.message : 'Failed to process image',
       };
     }
   }
@@ -146,7 +154,10 @@ export class UploadService {
   /**
    * Validate image file
    */
-  validateImageFile(file: Express.Multer.File): { isValid: boolean; error?: string } {
+  validateImageFile(file: Express.Multer.File): {
+    isValid: boolean;
+    error?: string;
+  } {
     if (!file) {
       return { isValid: false, error: 'No file provided' };
     }
@@ -154,14 +165,14 @@ export class UploadService {
     if (!this.allowedMimeTypes.includes(file.mimetype)) {
       return {
         isValid: false,
-        error: 'Invalid file type. Only JPEG, PNG, and WebP are allowed.'
+        error: 'Invalid file type. Only JPEG, PNG, and WebP are allowed.',
       };
     }
 
     if (file.size > this.maxFileSize) {
       return {
         isValid: false,
-        error: `File too large. Maximum size is ${this.maxFileSize / 1024 / 1024}MB.`
+        error: `File too large. Maximum size is ${this.maxFileSize / 1024 / 1024}MB.`,
       };
     }
 
@@ -197,7 +208,7 @@ export class UploadService {
     try {
       const tempDir = path.join(this.uploadDir, 'temp');
       const files = await fs.readdir(tempDir);
-      const cutoffTime = Date.now() - (maxAgeHours * 60 * 60 * 1000);
+      const cutoffTime = Date.now() - maxAgeHours * 60 * 60 * 1000;
 
       for (const file of files) {
         const filepath = path.join(tempDir, file);
@@ -215,7 +226,10 @@ export class UploadService {
   /**
    * Generate presigned URL for direct upload (for cloud storage)
    */
-  generatePresignedUrl(_userId: string, fileType: string): Promise<{
+  generatePresignedUrl(
+    _userId: string,
+    fileType: string
+  ): Promise<{
     uploadUrl: string;
     fileUrl: string;
     filename: string;

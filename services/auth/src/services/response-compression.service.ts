@@ -27,7 +27,7 @@ class ResponseCompressionService {
     totalOriginalSize: 0,
     totalCompressedSize: 0,
     averageCompressionRatio: 0,
-    averageCompressionTime: 0
+    averageCompressionTime: 0,
   };
 
   private compressionTimes: number[] = [];
@@ -38,7 +38,7 @@ class ResponseCompressionService {
     level: parseInt(process.env.COMPRESSION_LEVEL || '6'), // Balanced compression
     chunkSize: parseInt(process.env.COMPRESSION_CHUNK_SIZE || '16384'), // 16KB
     memLevel: parseInt(process.env.COMPRESSION_MEM_LEVEL || '8'),
-    strategy: zlib.constants.Z_DEFAULT_STRATEGY
+    strategy: zlib.constants.Z_DEFAULT_STRATEGY,
   };
 
   // Main compression middleware
@@ -68,9 +68,16 @@ class ResponseCompressionService {
           return originalSend.call(res, data);
         }
 
-        this.compressResponse(jsonString, originalSize, config, req, res, () => {
-          return originalSend.call(res, data);
-        });
+        this.compressResponse(
+          jsonString,
+          originalSize,
+          config,
+          req,
+          res,
+          () => {
+            return originalSend.call(res, data);
+          }
+        );
 
         return res;
       };
@@ -84,9 +91,16 @@ class ResponseCompressionService {
           this.stats.totalOriginalSize += originalSize;
 
           if (originalSize >= config.threshold) {
-            return this.compressResponse(chunk, originalSize, config, req, res, () => {
-              return originalEnd.call(res, chunk, encoding);
-            });
+            return this.compressResponse(
+              chunk,
+              originalSize,
+              config,
+              req,
+              res,
+              () => {
+                return originalEnd.call(res, chunk, encoding);
+              }
+            );
           }
         }
 
@@ -123,11 +137,15 @@ class ResponseCompressionService {
         fallback();
       }
     } catch (error) {
-      logger.error('Compression failed, sending uncompressed response', error as Error, {
-        originalSize,
-        path: req.path,
-        method: req.method
-      });
+      logger.error(
+        'Compression failed, sending uncompressed response',
+        error as Error,
+        {
+          originalSize,
+          path: req.path,
+          method: req.method,
+        }
+      );
 
       // Fallback to uncompressed response
       fallback();
@@ -142,19 +160,29 @@ class ResponseCompressionService {
     res: Response,
     startTime: number
   ): void {
-    zlib.gzip(data, {
-      level: config.level,
-      chunkSize: config.chunkSize,
-      memLevel: config.memLevel,
-      strategy: config.strategy
-    }, (error, compressed) => {
-      if (error) {
-        logger.error('Gzip compression failed', error);
-        return res.status(500).json({ error: 'Compression failed' });
-      }
+    zlib.gzip(
+      data,
+      {
+        level: config.level,
+        chunkSize: config.chunkSize,
+        memLevel: config.memLevel,
+        strategy: config.strategy,
+      },
+      (error, compressed) => {
+        if (error) {
+          logger.error('Gzip compression failed', error);
+          return res.status(500).json({ error: 'Compression failed' });
+        }
 
-      this.finishCompression(compressed, originalSize, 'gzip', res, startTime);
-    });
+        this.finishCompression(
+          compressed,
+          originalSize,
+          'gzip',
+          res,
+          startTime
+        );
+      }
+    );
   }
 
   // Deflate compression
@@ -165,19 +193,29 @@ class ResponseCompressionService {
     res: Response,
     startTime: number
   ): void {
-    zlib.deflate(data, {
-      level: config.level,
-      chunkSize: config.chunkSize,
-      memLevel: config.memLevel,
-      strategy: config.strategy
-    }, (error, compressed) => {
-      if (error) {
-        logger.error('Deflate compression failed', error);
-        return res.status(500).json({ error: 'Compression failed' });
-      }
+    zlib.deflate(
+      data,
+      {
+        level: config.level,
+        chunkSize: config.chunkSize,
+        memLevel: config.memLevel,
+        strategy: config.strategy,
+      },
+      (error, compressed) => {
+        if (error) {
+          logger.error('Deflate compression failed', error);
+          return res.status(500).json({ error: 'Compression failed' });
+        }
 
-      this.finishCompression(compressed, originalSize, 'deflate', res, startTime);
-    });
+        this.finishCompression(
+          compressed,
+          originalSize,
+          'deflate',
+          res,
+          startTime
+        );
+      }
+    );
   }
 
   // Brotli compression (if supported)
@@ -193,19 +231,23 @@ class ResponseCompressionService {
       return this.compressGzip(data, originalSize, config, res, startTime);
     }
 
-    zlib.brotliCompress(data, {
-      params: {
-        [zlib.constants.BROTLI_PARAM_QUALITY]: Math.min(config.level, 11),
-        [zlib.constants.BROTLI_PARAM_SIZE_HINT]: originalSize
-      }
-    }, (error, compressed) => {
-      if (error) {
-        logger.error('Brotli compression failed', error);
-        return res.status(500).json({ error: 'Compression failed' });
-      }
+    zlib.brotliCompress(
+      data,
+      {
+        params: {
+          [zlib.constants.BROTLI_PARAM_QUALITY]: Math.min(config.level, 11),
+          [zlib.constants.BROTLI_PARAM_SIZE_HINT]: originalSize,
+        },
+      },
+      (error, compressed) => {
+        if (error) {
+          logger.error('Brotli compression failed', error);
+          return res.status(500).json({ error: 'Compression failed' });
+        }
 
-      this.finishCompression(compressed, originalSize, 'br', res, startTime);
-    });
+        this.finishCompression(compressed, originalSize, 'br', res, startTime);
+      }
+    );
   }
 
   // Finish compression and send response
@@ -221,7 +263,12 @@ class ResponseCompressionService {
     const compressionRatio = (originalSize - compressedSize) / originalSize;
 
     // Update statistics
-    this.updateStats(originalSize, compressedSize, compressionTime, compressionRatio);
+    this.updateStats(
+      originalSize,
+      compressedSize,
+      compressionTime,
+      compressionRatio
+    );
 
     // Set response headers
     res.set({
@@ -232,7 +279,7 @@ class ResponseCompressionService {
       'X-Compressed-Size': compressedSize.toString(),
       'X-Compression-Ratio': (compressionRatio * 100).toFixed(2) + '%',
       'X-Compression-Time': compressionTime + 'ms',
-      'Vary': 'Accept-Encoding'
+      Vary: 'Accept-Encoding',
     });
 
     // Send compressed response
@@ -243,7 +290,7 @@ class ResponseCompressionService {
       originalSize,
       compressedSize,
       compressionRatio: compressionRatio * 100,
-      compressionTime
+      compressionTime,
     });
   }
 
@@ -262,7 +309,7 @@ class ResponseCompressionService {
       'audio/',
       'application/zip',
       'application/gzip',
-      'application/x-compressed'
+      'application/x-compressed',
     ];
 
     if (skipContentTypes.some(type => contentType.startsWith(type))) {
@@ -271,7 +318,11 @@ class ResponseCompressionService {
 
     // Skip if client doesn't support compression
     const acceptEncoding = req.headers['accept-encoding'] || '';
-    if (!acceptEncoding.includes('gzip') && !acceptEncoding.includes('deflate') && !acceptEncoding.includes('br')) {
+    if (
+      !acceptEncoding.includes('gzip') &&
+      !acceptEncoding.includes('deflate') &&
+      !acceptEncoding.includes('br')
+    ) {
       return true;
     }
 
@@ -302,21 +353,37 @@ class ResponseCompressionService {
     // Track compression times
     this.compressionTimes.push(compressionTime);
     if (this.compressionTimes.length > this.maxCompressionTimeHistory) {
-      this.compressionTimes = this.compressionTimes.slice(-this.maxCompressionTimeHistory);
+      this.compressionTimes = this.compressionTimes.slice(
+        -this.maxCompressionTimeHistory
+      );
     }
 
     // Calculate averages
     this.stats.averageCompressionRatio =
-      (this.stats.totalOriginalSize - this.stats.totalCompressedSize) / this.stats.totalOriginalSize;
+      (this.stats.totalOriginalSize - this.stats.totalCompressedSize) /
+      this.stats.totalOriginalSize;
 
     this.stats.averageCompressionTime =
-      this.compressionTimes.reduce((sum, time) => sum + time, 0) / this.compressionTimes.length;
+      this.compressionTimes.reduce((sum, time) => sum + time, 0) /
+      this.compressionTimes.length;
 
     // Record metrics
-    metricsService.recordMetric('compression_ratio', compressionRatio * 100, 'percent');
+    metricsService.recordMetric(
+      'compression_ratio',
+      compressionRatio * 100,
+      'percent'
+    );
     metricsService.recordMetric('compression_time', compressionTime, 'ms');
-    metricsService.recordMetric('compression_original_size', originalSize, 'bytes');
-    metricsService.recordMetric('compression_compressed_size', compressedSize, 'bytes');
+    metricsService.recordMetric(
+      'compression_original_size',
+      originalSize,
+      'bytes'
+    );
+    metricsService.recordMetric(
+      'compression_compressed_size',
+      compressedSize,
+      'bytes'
+    );
   }
 
   // Get compression statistics
@@ -339,22 +406,23 @@ class ResponseCompressionService {
     };
     recommendations: string[];
   } {
-    const compressionRate = this.stats.totalRequests > 0
-      ? (this.stats.compressedRequests / this.stats.totalRequests) * 100
-      : 0;
+    const compressionRate =
+      this.stats.totalRequests > 0
+        ? (this.stats.compressedRequests / this.stats.totalRequests) * 100
+        : 0;
 
-    const totalBytesSaved = this.stats.totalOriginalSize - this.stats.totalCompressedSize;
-    const averageSavings = this.stats.compressedRequests > 0
-      ? totalBytesSaved / this.stats.compressedRequests
-      : 0;
+    const totalBytesSaved =
+      this.stats.totalOriginalSize - this.stats.totalCompressedSize;
+    const averageSavings =
+      this.stats.compressedRequests > 0
+        ? totalBytesSaved / this.stats.compressedRequests
+        : 0;
 
-    const maxCompressionTime = this.compressionTimes.length > 0
-      ? Math.max(...this.compressionTimes)
-      : 0;
+    const maxCompressionTime =
+      this.compressionTimes.length > 0 ? Math.max(...this.compressionTimes) : 0;
 
-    const minCompressionTime = this.compressionTimes.length > 0
-      ? Math.min(...this.compressionTimes)
-      : 0;
+    const minCompressionTime =
+      this.compressionTimes.length > 0 ? Math.min(...this.compressionTimes) : 0;
 
     const recommendations = this.generateRecommendations();
 
@@ -363,14 +431,14 @@ class ResponseCompressionService {
       efficiency: {
         compressionRate,
         averageSavings,
-        totalBytesSaved
+        totalBytesSaved,
       },
       performance: {
         averageCompressionTime: this.stats.averageCompressionTime,
         maxCompressionTime,
-        minCompressionTime
+        minCompressionTime,
       },
-      recommendations
+      recommendations,
     };
   }
 
@@ -379,23 +447,35 @@ class ResponseCompressionService {
     const recommendations: string[] = [];
 
     if (this.stats.averageCompressionRatio < 0.3) {
-      recommendations.push('Low compression ratio - consider optimizing response data structure');
+      recommendations.push(
+        'Low compression ratio - consider optimizing response data structure'
+      );
     }
 
     if (this.stats.averageCompressionTime > 100) {
-      recommendations.push('High compression time - consider reducing compression level or threshold');
+      recommendations.push(
+        'High compression time - consider reducing compression level or threshold'
+      );
     }
 
-    const compressionRate = this.stats.totalRequests > 0
-      ? (this.stats.compressedRequests / this.stats.totalRequests) * 100
-      : 0;
+    const compressionRate =
+      this.stats.totalRequests > 0
+        ? (this.stats.compressedRequests / this.stats.totalRequests) * 100
+        : 0;
 
     if (compressionRate < 50) {
-      recommendations.push('Low compression rate - consider lowering compression threshold');
+      recommendations.push(
+        'Low compression rate - consider lowering compression threshold'
+      );
     }
 
-    if (this.stats.totalRequests > 1000 && this.stats.compressedRequests === 0) {
-      recommendations.push('No responses compressed - check compression configuration');
+    if (
+      this.stats.totalRequests > 1000 &&
+      this.stats.compressedRequests === 0
+    ) {
+      recommendations.push(
+        'No responses compressed - check compression configuration'
+      );
     }
 
     return recommendations;
@@ -409,7 +489,7 @@ class ResponseCompressionService {
       totalOriginalSize: 0,
       totalCompressedSize: 0,
       averageCompressionRatio: 0,
-      averageCompressionTime: 0
+      averageCompressionTime: 0,
     };
     this.compressionTimes = [];
   }

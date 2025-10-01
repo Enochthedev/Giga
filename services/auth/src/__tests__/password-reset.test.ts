@@ -18,7 +18,7 @@ vi.mock('../utils/security.utils', () => ({
     validateSecretStrength: vi.fn(() => ({ isValid: true, errors: [] })),
   },
   InputSanitizer: {
-    sanitizeString: vi.fn((str) => str),
+    sanitizeString: vi.fn(str => str),
   },
 }));
 vi.mock('bcryptjs');
@@ -85,8 +85,12 @@ describe('AuthController - Password Reset', () => {
     };
 
     // Mock the getInstance method for TokenManagementService
-    const { TokenManagementService } = await import('../services/token-management.service');
-    vi.mocked(TokenManagementService.getInstance).mockReturnValue(mockTokenManagementService);
+    const { TokenManagementService } = await import(
+      '../services/token-management.service'
+    );
+    vi.mocked(TokenManagementService.getInstance).mockReturnValue(
+      mockTokenManagementService
+    );
   });
 
   describe('requestPasswordReset', () => {
@@ -104,7 +108,8 @@ describe('AuthController - Password Reset', () => {
 
       expect(mockResponse.json).toHaveBeenCalledWith({
         success: true,
-        message: 'If an account with this email exists, a password reset link has been sent',
+        message:
+          'If an account with this email exists, a password reset link has been sent',
         timestamp: expect.any(String),
       });
     });
@@ -123,7 +128,8 @@ describe('AuthController - Password Reset', () => {
 
       expect(mockResponse.json).toHaveBeenCalledWith({
         success: true,
-        message: 'If an account with this email exists, a password reset link has been sent',
+        message:
+          'If an account with this email exists, a password reset link has been sent',
         timestamp: expect.any(String),
       });
     });
@@ -151,7 +157,8 @@ describe('AuthController - Password Reset', () => {
       expect(mockEmailService.sendPasswordResetEmail).not.toHaveBeenCalled();
       expect(mockResponse.json).toHaveBeenCalledWith({
         success: true,
-        message: 'If an account with this email exists, a password reset link has been sent',
+        message:
+          'If an account with this email exists, a password reset link has been sent',
         timestamp: expect.any(String),
       });
     });
@@ -166,8 +173,12 @@ describe('AuthController - Password Reset', () => {
 
       mockPrisma.user.findUnique.mockResolvedValue(user);
       mockPrisma.passwordResetToken.findFirst.mockResolvedValue(null);
-      mockEmailService.generateVerificationToken.mockReturnValue('reset-token-123');
-      mockEmailService.createPasswordResetUrl.mockReturnValue('http://example.com/reset?token=reset-token-123');
+      mockEmailService.generateVerificationToken.mockReturnValue(
+        'reset-token-123'
+      );
+      mockEmailService.createPasswordResetUrl.mockReturnValue(
+        'http://example.com/reset?token=reset-token-123'
+      );
       mockEmailService.sendPasswordResetEmail.mockResolvedValue(undefined);
 
       await authController.requestPasswordReset(
@@ -192,7 +203,8 @@ describe('AuthController - Password Reset', () => {
 
       expect(mockResponse.json).toHaveBeenCalledWith({
         success: true,
-        message: 'If an account with this email exists, a password reset link has been sent',
+        message:
+          'If an account with this email exists, a password reset link has been sent',
         timestamp: expect.any(String),
       });
     });
@@ -207,9 +219,15 @@ describe('AuthController - Password Reset', () => {
 
       mockPrisma.user.findUnique.mockResolvedValue(user);
       mockPrisma.passwordResetToken.findFirst.mockResolvedValue(null);
-      mockEmailService.generateVerificationToken.mockReturnValue('reset-token-123');
-      mockEmailService.createPasswordResetUrl.mockReturnValue('http://example.com/reset?token=reset-token-123');
-      mockEmailService.sendPasswordResetEmail.mockRejectedValue(new Error('Email service error'));
+      mockEmailService.generateVerificationToken.mockReturnValue(
+        'reset-token-123'
+      );
+      mockEmailService.createPasswordResetUrl.mockReturnValue(
+        'http://example.com/reset?token=reset-token-123'
+      );
+      mockEmailService.sendPasswordResetEmail.mockRejectedValue(
+        new Error('Email service error')
+      );
 
       await authController.requestPasswordReset(
         mockRequest as Request,
@@ -440,7 +458,7 @@ describe('AuthController - Password Reset', () => {
       mockPrisma.passwordHistory.findMany.mockResolvedValue([]);
 
       // Mock transaction
-      const mockTransaction = vi.fn().mockImplementation((callback) => {
+      const mockTransaction = vi.fn().mockImplementation(callback => {
         return callback(mockPrisma);
       });
       mockPrisma.$transaction = mockTransaction;
@@ -453,7 +471,8 @@ describe('AuthController - Password Reset', () => {
       expect(mockTransaction).toHaveBeenCalled();
       expect(mockResponse.json).toHaveBeenCalledWith({
         success: true,
-        message: 'Password reset successfully. Please log in with your new password.',
+        message:
+          'Password reset successfully. Please log in with your new password.',
         timestamp: expect.any(String),
       });
     });
@@ -479,7 +498,7 @@ describe('AuthController - Password Reset', () => {
       mockPrisma.passwordResetToken.findUnique.mockResolvedValue(validToken);
       mockPrisma.passwordHistory.findMany.mockResolvedValue([]);
 
-      const mockTransaction = vi.fn().mockImplementation((callback) => {
+      const mockTransaction = vi.fn().mockImplementation(callback => {
         return callback(mockPrisma);
       });
       mockPrisma.$transaction = mockTransaction;
@@ -516,12 +535,13 @@ describe('AuthController - Password Reset', () => {
       mockPrisma.passwordResetToken.findUnique.mockResolvedValue(validToken);
       mockPrisma.passwordHistory.findMany
         .mockResolvedValueOnce([]) // For password reuse check
-        .mockResolvedValueOnce([   // For cleanup check
+        .mockResolvedValueOnce([
+          // For cleanup check
           { id: 'old1' },
           { id: 'old2' },
         ]);
 
-      const mockTransaction = vi.fn().mockImplementation((callback) => {
+      const mockTransaction = vi.fn().mockImplementation(callback => {
         return callback(mockPrisma);
       });
       mockPrisma.$transaction = mockTransaction;
@@ -559,7 +579,7 @@ describe('AuthController - Password Reset', () => {
       mockPrisma.passwordResetToken.findUnique.mockResolvedValue(validToken);
       mockPrisma.passwordHistory.findMany.mockResolvedValue([]);
 
-      const mockTransaction = vi.fn().mockImplementation((callback) => {
+      const mockTransaction = vi.fn().mockImplementation(callback => {
         return callback(mockPrisma);
       });
       mockPrisma.$transaction = mockTransaction;
@@ -593,7 +613,7 @@ describe('AuthController - Password Reset', () => {
       mockPrisma.passwordResetToken.findUnique.mockResolvedValue(validToken);
       mockPrisma.passwordHistory.findMany.mockResolvedValue([]);
 
-      const mockTransaction = vi.fn().mockImplementation((callback) => {
+      const mockTransaction = vi.fn().mockImplementation(callback => {
         return callback(mockPrisma);
       });
       mockPrisma.$transaction = mockTransaction;

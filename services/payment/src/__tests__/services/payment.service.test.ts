@@ -17,7 +17,7 @@ describe('PaymentService', () => {
   describe('processPayment', () => {
     it('should process a valid payment request successfully', async () => {
       const paymentRequest = {
-        amount: 100.00,
+        amount: 100.0,
         currency: 'USD',
         description: 'Test payment',
         userId: 'test-user-1',
@@ -43,7 +43,7 @@ describe('PaymentService', () => {
 
     it('should handle large amounts requiring manual review', async () => {
       const paymentRequest = {
-        amount: 15000.00, // Large amount
+        amount: 15000.0, // Large amount
         currency: 'USD',
         description: 'Large payment',
         userId: 'test-user-1',
@@ -61,7 +61,7 @@ describe('PaymentService', () => {
 
     it('should simulate payment failure for specific amounts', async () => {
       const paymentRequest = {
-        amount: 1.00, // Amount that triggers failure
+        amount: 1.0, // Amount that triggers failure
         currency: 'USD',
         description: 'Failing payment',
         userId: 'test-user-1',
@@ -75,16 +75,16 @@ describe('PaymentService', () => {
 
     it('should validate currency', async () => {
       const paymentRequest = {
-        amount: 100.00,
+        amount: 100.0,
         currency: 'INVALID',
         description: 'Test payment',
         userId: 'test-user-1',
         paymentMethodId: testPaymentMethod.id,
       };
 
-      await expect(paymentService.processPayment(paymentRequest))
-        .rejects
-        .toThrow(ValidationError);
+      await expect(
+        paymentService.processPayment(paymentRequest)
+      ).rejects.toThrow(ValidationError);
     });
 
     it('should validate minimum amount', async () => {
@@ -96,14 +96,14 @@ describe('PaymentService', () => {
         paymentMethodId: testPaymentMethod.id,
       };
 
-      await expect(paymentService.processPayment(paymentRequest))
-        .rejects
-        .toThrow(ValidationError);
+      await expect(
+        paymentService.processPayment(paymentRequest)
+      ).rejects.toThrow(ValidationError);
     });
 
     it('should process payment splits', async () => {
       const paymentRequest = {
-        amount: 100.00,
+        amount: 100.0,
         currency: 'USD',
         description: 'Test payment with splits',
         userId: 'test-user-1',
@@ -111,12 +111,12 @@ describe('PaymentService', () => {
         splits: [
           {
             recipientId: 'vendor-1',
-            amount: 80.00,
+            amount: 80.0,
             description: 'Vendor payment',
           },
           {
             recipientId: 'platform',
-            amount: 20.00,
+            amount: 20.0,
             description: 'Platform fee',
           },
         ],
@@ -134,14 +134,14 @@ describe('PaymentService', () => {
         currency: 'USD',
       };
 
-      await expect(paymentService.processPayment(invalidRequest as any))
-        .rejects
-        .toThrow();
+      await expect(
+        paymentService.processPayment(invalidRequest as any)
+      ).rejects.toThrow();
     });
 
     it('should generate internal reference if not provided', async () => {
       const paymentRequest = {
-        amount: 100.00,
+        amount: 100.0,
         currency: 'USD',
         description: 'Test payment',
         userId: 'test-user-1',
@@ -159,7 +159,7 @@ describe('PaymentService', () => {
     it('should capture a pending payment', async () => {
       // First create a payment
       const paymentRequest = {
-        amount: 100.00,
+        amount: 100.0,
         currency: 'USD',
         description: 'Test payment',
         userId: 'test-user-1',
@@ -179,7 +179,7 @@ describe('PaymentService', () => {
 
     it('should capture partial amount', async () => {
       const paymentRequest = {
-        amount: 100.00,
+        amount: 100.0,
         currency: 'USD',
         description: 'Test payment',
         userId: 'test-user-1',
@@ -189,15 +189,15 @@ describe('PaymentService', () => {
       const payment = await paymentService.processPayment(paymentRequest);
       await paymentService.updateTransactionStatus(payment.id, 'pending');
 
-      const result = await paymentService.capturePayment(payment.id, 50.00);
+      const result = await paymentService.capturePayment(payment.id, 50.0);
 
       expect(result.status).toBe('succeeded');
-      expect(result.amount.toNumber()).toBe(50.00);
+      expect(result.amount.toNumber()).toBe(50.0);
     });
 
     it('should reject capture for non-pending payments', async () => {
       const paymentRequest = {
-        amount: 100.00,
+        amount: 100.0,
         currency: 'USD',
         description: 'Test payment',
         userId: 'test-user-1',
@@ -207,14 +207,14 @@ describe('PaymentService', () => {
       const payment = await paymentService.processPayment(paymentRequest);
       // Payment is already succeeded, cannot capture
 
-      await expect(paymentService.capturePayment(payment.id))
-        .rejects
-        .toThrow(ValidationError);
+      await expect(paymentService.capturePayment(payment.id)).rejects.toThrow(
+        ValidationError
+      );
     });
 
     it('should reject capture amount exceeding original amount', async () => {
       const paymentRequest = {
-        amount: 100.00,
+        amount: 100.0,
         currency: 'USD',
         description: 'Test payment',
         userId: 'test-user-1',
@@ -224,16 +224,16 @@ describe('PaymentService', () => {
       const payment = await paymentService.processPayment(paymentRequest);
       await paymentService.updateTransactionStatus(payment.id, 'pending');
 
-      await expect(paymentService.capturePayment(payment.id, 150.00))
-        .rejects
-        .toThrow(ValidationError);
+      await expect(
+        paymentService.capturePayment(payment.id, 150.0)
+      ).rejects.toThrow(ValidationError);
     });
   });
 
   describe('cancelPayment', () => {
     it('should cancel a pending payment', async () => {
       const paymentRequest = {
-        amount: 100.00,
+        amount: 100.0,
         currency: 'USD',
         description: 'Test payment',
         userId: 'test-user-1',
@@ -251,7 +251,7 @@ describe('PaymentService', () => {
 
     it('should cancel a processing payment', async () => {
       const paymentRequest = {
-        amount: 100.00,
+        amount: 100.0,
         currency: 'USD',
         description: 'Test payment',
         userId: 'test-user-1',
@@ -268,7 +268,7 @@ describe('PaymentService', () => {
 
     it('should reject cancellation for succeeded payments', async () => {
       const paymentRequest = {
-        amount: 100.00,
+        amount: 100.0,
         currency: 'USD',
         description: 'Test payment',
         userId: 'test-user-1',
@@ -278,16 +278,16 @@ describe('PaymentService', () => {
       const payment = await paymentService.processPayment(paymentRequest);
       // Payment is already succeeded
 
-      await expect(paymentService.cancelPayment(payment.id))
-        .rejects
-        .toThrow(ValidationError);
+      await expect(paymentService.cancelPayment(payment.id)).rejects.toThrow(
+        ValidationError
+      );
     });
   });
 
   describe('refundPayment', () => {
     it('should refund a succeeded payment', async () => {
       const paymentRequest = {
-        amount: 100.00,
+        amount: 100.0,
         currency: 'USD',
         description: 'Test payment',
         userId: 'test-user-1',
@@ -303,14 +303,14 @@ describe('PaymentService', () => {
       );
 
       expect(refund.transactionId).toBe(payment.id);
-      expect(refund.amount.toNumber()).toBe(100.00);
+      expect(refund.amount.toNumber()).toBe(100.0);
       expect(refund.reason).toBe('Customer request');
       expect(refund.status).toBe('succeeded');
     });
 
     it('should refund partial amount', async () => {
       const paymentRequest = {
-        amount: 100.00,
+        amount: 100.0,
         currency: 'USD',
         description: 'Test payment',
         userId: 'test-user-1',
@@ -321,17 +321,17 @@ describe('PaymentService', () => {
 
       const refund = await paymentService.refundPayment(
         payment.id,
-        50.00,
+        50.0,
         'Partial refund'
       );
 
-      expect(refund.amount.toNumber()).toBe(50.00);
+      expect(refund.amount.toNumber()).toBe(50.0);
       expect(refund.reason).toBe('Partial refund');
     });
 
     it('should reject refund for non-succeeded payments', async () => {
       const paymentRequest = {
-        amount: 100.00,
+        amount: 100.0,
         currency: 'USD',
         description: 'Test payment',
         userId: 'test-user-1',
@@ -341,14 +341,14 @@ describe('PaymentService', () => {
       const payment = await paymentService.processPayment(paymentRequest);
       await paymentService.updateTransactionStatus(payment.id, 'pending');
 
-      await expect(paymentService.refundPayment(payment.id))
-        .rejects
-        .toThrow(RefundError);
+      await expect(paymentService.refundPayment(payment.id)).rejects.toThrow(
+        RefundError
+      );
     });
 
     it('should reject refund amount exceeding original amount', async () => {
       const paymentRequest = {
-        amount: 100.00,
+        amount: 100.0,
         currency: 'USD',
         description: 'Test payment',
         userId: 'test-user-1',
@@ -357,14 +357,14 @@ describe('PaymentService', () => {
 
       const payment = await paymentService.processPayment(paymentRequest);
 
-      await expect(paymentService.refundPayment(payment.id, 150.00))
-        .rejects
-        .toThrow(ValidationError);
+      await expect(
+        paymentService.refundPayment(payment.id, 150.0)
+      ).rejects.toThrow(ValidationError);
     });
 
     it('should use default reason if not provided', async () => {
       const paymentRequest = {
-        amount: 100.00,
+        amount: 100.0,
         currency: 'USD',
         description: 'Test payment',
         userId: 'test-user-1',
@@ -382,7 +382,7 @@ describe('PaymentService', () => {
   describe('getTransaction', () => {
     it('should retrieve transaction by ID', async () => {
       const paymentRequest = {
-        amount: 100.00,
+        amount: 100.0,
         currency: 'USD',
         description: 'Test payment',
         userId: 'test-user-1',
@@ -393,15 +393,15 @@ describe('PaymentService', () => {
       const transaction = await paymentService.getTransaction(payment.id);
 
       expect(transaction.id).toBe(payment.id);
-      expect(transaction.amount.toNumber()).toBe(100.00);
+      expect(transaction.amount.toNumber()).toBe(100.0);
       expect(transaction.currency).toBe('USD');
       expect(transaction.description).toBe('Test payment');
     });
 
     it('should throw error for non-existent transaction', async () => {
-      await expect(paymentService.getTransaction('non-existent-id'))
-        .rejects
-        .toThrow();
+      await expect(
+        paymentService.getTransaction('non-existent-id')
+      ).rejects.toThrow();
     });
   });
 
@@ -409,7 +409,7 @@ describe('PaymentService', () => {
     it('should retrieve transactions with filters', async () => {
       // Create multiple test transactions
       const paymentRequest1 = {
-        amount: 100.00,
+        amount: 100.0,
         currency: 'USD',
         description: 'Test payment 1',
         userId: 'test-user-1',
@@ -417,7 +417,7 @@ describe('PaymentService', () => {
       };
 
       const paymentRequest2 = {
-        amount: 200.00,
+        amount: 200.0,
         currency: 'USD',
         description: 'Test payment 2',
         userId: 'test-user-2',
@@ -454,7 +454,7 @@ describe('PaymentService', () => {
   describe('updateTransactionStatus', () => {
     it('should update transaction status', async () => {
       const paymentRequest = {
-        amount: 100.00,
+        amount: 100.0,
         currency: 'USD',
         description: 'Test payment',
         userId: 'test-user-1',

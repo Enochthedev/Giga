@@ -200,7 +200,10 @@ router.get('/system', healthController.getSystemInfo.bind(healthController));
  *       200:
  *         description: Performance metrics retrieved successfully
  */
-router.get('/metrics/performance', healthController.getPerformanceMetrics.bind(healthController));
+router.get(
+  '/metrics/performance',
+  healthController.getPerformanceMetrics.bind(healthController)
+);
 
 /**
  * @swagger
@@ -213,7 +216,10 @@ router.get('/metrics/performance', healthController.getPerformanceMetrics.bind(h
  *       200:
  *         description: Database metrics retrieved successfully
  */
-router.get('/metrics/database', healthController.getDatabaseMetrics.bind(healthController));
+router.get(
+  '/metrics/database',
+  healthController.getDatabaseMetrics.bind(healthController)
+);
 
 /**
  * @swagger
@@ -226,7 +232,10 @@ router.get('/metrics/database', healthController.getDatabaseMetrics.bind(healthC
  *       200:
  *         description: Redis metrics retrieved successfully
  */
-router.get('/metrics/redis', healthController.getRedisMetrics.bind(healthController));
+router.get(
+  '/metrics/redis',
+  healthController.getRedisMetrics.bind(healthController)
+);
 
 /**
  * @swagger
@@ -245,7 +254,10 @@ router.get('/metrics/redis', healthController.getRedisMetrics.bind(healthControl
  *       200:
  *         description: Performance report retrieved successfully
  */
-router.get('/performance', healthController.getPerformanceReport.bind(healthController));
+router.get(
+  '/performance',
+  healthController.getPerformanceReport.bind(healthController)
+);
 
 /**
  * @swagger
@@ -265,7 +277,10 @@ router.get('/performance', healthController.getPerformanceReport.bind(healthCont
  *       200:
  *         description: Cache operation completed successfully
  */
-router.get('/cache', healthController.getCacheManagement.bind(healthController));
+router.get(
+  '/cache',
+  healthController.getCacheManagement.bind(healthController)
+);
 
 /**
  * @swagger
@@ -278,6 +293,9 @@ router.get('/cache', healthController.getCacheManagement.bind(healthController))
  *       200:
  *         description: Connection pool status retrieved successfully
  */
-router.get('/connections', healthController.getConnectionPoolStatus.bind(healthController));
+router.get(
+  '/connections',
+  healthController.getConnectionPoolStatus.bind(healthController)
+);
 
 export default router;

@@ -19,7 +19,7 @@ export enum LogLevel {
   ERROR = 'error',
   WARN = 'warn',
   INFO = 'info',
-  DEBUG = 'debug'
+  DEBUG = 'debug',
 }
 
 export interface LogEntry {
@@ -35,17 +35,21 @@ class LoggerService {
   private serviceName = 'auth-service';
   private version = process.env.npm_package_version || '1.0.0';
 
-  private formatLog(level: LogLevel, message: string, context: LogContext = {}): LogEntry {
+  private formatLog(
+    level: LogLevel,
+    message: string,
+    context: LogContext = {}
+  ): LogEntry {
     return {
       timestamp: new Date().toISOString(),
       level,
       message,
       context: {
         ...context,
-        correlationId: context.correlationId || this.generateCorrelationId()
+        correlationId: context.correlationId || this.generateCorrelationId(),
       },
       service: this.serviceName,
-      version: this.version
+      version: this.version,
     };
   }
 
@@ -76,13 +80,15 @@ class LoggerService {
 
   extractRequestContext(req: Request): LogContext {
     return {
-      correlationId: req.headers['x-correlation-id'] as string || this.generateCorrelationId(),
+      correlationId:
+        (req.headers['x-correlation-id'] as string) ||
+        this.generateCorrelationId(),
       userId: (req as any).user?.id,
       email: (req as any).user?.email,
       ip: req.ip || req.connection.remoteAddress,
       userAgent: req.headers['user-agent'],
       method: req.method,
-      url: req.originalUrl || req.url
+      url: req.originalUrl || req.url,
     };
   }
 
@@ -99,11 +105,13 @@ class LoggerService {
   error(message: string, error?: Error, context: LogContext = {}): void {
     const logEntry = this.formatLog(LogLevel.ERROR, message, {
       ...context,
-      error: error ? {
-        name: error.name,
-        message: error.message,
-        stack: error.stack
-      } : undefined
+      error: error
+        ? {
+            name: error.name,
+            message: error.message,
+            stack: error.stack,
+          }
+        : undefined,
     });
     this.output(logEntry);
   }
@@ -118,7 +126,7 @@ class LoggerService {
     this.warn(`SECURITY_EVENT: ${event}`, {
       ...context,
       securityEvent: true,
-      eventType: event
+      eventType: event,
     });
   }
 
@@ -127,29 +135,38 @@ class LoggerService {
     this.info(`AUTH_EVENT: ${event}`, {
       ...context,
       authEvent: true,
-      eventType: event
+      eventType: event,
     });
   }
 
   // Performance logging
-  logPerformance(operation: string, duration: number, context: LogContext = {}): void {
+  logPerformance(
+    operation: string,
+    duration: number,
+    context: LogContext = {}
+  ): void {
     this.info(`PERFORMANCE: ${operation}`, {
       ...context,
       performanceEvent: true,
       operation,
       duration,
-      slow: duration > 1000 // Mark as slow if over 1 second
+      slow: duration > 1000, // Mark as slow if over 1 second
     });
   }
 
   // Database operation logging
-  logDatabaseOperation(operation: string, table: string, duration: number, context: LogContext = {}): void {
+  logDatabaseOperation(
+    operation: string,
+    table: string,
+    duration: number,
+    context: LogContext = {}
+  ): void {
     this.debug(`DB_OPERATION: ${operation} on ${table}`, {
       ...context,
       databaseEvent: true,
       operation,
       table,
-      duration
+      duration,
     });
   }
 }

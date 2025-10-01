@@ -15,11 +15,11 @@ export default defineConfig({
         'dist/',
         '**/*.d.ts',
         '**/*.config.ts',
-        'src/seed.ts'
-      ]
+        'src/seed.ts',
+      ],
     },
     testTimeout: 10000,
-    hookTimeout: 10000
+    hookTimeout: 10000,
   },
   resolve: {
     alias: {
@@ -30,7 +30,7 @@ export default defineConfig({
       '@/controllers': path.resolve(__dirname, './src/controllers'),
       '@/middleware': path.resolve(__dirname, './src/middleware'),
       '@/utils': path.resolve(__dirname, './src/utils'),
-      '@/config': path.resolve(__dirname, './src/config')
-    }
-  }
+      '@/config': path.resolve(__dirname, './src/config'),
+    },
+  },
 });

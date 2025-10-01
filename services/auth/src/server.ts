@@ -25,7 +25,7 @@ async function start() {
         host: HOST,
         environment: process.env.NODE_ENV || 'development',
         nodeVersion: process.version,
-        pid: process.pid
+        pid: process.pid,
       });
       logger.info(`📚 API Documentation: http://${HOST}:${PORT}/docs`);
       logger.info(`🏥 Health Check: http://${HOST}:${PORT}/health`);
@@ -53,7 +53,7 @@ async function gracefulShutdown(signal: string) {
         await Promise.all([
           prisma.$disconnect(),
           redisService.disconnect(),
-          healthService.cleanup()
+          healthService.cleanup(),
         ]);
 
         logger.info('Graceful shutdown completed');
@@ -79,7 +79,7 @@ process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
 
 // Handle uncaught exceptions
-process.on('uncaughtException', (error) => {
+process.on('uncaughtException', error => {
   logger.error('Uncaught Exception', error);
   process.exit(1);
 });
@@ -87,7 +87,7 @@ process.on('uncaughtException', (error) => {
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (reason, promise) => {
   logger.error('Unhandled Rejection', new Error(String(reason)), {
-    promise: promise.toString()
+    promise: promise.toString(),
   });
   process.exit(1);
 });

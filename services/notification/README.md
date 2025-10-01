@@ -1,6 +1,7 @@
 # Notification Service
 
-A centralized notification service that handles multi-channel communication across the platform, including email, SMS, push notifications, and in-app messaging.
+A centralized notification service that handles multi-channel communication across the platform,
+including email, SMS, push notifications, and in-app messaging.
 
 ## Features
 
@@ -73,18 +74,21 @@ The service provides RESTful APIs for all notification operations. Once running,
 ### Supported Providers
 
 #### Email Providers
+
 - SendGrid
 - AWS SES
 - Mailgun
 - SMTP
 
 #### SMS Providers
+
 - Twilio
 - AWS SNS
 - Vonage
 - MessageBird
 
 #### Push Notification Providers
+
 - Firebase Cloud Messaging (FCM)
 - Apple Push Notification Service (APNS)
 
@@ -102,9 +106,9 @@ await client.sendEmail({
   templateId: 'welcome-email',
   variables: {
     firstName: 'John',
-    verificationUrl: 'https://app.com/verify/token'
+    verificationUrl: 'https://app.com/verify/token',
   },
-  priority: 'high'
+  priority: 'high',
 });
 ```
 
@@ -117,10 +121,10 @@ await client.sendNotification({
   templateId: 'order-confirmation',
   variables: {
     orderNumber: 'ORD-12345',
-    total: '$99.99'
+    total: '$99.99',
   },
   category: 'transactional',
-  priority: 'high'
+  priority: 'high',
 });
 ```
 
@@ -133,7 +137,7 @@ await client.scheduleNotification({
   templateId: 'reminder-email',
   variables: { eventName: 'Meeting' },
   scheduledAt: new Date('2024-01-15T10:00:00Z'),
-  timezone: 'America/New_York'
+  timezone: 'America/New_York',
 });
 ```
 

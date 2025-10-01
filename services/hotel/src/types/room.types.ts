@@ -61,7 +61,7 @@ export enum RoomCategory {
   PENTHOUSE = 'penthouse',
   STUDIO = 'studio',
   FAMILY = 'family',
-  ACCESSIBLE = 'accessible'
+  ACCESSIBLE = 'accessible',
 }
 
 export enum BedType {
@@ -73,12 +73,12 @@ export enum BedType {
   BUNK_BED = 'bunk_bed',
   TWIN = 'twin',
   FULL = 'full',
-  CALIFORNIA_KING = 'california_king'
+  CALIFORNIA_KING = 'california_king',
 }
 
 export enum RoomSizeUnit {
   SQM = 'sqm',
-  SQFT = 'sqft'
+  SQFT = 'sqft',
 }
 
 export enum RoomView {
@@ -91,7 +91,7 @@ export enum RoomView {
   STREET = 'street',
   INTERIOR = 'interior',
   PARTIAL_OCEAN = 'partial_ocean',
-  PARTIAL_CITY = 'partial_city'
+  PARTIAL_CITY = 'partial_city',
 }
 
 export enum RoomAmenity {
@@ -149,7 +149,7 @@ export enum RoomAmenity {
   SOUND_SYSTEM = 'sound_system',
   GAMING_CONSOLE = 'gaming_console',
   BOOKS = 'books',
-  MAGAZINES = 'magazines'
+  MAGAZINES = 'magazines',
 }
 
 // Request/Response types
@@ -208,7 +208,7 @@ export enum RoomTypeSortBy {
   PRICE = 'price',
   OCCUPANCY = 'occupancy',
   SIZE = 'size',
-  CREATED_DATE = 'created_date'
+  CREATED_DATE = 'created_date',
 }
 
 export interface RoomTypeSearchResult {

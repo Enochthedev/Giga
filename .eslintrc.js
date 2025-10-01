@@ -147,6 +147,6 @@ module.exports = {
     '**/generated/**',
     '**/prisma-client/**',
     '**/*.generated.*',
-    'services/*/src/generated/**'
+    'services/*/src/generated/**',
   ],
 };

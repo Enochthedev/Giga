@@ -98,7 +98,7 @@ export enum PropertyCategory {
   BOUTIQUE = 'boutique',
   BUSINESS = 'business',
   LUXURY = 'luxury',
-  BUDGET = 'budget'
+  BUDGET = 'budget',
 }
 
 export enum PropertyStatus {
@@ -106,7 +106,7 @@ export enum PropertyStatus {
   INACTIVE = 'inactive',
   MAINTENANCE = 'maintenance',
   PENDING_APPROVAL = 'pending_approval',
-  SUSPENDED = 'suspended'
+  SUSPENDED = 'suspended',
 }
 
 export enum PropertyAmenity {
@@ -141,7 +141,7 @@ export enum PropertyAmenity {
   PET_FRIENDLY = 'pet_friendly',
   NON_SMOKING = 'non_smoking',
   AIR_CONDITIONING = 'air_conditioning',
-  HEATING = 'heating'
+  HEATING = 'heating',
 }
 
 export enum ImageType {
@@ -152,7 +152,7 @@ export enum ImageType {
   DINING = 'dining',
   RECREATION = 'recreation',
   BUSINESS = 'business',
-  OTHER = 'other'
+  OTHER = 'other',
 }
 
 export enum CancellationPolicy {
@@ -160,25 +160,25 @@ export enum CancellationPolicy {
   MODERATE = 'moderate',
   STRICT = 'strict',
   SUPER_STRICT = 'super_strict',
-  NON_REFUNDABLE = 'non_refundable'
+  NON_REFUNDABLE = 'non_refundable',
 }
 
 export enum ChildPolicy {
   CHILDREN_WELCOME = 'children_welcome',
   ADULTS_ONLY = 'adults_only',
-  CHILDREN_WITH_RESTRICTIONS = 'children_with_restrictions'
+  CHILDREN_WITH_RESTRICTIONS = 'children_with_restrictions',
 }
 
 export enum PetPolicy {
   PETS_ALLOWED = 'pets_allowed',
   NO_PETS = 'no_pets',
-  PETS_WITH_RESTRICTIONS = 'pets_with_restrictions'
+  PETS_WITH_RESTRICTIONS = 'pets_with_restrictions',
 }
 
 export enum SmokingPolicy {
   NON_SMOKING = 'non_smoking',
   SMOKING_ALLOWED = 'smoking_allowed',
-  DESIGNATED_AREAS = 'designated_areas'
+  DESIGNATED_AREAS = 'designated_areas',
 }
 
 // Request/Response types
@@ -253,12 +253,12 @@ export enum PropertySortBy {
   RATING = 'rating',
   DISTANCE = 'distance',
   POPULARITY = 'popularity',
-  CREATED_DATE = 'created_date'
+  CREATED_DATE = 'created_date',
 }
 
 export enum SortOrder {
   ASC = 'asc',
-  DESC = 'desc'
+  DESC = 'desc',
 }
 
 export interface PropertySearchResult {

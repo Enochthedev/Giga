@@ -7,7 +7,10 @@ import { logger } from '../services/logger.service';
 export class APIVersioningMiddleware {
   private static readonly SUPPORTED_VERSIONS = ['1.0.0'];
   private static readonly LATEST_VERSION = '1.0.0';
-  private static readonly DEPRECATED_VERSIONS: Record<string, { deprecationDate: string; sunsetDate: string }> = {
+  private static readonly DEPRECATED_VERSIONS: Record<
+    string,
+    { deprecationDate: string; sunsetDate: string }
+  > = {
     // Example: '0.9.0': { deprecationDate: '2024-01-01', sunsetDate: '2024-06-01' }
   };
 
@@ -27,10 +30,16 @@ export class APIVersioningMiddleware {
       const customHeaderVersion = req.headers['x-api-version'] as string;
 
       // Determine version (priority: custom header > URL path > Accept header > latest)
-      const requestedVersion = customHeaderVersion || pathVersion || headerVersion || APIVersioningMiddleware.LATEST_VERSION;
+      const requestedVersion =
+        customHeaderVersion ||
+        pathVersion ||
+        headerVersion ||
+        APIVersioningMiddleware.LATEST_VERSION;
 
       // Validate version
-      if (!APIVersioningMiddleware.SUPPORTED_VERSIONS.includes(requestedVersion)) {
+      if (
+        !APIVersioningMiddleware.SUPPORTED_VERSIONS.includes(requestedVersion)
+      ) {
         return res.status(400).json({
           success: false,
           error: 'Unsupported API version',
@@ -38,20 +47,21 @@ export class APIVersioningMiddleware {
           details: {
             requestedVersion,
             supportedVersions: APIVersioningMiddleware.SUPPORTED_VERSIONS,
-            latestVersion: APIVersioningMiddleware.LATEST_VERSION
+            latestVersion: APIVersioningMiddleware.LATEST_VERSION,
           },
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       }
 
       // Check for deprecated version
-      const deprecationInfo = APIVersioningMiddleware.DEPRECATED_VERSIONS[requestedVersion];
+      const deprecationInfo =
+        APIVersioningMiddleware.DEPRECATED_VERSIONS[requestedVersion];
       if (deprecationInfo) {
         res.set({
           'X-API-Deprecated': 'true',
           'X-API-Deprecation-Date': deprecationInfo.deprecationDate,
           'X-API-Sunset-Date': deprecationInfo.sunsetDate,
-          'X-API-Latest-Version': APIVersioningMiddleware.LATEST_VERSION
+          'X-API-Latest-Version': APIVersioningMiddleware.LATEST_VERSION,
         });
 
         logger.warn('Deprecated API version used', {
@@ -59,7 +69,7 @@ export class APIVersioningMiddleware {
           path: req.path,
           userAgent: req.headers['user-agent'],
           ip: req.ip,
-          userId: req.user?.sub
+          userId: req.user?.sub,
         });
       }
 
@@ -67,8 +77,9 @@ export class APIVersioningMiddleware {
       req.apiVersion = requestedVersion;
       res.set({
         'X-API-Version': requestedVersion,
-        'X-API-Supported-Versions': APIVersioningMiddleware.SUPPORTED_VERSIONS.join(', '),
-        'X-API-Latest-Version': APIVersioningMiddleware.LATEST_VERSION
+        'X-API-Supported-Versions':
+          APIVersioningMiddleware.SUPPORTED_VERSIONS.join(', '),
+        'X-API-Latest-Version': APIVersioningMiddleware.LATEST_VERSION,
       });
 
       next();
@@ -85,7 +96,7 @@ export class APIVersioningMiddleware {
       supportedVersions: APIVersioningMiddleware.SUPPORTED_VERSIONS,
       latestVersion: APIVersioningMiddleware.LATEST_VERSION,
       deprecatedVersions: APIVersioningMiddleware.DEPRECATED_VERSIONS,
-      changelog: 'https://docs.platform.example.com/changelog'
+      changelog: 'https://docs.platform.example.com/changelog',
     };
   }
 
@@ -97,7 +108,7 @@ export class APIVersioningMiddleware {
       'bulk-operations': ['1.0.0'],
       'advanced-analytics': ['1.0.0'],
       'phone-verification': ['1.0.0'],
-      'two-factor-auth': ['1.0.0']
+      'two-factor-auth': ['1.0.0'],
     };
 
     return featureMatrix[feature]?.includes(version) || false;
@@ -116,11 +127,23 @@ export class APIVersioningMiddleware {
         isLatest: version === APIVersioningMiddleware.LATEST_VERSION,
         isDeprecated: !!APIVersioningMiddleware.DEPRECATED_VERSIONS[version],
         features: {
-          bulkOperations: APIVersioningMiddleware.checkFeatureAvailability('bulk-operations', version),
-          advancedAnalytics: APIVersioningMiddleware.checkFeatureAvailability('advanced-analytics', version),
-          phoneVerification: APIVersioningMiddleware.checkFeatureAvailability('phone-verification', version),
-          twoFactorAuth: APIVersioningMiddleware.checkFeatureAvailability('two-factor-auth', version)
-        }
+          bulkOperations: APIVersioningMiddleware.checkFeatureAvailability(
+            'bulk-operations',
+            version
+          ),
+          advancedAnalytics: APIVersioningMiddleware.checkFeatureAvailability(
+            'advanced-analytics',
+            version
+          ),
+          phoneVerification: APIVersioningMiddleware.checkFeatureAvailability(
+            'phone-verification',
+            version
+          ),
+          twoFactorAuth: APIVersioningMiddleware.checkFeatureAvailability(
+            'two-factor-auth',
+            version
+          ),
+        },
       };
 
       next();

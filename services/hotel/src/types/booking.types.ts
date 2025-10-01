@@ -147,7 +147,7 @@ export enum BookingStatus {
   CANCELLED = 'cancelled',
   NO_SHOW = 'no_show',
   MODIFIED = 'modified',
-  EXPIRED = 'expired'
+  EXPIRED = 'expired',
 }
 
 export enum BookingSource {
@@ -159,7 +159,7 @@ export enum BookingSource {
   GROUP = 'group',
   TRAVEL_AGENT = 'travel_agent',
   MOBILE_APP = 'mobile_app',
-  PARTNER = 'partner'
+  PARTNER = 'partner',
 }
 
 export enum PaymentStatus {
@@ -171,7 +171,7 @@ export enum PaymentStatus {
   FAILED = 'failed',
   REFUNDED = 'refunded',
   PARTIALLY_REFUNDED = 'partially_refunded',
-  CANCELLED = 'cancelled'
+  CANCELLED = 'cancelled',
 }
 
 export enum PaymentMethod {
@@ -182,7 +182,7 @@ export enum PaymentMethod {
   CASH = 'cash',
   CORPORATE_ACCOUNT = 'corporate_account',
   VOUCHER = 'voucher',
-  POINTS = 'points'
+  POINTS = 'points',
 }
 
 export enum CancellationPolicy {
@@ -190,14 +190,14 @@ export enum CancellationPolicy {
   MODERATE = 'moderate',
   STRICT = 'strict',
   SUPER_STRICT = 'super_strict',
-  NON_REFUNDABLE = 'non_refundable'
+  NON_REFUNDABLE = 'non_refundable',
 }
 
 export enum NoShowPolicy {
   CHARGE_FIRST_NIGHT = 'charge_first_night',
   CHARGE_FULL_STAY = 'charge_full_stay',
   CHARGE_PENALTY = 'charge_penalty',
-  NO_CHARGE = 'no_charge'
+  NO_CHARGE = 'no_charge',
 }
 
 export enum TaxType {
@@ -205,7 +205,7 @@ export enum TaxType {
   TOURISM_TAX = 'tourism_tax',
   VAT = 'vat',
   SERVICE_TAX = 'service_tax',
-  OCCUPANCY_TAX = 'occupancy_tax'
+  OCCUPANCY_TAX = 'occupancy_tax',
 }
 
 export enum FeeType {
@@ -215,7 +215,7 @@ export enum FeeType {
   BOOKING_FEE = 'booking_fee',
   PARKING_FEE = 'parking_fee',
   WIFI_FEE = 'wifi_fee',
-  PET_FEE = 'pet_fee'
+  PET_FEE = 'pet_fee',
 }
 
 export enum DiscountType {
@@ -226,7 +226,7 @@ export enum DiscountType {
   LOYALTY = 'loyalty',
   CORPORATE = 'corporate',
   GROUP = 'group',
-  PROMOTIONAL = 'promotional'
+  PROMOTIONAL = 'promotional',
 }
 
 export enum FloorPreference {
@@ -234,13 +234,13 @@ export enum FloorPreference {
   HIGH = 'high',
   MIDDLE = 'middle',
   GROUND = 'ground',
-  TOP = 'top'
+  TOP = 'top',
 }
 
 export enum SmokingPreference {
   SMOKING = 'smoking',
   NON_SMOKING = 'non_smoking',
-  NO_PREFERENCE = 'no_preference'
+  NO_PREFERENCE = 'no_preference',
 }
 
 export enum HousekeepingPreference {
@@ -248,7 +248,7 @@ export enum HousekeepingPreference {
   EVERY_OTHER_DAY = 'every_other_day',
   WEEKLY = 'weekly',
   ON_REQUEST = 'on_request',
-  MINIMAL = 'minimal'
+  MINIMAL = 'minimal',
 }
 
 // Request/Response types
@@ -315,7 +315,7 @@ export enum BookingSortBy {
   CHECK_OUT_DATE = 'check_out_date',
   TOTAL_AMOUNT = 'total_amount',
   STATUS = 'status',
-  GUEST_NAME = 'guest_name'
+  GUEST_NAME = 'guest_name',
 }
 
 export interface BookingSearchResult {

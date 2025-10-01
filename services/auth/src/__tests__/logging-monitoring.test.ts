@@ -9,11 +9,11 @@ describe('Logging and Monitoring System', () => {
     metricsService.reset();
 
     // Mock console methods to avoid noise in tests
-    vi.spyOn(console, 'log').mockImplementation(() => { });
-    vi.spyOn(console, 'info').mockImplementation(() => { });
-    vi.spyOn(console, 'warn').mockImplementation(() => { });
-    vi.spyOn(console, 'error').mockImplementation(() => { });
-    vi.spyOn(console, 'debug').mockImplementation(() => { });
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'info').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(console, 'debug').mockImplementation(() => {});
   });
 
   afterEach(() => {
@@ -62,7 +62,9 @@ describe('Logging and Monitoring System', () => {
     it('should log security events', () => {
       const consoleSpy = vi.spyOn(console, 'warn');
 
-      logger.logSecurityEvent('Suspicious login attempt', { ip: '192.168.1.1' });
+      logger.logSecurityEvent('Suspicious login attempt', {
+        ip: '192.168.1.1',
+      });
 
       expect(consoleSpy).toHaveBeenCalled();
       const logCall = consoleSpy.mock.calls[0][0];
@@ -77,7 +79,9 @@ describe('Logging and Monitoring System', () => {
     it('should log performance events', () => {
       const consoleSpy = vi.spyOn(console, 'info');
 
-      logger.logPerformance('Database query', 1500, { query: 'SELECT * FROM users' });
+      logger.logPerformance('Database query', 1500, {
+        query: 'SELECT * FROM users',
+      });
 
       expect(consoleSpy).toHaveBeenCalled();
       const logCall = consoleSpy.mock.calls[0][0];
@@ -208,7 +212,7 @@ describe('Logging and Monitoring System', () => {
         method: 'GET',
         originalUrl: '/test',
         ip: '127.0.0.1',
-        connection: { remoteAddress: '127.0.0.1' }
+        connection: { remoteAddress: '127.0.0.1' },
       } as unknown;
 
       const context = logger.extractRequestContext(mockReq);

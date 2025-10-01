@@ -3,7 +3,12 @@ export class PaymentError extends Error {
   public readonly statusCode: number;
   public readonly details?: any;
 
-  constructor(message: string, code: string, statusCode: number = 400, details?: any) {
+  constructor(
+    message: string,
+    code: string,
+    statusCode: number = 400,
+    details?: any
+  ) {
     super(message);
     this.name = 'PaymentError';
     this.code = code;
@@ -47,7 +52,12 @@ export class FraudError extends PaymentError {
   public readonly riskScore: number;
   public readonly riskLevel: string;
 
-  constructor(message: string, riskScore: number, riskLevel: string, details?: any) {
+  constructor(
+    message: string,
+    riskScore: number,
+    riskLevel: string,
+    details?: any
+  ) {
     super(message, 'FRAUD_DETECTED', 403, details);
     this.name = 'FraudError';
     this.riskScore = riskScore;
@@ -74,14 +84,22 @@ export class CardDeclinedError extends PaymentError {
 
 export class TransactionNotFoundError extends PaymentError {
   constructor(transactionId: string) {
-    super(`Transaction not found: ${transactionId}`, 'TRANSACTION_NOT_FOUND', 404);
+    super(
+      `Transaction not found: ${transactionId}`,
+      'TRANSACTION_NOT_FOUND',
+      404
+    );
     this.name = 'TransactionNotFoundError';
   }
 }
 
 export class PaymentMethodNotFoundError extends PaymentError {
   constructor(paymentMethodId: string) {
-    super(`Payment method not found: ${paymentMethodId}`, 'PAYMENT_METHOD_NOT_FOUND', 404);
+    super(
+      `Payment method not found: ${paymentMethodId}`,
+      'PAYMENT_METHOD_NOT_FOUND',
+      404
+    );
     this.name = 'PaymentMethodNotFoundError';
   }
 }
@@ -95,7 +113,11 @@ export class RefundError extends PaymentError {
 
 export class DuplicateTransactionError extends PaymentError {
   constructor(reference: string) {
-    super(`Duplicate transaction detected: ${reference}`, 'DUPLICATE_TRANSACTION', 409);
+    super(
+      `Duplicate transaction detected: ${reference}`,
+      'DUPLICATE_TRANSACTION',
+      409
+    );
     this.name = 'DuplicateTransactionError';
   }
 }
@@ -153,7 +175,10 @@ export const formatErrorResponse = (error: Error) => {
 };
 
 // Error code mappings for different gateways
-export const mapGatewayError = (gatewayType: string, gatewayError: any): PaymentError => {
+export const mapGatewayError = (
+  gatewayType: string,
+  gatewayError: any
+): PaymentError => {
   switch (gatewayType.toLowerCase()) {
     case 'stripe':
       return mapStripeError(gatewayError);

@@ -13,8 +13,8 @@ describe('Advanced Security Features', () => {
       headers: {
         'user-agent': 'test-agent',
         'accept-language': 'en-US',
-        'accept': 'application/json',
-        'host': 'localhost:3001',
+        accept: 'application/json',
+        host: 'localhost:3001',
       },
       clientIp: '192.168.1.1',
       ip: '192.168.1.1',
@@ -48,8 +48,14 @@ describe('Advanced Security Features', () => {
       );
 
       expect(mockRes.setHeader).toHaveBeenCalledWith('X-Frame-Options', 'DENY');
-      expect(mockRes.setHeader).toHaveBeenCalledWith('X-Content-Type-Options', 'nosniff');
-      expect(mockRes.setHeader).toHaveBeenCalledWith('X-XSS-Protection', '1; mode=block');
+      expect(mockRes.setHeader).toHaveBeenCalledWith(
+        'X-Content-Type-Options',
+        'nosniff'
+      );
+      expect(mockRes.setHeader).toHaveBeenCalledWith(
+        'X-XSS-Protection',
+        '1; mode=block'
+      );
       expect(mockRes.removeHeader).toHaveBeenCalledWith('X-Powered-By');
       expect(mockNext).toHaveBeenCalled();
     });
@@ -58,7 +64,7 @@ describe('Advanced Security Features', () => {
       mockReq.headers = {
         'user-agent': 'test-agent',
         'content-length': '100',
-        'host': 'localhost:3001',
+        host: 'localhost:3001',
       };
       mockReq.method = 'POST';
 
@@ -74,7 +80,7 @@ describe('Advanced Security Features', () => {
     it('should reject requests with invalid content length', () => {
       mockReq.headers = {
         'content-length': 'invalid',
-        'host': 'localhost:3001',
+        host: 'localhost:3001',
       };
       mockReq.method = 'POST';
 
@@ -96,7 +102,7 @@ describe('Advanced Security Features', () => {
     it('should reject requests that are too large', () => {
       mockReq.headers = {
         'content-length': '11000000', // 11MB
-        'host': 'localhost:3001',
+        host: 'localhost:3001',
       };
       mockReq.method = 'POST';
 
@@ -122,7 +128,10 @@ describe('Advanced Security Features', () => {
         mockNext
       );
 
-      expect(mockRes.setHeader).toHaveBeenCalledWith('X-Security-Level', 'standard');
+      expect(mockRes.setHeader).toHaveBeenCalledWith(
+        'X-Security-Level',
+        'standard'
+      );
       expect(mockNext).toHaveBeenCalled();
     });
 

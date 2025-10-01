@@ -1,10 +1,13 @@
-import { GatewaySelectionCriteria, IGatewayManager } from '../interfaces/gateway.interface';
+import {
+  GatewaySelectionCriteria,
+  IGatewayManager,
+} from '../interfaces/gateway.interface';
 import { logger } from '../lib/logger';
 import {
   GatewayHealthStatus,
   GatewayMetrics,
   GatewaySelection,
-  PaymentGateway
+  PaymentGateway,
 } from '../types/gateway.types';
 import { GatewayFailoverManager } from './gateway-failover-manager.service';
 import { GatewayHealthMonitor } from './gateway-health-monitor.service';
@@ -26,21 +29,24 @@ export class GatewayManager implements IGatewayManager {
     try {
       logger.info('Registering payment gateway', {
         gatewayId: gateway.getId(),
-        type: gateway.getType()
+        type: gateway.getType(),
       });
 
       this.gateways.set(gateway.getId(), gateway);
 
       // Start health monitoring for the gateway
-      this.healthMonitor.addGateway(gateway.getId(), gateway.getConfig().healthCheck);
+      this.healthMonitor.addGateway(
+        gateway.getId(),
+        gateway.getConfig().healthCheck
+      );
 
       logger.info('Payment gateway registered successfully', {
-        gatewayId: gateway.getId()
+        gatewayId: gateway.getId(),
       });
     } catch (error) {
       logger.error('Failed to register payment gateway', {
         error,
-        gatewayId: gateway.getId()
+        gatewayId: gateway.getId(),
       });
       throw error;
     }
@@ -58,21 +64,25 @@ export class GatewayManager implements IGatewayManager {
     return this.getAllGateways().filter(gateway => gateway.isActive());
   }
 
-  async selectGateway(criteria: GatewaySelectionCriteria): Promise<GatewaySelection> {
+  async selectGateway(
+    criteria: GatewaySelectionCriteria
+  ): Promise<GatewaySelection> {
     try {
       logger.info('Selecting optimal gateway', { criteria });
 
       const eligibleGateways = await this.getEligibleGateways(criteria);
 
       if (eligibleGateways.length === 0) {
-        throw new Error('No eligible payment gateways available for the given criteria');
+        throw new Error(
+          'No eligible payment gateways available for the given criteria'
+        );
       }
 
       // Score gateways based on multiple factors
       const scoredGateways = await Promise.all(
-        eligibleGateways.map(async (gateway) => ({
+        eligibleGateways.map(async gateway => ({
           gateway,
-          score: await this.calculateGatewayScore(gateway, criteria)
+          score: await this.calculateGatewayScore(gateway, criteria),
         }))
       );
 
@@ -80,7 +90,9 @@ export class GatewayManager implements IGatewayManager {
       scoredGateways.sort((a, b) => b.score - a.score);
 
       const primary = scoredGateways[0].gateway.getId();
-      const fallbacks = scoredGateways.slice(1, 4).map(sg => sg.gateway.getId());
+      const fallbacks = scoredGateways
+        .slice(1, 4)
+        .map(sg => sg.gateway.getId());
 
       const selection: GatewaySelection = {
         primary,
@@ -89,9 +101,9 @@ export class GatewayManager implements IGatewayManager {
         metadata: {
           scores: scoredGateways.map(sg => ({
             gatewayId: sg.gateway.getId(),
-            score: sg.score
-          }))
-        }
+            score: sg.score,
+          })),
+        },
       };
 
       logger.info('Gateway selection completed', { selection });
@@ -102,10 +114,13 @@ export class GatewayManager implements IGatewayManager {
     }
   }
 
-  async selectBestGateway(amount: number, currency: string): Promise<PaymentGateway> {
+  async selectBestGateway(
+    amount: number,
+    currency: string
+  ): Promise<PaymentGateway> {
     const criteria: GatewaySelectionCriteria = {
       amount,
-      currency
+      currency,
     };
 
     const selection = await this.selectGateway(criteria);
@@ -130,7 +145,10 @@ export class GatewayManager implements IGatewayManager {
     return healthChecks;
   }
 
-  async recordMetrics(gatewayId: string, metrics: Partial<GatewayMetrics>): Promise<void> {
+  async recordMetrics(
+    gatewayId: string,
+    metrics: Partial<GatewayMetrics>
+  ): Promise<void> {
     await this.metricsCollector.recordMetrics(gatewayId, metrics);
   }
 
@@ -141,26 +159,41 @@ export class GatewayManager implements IGatewayManager {
     return this.metricsCollector.getMetrics(gatewayId, period);
   }
 
-  async handleGatewayFailure(gatewayId: string, error: Error): Promise<PaymentGateway | null> {
+  async handleGatewayFailure(
+    gatewayId: string,
+    error: Error
+  ): Promise<PaymentGateway | null> {
     try {
-      logger.warn('Handling gateway failure', { gatewayId, error: error.message });
+      logger.warn('Handling gateway failure', {
+        gatewayId,
+        error: error.message,
+      });
 
       // Record the failure
-      await this.metricsCollector.recordError(gatewayId, error.constructor.name, error.message);
+      await this.metricsCollector.recordError(
+        gatewayId,
+        error.constructor.name,
+        error.message
+      );
 
       // Update health status
       await this.healthMonitor.recordFailure(gatewayId, error);
 
       // Attempt failover
-      const fallbackGateway = await this.failoverManager.executeFailover(gatewayId, { error });
+      const fallbackGateway = await this.failoverManager.executeFailover(
+        gatewayId,
+        { error }
+      );
 
       if (fallbackGateway) {
         logger.info('Failover successful', {
           failedGateway: gatewayId,
-          fallbackGateway: fallbackGateway.getId()
+          fallbackGateway: fallbackGateway.getId(),
         });
       } else {
-        logger.error('No fallback gateway available', { failedGateway: gatewayId });
+        logger.error('No fallback gateway available', {
+          failedGateway: gatewayId,
+        });
       }
 
       return fallbackGateway;
@@ -168,7 +201,7 @@ export class GatewayManager implements IGatewayManager {
       logger.error('Failed to handle gateway failure', {
         gatewayId,
         originalError: error.message,
-        failoverError
+        failoverError,
       });
       throw failoverError;
     }
@@ -198,7 +231,9 @@ export class GatewayManager implements IGatewayManager {
     logger.info('Failover disabled for gateway', { gatewayId });
   }
 
-  private async getEligibleGateways(criteria: GatewaySelectionCriteria): Promise<PaymentGateway[]> {
+  private async getEligibleGateways(
+    criteria: GatewaySelectionCriteria
+  ): Promise<PaymentGateway[]> {
     const activeGateways = this.getActiveGateways();
 
     return activeGateways.filter(gateway => {
@@ -215,26 +250,36 @@ export class GatewayManager implements IGatewayManager {
       }
 
       // Check payment method type
-      if (criteria.paymentMethodType &&
-        !config.settings.supportedPaymentMethods.includes(criteria.paymentMethodType)) {
+      if (
+        criteria.paymentMethodType &&
+        !config.settings.supportedPaymentMethods.includes(
+          criteria.paymentMethodType
+        )
+      ) {
         return false;
       }
 
       // Check country support
-      if (criteria.country &&
-        !config.settings.supportedCountries.includes(criteria.country)) {
+      if (
+        criteria.country &&
+        !config.settings.supportedCountries.includes(criteria.country)
+      ) {
         return false;
       }
 
       // Check preferred gateways
-      if (criteria.preferredGateways &&
-        !criteria.preferredGateways.includes(gateway.getId())) {
+      if (
+        criteria.preferredGateways &&
+        !criteria.preferredGateways.includes(gateway.getId())
+      ) {
         return false;
       }
 
       // Check excluded gateways
-      if (criteria.excludeGateways &&
-        criteria.excludeGateways.includes(gateway.getId())) {
+      if (
+        criteria.excludeGateways &&
+        criteria.excludeGateways.includes(gateway.getId())
+      ) {
         return false;
       }
 
@@ -259,29 +304,31 @@ export class GatewayManager implements IGatewayManager {
       const health = await this.healthMonitor.getHealthStatus(gateway.getId());
       if (health) {
         const healthScore = this.calculateHealthScore(health);
-        score *= (0.6 + 0.4 * healthScore); // 40% weight for health
+        score *= 0.6 + 0.4 * healthScore; // 40% weight for health
       }
 
       // Performance metrics factor (30% weight)
-      const metrics = await this.metricsCollector.getLatestMetrics(gateway.getId());
+      const metrics = await this.metricsCollector.getLatestMetrics(
+        gateway.getId()
+      );
       if (metrics) {
         const performanceScore = this.calculatePerformanceScore(metrics);
-        score *= (0.7 + 0.3 * performanceScore); // 30% weight for performance
+        score *= 0.7 + 0.3 * performanceScore; // 30% weight for performance
       }
 
       // Cost factor (20% weight)
       const costScore = this.calculateCostScore(gateway, criteria.amount);
-      score *= (0.8 + 0.2 * costScore); // 20% weight for cost
+      score *= 0.8 + 0.2 * costScore; // 20% weight for cost
 
       // Priority factor (10% weight)
       const priorityScore = gateway.getConfig().priority / 100; // Normalize to 0-1
-      score *= (0.9 + 0.1 * priorityScore); // 10% weight for priority
+      score *= 0.9 + 0.1 * priorityScore; // 10% weight for priority
 
       return Math.max(0, score);
     } catch (error) {
       logger.warn('Error calculating gateway score, using base score', {
         gatewayId: gateway.getId(),
-        error: error.message
+        error: error.message,
       });
       return 50; // Return a low but non-zero score on error
     }
@@ -297,9 +344,9 @@ export class GatewayManager implements IGatewayManager {
   private calculatePerformanceScore(metrics: GatewayMetrics): number {
     // Combine success rate and response time
     const successRateScore = metrics.successRate;
-    const responseTimeScore = Math.max(0, 1 - (metrics.responseTime / 5000)); // 5s max
+    const responseTimeScore = Math.max(0, 1 - metrics.responseTime / 5000); // 5s max
 
-    return (successRateScore * 0.7) + (responseTimeScore * 0.3);
+    return successRateScore * 0.7 + responseTimeScore * 0.3;
   }
 
   private calculateCostScore(gateway: PaymentGateway, amount: number): number {
@@ -317,6 +364,6 @@ export class GatewayManager implements IGatewayManager {
 
     // Normalize cost score (lower cost = higher score)
     const maxReasonableCost = amount * 0.05; // 5% of transaction amount
-    return Math.max(0, 1 - (cost / maxReasonableCost));
+    return Math.max(0, 1 - cost / maxReasonableCost);
   }
 }

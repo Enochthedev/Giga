@@ -6,14 +6,14 @@ export enum NotificationChannel {
   EMAIL = 'email',
   SMS = 'sms',
   PUSH = 'push',
-  IN_APP = 'in_app'
+  IN_APP = 'in_app',
 }
 
 export enum NotificationPriority {
   LOW = 'low',
   NORMAL = 'normal',
   HIGH = 'high',
-  URGENT = 'urgent'
+  URGENT = 'urgent',
 }
 
 export enum NotificationCategory {
@@ -22,7 +22,7 @@ export enum NotificationCategory {
   TRANSACTIONAL = 'transactional',
   MARKETING = 'marketing',
   SYSTEM = 'system',
-  SOCIAL = 'social'
+  SOCIAL = 'social',
 }
 
 export enum NotificationStatus {
@@ -32,7 +32,7 @@ export enum NotificationStatus {
   SENT = 'sent',
   DELIVERED = 'delivered',
   FAILED = 'failed',
-  CANCELLED = 'cancelled'
+  CANCELLED = 'cancelled',
 }
 
 export interface NotificationContent {
@@ -284,7 +284,7 @@ export enum NotificationErrorCode {
   SERVICE_UNAVAILABLE = 'SERVICE_UNAVAILABLE',
   AUTHENTICATION_FAILED = 'AUTHENTICATION_FAILED',
   INVALID_RECIPIENT = 'INVALID_RECIPIENT',
-  CONTENT_VALIDATION_FAILED = 'CONTENT_VALIDATION_FAILED'
+  CONTENT_VALIDATION_FAILED = 'CONTENT_VALIDATION_FAILED',
 }
 
 export interface NotificationError {

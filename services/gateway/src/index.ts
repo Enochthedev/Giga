@@ -13,13 +13,13 @@ const fastify = Fastify({
     transport:
       process.env.NODE_ENV !== 'production'
         ? {
-          target: 'pino-pretty',
-          options: {
-            colorize: true,
-            translateTime: 'HH:MM:ss Z',
-            ignore: 'pid,hostname',
-          },
-        }
+            target: 'pino-pretty',
+            options: {
+              colorize: true,
+              translateTime: 'HH:MM:ss Z',
+              ignore: 'pid,hostname',
+            },
+          }
         : undefined,
   },
 });
@@ -51,7 +51,8 @@ async function buildApp() {
 
   // Add correlation ID middleware
   fastify.addHook('onRequest', async (request: FastifyRequest) => {
-    const correlationId = request.headers['x-correlation-id'] as string ||
+    const correlationId =
+      (request.headers['x-correlation-id'] as string) ||
       `gw-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
     (request as any).correlationId = correlationId;
@@ -62,13 +63,16 @@ async function buildApp() {
   // Add request logging middleware
   fastify.addHook('onRequest', async (request: FastifyRequest) => {
     await Promise.resolve(); // Ensure async function has await
-    request.log.info({
-      correlationId: (request as any).correlationId,
-      method: request.method,
-      url: request.url,
-      userAgent: request.headers['user-agent'],
-      ip: request.ip,
-    }, 'Incoming request');
+    request.log.info(
+      {
+        correlationId: (request as any).correlationId,
+        method: request.method,
+        url: request.url,
+        userAgent: request.headers['user-agent'],
+        ip: request.ip,
+      },
+      'Incoming request'
+    );
   });
 
   // Health check with service registry status
@@ -100,33 +104,42 @@ async function buildApp() {
     };
   });
 
-  fastify.get('/gateway/services/:serviceId/versions', async (request: FastifyRequest) => {
-    await Promise.resolve(); // Ensure async function has await
-    const { serviceId } = request.params as { serviceId: string };
-    return {
-      success: true,
-      data: serviceRegistry.getServiceVersions(serviceId),
-    };
-  });
-
-  fastify.post('/gateway/services/:serviceId/versions', async (request: FastifyRequest, reply: FastifyReply) => {
-    await Promise.resolve(); // Ensure async function has await
-    const { serviceId } = request.params as { serviceId: string };
-    const versionConfig = request.body as any;
-
-    try {
-      serviceRegistry.registerServiceVersion(serviceId, versionConfig);
-      return reply.code(201).send({
+  fastify.get(
+    '/gateway/services/:serviceId/versions',
+    async (request: FastifyRequest) => {
+      await Promise.resolve(); // Ensure async function has await
+      const { serviceId } = request.params as { serviceId: string };
+      return {
         success: true,
-        message: `Version ${versionConfig.version} registered for service ${serviceId}`,
-      });
-    } catch (error) {
-      return reply.code(400).send({
-        success: false,
-        error: error instanceof Error ? error.message : 'Failed to register version',
-      });
+        data: serviceRegistry.getServiceVersions(serviceId),
+      };
     }
-  });
+  );
+
+  fastify.post(
+    '/gateway/services/:serviceId/versions',
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      await Promise.resolve(); // Ensure async function has await
+      const { serviceId } = request.params as { serviceId: string };
+      const versionConfig = request.body as any;
+
+      try {
+        serviceRegistry.registerServiceVersion(serviceId, versionConfig);
+        return reply.code(201).send({
+          success: true,
+          message: `Version ${versionConfig.version} registered for service ${serviceId}`,
+        });
+      } catch (error) {
+        return reply.code(400).send({
+          success: false,
+          error:
+            error instanceof Error
+              ? error.message
+              : 'Failed to register version',
+        });
+      }
+    }
+  );
 
   fastify.get('/gateway/routes', async () => {
     await Promise.resolve(); // Ensure async function has await
@@ -136,61 +149,79 @@ async function buildApp() {
     };
   });
 
-  fastify.post('/gateway/routes', async (request: FastifyRequest, reply: FastifyReply) => {
-    await Promise.resolve(); // Ensure async function has await
-    const rule = request.body as any;
+  fastify.post(
+    '/gateway/routes',
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      await Promise.resolve(); // Ensure async function has await
+      const rule = request.body as any;
 
-    try {
-      requestRouter.addDynamicRoutingRule(rule);
-      return reply.code(201).send({
-        success: true,
-        message: `Routing rule ${rule.id} added successfully`,
-      });
-    } catch (error) {
-      return reply.code(400).send({
-        success: false,
-        error: error instanceof Error ? error.message : 'Failed to add routing rule',
-      });
+      try {
+        requestRouter.addDynamicRoutingRule(rule);
+        return reply.code(201).send({
+          success: true,
+          message: `Routing rule ${rule.id} added successfully`,
+        });
+      } catch (error) {
+        return reply.code(400).send({
+          success: false,
+          error:
+            error instanceof Error
+              ? error.message
+              : 'Failed to add routing rule',
+        });
+      }
     }
-  });
+  );
 
-  fastify.put('/gateway/routes/:ruleId/toggle', async (request: FastifyRequest, reply: FastifyReply) => {
-    await Promise.resolve(); // Ensure async function has await
-    const { ruleId } = request.params as { ruleId: string };
-    const { enabled } = request.body as { enabled: boolean };
+  fastify.put(
+    '/gateway/routes/:ruleId/toggle',
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      await Promise.resolve(); // Ensure async function has await
+      const { ruleId } = request.params as { ruleId: string };
+      const { enabled } = request.body as { enabled: boolean };
 
-    try {
-      requestRouter.toggleRoutingRule(ruleId, enabled);
-      return {
-        success: true,
-        message: `Routing rule ${ruleId} ${enabled ? 'enabled' : 'disabled'}`,
-      };
-    } catch (error) {
-      return reply.code(404).send({
-        success: false,
-        error: error instanceof Error ? error.message : 'Failed to toggle routing rule',
-      });
+      try {
+        requestRouter.toggleRoutingRule(ruleId, enabled);
+        return {
+          success: true,
+          message: `Routing rule ${ruleId} ${enabled ? 'enabled' : 'disabled'}`,
+        };
+      } catch (error) {
+        return reply.code(404).send({
+          success: false,
+          error:
+            error instanceof Error
+              ? error.message
+              : 'Failed to toggle routing rule',
+        });
+      }
     }
-  });
+  );
 
-  fastify.post('/gateway/services/:serviceId/rewrite-rules', async (request: FastifyRequest, reply: FastifyReply) => {
-    await Promise.resolve(); // Ensure async function has await
-    const { serviceId } = request.params as { serviceId: string };
-    const rule = request.body as any;
+  fastify.post(
+    '/gateway/services/:serviceId/rewrite-rules',
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      await Promise.resolve(); // Ensure async function has await
+      const { serviceId } = request.params as { serviceId: string };
+      const rule = request.body as any;
 
-    try {
-      serviceRegistry.addPathRewriteRule(serviceId, rule);
-      return reply.code(201).send({
-        success: true,
-        message: `Path rewrite rule added for service ${serviceId}`,
-      });
-    } catch (error) {
-      return reply.code(400).send({
-        success: false,
-        error: error instanceof Error ? error.message : 'Failed to add rewrite rule',
-      });
+      try {
+        serviceRegistry.addPathRewriteRule(serviceId, rule);
+        return reply.code(201).send({
+          success: true,
+          message: `Path rewrite rule added for service ${serviceId}`,
+        });
+      } catch (error) {
+        return reply.code(400).send({
+          success: false,
+          error:
+            error instanceof Error
+              ? error.message
+              : 'Failed to add rewrite rule',
+        });
+      }
     }
-  });
+  );
 
   fastify.get('/gateway/stats', async () => {
     await Promise.resolve(); // Ensure async function has await
@@ -204,145 +235,165 @@ async function buildApp() {
     };
   });
 
-  fastify.post('/gateway/discovery/configure', async (request: FastifyRequest, reply: FastifyReply) => {
-    await Promise.resolve(); // Ensure async function has await
-    const config = request.body as any;
-
-    try {
-      serviceRegistry.configureDiscovery(config);
-      return {
-        success: true,
-        message: 'Service discovery configured successfully',
-      };
-    } catch (error) {
-      return reply.code(400).send({
-        success: false,
-        error: error instanceof Error ? error.message : 'Failed to configure discovery',
-      });
-    }
-  });
-
-  fastify.post('/gateway/discovery/trigger', async (request: FastifyRequest, reply: FastifyReply) => {
-    await Promise.resolve(); // Ensure async function has await
-    try {
-      const discoveredServices = await serviceRegistry.discoverServices();
-      return {
-        success: true,
-        message: `Discovered ${discoveredServices.length} services`,
-        data: discoveredServices,
-      };
-    } catch (error) {
-      return reply.code(500).send({
-        success: false,
-        error: error instanceof Error ? error.message : 'Service discovery failed',
-      });
-    }
-  });
-
-  // Dynamic proxy handler for all API routes
-  fastify.all('/api/*', async (request: FastifyRequest, reply: FastifyReply) => {
-    await Promise.resolve(); // Ensure async function has await
-    const startTime = Date.now();
-
-    try {
-      // Resolve route using the request router
-      const routeMatch = requestRouter.resolveRoute(request);
-
-      if (!routeMatch) {
-        return reply.code(404).send({
-          success: false,
-          error: 'Route not found',
-          message: `${request.method} ${request.url} is not available`,
-          correlationId: (request as any).correlationId,
-          timestamp: new Date().toISOString(),
-        });
-      }
-
-      // Get healthy instances for the service
-      const instances = serviceRegistry.getHealthyInstances(routeMatch.serviceConfig.id);
-
-      if (instances.length === 0) {
-        return reply.code(503).send({
-          success: false,
-          error: 'Service Unavailable',
-          message: `No healthy instances available for service: ${routeMatch.serviceConfig.name}`,
-          correlationId: (request as any).correlationId,
-          timestamp: new Date().toISOString(),
-          retryAfter: 30,
-        });
-      }
-
-      // Select instance using load balancer
-      const selectedInstance = loadBalancer.selectInstanceWithStickySession(
-        routeMatch.serviceConfig.id,
-        instances,
-        routeMatch.serviceConfig.loadBalancing,
-        request
-      );
-
-      if (!selectedInstance) {
-        return reply.code(503).send({
-          success: false,
-          error: 'Service Unavailable',
-          message: 'Failed to select service instance',
-          correlationId: (request as any).correlationId,
-          timestamp: new Date().toISOString(),
-        });
-      }
-
-      // Increment connection count
-      loadBalancer.incrementConnections(selectedInstance.id, instances);
+  fastify.post(
+    '/gateway/discovery/configure',
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      await Promise.resolve(); // Ensure async function has await
+      const config = request.body as any;
 
       try {
-        // Forward request with automatic failover
-        const response = await forwardRequestWithFailover(request, routeMatch, instances);
+        serviceRegistry.configureDiscovery(config);
+        return {
+          success: true,
+          message: 'Service discovery configured successfully',
+        };
+      } catch (error) {
+        return reply.code(400).send({
+          success: false,
+          error:
+            error instanceof Error
+              ? error.message
+              : 'Failed to configure discovery',
+        });
+      }
+    }
+  );
 
-        // Update metrics
-        const responseTime = Date.now() - startTime;
-        serviceRegistry.updateInstanceMetrics(
-          routeMatch.serviceConfig.id,
-          response.instanceId,
-          {
-            responseTime,
-            errorCount: response.statusCode >= 400 ? 1 : 0,
-            requestCount: 1,
-            timestamp: new Date(),
-          }
+  fastify.post(
+    '/gateway/discovery/trigger',
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      await Promise.resolve(); // Ensure async function has await
+      try {
+        const discoveredServices = await serviceRegistry.discoverServices();
+        return {
+          success: true,
+          message: `Discovered ${discoveredServices.length} services`,
+          data: discoveredServices,
+        };
+      } catch (error) {
+        return reply.code(500).send({
+          success: false,
+          error:
+            error instanceof Error ? error.message : 'Service discovery failed',
+        });
+      }
+    }
+  );
+
+  // Dynamic proxy handler for all API routes
+  fastify.all(
+    '/api/*',
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      await Promise.resolve(); // Ensure async function has await
+      const startTime = Date.now();
+
+      try {
+        // Resolve route using the request router
+        const routeMatch = requestRouter.resolveRoute(request);
+
+        if (!routeMatch) {
+          return reply.code(404).send({
+            success: false,
+            error: 'Route not found',
+            message: `${request.method} ${request.url} is not available`,
+            correlationId: (request as any).correlationId,
+            timestamp: new Date().toISOString(),
+          });
+        }
+
+        // Get healthy instances for the service
+        const instances = serviceRegistry.getHealthyInstances(
+          routeMatch.serviceConfig.id
         );
 
-        // Add response headers
-        reply.headers({
-          'x-correlation-id': (request as any).correlationId,
-          'x-response-time': `${responseTime}ms`,
-          'x-service-instance': response.instanceId,
-          'x-service-name': routeMatch.serviceConfig.name,
-          'x-retry-count': response.retryCount?.toString() || '0',
+        if (instances.length === 0) {
+          return reply.code(503).send({
+            success: false,
+            error: 'Service Unavailable',
+            message: `No healthy instances available for service: ${routeMatch.serviceConfig.name}`,
+            correlationId: (request as any).correlationId,
+            timestamp: new Date().toISOString(),
+            retryAfter: 30,
+          });
+        }
+
+        // Select instance using load balancer
+        const selectedInstance = loadBalancer.selectInstanceWithStickySession(
+          routeMatch.serviceConfig.id,
+          instances,
+          routeMatch.serviceConfig.loadBalancing,
+          request
+        );
+
+        if (!selectedInstance) {
+          return reply.code(503).send({
+            success: false,
+            error: 'Service Unavailable',
+            message: 'Failed to select service instance',
+            correlationId: (request as any).correlationId,
+            timestamp: new Date().toISOString(),
+          });
+        }
+
+        // Increment connection count
+        loadBalancer.incrementConnections(selectedInstance.id, instances);
+
+        try {
+          // Forward request with automatic failover
+          const response = await forwardRequestWithFailover(
+            request,
+            routeMatch,
+            instances
+          );
+
+          // Update metrics
+          const responseTime = Date.now() - startTime;
+          serviceRegistry.updateInstanceMetrics(
+            routeMatch.serviceConfig.id,
+            response.instanceId,
+            {
+              responseTime,
+              errorCount: response.statusCode >= 400 ? 1 : 0,
+              requestCount: 1,
+              timestamp: new Date(),
+            }
+          );
+
+          // Add response headers
+          reply.headers({
+            'x-correlation-id': (request as any).correlationId,
+            'x-response-time': `${responseTime}ms`,
+            'x-service-instance': response.instanceId,
+            'x-service-name': routeMatch.serviceConfig.name,
+            'x-retry-count': response.retryCount?.toString() || '0',
+          });
+
+          return reply.code(response.statusCode).send(response.body);
+        } finally {
+          // Decrement connection count for all instances that were used
+          loadBalancer.decrementConnections(selectedInstance.id, instances);
+        }
+      } catch (error) {
+        const responseTime = Date.now() - startTime;
+
+        request.log.error(
+          {
+            error: error instanceof Error ? error.message : 'Unknown error',
+            correlationId: (request as any).correlationId,
+            responseTime,
+          },
+          'Request forwarding failed'
+        );
+
+        return reply.code(500).send({
+          success: false,
+          error: 'Internal Server Error',
+          correlationId: (request as any).correlationId,
+          timestamp: new Date().toISOString(),
         });
-
-        return reply.code(response.statusCode).send(response.body);
-
-      } finally {
-        // Decrement connection count for all instances that were used
-        loadBalancer.decrementConnections(selectedInstance.id, instances);
       }
-
-    } catch (error) {
-      const responseTime = Date.now() - startTime;
-
-      request.log.error({
-        error: error instanceof Error ? error.message : 'Unknown error',
-        correlationId: (request as any).correlationId,
-        responseTime,
-      }, 'Request forwarding failed');
-
-      return reply.code(500).send({
-        success: false,
-        error: 'Internal Server Error',
-        correlationId: (request as any).correlationId,
-        timestamp: new Date().toISOString(),
-      });
     }
-  });
+  );
 
   // Catch-all for unmatched routes
   fastify.setNotFoundHandler((request, reply) => {
@@ -559,7 +610,13 @@ async function forwardRequestWithFailover(
   request: FastifyRequest,
   routeMatch: RouteMatch,
   availableInstances: any[]
-): Promise<{ statusCode: number; body: any; headers?: Record<string, string>; instanceId: string; retryCount?: number }> {
+): Promise<{
+  statusCode: number;
+  body: any;
+  headers?: Record<string, string>;
+  instanceId: string;
+  retryCount?: number;
+}> {
   const failoverConfig = routeMatch.serviceConfig.failover;
   let lastError: Error | null = null;
   let retryCount = 0;
@@ -591,32 +648,44 @@ async function forwardRequestWithFailover(
       retryCount = attempt;
 
       // Mark instance as potentially unhealthy if it's a connection error
-      if (error instanceof Error && (
-        error.message.includes('timeout') ||
-        error.message.includes('ECONNREFUSED') ||
-        error.message.includes('ENOTFOUND')
-      )) {
-        serviceRegistry.updateInstanceHealth(routeMatch.serviceConfig.id, instance.id, false);
+      if (
+        error instanceof Error &&
+        (error.message.includes('timeout') ||
+          error.message.includes('ECONNREFUSED') ||
+          error.message.includes('ENOTFOUND'))
+      ) {
+        serviceRegistry.updateInstanceHealth(
+          routeMatch.serviceConfig.id,
+          instance.id,
+          false
+        );
       }
 
       // Don't retry on the last attempt
       if (attempt < failoverConfig.maxRetries) {
-        const delay = failoverConfig.retryDelay * Math.pow(failoverConfig.backoffMultiplier, attempt);
+        const delay =
+          failoverConfig.retryDelay *
+          Math.pow(failoverConfig.backoffMultiplier, attempt);
         await new Promise(resolve => setTimeout(resolve, delay));
 
-        request.log.warn({
-          correlationId: (request as any).correlationId,
-          attempt: attempt + 1,
-          instanceId: instance.id,
-          error: error instanceof Error ? error.message : 'Unknown error',
-          nextRetryIn: delay,
-        }, 'Request failed, retrying with failover');
+        request.log.warn(
+          {
+            correlationId: (request as any).correlationId,
+            attempt: attempt + 1,
+            instanceId: instance.id,
+            error: error instanceof Error ? error.message : 'Unknown error',
+            nextRetryIn: delay,
+          },
+          'Request failed, retrying with failover'
+        );
       }
     }
   }
 
   // All attempts failed
-  throw new Error(`Request failed after ${retryCount + 1} attempts. Last error: ${lastError?.message}`);
+  throw new Error(
+    `Request failed after ${retryCount + 1} attempts. Last error: ${lastError?.message}`
+  );
 }
 
 /**
@@ -626,7 +695,11 @@ async function forwardRequest(
   request: FastifyRequest,
   instance: any,
   routeMatch: RouteMatch
-): Promise<{ statusCode: number; body: any; headers?: Record<string, string> }> {
+): Promise<{
+  statusCode: number;
+  body: any;
+  headers?: Record<string, string>;
+}> {
   const targetUrl = `${instance.url}${routeMatch.transformedPath}`;
 
   // Prepare headers
@@ -658,9 +731,10 @@ async function forwardRequest(
   // Add body for non-GET requests
   if (request.method !== 'GET' && request.method !== 'HEAD') {
     if (request.body) {
-      requestOptions.body = typeof request.body === 'string'
-        ? request.body
-        : JSON.stringify(request.body);
+      requestOptions.body =
+        typeof request.body === 'string'
+          ? request.body
+          : JSON.stringify(request.body);
     }
   }
 
@@ -681,7 +755,6 @@ async function forwardRequest(
       body,
       headers: Object.fromEntries(response.headers.entries()),
     };
-
   } catch (error) {
     if (error instanceof Error && error.name === 'AbortError') {
       throw new Error(`Request timeout to ${instance.url}`);

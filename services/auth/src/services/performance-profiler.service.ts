@@ -52,9 +52,12 @@ class PerformanceProfilerService {
         metadata: {
           ...metadata,
           success: true,
-          memoryDelta: this.calculateMemoryDelta(startMemory, process.memoryUsage()),
-          cpuDelta: process.cpuUsage(startCpu)
-        }
+          memoryDelta: this.calculateMemoryDelta(
+            startMemory,
+            process.memoryUsage()
+          ),
+          cpuDelta: process.cpuUsage(startCpu),
+        },
       });
 
       // Log slow operations
@@ -62,7 +65,7 @@ class PerformanceProfilerService {
         logger.warn('Slow operation detected', {
           operation: operationName,
           duration,
-          metadata
+          metadata,
         });
       }
 
@@ -79,9 +82,12 @@ class PerformanceProfilerService {
           ...metadata,
           success: false,
           error: (error as Error).message,
-          memoryDelta: this.calculateMemoryDelta(startMemory, process.memoryUsage()),
-          cpuDelta: process.cpuUsage(startCpu)
-        }
+          memoryDelta: this.calculateMemoryDelta(
+            startMemory,
+            process.memoryUsage()
+          ),
+          cpuDelta: process.cpuUsage(startCpu),
+        },
       });
 
       throw error;
@@ -109,9 +115,12 @@ class PerformanceProfilerService {
         metadata: {
           ...metadata,
           success: true,
-          memoryDelta: this.calculateMemoryDelta(startMemory, process.memoryUsage()),
-          cpuDelta: process.cpuUsage(startCpu)
-        }
+          memoryDelta: this.calculateMemoryDelta(
+            startMemory,
+            process.memoryUsage()
+          ),
+          cpuDelta: process.cpuUsage(startCpu),
+        },
       });
 
       return result;
@@ -126,9 +135,12 @@ class PerformanceProfilerService {
           ...metadata,
           success: false,
           error: (error as Error).message,
-          memoryDelta: this.calculateMemoryDelta(startMemory, process.memoryUsage()),
-          cpuDelta: process.cpuUsage(startCpu)
-        }
+          memoryDelta: this.calculateMemoryDelta(
+            startMemory,
+            process.memoryUsage()
+          ),
+          cpuDelta: process.cpuUsage(startCpu),
+        },
       });
 
       throw error;
@@ -140,22 +152,44 @@ class PerformanceProfilerService {
     const snapshot: ResourceUsage = {
       memory: process.memoryUsage(),
       cpu: process.cpuUsage(),
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
 
     this.resourceSnapshots.push(snapshot);
 
     // Keep only recent snapshots
     if (this.resourceSnapshots.length > this.MAX_SNAPSHOTS) {
-      this.resourceSnapshots = this.resourceSnapshots.slice(-this.MAX_SNAPSHOTS);
+      this.resourceSnapshots = this.resourceSnapshots.slice(
+        -this.MAX_SNAPSHOTS
+      );
     }
 
     // Record metrics
-    metricsService.recordMetric('memory_usage_rss', snapshot.memory.rss, 'bytes');
-    metricsService.recordMetric('memory_usage_heap_used', snapshot.memory.heapUsed, 'bytes');
-    metricsService.recordMetric('memory_usage_heap_total', snapshot.memory.heapTotal, 'bytes');
-    metricsService.recordMetric('cpu_usage_user', snapshot.cpu.user, 'microseconds');
-    metricsService.recordMetric('cpu_usage_system', snapshot.cpu.system, 'microseconds');
+    metricsService.recordMetric(
+      'memory_usage_rss',
+      snapshot.memory.rss,
+      'bytes'
+    );
+    metricsService.recordMetric(
+      'memory_usage_heap_used',
+      snapshot.memory.heapUsed,
+      'bytes'
+    );
+    metricsService.recordMetric(
+      'memory_usage_heap_total',
+      snapshot.memory.heapTotal,
+      'bytes'
+    );
+    metricsService.recordMetric(
+      'cpu_usage_user',
+      snapshot.cpu.user,
+      'microseconds'
+    );
+    metricsService.recordMetric(
+      'cpu_usage_system',
+      snapshot.cpu.system,
+      'microseconds'
+    );
   }
 
   // Analyze bottlenecks
@@ -165,11 +199,14 @@ class PerformanceProfilerService {
       profile => now - profile.timestamp < timeWindowMs
     );
 
-    const operationStats = new Map<string, {
-      durations: number[];
-      totalDuration: number;
-      count: number;
-    }>();
+    const operationStats = new Map<
+      string,
+      {
+        durations: number[];
+        totalDuration: number;
+        count: number;
+      }
+    >();
 
     // Aggregate operation statistics
     recentProfiles.forEach(profile => {
@@ -177,7 +214,7 @@ class PerformanceProfilerService {
         operationStats.set(profile.operation, {
           durations: [],
           totalDuration: 0,
-          count: 0
+          count: 0,
         });
       }
 
@@ -209,14 +246,15 @@ class PerformanceProfilerService {
         averageDuration,
         maxDuration,
         occurrences: stats.count,
-        severity
+        severity,
       });
     });
 
     // Sort by severity and average duration
     return bottlenecks.sort((a, b) => {
       const severityOrder = { critical: 4, high: 3, medium: 2, low: 1 };
-      const severityDiff = severityOrder[b.severity] - severityOrder[a.severity];
+      const severityDiff =
+        severityOrder[b.severity] - severityOrder[a.severity];
 
       if (severityDiff !== 0) return severityDiff;
       return b.averageDuration - a.averageDuration;
@@ -251,10 +289,18 @@ class PerformanceProfilerService {
 
     // Calculate summary statistics
     const totalOperations = recentProfiles.length;
-    const totalDuration = recentProfiles.reduce((sum, profile) => sum + profile.duration, 0);
-    const averageResponseTime = totalOperations > 0 ? totalDuration / totalOperations : 0;
-    const slowOperations = recentProfiles.filter(p => p.duration > this.SLOW_OPERATION_THRESHOLD).length;
-    const criticalOperations = recentProfiles.filter(p => p.duration > this.CRITICAL_THRESHOLD).length;
+    const totalDuration = recentProfiles.reduce(
+      (sum, profile) => sum + profile.duration,
+      0
+    );
+    const averageResponseTime =
+      totalOperations > 0 ? totalDuration / totalOperations : 0;
+    const slowOperations = recentProfiles.filter(
+      p => p.duration > this.SLOW_OPERATION_THRESHOLD
+    ).length;
+    const criticalOperations = recentProfiles.filter(
+      p => p.duration > this.CRITICAL_THRESHOLD
+    ).length;
 
     // Analyze bottlenecks
     const bottlenecks = this.analyzeBottlenecks(timeWindowMs);
@@ -263,18 +309,21 @@ class PerformanceProfilerService {
     const resourceTrends = this.analyzeResourceTrends(recentSnapshots);
 
     // Generate recommendations
-    const recommendations = this.generateRecommendations(bottlenecks, resourceTrends);
+    const recommendations = this.generateRecommendations(
+      bottlenecks,
+      resourceTrends
+    );
 
     return {
       summary: {
         totalOperations,
         averageResponseTime,
         slowOperations,
-        criticalOperations
+        criticalOperations,
       },
       bottlenecks,
       resourceTrends,
-      recommendations
+      recommendations,
     };
   }
 
@@ -285,11 +334,13 @@ class PerformanceProfilerService {
 
       // Analyze and log critical bottlenecks
       const bottlenecks = this.analyzeBottlenecks(300000); // Last 5 minutes
-      const criticalBottlenecks = bottlenecks.filter(b => b.severity === 'critical');
+      const criticalBottlenecks = bottlenecks.filter(
+        b => b.severity === 'critical'
+      );
 
       if (criticalBottlenecks.length > 0) {
         logger.error('Critical performance bottlenecks detected', {
-          bottlenecks: criticalBottlenecks
+          bottlenecks: criticalBottlenecks,
         });
       }
     }, intervalMs);
@@ -311,7 +362,7 @@ class PerformanceProfilerService {
 
     logger.debug('Performance profiler cleanup completed', {
       remainingProfiles: this.profiles.length,
-      remainingSnapshots: this.resourceSnapshots.length
+      remainingSnapshots: this.resourceSnapshots.length,
     });
   }
 
@@ -325,16 +376,23 @@ class PerformanceProfilerService {
     }
 
     // Record metrics
-    metricsService.recordMetric(`operation_duration_${profile.operation}`, profile.duration, 'ms');
+    metricsService.recordMetric(
+      `operation_duration_${profile.operation}`,
+      profile.duration,
+      'ms'
+    );
   }
 
-  private calculateMemoryDelta(start: NodeJS.MemoryUsage, end: NodeJS.MemoryUsage): NodeJS.MemoryUsage {
+  private calculateMemoryDelta(
+    start: NodeJS.MemoryUsage,
+    end: NodeJS.MemoryUsage
+  ): NodeJS.MemoryUsage {
     return {
       rss: end.rss - start.rss,
       heapTotal: end.heapTotal - start.heapTotal,
       heapUsed: end.heapUsed - start.heapUsed,
       external: end.external - start.external,
-      arrayBuffers: end.arrayBuffers - start.arrayBuffers
+      arrayBuffers: end.arrayBuffers - start.arrayBuffers,
     };
   }
 
@@ -349,14 +407,15 @@ class PerformanceProfilerService {
         memoryTrend: 'stable',
         cpuTrend: 'stable',
         averageMemoryUsage: 0,
-        peakMemoryUsage: 0
+        peakMemoryUsage: 0,
       };
     }
 
     const memoryUsages = snapshots.map(s => s.memory.heapUsed);
     const cpuUsages = snapshots.map(s => s.cpu.user + s.cpu.system);
 
-    const averageMemoryUsage = memoryUsages.reduce((sum, usage) => sum + usage, 0) / memoryUsages.length;
+    const averageMemoryUsage =
+      memoryUsages.reduce((sum, usage) => sum + usage, 0) / memoryUsages.length;
     const peakMemoryUsage = Math.max(...memoryUsages);
 
     // Simple trend analysis using first and last values
@@ -367,11 +426,13 @@ class PerformanceProfilerService {
       memoryTrend,
       cpuTrend,
       averageMemoryUsage,
-      peakMemoryUsage
+      peakMemoryUsage,
     };
   }
 
-  private calculateTrend(values: number[]): 'increasing' | 'decreasing' | 'stable' {
+  private calculateTrend(
+    values: number[]
+  ): 'increasing' | 'decreasing' | 'stable' {
     if (values.length < 2) return 'stable';
 
     const first = values[0];
@@ -390,35 +451,53 @@ class PerformanceProfilerService {
     const recommendations: string[] = [];
 
     // Bottleneck recommendations
-    const criticalBottlenecks = bottlenecks.filter(b => b.severity === 'critical');
+    const criticalBottlenecks = bottlenecks.filter(
+      b => b.severity === 'critical'
+    );
     if (criticalBottlenecks.length > 0) {
-      recommendations.push(`Critical performance issues detected in: ${criticalBottlenecks.map(b => b.operation).join(', ')}`);
+      recommendations.push(
+        `Critical performance issues detected in: ${criticalBottlenecks.map(b => b.operation).join(', ')}`
+      );
     }
 
     const highBottlenecks = bottlenecks.filter(b => b.severity === 'high');
     if (highBottlenecks.length > 0) {
-      recommendations.push(`Consider optimizing: ${highBottlenecks.map(b => b.operation).join(', ')}`);
+      recommendations.push(
+        `Consider optimizing: ${highBottlenecks.map(b => b.operation).join(', ')}`
+      );
     }
 
     // Resource trend recommendations
     if (resourceTrends.memoryTrend === 'increasing') {
-      recommendations.push('Memory usage is increasing - check for memory leaks');
+      recommendations.push(
+        'Memory usage is increasing - check for memory leaks'
+      );
     }
 
     if (resourceTrends.cpuTrend === 'increasing') {
-      recommendations.push('CPU usage is increasing - consider optimizing compute-intensive operations');
+      recommendations.push(
+        'CPU usage is increasing - consider optimizing compute-intensive operations'
+      );
     }
 
     // Database-specific recommendations
-    const dbBottlenecks = bottlenecks.filter(b => b.operation.includes('database') || b.operation.includes('query'));
+    const dbBottlenecks = bottlenecks.filter(
+      b => b.operation.includes('database') || b.operation.includes('query')
+    );
     if (dbBottlenecks.length > 0) {
-      recommendations.push('Database operations are slow - consider adding indexes or optimizing queries');
+      recommendations.push(
+        'Database operations are slow - consider adding indexes or optimizing queries'
+      );
     }
 
     // Cache-specific recommendations
-    const cacheBottlenecks = bottlenecks.filter(b => b.operation.includes('cache') || b.operation.includes('redis'));
+    const cacheBottlenecks = bottlenecks.filter(
+      b => b.operation.includes('cache') || b.operation.includes('redis')
+    );
     if (cacheBottlenecks.length > 0) {
-      recommendations.push('Cache operations are slow - check Redis connection and network latency');
+      recommendations.push(
+        'Cache operations are slow - check Redis connection and network latency'
+      );
     }
 
     return recommendations;

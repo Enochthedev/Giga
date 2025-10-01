@@ -25,7 +25,10 @@ export class SessionManagementMiddleware {
   ) => {
     try {
       const deviceFingerprint = this.generateDeviceFingerprint(req);
-      const deviceId = this.generateDeviceId(deviceFingerprint, req.clientIp || req.ip || 'unknown');
+      const deviceId = this.generateDeviceId(
+        deviceFingerprint,
+        req.clientIp || req.ip || 'unknown'
+      );
       const sessionId = crypto.randomUUID();
       const clientIp = req.clientIp || req.ip;
 
@@ -125,7 +128,11 @@ export class SessionManagementMiddleware {
 
       // Validate session ownership
       if (session.userId !== userId) {
-        console.warn('Session ownership mismatch', { sessionId, userId, sessionUserId: session.userId });
+        console.warn('Session ownership mismatch', {
+          sessionId,
+          userId,
+          sessionUserId: session.userId,
+        });
         return this.invalidateSession(req, res, 'SESSION_OWNERSHIP_MISMATCH');
       }
 
@@ -141,7 +148,11 @@ export class SessionManagementMiddleware {
 
       // Check session expiry
       if (deviceSession.expiresAt < new Date()) {
-        console.warn('Session expired', { sessionId, userId, expiresAt: deviceSession.expiresAt });
+        console.warn('Session expired', {
+          sessionId,
+          userId,
+          expiresAt: deviceSession.expiresAt,
+        });
         await this.cleanupExpiredSession(sessionId);
         return this.invalidateSession(req, res, 'SESSION_EXPIRED');
       }
@@ -162,7 +173,9 @@ export class SessionManagementMiddleware {
 
       // Check for suspicious IP changes
       const currentIP = req.clientIp || req.ip;
-      if (this.hashIP(currentIP || 'unknown') !== this.hashIP(session.ipAddress)) {
+      if (
+        this.hashIP(currentIP || 'unknown') !== this.hashIP(session.ipAddress)
+      ) {
         console.warn('IP address change detected', {
           sessionId,
           userId,
@@ -215,7 +228,10 @@ export class SessionManagementMiddleware {
         );
 
         for (const session of sessionsToRemove) {
-          await this.terminateSession(session.sessionId, 'CONCURRENT_LIMIT_EXCEEDED');
+          await this.terminateSession(
+            session.sessionId,
+            'CONCURRENT_LIMIT_EXCEEDED'
+          );
         }
 
         console.info('Enforced concurrent session limit', {
@@ -293,7 +309,8 @@ export class SessionManagementMiddleware {
 
       // Keep only recent sessions
       const recentSessions = sessionList.filter(
-        (s: any) => Date.now() - s.createdAt < this.SESSION_TIMEOUT_HOURS * 3600 * 1000
+        (s: any) =>
+          Date.now() - s.createdAt < this.SESSION_TIMEOUT_HOURS * 3600 * 1000
       );
 
       await redisService.set(
@@ -309,7 +326,10 @@ export class SessionManagementMiddleware {
   /**
    * Update session activity
    */
-  private static async updateSessionActivity(sessionId: string, sessionData: any) {
+  private static async updateSessionActivity(
+    sessionId: string,
+    sessionData: any
+  ) {
     try {
       const now = Date.now();
 
@@ -323,7 +343,8 @@ export class SessionManagementMiddleware {
 
       // Update database (less frequently to reduce load)
       const lastUpdate = sessionData.lastDbUpdate || 0;
-      if (now - lastUpdate > 300000) { // Update DB every 5 minutes
+      if (now - lastUpdate > 300000) {
+        // Update DB every 5 minutes
         await prisma.deviceSession.update({
           where: { sessionId },
           data: { lastUsed: new Date() },
@@ -339,7 +360,11 @@ export class SessionManagementMiddleware {
   /**
    * Invalidate session
    */
-  private static invalidateSession(_req: Request, res: Response, reason: string) {
+  private static invalidateSession(
+    _req: Request,
+    res: Response,
+    reason: string
+  ) {
     console.warn('Session invalidated', {
       sessionId: req.headers['x-session-id'],
       userId: req.user?.sub,
@@ -491,7 +516,9 @@ export class SessionManagementMiddleware {
         where: {
           OR: [
             { expiresAt: { lt: new Date() } },
-            { lastUsed: { lt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } }, // 7 days old
+            {
+              lastUsed: { lt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) },
+            }, // 7 days old
           ],
           isActive: true,
         },

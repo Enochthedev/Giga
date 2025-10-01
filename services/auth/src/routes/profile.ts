@@ -12,7 +12,7 @@ import {
   updateProfileRatingSchema,
   updateProfileVerificationSchema,
   updateVendorProfileSchema,
-  validate
+  validate,
 } from '../middleware/validation.middleware';
 import { UploadService } from '../services/upload.service';
 
@@ -142,11 +142,14 @@ router.post(
       // Get current user to delete old avatar
       const currentUser = await req.prisma.user.findUnique({
         where: { id: req.user.sub },
-        select: { avatar: true }
+        select: { avatar: true },
       });
 
       // Process and save new avatar
-      const uploadResult = await uploadService.processAvatar(req.file, req.user.sub);
+      const uploadResult = await uploadService.processAvatar(
+        req.file,
+        req.user.sub
+      );
 
       if (!uploadResult.success) {
         return res.status(500).json({
@@ -161,7 +164,7 @@ router.post(
       const updatedUser = await req.prisma.user.update({
         where: { id: req.user.sub },
         data: { avatar: uploadResult.url },
-        select: { avatar: true }
+        select: { avatar: true },
       });
 
       // Delete old avatar file if it exists
@@ -201,54 +204,49 @@ router.post(
  *       200:
  *         description: Avatar deleted successfully
  */
-router.delete(
-  '/avatar',
-  apiRateLimit,
-  authenticateToken,
-  (req, res) => {
-    try {
-      if (!req.user) {
-        return res.status(401).json({
-          success: false,
-          error: 'Unauthorized',
-          code: 'UNAUTHORIZED',
-          timestamp: new Date().toISOString(),
-        });
-      }
-
-      // Get current user avatar
-      const currentUser = await req.prisma.user.findUnique({
-        where: { id: req.user.sub },
-        select: { avatar: true }
-      });
-
-      // Remove avatar from database
-      await req.prisma.user.update({
-        where: { id: req.user.sub },
-        data: { avatar: null }
-      });
-
-      // Delete avatar file if it exists
-      if (currentUser?.avatar) {
-        await uploadService.deleteAvatar(currentUser.avatar);
-      }
-
-      res.json({
-        success: true,
-        message: 'Avatar deleted successfully',
-        timestamp: new Date().toISOString(),
-      });
-    } catch (error) {
-      console.error('Avatar delete error:', error);
-      res.status(500).json({
+router.delete('/avatar', apiRateLimit, authenticateToken, (req, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({
         success: false,
-        error: 'Failed to delete avatar',
-        code: 'DELETE_ERROR',
+        error: 'Unauthorized',
+        code: 'UNAUTHORIZED',
         timestamp: new Date().toISOString(),
       });
     }
+
+    // Get current user avatar
+    const currentUser = await req.prisma.user.findUnique({
+      where: { id: req.user.sub },
+      select: { avatar: true },
+    });
+
+    // Remove avatar from database
+    await req.prisma.user.update({
+      where: { id: req.user.sub },
+      data: { avatar: null },
+    });
+
+    // Delete avatar file if it exists
+    if (currentUser?.avatar) {
+      await uploadService.deleteAvatar(currentUser.avatar);
+    }
+
+    res.json({
+      success: true,
+      message: 'Avatar deleted successfully',
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error('Avatar delete error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to delete avatar',
+      code: 'DELETE_ERROR',
+      timestamp: new Date().toISOString(),
+    });
   }
-);
+});
 
 /**
  * @swagger

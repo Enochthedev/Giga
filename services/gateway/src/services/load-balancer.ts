@@ -1,5 +1,9 @@
 import { FastifyRequest } from 'fastify';
-import { InstanceMetrics, LoadBalancingStrategy, ServiceInstance } from '../types/index.js';
+import {
+  InstanceMetrics,
+  LoadBalancingStrategy,
+  ServiceInstance,
+} from '../types/index.js';
 
 export class LoadBalancer {
   private roundRobinCounters: Map<string, number> = new Map();
@@ -45,7 +49,10 @@ export class LoadBalancer {
   /**
    * Round-robin load balancing
    */
-  private roundRobin(serviceId: string, instances: ServiceInstance[]): ServiceInstance {
+  private roundRobin(
+    serviceId: string,
+    instances: ServiceInstance[]
+  ): ServiceInstance {
     const counter = this.roundRobinCounters.get(serviceId) || 0;
     const selectedIndex = counter % instances.length;
 
@@ -57,9 +64,15 @@ export class LoadBalancer {
   /**
    * Weighted round-robin load balancing
    */
-  private weightedRoundRobin(serviceId: string, instances: ServiceInstance[]): ServiceInstance {
+  private weightedRoundRobin(
+    serviceId: string,
+    instances: ServiceInstance[]
+  ): ServiceInstance {
     // Calculate total weight
-    const totalWeight = instances.reduce((sum, instance) => sum + instance.weight, 0);
+    const totalWeight = instances.reduce(
+      (sum, instance) => sum + instance.weight,
+      0
+    );
 
     if (totalWeight === 0) {
       return this.roundRobin(serviceId, instances);
@@ -156,7 +169,12 @@ export class LoadBalancer {
     }
 
     // No valid sticky session, select new instance and create mapping
-    const selectedInstance = this.selectInstance(serviceId, instances, strategy, request);
+    const selectedInstance = this.selectInstance(
+      serviceId,
+      instances,
+      strategy,
+      request
+    );
     if (selectedInstance) {
       this.stickySessionMap.set(stickyKey, selectedInstance.id);
     }
@@ -167,7 +185,10 @@ export class LoadBalancer {
   /**
    * Extract session ID from request
    */
-  private extractSessionId(request: FastifyRequest, sessionKey: string): string | null {
+  private extractSessionId(
+    request: FastifyRequest,
+    sessionKey: string
+  ): string | null {
     // Try to get session ID from different sources
 
     // 1. From headers
@@ -179,7 +200,7 @@ export class LoadBalancer {
     // 2. From cookies
     const cookies = request.headers.cookie;
     if (cookies) {
-// eslint-disable-next-line security/detect-unsafe-regex
+      // eslint-disable-next-line security/detect-unsafe-regex
       const cookieMatch = cookies.match(new RegExp(`${sessionKey}=([^;]+)`));
       if (cookieMatch) {
         return cookieMatch[1];
@@ -286,7 +307,8 @@ export class LoadBalancer {
     const stickySessionsByService: Record<string, number> = {};
     for (const key of this.stickySessionMap.keys()) {
       const serviceId = key.split(':')[0];
-      stickySessionsByService[serviceId] = (stickySessionsByService[serviceId] || 0) + 1;
+      stickySessionsByService[serviceId] =
+        (stickySessionsByService[serviceId] || 0) + 1;
     }
 
     return {

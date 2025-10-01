@@ -34,7 +34,7 @@ describe('TransactionService', () => {
       expect(transaction.id).toBeDefined();
       expect(transaction.type).toBe('PAYMENT');
       expect(transaction.status).toBe('pending');
-      expect(transaction.amount.toNumber()).toBe(100.00);
+      expect(transaction.amount.toNumber()).toBe(100.0);
       expect(transaction.currency).toBe('USD');
       expect(transaction.description).toBe('Test transaction');
       expect(transaction.userId).toBe('test-user-1');
@@ -73,7 +73,7 @@ describe('TransactionService', () => {
       // Add splits
       await transactionService.addSplit(transaction.id, {
         recipientId: 'vendor-1',
-        amount: 80.00,
+        amount: 80.0,
         currency: 'USD',
         type: 'FIXED',
         description: 'Vendor payment',
@@ -81,13 +81,15 @@ describe('TransactionService', () => {
 
       await transactionService.addSplit(transaction.id, {
         recipientId: 'platform',
-        amount: 20.00,
+        amount: 20.0,
         currency: 'USD',
         type: 'FIXED',
         description: 'Platform fee',
       });
 
-      const updatedTransaction = await transactionService.getById(transaction.id);
+      const updatedTransaction = await transactionService.getById(
+        transaction.id
+      );
       expect(updatedTransaction.splits).toHaveLength(2);
     });
   });
@@ -101,19 +103,22 @@ describe('TransactionService', () => {
         description: 'Test transaction',
       };
 
-      const createdTransaction = await transactionService.create(transactionData);
-      const retrievedTransaction = await transactionService.getById(createdTransaction.id);
+      const createdTransaction =
+        await transactionService.create(transactionData);
+      const retrievedTransaction = await transactionService.getById(
+        createdTransaction.id
+      );
 
       expect(retrievedTransaction.id).toBe(createdTransaction.id);
-      expect(retrievedTransaction.amount.toNumber()).toBe(100.00);
+      expect(retrievedTransaction.amount.toNumber()).toBe(100.0);
       expect(retrievedTransaction.currency).toBe('USD');
       expect(retrievedTransaction.description).toBe('Test transaction');
     });
 
     it('should throw error for non-existent transaction', async () => {
-      await expect(transactionService.getById('non-existent-id'))
-        .rejects
-        .toThrow(TransactionNotFoundError);
+      await expect(
+        transactionService.getById('non-existent-id')
+      ).rejects.toThrow(TransactionNotFoundError);
     });
 
     it('should include related data', async () => {
@@ -125,7 +130,9 @@ describe('TransactionService', () => {
       };
 
       const transaction = await transactionService.create(transactionData);
-      const retrievedTransaction = await transactionService.getById(transaction.id);
+      const retrievedTransaction = await transactionService.getById(
+        transaction.id
+      );
 
       expect(retrievedTransaction.paymentMethodId).toBe(testPaymentMethod.id);
       expect(retrievedTransaction.gatewayId).toBe(testGateway.id);
@@ -202,7 +209,7 @@ describe('TransactionService', () => {
       });
 
       expect(result.data).toHaveLength(1);
-      expect(result.data[0].amount.toNumber()).toBe(200.00);
+      expect(result.data[0].amount.toNumber()).toBe(200.0);
     });
 
     it('should handle pagination', async () => {
@@ -228,8 +235,9 @@ describe('TransactionService', () => {
 
       // Transactions should be sorted by createdAt desc
       for (let i = 1; i < result.data.length; i++) {
-        expect(result.data[i - 1].createdAt.getTime())
-          .toBeGreaterThanOrEqual(result.data[i].createdAt.getTime());
+        expect(result.data[i - 1].createdAt.getTime()).toBeGreaterThanOrEqual(
+          result.data[i].createdAt.getTime()
+        );
       }
     });
   });
@@ -250,7 +258,10 @@ describe('TransactionService', () => {
         metadata: { updated: true },
       };
 
-      const updatedTransaction = await transactionService.update(transaction.id, updateData);
+      const updatedTransaction = await transactionService.update(
+        transaction.id,
+        updateData
+      );
 
       expect(updatedTransaction.description).toBe('Updated description');
       expect(updatedTransaction.gatewayTransactionId).toBe('gw_123');
@@ -270,10 +281,13 @@ describe('TransactionService', () => {
         gatewayFee: new Decimal('2.50'),
       };
 
-      const updatedTransaction = await transactionService.update(transaction.id, updateData);
+      const updatedTransaction = await transactionService.update(
+        transaction.id,
+        updateData
+      );
 
-      expect(updatedTransaction.platformFee?.toNumber()).toBe(5.00);
-      expect(updatedTransaction.gatewayFee?.toNumber()).toBe(2.50);
+      expect(updatedTransaction.platformFee?.toNumber()).toBe(5.0);
+      expect(updatedTransaction.gatewayFee?.toNumber()).toBe(2.5);
     });
   });
 
@@ -286,7 +300,10 @@ describe('TransactionService', () => {
         status: 'pending',
       });
 
-      const updatedTransaction = await transactionService.updateStatus(transaction.id, 'succeeded');
+      const updatedTransaction = await transactionService.updateStatus(
+        transaction.id,
+        'succeeded'
+      );
 
       expect(updatedTransaction.status).toBe('succeeded');
       expect(updatedTransaction.processedAt).toBeInstanceOf(Date);
@@ -301,7 +318,10 @@ describe('TransactionService', () => {
         status: 'pending',
       });
 
-      const updatedTransaction = await transactionService.updateStatus(transaction.id, 'succeeded');
+      const updatedTransaction = await transactionService.updateStatus(
+        transaction.id,
+        'succeeded'
+      );
 
       expect(updatedTransaction.processedAt).toBeInstanceOf(Date);
       expect(updatedTransaction.settledAt).toBeInstanceOf(Date);
@@ -315,7 +335,10 @@ describe('TransactionService', () => {
         status: 'pending',
       });
 
-      const updatedTransaction = await transactionService.updateStatus(transaction.id, 'failed');
+      const updatedTransaction = await transactionService.updateStatus(
+        transaction.id,
+        'failed'
+      );
 
       expect(updatedTransaction.processedAt).toBeInstanceOf(Date);
       expect(updatedTransaction.settledAt).toBeUndefined();
@@ -332,16 +355,18 @@ describe('TransactionService', () => {
 
       await transactionService.addSplit(transaction.id, {
         recipientId: 'vendor-1',
-        amount: 80.00,
+        amount: 80.0,
         currency: 'USD',
         type: 'FIXED',
         description: 'Vendor payment',
       });
 
-      const updatedTransaction = await transactionService.getById(transaction.id);
+      const updatedTransaction = await transactionService.getById(
+        transaction.id
+      );
       expect(updatedTransaction.splits).toHaveLength(1);
       expect(updatedTransaction.splits![0].recipientId).toBe('vendor-1');
-      expect(updatedTransaction.splits![0].amount.toNumber()).toBe(80.00);
+      expect(updatedTransaction.splits![0].amount.toNumber()).toBe(80.0);
       expect(updatedTransaction.splits![0].status).toBe('pending');
     });
   });
@@ -356,7 +381,7 @@ describe('TransactionService', () => {
 
       await transactionService.addSplit(transaction.id, {
         recipientId: 'vendor-1',
-        amount: 80.00,
+        amount: 80.0,
         currency: 'USD',
         type: 'FIXED',
         description: 'Vendor payment',

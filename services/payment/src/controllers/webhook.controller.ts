@@ -4,7 +4,7 @@ import { GatewayManager } from '../services/gateway-manager.service';
 import { WebhookEvent } from '../types/gateway.types';
 
 export class WebhookController {
-  constructor(private gatewayManager: GatewayManager) { }
+  constructor(private gatewayManager: GatewayManager) {}
 
   /**
    * Handle Stripe webhook events
@@ -44,13 +44,13 @@ export class WebhookController {
 
       logger.info('Stripe webhook processed successfully', {
         eventId: webhookEvent.id,
-        eventType: webhookEvent.type
+        eventType: webhookEvent.type,
       });
 
       res.status(200).json({ received: true });
     } catch (error) {
       logger.error('Failed to process Stripe webhook', {
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
       res.status(500).json({ error: 'Webhook processing failed' });
     }
@@ -66,7 +66,7 @@ export class WebhookController {
       res.status(200).json({ received: true });
     } catch (error) {
       logger.error('Failed to process PayPal webhook', {
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
       res.status(500).json({ error: 'Webhook processing failed' });
     }
@@ -110,13 +110,13 @@ export class WebhookController {
 
       logger.info('Paystack webhook processed successfully', {
         eventId: webhookEvent.id,
-        eventType: webhookEvent.type
+        eventType: webhookEvent.type,
       });
 
       res.status(200).json({ received: true });
     } catch (error) {
       logger.error('Failed to process Paystack webhook', {
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
       res.status(500).json({ error: 'Webhook processing failed' });
     }
@@ -160,13 +160,13 @@ export class WebhookController {
 
       logger.info('Flutterwave webhook processed successfully', {
         eventId: webhookEvent.id,
-        eventType: webhookEvent.type
+        eventType: webhookEvent.type,
       });
 
       res.status(200).json({ received: true });
     } catch (error) {
       logger.error('Failed to process Flutterwave webhook', {
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
       res.status(500).json({ error: 'Webhook processing failed' });
     }
@@ -235,14 +235,14 @@ export class WebhookController {
       logger.info('Webhook processed successfully', {
         gatewayId,
         eventId: webhookEvent.id,
-        eventType: webhookEvent.type
+        eventType: webhookEvent.type,
       });
 
       res.status(200).json({ received: true });
     } catch (error) {
       logger.error('Failed to process webhook', {
         error: error instanceof Error ? error.message : 'Unknown error',
-        gatewayId: req.params.gatewayId
+        gatewayId: req.params.gatewayId,
       });
       res.status(500).json({ error: 'Webhook processing failed' });
     }
@@ -256,19 +256,18 @@ export class WebhookController {
       logger.info('Processing webhook event', {
         eventId: webhookEvent.id,
         eventType: webhookEvent.type,
-        gatewayId: webhookEvent.gatewayId
+        gatewayId: webhookEvent.gatewayId,
       });
 
       this.routeWebhookEvent(webhookEvent);
 
       // Mark event as processed
       webhookEvent.processed = true;
-
     } catch (error) {
       logger.error('Failed to process webhook event', {
         eventId: webhookEvent.id,
         eventType: webhookEvent.type,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
       throw error;
     }
@@ -314,7 +313,7 @@ export class WebhookController {
       default:
         logger.info('Unhandled webhook event type', {
           eventType: webhookEvent.type,
-          eventId: webhookEvent.id
+          eventId: webhookEvent.id,
         });
     }
   }
@@ -325,7 +324,7 @@ export class WebhookController {
   private handlePaymentSucceeded(webhookEvent: WebhookEvent): void {
     logger.info('Processing payment succeeded event', {
       eventId: webhookEvent.id,
-      paymentId: webhookEvent.data.id
+      paymentId: webhookEvent.data.id,
     });
 
     // TODO: Update transaction status in database
@@ -339,7 +338,7 @@ export class WebhookController {
   private handlePaymentFailed(webhookEvent: WebhookEvent): void {
     logger.info('Processing payment failed event', {
       eventId: webhookEvent.id,
-      paymentId: webhookEvent.data.id
+      paymentId: webhookEvent.data.id,
     });
 
     // TODO: Update transaction status in database
@@ -353,7 +352,7 @@ export class WebhookController {
   private handlePaymentCancelled(webhookEvent: WebhookEvent): void {
     logger.info('Processing payment cancelled event', {
       eventId: webhookEvent.id,
-      paymentId: webhookEvent.data.id
+      paymentId: webhookEvent.data.id,
     });
 
     // TODO: Update transaction status in database
@@ -367,7 +366,7 @@ export class WebhookController {
   private handlePaymentRefunded(webhookEvent: WebhookEvent): void {
     logger.info('Processing payment refunded event', {
       eventId: webhookEvent.id,
-      refundId: webhookEvent.data.id
+      refundId: webhookEvent.data.id,
     });
 
     // TODO: Update refund status in database
@@ -381,7 +380,7 @@ export class WebhookController {
   private handlePaymentDisputed(webhookEvent: WebhookEvent): void {
     logger.info('Processing payment disputed event', {
       eventId: webhookEvent.id,
-      disputeId: webhookEvent.data.id
+      disputeId: webhookEvent.data.id,
     });
 
     // TODO: Create dispute record in database
@@ -395,7 +394,7 @@ export class WebhookController {
   private handlePaymentMethodCreated(webhookEvent: WebhookEvent): void {
     logger.info('Processing payment method created event', {
       eventId: webhookEvent.id,
-      paymentMethodId: webhookEvent.data.id
+      paymentMethodId: webhookEvent.data.id,
     });
 
     // TODO: Update payment method in database
@@ -408,7 +407,7 @@ export class WebhookController {
   private handlePaymentMethodUpdated(webhookEvent: WebhookEvent): void {
     logger.info('Processing payment method updated event', {
       eventId: webhookEvent.id,
-      paymentMethodId: webhookEvent.data.id
+      paymentMethodId: webhookEvent.data.id,
     });
 
     // TODO: Update payment method in database
@@ -421,7 +420,7 @@ export class WebhookController {
   private handlePaymentMethodDeleted(webhookEvent: WebhookEvent): void {
     logger.info('Processing payment method deleted event', {
       eventId: webhookEvent.id,
-      paymentMethodId: webhookEvent.data.id
+      paymentMethodId: webhookEvent.data.id,
     });
 
     // TODO: Mark payment method as inactive in database

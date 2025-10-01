@@ -87,7 +87,7 @@ export enum PropertyCategory {
   BOUTIQUE = 'boutique',
   BUSINESS = 'business',
   LUXURY = 'luxury',
-  BUDGET = 'budget'
+  BUDGET = 'budget',
 }
 
 export enum PropertyStatus {
@@ -95,7 +95,7 @@ export enum PropertyStatus {
   INACTIVE = 'inactive',
   MAINTENANCE = 'maintenance',
   PENDING_APPROVAL = 'pending_approval',
-  SUSPENDED = 'suspended'
+  SUSPENDED = 'suspended',
 }
 
 export enum PropertyAmenity {
@@ -121,7 +121,7 @@ export enum PropertyAmenity {
   PET_FRIENDLY = 'pet_friendly',
   NON_SMOKING = 'non_smoking',
   AIR_CONDITIONING = 'air_conditioning',
-  HEATING = 'heating'
+  HEATING = 'heating',
 }
 
 export enum ImageType {
@@ -132,7 +132,7 @@ export enum ImageType {
   DINING = 'dining',
   RECREATION = 'recreation',
   BUSINESS = 'business',
-  OTHER = 'other'
+  OTHER = 'other',
 }
 
 export enum CancellationPolicy {
@@ -140,25 +140,25 @@ export enum CancellationPolicy {
   MODERATE = 'moderate',
   STRICT = 'strict',
   SUPER_STRICT = 'super_strict',
-  NON_REFUNDABLE = 'non_refundable'
+  NON_REFUNDABLE = 'non_refundable',
 }
 
 export enum ChildPolicy {
   CHILDREN_WELCOME = 'children_welcome',
   ADULTS_ONLY = 'adults_only',
-  CHILDREN_WITH_RESTRICTIONS = 'children_with_restrictions'
+  CHILDREN_WITH_RESTRICTIONS = 'children_with_restrictions',
 }
 
 export enum PetPolicy {
   PETS_ALLOWED = 'pets_allowed',
   NO_PETS = 'no_pets',
-  PETS_WITH_RESTRICTIONS = 'pets_with_restrictions'
+  PETS_WITH_RESTRICTIONS = 'pets_with_restrictions',
 }
 
 export enum SmokingPolicy {
   NON_SMOKING = 'non_smoking',
   SMOKING_ALLOWED = 'smoking_allowed',
-  DESIGNATED_AREAS = 'designated_areas'
+  DESIGNATED_AREAS = 'designated_areas',
 }
 
 export interface HotelRoomType {
@@ -206,7 +206,7 @@ export enum RoomCategory {
   PENTHOUSE = 'penthouse',
   STUDIO = 'studio',
   FAMILY = 'family',
-  ACCESSIBLE = 'accessible'
+  ACCESSIBLE = 'accessible',
 }
 
 export enum BedType {
@@ -218,12 +218,12 @@ export enum BedType {
   BUNK_BED = 'bunk_bed',
   TWIN = 'twin',
   FULL = 'full',
-  CALIFORNIA_KING = 'california_king'
+  CALIFORNIA_KING = 'california_king',
 }
 
 export enum RoomSizeUnit {
   SQM = 'sqm',
-  SQFT = 'sqft'
+  SQFT = 'sqft',
 }
 
 export enum RoomView {
@@ -236,7 +236,7 @@ export enum RoomView {
   STREET = 'street',
   INTERIOR = 'interior',
   PARTIAL_OCEAN = 'partial_ocean',
-  PARTIAL_CITY = 'partial_city'
+  PARTIAL_CITY = 'partial_city',
 }
 
 export enum RoomAmenity {
@@ -279,7 +279,7 @@ export enum RoomAmenity {
   SOUND_SYSTEM = 'sound_system',
   GAMING_CONSOLE = 'gaming_console',
   BOOKS = 'books',
-  MAGAZINES = 'magazines'
+  MAGAZINES = 'magazines',
 }
 
 export interface HotelBooking {
@@ -409,7 +409,7 @@ export enum BookingStatus {
   CANCELLED = 'cancelled',
   NO_SHOW = 'no_show',
   MODIFIED = 'modified',
-  EXPIRED = 'expired'
+  EXPIRED = 'expired',
 }
 
 export enum BookingSource {
@@ -421,7 +421,7 @@ export enum BookingSource {
   GROUP = 'group',
   TRAVEL_AGENT = 'travel_agent',
   MOBILE_APP = 'mobile_app',
-  PARTNER = 'partner'
+  PARTNER = 'partner',
 }
 
 export enum PaymentStatus {
@@ -433,7 +433,7 @@ export enum PaymentStatus {
   FAILED = 'failed',
   REFUNDED = 'refunded',
   PARTIALLY_REFUNDED = 'partially_refunded',
-  CANCELLED = 'cancelled'
+  CANCELLED = 'cancelled',
 }
 
 export enum PaymentMethod {
@@ -444,14 +444,14 @@ export enum PaymentMethod {
   CASH = 'cash',
   CORPORATE_ACCOUNT = 'corporate_account',
   VOUCHER = 'voucher',
-  POINTS = 'points'
+  POINTS = 'points',
 }
 
 export enum NoShowPolicy {
   CHARGE_FIRST_NIGHT = 'charge_first_night',
   CHARGE_FULL_STAY = 'charge_full_stay',
   CHARGE_PENALTY = 'charge_penalty',
-  NO_CHARGE = 'no_charge'
+  NO_CHARGE = 'no_charge',
 }
 
 export enum TaxType {
@@ -459,7 +459,7 @@ export enum TaxType {
   TOURISM_TAX = 'tourism_tax',
   VAT = 'vat',
   SERVICE_TAX = 'service_tax',
-  OCCUPANCY_TAX = 'occupancy_tax'
+  OCCUPANCY_TAX = 'occupancy_tax',
 }
 
 export enum FeeType {
@@ -469,7 +469,7 @@ export enum FeeType {
   BOOKING_FEE = 'booking_fee',
   PARKING_FEE = 'parking_fee',
   WIFI_FEE = 'wifi_fee',
-  PET_FEE = 'pet_fee'
+  PET_FEE = 'pet_fee',
 }
 
 export enum DiscountType {
@@ -480,7 +480,7 @@ export enum DiscountType {
   LOYALTY = 'loyalty',
   CORPORATE = 'corporate',
   GROUP = 'group',
-  PROMOTIONAL = 'promotional'
+  PROMOTIONAL = 'promotional',
 }
 
 export enum FloorPreference {
@@ -488,13 +488,13 @@ export enum FloorPreference {
   HIGH = 'high',
   MIDDLE = 'middle',
   GROUND = 'ground',
-  TOP = 'top'
+  TOP = 'top',
 }
 
 export enum SmokingPreference {
   SMOKING = 'smoking',
   NON_SMOKING = 'non_smoking',
-  NO_PREFERENCE = 'no_preference'
+  NO_PREFERENCE = 'no_preference',
 }
 
 export enum HousekeepingPreference {
@@ -502,7 +502,7 @@ export enum HousekeepingPreference {
   EVERY_OTHER_DAY = 'every_other_day',
   WEEKLY = 'weekly',
   ON_REQUEST = 'on_request',
-  MINIMAL = 'minimal'
+  MINIMAL = 'minimal',
 }
 
 export interface HotelSearchCriteria {

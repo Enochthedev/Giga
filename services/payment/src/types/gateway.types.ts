@@ -1,7 +1,19 @@
 import { Decimal } from '../lib/decimal';
-import { PaymentMethod, PaymentRequest, PaymentResponse, Refund } from './payment.types';
+import {
+  PaymentMethod,
+  PaymentRequest,
+  PaymentResponse,
+  Refund,
+} from './payment.types';
 
-export type GatewayType = 'stripe' | 'paypal' | 'square' | 'adyen' | 'braintree' | 'paystack' | 'flutterwave';
+export type GatewayType =
+  | 'stripe'
+  | 'paypal'
+  | 'square'
+  | 'adyen'
+  | 'braintree'
+  | 'paystack'
+  | 'flutterwave';
 
 export type GatewayStatus = 'active' | 'inactive' | 'maintenance' | 'error';
 
@@ -91,9 +103,16 @@ export abstract class PaymentGateway {
 
   // Core payment operations
   abstract processPayment(request: PaymentRequest): Promise<PaymentResponse>;
-  abstract capturePayment(transactionId: string, amount?: number): Promise<PaymentResponse>;
+  abstract capturePayment(
+    transactionId: string,
+    amount?: number
+  ): Promise<PaymentResponse>;
   abstract cancelPayment(transactionId: string): Promise<PaymentResponse>;
-  abstract refundPayment(transactionId: string, amount?: number, reason?: string): Promise<Refund>;
+  abstract refundPayment(
+    transactionId: string,
+    amount?: number,
+    reason?: string
+  ): Promise<Refund>;
 
   // Payment method operations
   abstract createPaymentMethod(data: any): Promise<PaymentMethod>;

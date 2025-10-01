@@ -2,7 +2,8 @@
 
 ## Overview
 
-This document provides comprehensive SDK documentation for integrating with the Authentication Service across different programming languages and frameworks.
+This document provides comprehensive SDK documentation for integrating with the Authentication
+Service across different programming languages and frameworks.
 
 ## JavaScript/TypeScript SDK
 
@@ -22,7 +23,7 @@ import { AuthSDK } from '@platform/auth-sdk';
 const auth = new AuthSDK({
   baseURL: 'https://api.platform.example.com',
   version: '1.0.0',
-  timeout: 30000
+  timeout: 30000,
 });
 
 // Register user
@@ -32,7 +33,7 @@ const user = await auth.register({
   firstName: 'John',
   lastName: 'Doe',
   roles: ['CUSTOMER'],
-  acceptTerms: true
+  acceptTerms: true,
 });
 
 // Login
@@ -66,12 +67,12 @@ const auth = new AuthSDK({
   retryDelay: 1000,
   debug: process.env.NODE_ENV === 'development',
   storage: 'localStorage',
-  onTokenRefresh: (tokens) => {
+  onTokenRefresh: tokens => {
     console.log('Tokens refreshed:', tokens);
   },
-  onError: (error) => {
+  onError: error => {
     console.error('Auth error:', error);
-  }
+  },
 });
 ```
 
@@ -115,7 +116,7 @@ const profile = await auth.getProfile();
 // Update profile
 const updatedProfile = await auth.updateProfile({
   firstName: 'Updated Name',
-  phone: '+1234567890'
+  phone: '+1234567890',
 });
 
 // Change password
@@ -195,13 +196,16 @@ const AuthContext = createContext<{
 }>({} as any);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [auth] = useState(() => new AuthSDK({
-    baseURL: process.env.REACT_APP_API_URL!,
-    onTokenRefresh: (tokens) => {
-      console.log('Tokens refreshed');
-    }
-  }));
-  
+  const [auth] = useState(
+    () =>
+      new AuthSDK({
+        baseURL: process.env.REACT_APP_API_URL!,
+        onTokenRefresh: tokens => {
+          console.log('Tokens refreshed');
+        },
+      })
+  );
+
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -267,14 +271,14 @@ const LoginForm: React.FC = () => {
       <input
         type="email"
         value={email}
-        onChange={(e) => setEmail(e.target.value)}
+        onChange={e => setEmail(e.target.value)}
         placeholder="Email"
         required
       />
       <input
         type="password"
         value={password}
-        onChange={(e) => setPassword(e.target.value)}
+        onChange={e => setPassword(e.target.value)}
         placeholder="Password"
         required
       />
@@ -339,15 +343,15 @@ class CustomTokenStorage(TokenStorage):
     def save_tokens(self, access_token: str, refresh_token: str):
         # Custom token storage implementation
         pass
-    
+
     def get_access_token(self) -> str:
         # Custom token retrieval
         pass
-    
+
     def get_refresh_token(self) -> str:
         # Custom refresh token retrieval
         pass
-    
+
     def clear_tokens(self):
         # Custom token clearing
         pass
@@ -383,7 +387,7 @@ class AuthMiddleware(MiddlewareMixin):
         self.get_response = get_response
         self.auth_sdk = AuthSDK(**settings.PLATFORM_AUTH)
         super().__init__(get_response)
-    
+
     def process_request(self, request):
         auth_header = request.META.get('HTTP_AUTHORIZATION')
         if auth_header and auth_header.startswith('Bearer '):
@@ -406,7 +410,7 @@ def login_view(request):
     if request.method == 'POST':
         email = request.POST.get('email')
         password = request.POST.get('password')
-        
+
         try:
             result = auth_sdk.login(email, password)
             return JsonResponse(result)
@@ -433,14 +437,14 @@ def require_auth(f):
         auth_header = request.headers.get('Authorization')
         if not auth_header or not auth_header.startswith('Bearer '):
             return jsonify({'error': 'Authorization required'}), 401
-        
+
         token = auth_header[7:]
         try:
             user_data = auth_sdk.verify_token(token)
             g.user = user_data
         except AuthError:
             return jsonify({'error': 'Invalid token'}), 401
-        
+
         return f(*args, **kwargs)
     return decorated_function
 
@@ -541,7 +545,7 @@ class PlatformAuth
     public function handle($request, Closure $next)
     {
         $token = $request->bearerToken();
-        
+
         if (!$token) {
             return response()->json(['error' => 'Authorization required'], 401);
         }
@@ -622,7 +626,7 @@ try {
         .roles(Arrays.asList("CUSTOMER"))
         .acceptTerms(true)
         .build();
-    
+
     User user = auth.register(request);
     System.out.println("User registered: " + user.getId());
 } catch (AuthException e) {
@@ -644,13 +648,13 @@ try {
 // AuthConfig.java
 @Configuration
 public class AuthConfig {
-    
+
     @Value("${platform.auth.base-url}")
     private String baseUrl;
-    
+
     @Value("${platform.auth.version}")
     private String version;
-    
+
     @Bean
     public AuthSDK authSDK() {
         return new AuthSDK.Builder()
@@ -665,10 +669,10 @@ public class AuthConfig {
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
-    
+
     @Autowired
     private AuthSDK authSDK;
-    
+
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
         try {
@@ -678,14 +682,14 @@ public class AuthController {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
-    
+
     @GetMapping("/profile")
     public ResponseEntity<?> getProfile(HttpServletRequest request) {
         String token = extractToken(request);
         if (token == null) {
             return ResponseEntity.status(401).body(Map.of("error", "Authorization required"));
         }
-        
+
         try {
             User user = authSDK.verifyToken(token);
             return ResponseEntity.ok(user);
@@ -693,7 +697,7 @@ public class AuthController {
             return ResponseEntity.status(401).body(Map.of("error", "Invalid token"));
         }
     }
-    
+
     private String extractToken(HttpServletRequest request) {
         String authHeader = request.getHeader("Authorization");
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
@@ -720,7 +724,7 @@ package main
 import (
     "fmt"
     "log"
-    
+
     "github.com/platform/auth-sdk-go"
 )
 
@@ -731,7 +735,7 @@ func main() {
         Version: "1.0.0",
         Timeout: 30,
     })
-    
+
     // Register user
     user, err := client.Register(&auth.RegisterRequest{
         Email:       "user@example.com",
@@ -746,7 +750,7 @@ func main() {
         return
     }
     fmt.Printf("User registered: %s\n", user.ID)
-    
+
     // Login
     result, err := client.Login("user@example.com", "securePassword123!")
     if err != nil {
@@ -765,7 +769,7 @@ package main
 import (
     "net/http"
     "strings"
-    
+
     "github.com/gin-gonic/gin"
     "github.com/platform/auth-sdk-go"
 )
@@ -775,9 +779,9 @@ func main() {
         BaseURL: "https://api.platform.example.com",
         Version: "1.0.0",
     })
-    
+
     r := gin.Default()
-    
+
     // Auth middleware
     authMiddleware := func(c *gin.Context) {
         authHeader := c.GetHeader("Authorization")
@@ -786,7 +790,7 @@ func main() {
             c.Abort()
             return
         }
-        
+
         token := authHeader[7:]
         user, err := authClient.VerifyToken(token)
         if err != nil {
@@ -794,37 +798,37 @@ func main() {
             c.Abort()
             return
         }
-        
+
         c.Set("user", user)
         c.Next()
     }
-    
+
     // Routes
     r.POST("/login", func(c *gin.Context) {
         var req struct {
             Email    string `json:"email"`
             Password string `json:"password"`
         }
-        
+
         if err := c.ShouldBindJSON(&req); err != nil {
             c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
             return
         }
-        
+
         result, err := authClient.Login(req.Email, req.Password)
         if err != nil {
             c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
             return
         }
-        
+
         c.JSON(http.StatusOK, result)
     })
-    
+
     r.GET("/profile", authMiddleware, func(c *gin.Context) {
         user, _ := c.Get("user")
         c.JSON(http.StatusOK, user)
     })
-    
+
     r.Run(":8080")
 }
 ```
@@ -840,37 +844,37 @@ import { MockAuthServer } from '@platform/auth-sdk/testing';
 describe('AuthSDK', () => {
   let mockServer: MockAuthServer;
   let auth: AuthSDK;
-  
+
   beforeEach(() => {
     mockServer = new MockAuthServer();
     auth = new AuthSDK({
       baseURL: mockServer.url,
-      version: '1.0.0'
+      version: '1.0.0',
     });
   });
-  
+
   afterEach(() => {
     mockServer.close();
   });
-  
+
   test('should register user successfully', async () => {
     mockServer.mockRegister({
       success: true,
       data: {
         user: { id: '123', email: 'test@example.com' },
-        tokens: { accessToken: 'token123', refreshToken: 'refresh123' }
-      }
+        tokens: { accessToken: 'token123', refreshToken: 'refresh123' },
+      },
     });
-    
+
     const result = await auth.register({
       email: 'test@example.com',
       password: 'password123',
       firstName: 'Test',
       lastName: 'User',
       roles: ['CUSTOMER'],
-      acceptTerms: true
+      acceptTerms: true,
     });
-    
+
     expect(result.success).toBe(true);
     expect(result.data.user.email).toBe('test@example.com');
   });
@@ -890,7 +894,7 @@ class TestAuthSDK(unittest.TestCase):
             base_url='https://api.test.com',
             version='1.0.0'
         )
-    
+
     @patch('platform_auth.requests.post')
     def test_register_success(self, mock_post):
         mock_response = Mock()
@@ -903,7 +907,7 @@ class TestAuthSDK(unittest.TestCase):
         }
         mock_response.status_code = 201
         mock_post.return_value = mock_response
-        
+
         result = self.auth.register(
             email='test@example.com',
             password='password123',
@@ -912,10 +916,10 @@ class TestAuthSDK(unittest.TestCase):
             roles=['CUSTOMER'],
             accept_terms=True
         )
-        
+
         self.assertTrue(result['success'])
         self.assertEqual(result['data']['user']['email'], 'test@example.com')
-    
+
     @patch('platform_auth.requests.post')
     def test_login_failure(self, mock_post):
         mock_response = Mock()
@@ -926,10 +930,10 @@ class TestAuthSDK(unittest.TestCase):
         }
         mock_response.status_code = 401
         mock_post.return_value = mock_response
-        
+
         with self.assertRaises(AuthError) as context:
             self.auth.login('test@example.com', 'wrongpassword')
-        
+
         self.assertEqual(str(context.exception), 'Invalid credentials')
 
 if __name__ == '__main__':

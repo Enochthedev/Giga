@@ -1,18 +1,21 @@
 # Payment Service
 
-A comprehensive payment processing service for the Giga platform that handles transactions, refunds, and payment method management with support for multiple payment gateways.
+A comprehensive payment processing service for the Giga platform that handles transactions, refunds,
+and payment method management with support for multiple payment gateways.
 
 ## Implementation Status
 
 ### ✅ Completed - Basic Payment Processing
+
 - **PaymentController**: RESTful API endpoints for payment operations
-- **PaymentService**: Core business logic for payment processing  
+- **PaymentService**: Core business logic for payment processing
 - **TransactionService**: Transaction management and storage
 - **Request Validation**: Input validation and sanitization
 - **Error Handling**: Comprehensive error handling with proper HTTP status codes
 - **Unit Tests**: Test coverage for core payment functionality
 
 ### 🚧 Planned Features
+
 - Multi-gateway payment processing (Stripe, PayPal, Square)
 - Fraud detection and risk assessment
 - Subscription billing and recurring payments
@@ -22,12 +25,14 @@ A comprehensive payment processing service for the Giga platform that handles tr
 ## Features
 
 ### Core Payment Processing
+
 - Multi-gateway payment processing (Stripe, PayPal, Square)
 - Automatic gateway failover and load balancing
 - Payment method tokenization and management
 - Real-time transaction processing and status tracking
 
 ### Advanced Capabilities
+
 - Fraud detection and risk assessment
 - Multi-currency support with real-time exchange rates
 - Subscription billing and recurring payments
@@ -35,6 +40,7 @@ A comprehensive payment processing service for the Giga platform that handles tr
 - Comprehensive refund and dispute management
 
 ### Security & Compliance
+
 - PCI DSS compliant payment processing
 - Advanced fraud detection with ML algorithms
 - Secure webhook handling and verification
@@ -43,6 +49,7 @@ A comprehensive payment processing service for the Giga platform that handles tr
 ## Quick Start
 
 ### Prerequisites
+
 - Node.js 20+
 - PostgreSQL 14+
 - Redis 6+
@@ -91,6 +98,7 @@ PAYPAL_CLIENT_SECRET="your-paypal-client-secret"
 ### Payment Processing
 
 #### Create Payment
+
 ```http
 POST /api/v1/payments
 Content-Type: application/json
@@ -108,11 +116,13 @@ Content-Type: application/json
 ```
 
 #### Get Payment
+
 ```http
 GET /api/v1/payments/{paymentId}
 ```
 
 #### Refund Payment
+
 ```http
 POST /api/v1/payments/{paymentId}/refund
 Content-Type: application/json
@@ -126,6 +136,7 @@ Content-Type: application/json
 ### Payment Methods
 
 #### Create Payment Method
+
 ```http
 POST /api/v1/payment-methods
 Content-Type: application/json
@@ -139,6 +150,7 @@ Content-Type: application/json
 ```
 
 #### List User Payment Methods
+
 ```http
 GET /api/v1/users/{userId}/payment-methods
 ```
@@ -146,6 +158,7 @@ GET /api/v1/users/{userId}/payment-methods
 ### Subscriptions
 
 #### Create Subscription
+
 ```http
 POST /api/v1/subscriptions
 Content-Type: application/json
@@ -159,6 +172,7 @@ Content-Type: application/json
 ```
 
 #### Update Subscription
+
 ```http
 PUT /api/v1/subscriptions/{subscriptionId}
 Content-Type: application/json
@@ -172,6 +186,7 @@ Content-Type: application/json
 ## Architecture
 
 ### Service Structure
+
 ```
 src/
 ├── controllers/     # API controllers
@@ -187,6 +202,7 @@ src/
 ```
 
 ### Gateway Architecture
+
 The service uses an abstraction layer for payment gateways:
 
 ```typescript
@@ -199,6 +215,7 @@ abstract class PaymentGateway {
 ```
 
 ### Failover System
+
 - Automatic gateway selection based on performance metrics
 - Circuit breaker pattern for failed gateways
 - Configurable failover chains
@@ -250,27 +267,32 @@ docker run -p 3004:3004 \
 ## Monitoring
 
 ### Health Checks
+
 - `GET /health` - Service health status
 - `GET /health/detailed` - Detailed health information
 
 ### Metrics
+
 - Payment success/failure rates
 - Gateway performance metrics
 - Fraud detection statistics
 - Transaction volume and revenue
 
 ### Logging
+
 Structured logging with correlation IDs for request tracing.
 
 ## Security
 
 ### PCI DSS Compliance
+
 - No sensitive card data stored
 - Tokenization for payment methods
 - Secure communication with gateways
 - Regular security audits
 
 ### Fraud Detection
+
 - Real-time risk scoring
 - Velocity checks
 - Device fingerprinting

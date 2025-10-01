@@ -9,21 +9,21 @@ vi.mock('paystack', () => {
     Paystack: vi.fn().mockImplementation(() => ({
       transaction: {
         initialize: vi.fn(),
-        verify: vi.fn()
+        verify: vi.fn(),
       },
       refund: {
-        create: vi.fn()
+        create: vi.fn(),
       },
       customer: {
         create: vi.fn(),
         update: vi.fn(),
         fetch: vi.fn(),
-        deactivate: vi.fn()
+        deactivate: vi.fn(),
       },
       misc: {
-        list_banks: vi.fn()
-      }
-    }))
+        list_banks: vi.fn(),
+      },
+    })),
   };
 });
 
@@ -45,26 +45,26 @@ describe('PaystackGateway Integration Tests', () => {
       credentials: {
         secretKey: 'sk_test_paystack_secret_key',
         publicKey: 'pk_test_paystack_public_key',
-        webhookSecret: 'whsec_test_paystack_webhook_secret'
+        webhookSecret: 'whsec_test_paystack_webhook_secret',
       },
       settings: {
         supportedCurrencies: ['NGN', 'USD', 'GHS'],
         supportedCountries: ['NG', 'GH', 'ZA'],
         supportedPaymentMethods: ['card', 'bank_account'],
         minAmount: 1,
-        maxAmount: 10000000
+        maxAmount: 10000000,
       },
       healthCheck: {
         interval: 60000,
         timeout: 5000,
-        retries: 3
+        retries: 3,
       },
       rateLimit: {
         requestsPerSecond: 50,
-        burstLimit: 100
+        burstLimit: 100,
       },
       createdAt: new Date(),
-      updatedAt: new Date()
+      updatedAt: new Date(),
     };
 
     paystackGateway = new PaystackGateway(gatewayConfig);
@@ -77,12 +77,12 @@ describe('PaystackGateway Integration Tests', () => {
   describe('Payment Processing', () => {
     it('should process payment successfully', async () => {
       const paymentRequest: PaymentRequest = {
-        amount: 100.00,
+        amount: 100.0,
         currency: 'NGN',
         userId: 'user-123',
         customerEmail: 'test@example.com',
         description: 'Test payment',
-        internalReference: 'test-ref-123'
+        internalReference: 'test-ref-123',
       };
 
       const mockResponse = {
@@ -91,8 +91,8 @@ describe('PaystackGateway Integration Tests', () => {
         data: {
           authorization_url: 'https://checkout.paystack.com/test-url',
           access_code: 'test-access-code',
-          reference: 'test-ref-123'
-        }
+          reference: 'test-ref-123',
+        },
       };
 
       mockPaystack.transaction.initialize.mockResolvedValue(mockResponse);
@@ -108,7 +108,7 @@ describe('PaystackGateway Integration Tests', () => {
         requiresAction: true,
         nextAction: {
           type: 'redirect',
-          redirectUrl: 'https://checkout.paystack.com/test-url'
+          redirectUrl: 'https://checkout.paystack.com/test-url',
         },
         metadata: {
           paystackReference: 'test-ref-123',
@@ -116,9 +116,9 @@ describe('PaystackGateway Integration Tests', () => {
           userId: 'user-123',
           merchantId: '',
           internalReference: 'test-ref-123',
-          externalReference: ''
+          externalReference: '',
         },
-        createdAt: expect.any(Date)
+        createdAt: expect.any(Date),
       });
 
       expect(mockPaystack.transaction.initialize).toHaveBeenCalledWith({
@@ -131,29 +131,30 @@ describe('PaystackGateway Integration Tests', () => {
           userId: 'user-123',
           merchantId: '',
           internalReference: 'test-ref-123',
-          externalReference: ''
-        }
+          externalReference: '',
+        },
       });
     });
 
     it('should handle payment processing failure', async () => {
       const paymentRequest: PaymentRequest = {
-        amount: 100.00,
+        amount: 100.0,
         currency: 'NGN',
         userId: 'user-123',
         customerEmail: 'test@example.com',
-        description: 'Test payment'
+        description: 'Test payment',
       };
 
       const mockResponse = {
         status: false,
-        message: 'Invalid email address'
+        message: 'Invalid email address',
       };
 
       mockPaystack.transaction.initialize.mockResolvedValue(mockResponse);
 
-      await expect(paystackGateway.processPayment(paymentRequest))
-        .rejects.toThrow('Invalid email address');
+      await expect(
+        paystackGateway.processPayment(paymentRequest)
+      ).rejects.toThrow('Invalid email address');
     });
   });
 
@@ -173,8 +174,8 @@ describe('PaystackGateway Integration Tests', () => {
           gateway_response: 'Successful',
           paid_at: '2023-01-01T00:00:00.000Z',
           created_at: '2023-01-01T00:00:00.000Z',
-          channel: 'card'
-        }
+          channel: 'card',
+        },
       };
 
       mockPaystack.transaction.verify.mockResolvedValue(mockResponse);
@@ -190,19 +191,21 @@ describe('PaystackGateway Integration Tests', () => {
           paystackId: 12345,
           gatewayResponse: 'Successful',
           paidAt: '2023-01-01T00:00:00.000Z',
-          channel: 'card'
+          channel: 'card',
         },
-        createdAt: new Date('2023-01-01T00:00:00.000Z')
+        createdAt: new Date('2023-01-01T00:00:00.000Z'),
       });
 
-      expect(mockPaystack.transaction.verify).toHaveBeenCalledWith(transactionId);
+      expect(mockPaystack.transaction.verify).toHaveBeenCalledWith(
+        transactionId
+      );
     });
   });
 
   describe('Refund Processing', () => {
     it('should process refund successfully', async () => {
       const transactionId = 'test-ref-123';
-      const refundAmount = 50.00;
+      const refundAmount = 50.0;
       const reason = 'Customer request';
 
       // Mock transaction verification
@@ -211,8 +214,8 @@ describe('PaystackGateway Integration Tests', () => {
         data: {
           id: 12345,
           amount: 10000,
-          currency: 'NGN'
-        }
+          currency: 'NGN',
+        },
       };
 
       // Mock refund creation
@@ -228,14 +231,18 @@ describe('PaystackGateway Integration Tests', () => {
           merchant_note: reason,
           refunded_by: 'test@example.com',
           refunded_at: '2023-01-01T00:00:00.000Z',
-          created_at: '2023-01-01T00:00:00.000Z'
-        }
+          created_at: '2023-01-01T00:00:00.000Z',
+        },
       };
 
       mockPaystack.transaction.verify.mockResolvedValue(mockVerifyResponse);
       mockPaystack.refund.create.mockResolvedValue(mockRefundResponse);
 
-      const result = await paystackGateway.refundPayment(transactionId, refundAmount, reason);
+      const result = await paystackGateway.refundPayment(
+        transactionId,
+        refundAmount,
+        reason
+      );
 
       expect(result).toEqual({
         id: 'paystack_refund_67890',
@@ -249,18 +256,18 @@ describe('PaystackGateway Integration Tests', () => {
           paystackRefundId: 67890,
           customerNote: reason,
           merchantNote: reason,
-          refundedBy: 'test@example.com'
+          refundedBy: 'test@example.com',
         },
         processedAt: new Date('2023-01-01T00:00:00.000Z'),
         createdAt: new Date('2023-01-01T00:00:00.000Z'),
-        updatedAt: expect.any(Date)
+        updatedAt: expect.any(Date),
       });
 
       expect(mockPaystack.refund.create).toHaveBeenCalledWith({
         transaction: transactionId,
         amount: 5000, // 50 NGN in kobo
         customer_note: reason,
-        merchant_note: reason
+        merchant_note: reason,
       });
     });
   });
@@ -272,7 +279,7 @@ describe('PaystackGateway Integration Tests', () => {
         email: 'test@example.com',
         firstName: 'John',
         lastName: 'Doe',
-        phone: '+2348012345678'
+        phone: '+2348012345678',
       };
 
       const mockResponse = {
@@ -285,13 +292,14 @@ describe('PaystackGateway Integration Tests', () => {
           first_name: 'John',
           last_name: 'Doe',
           phone: '+2348012345678',
-          created_at: '2023-01-01T00:00:00.000Z'
-        }
+          created_at: '2023-01-01T00:00:00.000Z',
+        },
       };
 
       mockPaystack.customer.create.mockResolvedValue(mockResponse);
 
-      const result = await paystackGateway.createPaymentMethod(paymentMethodData);
+      const result =
+        await paystackGateway.createPaymentMethod(paymentMethodData);
 
       expect(result).toEqual({
         id: 'paystack_pm_CUS_test123',
@@ -303,18 +311,18 @@ describe('PaystackGateway Integration Tests', () => {
         metadata: {
           customerCode: 'CUS_test123',
           customerId: 12345,
-          email: 'test@example.com'
+          email: 'test@example.com',
         },
         isActive: true,
         createdAt: new Date('2023-01-01T00:00:00.000Z'),
-        updatedAt: expect.any(Date)
+        updatedAt: expect.any(Date),
       });
 
       expect(mockPaystack.customer.create).toHaveBeenCalledWith({
         email: 'test@example.com',
         first_name: 'John',
         last_name: 'Doe',
-        phone: '+2348012345678'
+        phone: '+2348012345678',
       });
     });
   });
@@ -325,13 +333,14 @@ describe('PaystackGateway Integration Tests', () => {
         event: 'charge.success',
         data: {
           id: 12345,
-          reference: 'test-ref-123'
-        }
+          reference: 'test-ref-123',
+        },
       });
 
       // Mock crypto module
       const crypto = require('crypto');
-      const expectedHash = crypto.createHmac('sha512', gatewayConfig.credentials.webhookSecret)
+      const expectedHash = crypto
+        .createHmac('sha512', gatewayConfig.credentials.webhookSecret)
         .update(payload)
         .digest('hex');
 
@@ -347,9 +356,9 @@ describe('PaystackGateway Integration Tests', () => {
           id: 12345,
           reference: 'test-ref-123',
           amount: 10000,
-          currency: 'NGN'
+          currency: 'NGN',
         },
-        domain: 'test'
+        domain: 'test',
       });
 
       const webhookEvent = paystackGateway.parseWebhook(payload);
@@ -363,15 +372,15 @@ describe('PaystackGateway Integration Tests', () => {
           id: 12345,
           reference: 'test-ref-123',
           amount: 10000,
-          currency: 'NGN'
+          currency: 'NGN',
         },
         timestamp: expect.any(Date),
         processed: false,
         retryCount: 0,
         metadata: {
           paystackEvent: 'charge.success',
-          domain: 'test'
-        }
+          domain: 'test',
+        },
       });
     });
   });
@@ -381,7 +390,7 @@ describe('PaystackGateway Integration Tests', () => {
       const mockResponse = {
         status: true,
         message: 'Banks retrieved successfully',
-        data: []
+        data: [],
       };
 
       mockPaystack.misc.list_banks.mockResolvedValue(mockResponse);
@@ -395,7 +404,7 @@ describe('PaystackGateway Integration Tests', () => {
     it('should handle health check failure', async () => {
       const mockResponse = {
         status: false,
-        message: 'API error'
+        message: 'API error',
       };
 
       mockPaystack.misc.list_banks.mockResolvedValue(mockResponse);
@@ -410,7 +419,7 @@ describe('PaystackGateway Integration Tests', () => {
     it('should return active status when healthy', async () => {
       const mockResponse = {
         status: true,
-        data: []
+        data: [],
       };
 
       mockPaystack.misc.list_banks.mockResolvedValue(mockResponse);
@@ -421,7 +430,9 @@ describe('PaystackGateway Integration Tests', () => {
     });
 
     it('should return error status when unhealthy', async () => {
-      mockPaystack.misc.list_banks.mockRejectedValue(new Error('Network error'));
+      mockPaystack.misc.list_banks.mockRejectedValue(
+        new Error('Network error')
+      );
 
       const status = await paystackGateway.getStatus();
 

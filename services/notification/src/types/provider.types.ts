@@ -143,7 +143,7 @@ export enum LoadBalancingStrategy {
   WEIGHTED = 'weighted',
   LEAST_CONNECTIONS = 'least_connections',
   COST_OPTIMIZED = 'cost_optimized',
-  PERFORMANCE_BASED = 'performance_based'
+  PERFORMANCE_BASED = 'performance_based',
 }
 
 export interface ProviderFailoverEvent {

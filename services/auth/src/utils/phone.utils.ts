@@ -1,4 +1,8 @@
-import { CountryCode, isValidPhoneNumber, parsePhoneNumber } from 'libphonenumber-js';
+import {
+  CountryCode,
+  isValidPhoneNumber,
+  parsePhoneNumber,
+} from 'libphonenumber-js';
 
 export interface PhoneValidationResult {
   isValid: boolean;
@@ -12,7 +16,10 @@ export class PhoneNumberValidator {
   /**
    * Validate and format phone number
    */
-  static validate(phoneNumber: string, defaultCountry?: CountryCode): PhoneValidationResult {
+  static validate(
+    phoneNumber: string,
+    defaultCountry?: CountryCode
+  ): PhoneValidationResult {
     const errors: string[] = [];
 
     if (!phoneNumber || phoneNumber.trim().length === 0) {
@@ -46,9 +53,14 @@ export class PhoneNumberValidator {
 
       // Check if it's a mobile number (preferred for verification)
       const numberType = parsed.getType();
-      if (numberType && !['MOBILE', 'FIXED_LINE_OR_MOBILE'].includes(numberType)) {
+      if (
+        numberType &&
+        !['MOBILE', 'FIXED_LINE_OR_MOBILE'].includes(numberType)
+      ) {
         // Warning but not blocking
-        console.warn(`Phone number type ${numberType} may not support SMS verification`);
+        console.warn(
+          `Phone number type ${numberType} may not support SMS verification`
+        );
       }
 
       return {
@@ -56,11 +68,12 @@ export class PhoneNumberValidator {
         formatted: parsed.formatInternational(),
         country: parsed.country,
         type: numberType,
-        errors: []
+        errors: [],
       };
-
     } catch (error) {
-      errors.push(`Phone validation error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      errors.push(
+        `Phone validation error: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
       return { isValid: false, errors };
     }
   }
@@ -68,7 +81,10 @@ export class PhoneNumberValidator {
   /**
    * Format phone number for storage (E.164 format)
    */
-  static formatForStorage(phoneNumber: string, defaultCountry?: CountryCode): string | null {
+  static formatForStorage(
+    phoneNumber: string,
+    defaultCountry?: CountryCode
+  ): string | null {
     try {
       const parsed = parsePhoneNumber(phoneNumber, defaultCountry);
       return parsed?.format('E.164') || null;
@@ -80,7 +96,10 @@ export class PhoneNumberValidator {
   /**
    * Format phone number for display
    */
-  static formatForDisplay(phoneNumber: string, defaultCountry?: CountryCode): string {
+  static formatForDisplay(
+    phoneNumber: string,
+    defaultCountry?: CountryCode
+  ): string {
     try {
       const parsed = parsePhoneNumber(phoneNumber, defaultCountry);
       return parsed?.formatInternational() || phoneNumber;
@@ -92,13 +111,18 @@ export class PhoneNumberValidator {
   /**
    * Check if phone number can receive SMS
    */
-  static canReceiveSMS(phoneNumber: string, defaultCountry?: CountryCode): boolean {
+  static canReceiveSMS(
+    phoneNumber: string,
+    defaultCountry?: CountryCode
+  ): boolean {
     try {
       const parsed = parsePhoneNumber(phoneNumber, defaultCountry);
       if (!parsed) return false;
 
       const numberType = parsed.getType();
-      return !numberType || ['MOBILE', 'FIXED_LINE_OR_MOBILE'].includes(numberType);
+      return (
+        !numberType || ['MOBILE', 'FIXED_LINE_OR_MOBILE'].includes(numberType)
+      );
     } catch {
       return false;
     }

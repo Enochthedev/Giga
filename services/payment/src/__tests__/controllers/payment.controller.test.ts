@@ -15,7 +15,7 @@ describe('PaymentController', () => {
   describe('POST /api/v1/payments', () => {
     it('should process a valid payment request', async () => {
       const paymentRequest = {
-        amount: 100.00,
+        amount: 100.0,
         currency: 'USD',
         description: 'Test payment',
         userId: 'test-user-1',
@@ -90,7 +90,7 @@ describe('PaymentController', () => {
 
     it('should handle payment with splits', async () => {
       const paymentRequest = {
-        amount: 100.00,
+        amount: 100.0,
         currency: 'USD',
         description: 'Test payment with splits',
         userId: 'test-user-1',
@@ -98,12 +98,12 @@ describe('PaymentController', () => {
         splits: [
           {
             recipientId: 'vendor-1',
-            amount: 80.00,
+            amount: 80.0,
             description: 'Vendor payment',
           },
           {
             recipientId: 'platform',
-            amount: 20.00,
+            amount: 20.0,
             description: 'Platform fee',
           },
         ],
@@ -120,7 +120,7 @@ describe('PaymentController', () => {
 
     it('should validate split business rules', async () => {
       const invalidRequest = {
-        amount: 100.00,
+        amount: 100.0,
         currency: 'USD',
         paymentMethodId: testPaymentMethod.id,
         splits: [
@@ -144,7 +144,7 @@ describe('PaymentController', () => {
     it('should capture a pending payment', async () => {
       // First create a payment
       const paymentRequest = {
-        amount: 100.00,
+        amount: 100.0,
         currency: 'USD',
         paymentMethodId: testPaymentMethod.id,
       };
@@ -171,7 +171,7 @@ describe('PaymentController', () => {
 
     it('should capture partial amount', async () => {
       const paymentRequest = {
-        amount: 100.00,
+        amount: 100.0,
         currency: 'USD',
         paymentMethodId: testPaymentMethod.id,
       };
@@ -188,7 +188,7 @@ describe('PaymentController', () => {
 
       const response = await request(app)
         .post(`/api/v1/payments/${transactionId}/capture`)
-        .send({ amount: 50.00 })
+        .send({ amount: 50.0 })
         .expect(200);
 
       expect(response.body.success).toBe(true);
@@ -208,7 +208,7 @@ describe('PaymentController', () => {
   describe('POST /api/v1/payments/:transactionId/cancel', () => {
     it('should cancel a pending payment', async () => {
       const paymentRequest = {
-        amount: 100.00,
+        amount: 100.0,
         currency: 'USD',
         paymentMethodId: testPaymentMethod.id,
       };
@@ -236,7 +236,7 @@ describe('PaymentController', () => {
   describe('POST /api/v1/payments/:transactionId/refund', () => {
     it('should refund a succeeded payment', async () => {
       const paymentRequest = {
-        amount: 100.00,
+        amount: 100.0,
         currency: 'USD',
         paymentMethodId: testPaymentMethod.id,
       };
@@ -261,7 +261,7 @@ describe('PaymentController', () => {
 
     it('should refund partial amount', async () => {
       const paymentRequest = {
-        amount: 100.00,
+        amount: 100.0,
         currency: 'USD',
         paymentMethodId: testPaymentMethod.id,
       };
@@ -275,7 +275,7 @@ describe('PaymentController', () => {
       const response = await request(app)
         .post(`/api/v1/payments/${transactionId}/refund`)
         .send({
-          amount: 50.00,
+          amount: 50.0,
           reason: 'Partial refund',
         })
         .expect(200);
@@ -288,7 +288,7 @@ describe('PaymentController', () => {
   describe('GET /api/v1/payments/:transactionId', () => {
     it('should retrieve transaction by ID', async () => {
       const paymentRequest = {
-        amount: 100.00,
+        amount: 100.0,
         currency: 'USD',
         description: 'Test payment',
         paymentMethodId: testPaymentMethod.id,
@@ -321,23 +321,19 @@ describe('PaymentController', () => {
   describe('GET /api/v1/payments', () => {
     beforeEach(async () => {
       // Create test transactions
-      await request(app)
-        .post('/api/v1/payments')
-        .send({
-          amount: 100.00,
-          currency: 'USD',
-          userId: 'user-1',
-          paymentMethodId: testPaymentMethod.id,
-        });
+      await request(app).post('/api/v1/payments').send({
+        amount: 100.0,
+        currency: 'USD',
+        userId: 'user-1',
+        paymentMethodId: testPaymentMethod.id,
+      });
 
-      await request(app)
-        .post('/api/v1/payments')
-        .send({
-          amount: 200.00,
-          currency: 'EUR',
-          userId: 'user-2',
-          paymentMethodId: testPaymentMethod.id,
-        });
+      await request(app).post('/api/v1/payments').send({
+        amount: 200.0,
+        currency: 'EUR',
+        userId: 'user-2',
+        paymentMethodId: testPaymentMethod.id,
+      });
     });
 
     it('should retrieve transactions with filters', async () => {
@@ -388,7 +384,7 @@ describe('PaymentController', () => {
   describe('PATCH /api/v1/payments/:transactionId/status', () => {
     it('should update transaction status', async () => {
       const paymentRequest = {
-        amount: 100.00,
+        amount: 100.0,
         currency: 'USD',
         paymentMethodId: testPaymentMethod.id,
       };
@@ -410,7 +406,7 @@ describe('PaymentController', () => {
 
     it('should validate status value', async () => {
       const paymentRequest = {
-        amount: 100.00,
+        amount: 100.0,
         currency: 'USD',
         paymentMethodId: testPaymentMethod.id,
       };
@@ -459,9 +455,7 @@ describe('PaymentController', () => {
 
   describe('Health check', () => {
     it('should return health status', async () => {
-      const response = await request(app)
-        .get('/health')
-        .expect(200);
+      const response = await request(app).get('/health').expect(200);
 
       expect(response.body.success).toBe(true);
       expect(response.body.data.status).toBe('healthy');

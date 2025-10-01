@@ -12,9 +12,15 @@ declare global {
   }
 }
 
-export function correlationIdMiddleware(_req: Request, res: Response, next: NextFunction): void {
+export function correlationIdMiddleware(
+  _req: Request,
+  res: Response,
+  next: NextFunction
+): void {
   // Generate or extract correlation ID
-  const correlationId = (req.headers['x-correlation-id'] as string) || logger.generateCorrelationId();
+  const correlationId =
+    (req.headers['x-correlation-id'] as string) ||
+    logger.generateCorrelationId();
 
   // Set correlation ID in request
   req.correlationId = correlationId;
@@ -29,7 +35,11 @@ export function correlationIdMiddleware(_req: Request, res: Response, next: Next
   next();
 }
 
-export function requestLoggingMiddleware(_req: Request, res: Response, next: NextFunction): void {
+export function requestLoggingMiddleware(
+  _req: Request,
+  res: Response,
+  next: NextFunction
+): void {
   // Record start time (use existing startTime if available)
   if (!req.startTime) {
     req.startTime = Date.now();
@@ -38,7 +48,10 @@ export function requestLoggingMiddleware(_req: Request, res: Response, next: Nex
   // Log incoming request
   logger.info('Incoming request', {
     ...req.logContext,
-    body: req.method === 'POST' || req.method === 'PUT' ? sanitizeRequestBody(req.body) : undefined
+    body:
+      req.method === 'POST' || req.method === 'PUT'
+        ? sanitizeRequestBody(req.body)
+        : undefined,
   });
 
   // Increment request counter
@@ -57,12 +70,16 @@ export function requestLoggingMiddleware(_req: Request, res: Response, next: Nex
       ...req.logContext,
       statusCode: res.statusCode,
       responseTime,
-      responseSize: JSON.stringify(body).length
+      responseSize: JSON.stringify(body).length,
     });
 
     // Log performance if slow
     if (responseTime > 1000) {
-      logger.logPerformance(`${req.method} ${req.url}`, responseTime, req.logContext);
+      logger.logPerformance(
+        `${req.method} ${req.url}`,
+        responseTime,
+        req.logContext
+      );
     }
 
     return originalJson.call(this, body);
@@ -84,7 +101,12 @@ export function requestLoggingMiddleware(_req: Request, res: Response, next: Nex
   next();
 }
 
-export function errorLoggingMiddleware(err: Error, _req: Request, res: Response, next: NextFunction): void {
+export function errorLoggingMiddleware(
+  err: Error,
+  _req: Request,
+  res: Response,
+  next: NextFunction
+): void {
   const responseTime = Date.now() - (req.startTime || Date.now());
 
   // Log error with full context
@@ -94,7 +116,7 @@ export function errorLoggingMiddleware(err: Error, _req: Request, res: Response,
     responseTime,
     errorName: err.name,
     errorMessage: err.message,
-    stack: err.stack
+    stack: err.stack,
   });
 
   // Record error metrics
@@ -103,12 +125,16 @@ export function errorLoggingMiddleware(err: Error, _req: Request, res: Response,
   next(err);
 }
 
-export function securityLoggingMiddleware(_req: Request, res: Response, next: NextFunction): void {
+export function securityLoggingMiddleware(
+  _req: Request,
+  res: Response,
+  next: NextFunction
+): void {
   // Log security-relevant events
   const securityHeaders = {
     authorization: req.headers.authorization ? '[REDACTED]' : undefined,
     'x-forwarded-for': req.headers['x-forwarded-for'],
-    'x-real-ip': req.headers['x-real-ip']
+    'x-real-ip': req.headers['x-real-ip'],
   };
 
   // Check for suspicious patterns
@@ -120,17 +146,20 @@ export function securityLoggingMiddleware(_req: Request, res: Response, next: Ne
     /onerror/i,
     /<.*>/,
     /union.*select/i,
-    /drop.*table/i
+    /drop.*table/i,
   ];
 
-  const requestString = JSON.stringify(req.body) + req.url + JSON.stringify(req.query);
-  const hasSuspiciousContent = suspiciousPatterns.some(pattern => pattern.test(requestString));
+  const requestString =
+    JSON.stringify(req.body) + req.url + JSON.stringify(req.query);
+  const hasSuspiciousContent = suspiciousPatterns.some(pattern =>
+    pattern.test(requestString)
+  );
 
   if (hasSuspiciousContent) {
     logger.logSecurityEvent('Suspicious request content detected', {
       ...req.logContext,
       securityHeaders,
-      suspiciousContent: true
+      suspiciousContent: true,
     });
   }
 
@@ -139,7 +168,7 @@ export function securityLoggingMiddleware(_req: Request, res: Response, next: Ne
     logger.logAuthEvent('Authentication attempt', {
       ...req.logContext,
       hasAuthHeader: !!req.headers.authorization,
-      endpoint: req.url
+      endpoint: req.url,
     });
   }
 
@@ -152,7 +181,13 @@ function sanitizeRequestBody(body: any): any {
     return body;
   }
 
-  const sensitiveFields = ['password', 'token', 'secret', 'key', 'authorization'];
+  const sensitiveFields = [
+    'password',
+    'token',
+    'secret',
+    'key',
+    'authorization',
+  ];
   const sanitized = { ...body };
 
   for (const field of sensitiveFields) {
@@ -175,7 +210,9 @@ export function createDatabaseLoggingMiddleware() {
         const operation = e.query.split(' ')[0]?.toUpperCase() || 'UNKNOWN';
 
         // Extract table name from query (basic implementation)
-        const tableMatch = e.query.match(/(?:FROM|INTO|UPDATE|TABLE)\s+`?(\w+)`?/i);
+        const tableMatch = e.query.match(
+          /(?:FROM|INTO|UPDATE|TABLE)\s+`?(\w+)`?/i
+        );
         const table = tableMatch ? tableMatch[1] : undefined;
 
         logger.logDatabaseOperation(operation, table || 'unknown', duration);
@@ -183,7 +220,7 @@ export function createDatabaseLoggingMiddleware() {
 
         return result;
       };
-    }
+    },
   };
 }
 
@@ -198,12 +235,14 @@ export function logRedisOperation<T>(
   return fn()
     .then(result => {
       const duration = Date.now() - startTime;
-      const hit = cacheOperation ? result !== null && result !== undefined : undefined;
+      const hit = cacheOperation
+        ? result !== null && result !== undefined
+        : undefined;
 
       logger.debug(`Redis operation: ${operation}`, {
         operation,
         duration,
-        hit
+        hit,
       });
 
       metricsService.recordRedisOperation(duration, operation, hit);
@@ -215,7 +254,7 @@ export function logRedisOperation<T>(
 
       logger.error(`Redis operation failed: ${operation}`, error, {
         operation,
-        duration
+        duration,
       });
 
       metricsService.recordRedisError();

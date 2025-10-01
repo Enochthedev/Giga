@@ -1,14 +1,18 @@
 # Hotel Service
 
-A comprehensive accommodation booking and management service that handles property listings, room inventory, reservations, dynamic pricing, and guest management.
+A comprehensive accommodation booking and management service that handles property listings, room
+inventory, reservations, dynamic pricing, and guest management.
 
 ## Features
 
-- **Property Management**: Create and manage hotel properties with detailed information, amenities, and policies
+- **Property Management**: Create and manage hotel properties with detailed information, amenities,
+  and policies
 - **Room Type Management**: Define room types with capacity, amenities, and pricing
 - **Availability Engine**: Real-time inventory management and availability checking
-- **Dynamic Pricing**: Flexible pricing strategies based on demand, seasonality, and market conditions
-- **Booking Management**: Complete reservation workflow with confirmation, modification, and cancellation
+- **Dynamic Pricing**: Flexible pricing strategies based on demand, seasonality, and market
+  conditions
+- **Booking Management**: Complete reservation workflow with confirmation, modification, and
+  cancellation
 - **Guest Profiles**: Personalized guest management with preferences and booking history
 - **Multi-Property Support**: Manage multiple properties and hotel chains
 - **External Integrations**: Connect with OTAs, channel managers, and payment systems
@@ -37,28 +41,33 @@ A comprehensive accommodation booking and management service that handles proper
 ### Installation
 
 1. Install dependencies:
+
 ```bash
 pnpm install
 ```
 
 2. Set up environment variables:
+
 ```bash
 cp .env.example .env
 # Edit .env with your configuration
 ```
 
 3. Set up the database:
+
 ```bash
 pnpm prisma:migrate
 pnpm prisma:generate
 ```
 
 4. Seed the database (optional):
+
 ```bash
 pnpm seed
 ```
 
 5. Start the development server:
+
 ```bash
 pnpm dev
 ```
@@ -68,6 +77,7 @@ The service will be available at `http://localhost:3004`
 ### API Documentation
 
 Once the service is running, you can access the API documentation at:
+
 - Swagger UI: `http://localhost:3004/api/docs`
 - OpenAPI JSON: `http://localhost:3004/api/docs.json`
 
@@ -96,28 +106,36 @@ src/
 ## Core Concepts
 
 ### Properties
+
 Properties represent hotels, resorts, or other accommodation types. Each property has:
+
 - Basic information (name, description, location)
 - Amenities and facilities
 - Policies (check-in/out times, cancellation policies)
 - Contact information and media
 
 ### Room Types
+
 Room types define the different categories of rooms available at a property:
+
 - Capacity and bed configuration
 - Amenities and features
 - Base pricing
 - Inventory counts
 
 ### Availability
+
 The availability engine manages room inventory in real-time:
+
 - Tracks available rooms by date and room type
 - Handles reservations and releases
 - Prevents overbooking with inventory locks
 - Supports availability blocks for maintenance
 
 ### Pricing
+
 Dynamic pricing engine supports:
+
 - Base rates and seasonal adjustments
 - Demand-based pricing rules
 - Promotions and discounts
@@ -125,7 +143,9 @@ Dynamic pricing engine supports:
 - Group and corporate rates
 
 ### Bookings
+
 Complete booking lifecycle management:
+
 - Reservation creation and validation
 - Payment processing integration
 - Confirmation and notification
@@ -133,7 +153,9 @@ Complete booking lifecycle management:
 - Check-in/check-out workflow
 
 ### Guest Management
+
 Personalized guest experience:
+
 - Guest profiles and preferences
 - Booking history tracking
 - Loyalty program integration
@@ -143,6 +165,7 @@ Personalized guest experience:
 ## API Endpoints
 
 ### Properties
+
 - `GET /api/v1/properties` - Search properties
 - `POST /api/v1/properties` - Create property
 - `GET /api/v1/properties/:id` - Get property details
@@ -150,17 +173,20 @@ Personalized guest experience:
 - `DELETE /api/v1/properties/:id` - Delete property
 
 ### Room Types
+
 - `GET /api/v1/properties/:propertyId/room-types` - Get room types
 - `POST /api/v1/properties/:propertyId/room-types` - Create room type
 - `PUT /api/v1/room-types/:id` - Update room type
 - `DELETE /api/v1/room-types/:id` - Delete room type
 
 ### Availability
+
 - `POST /api/v1/availability/search` - Search availability
 - `PUT /api/v1/properties/:propertyId/availability` - Update availability
 - `POST /api/v1/properties/:propertyId/availability/block` - Block availability
 
 ### Bookings
+
 - `POST /api/v1/bookings` - Create booking
 - `GET /api/v1/bookings/:id` - Get booking details
 - `PUT /api/v1/bookings/:id` - Update booking
@@ -168,11 +194,13 @@ Personalized guest experience:
 - `GET /api/v1/bookings` - Search bookings
 
 ### Pricing
+
 - `POST /api/v1/pricing/calculate` - Calculate price
 - `PUT /api/v1/properties/:propertyId/rates` - Update rates
 - `POST /api/v1/promotions` - Create promotion
 
 ### Guests
+
 - `GET /api/v1/guests/:id` - Get guest profile
 - `PUT /api/v1/guests/:id` - Update guest profile
 - `GET /api/v1/guests` - Search guests
@@ -274,6 +302,7 @@ The hotel service integrates with:
 ### Event System
 
 The service publishes events for:
+
 - Property changes
 - Booking lifecycle events
 - Availability updates

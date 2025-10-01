@@ -106,7 +106,7 @@ describe('PaymentService Stripe Integration Tests', () => {
   describe('Payment Processing with Stripe', () => {
     it('should process payment through Stripe gateway', async () => {
       const paymentRequest: PaymentRequest = {
-        amount: 100.00,
+        amount: 100.0,
         currency: 'USD',
         description: 'Test Stripe payment',
         userId: 'user-123',
@@ -148,11 +148,17 @@ describe('PaymentService Stripe Integration Tests', () => {
         metadata: {},
       });
 
-      const result = await paymentService.capturePayment('test-transaction-id', 50.00);
+      const result = await paymentService.capturePayment(
+        'test-transaction-id',
+        50.0
+      );
 
-      expect(mockStripe.paymentIntents.capture).toHaveBeenCalledWith('pi_test_123', {
-        amount_to_capture: 5000,
-      });
+      expect(mockStripe.paymentIntents.capture).toHaveBeenCalledWith(
+        'pi_test_123',
+        {
+          amount_to_capture: 5000,
+        }
+      );
 
       expect(result.status).toBe('succeeded');
     });
@@ -169,7 +175,9 @@ describe('PaymentService Stripe Integration Tests', () => {
 
       const result = await paymentService.cancelPayment('test-transaction-id');
 
-      expect(mockStripe.paymentIntents.cancel).toHaveBeenCalledWith('pi_test_123');
+      expect(mockStripe.paymentIntents.cancel).toHaveBeenCalledWith(
+        'pi_test_123'
+      );
       expect(result.status).toBe('cancelled');
     });
 
@@ -179,7 +187,8 @@ describe('PaymentService Stripe Integration Tests', () => {
       await new Promise(resolve => setTimeout(resolve, 100));
 
       // Mock the transaction service to return succeeded transaction
-      const mockTransactionService = paymentServiceForRefund['transactionService'];
+      const mockTransactionService =
+        paymentServiceForRefund['transactionService'];
       vi.mocked(mockTransactionService.getById).mockResolvedValue({
         id: 'test-transaction-id',
         type: 'payment',
@@ -204,7 +213,11 @@ describe('PaymentService Stripe Integration Tests', () => {
         metadata: {},
       });
 
-      const result = await paymentServiceForRefund.refundPayment('test-transaction-id', 50.00, 'Customer request');
+      const result = await paymentServiceForRefund.refundPayment(
+        'test-transaction-id',
+        50.0,
+        'Customer request'
+      );
 
       expect(mockStripe.refunds.create).toHaveBeenCalledWith({
         payment_intent: 'pi_test_123',
@@ -251,7 +264,8 @@ describe('PaymentService Stripe Integration Tests', () => {
         },
       };
 
-      const result = await paymentService.createPaymentMethod(paymentMethodData);
+      const result =
+        await paymentService.createPaymentMethod(paymentMethodData);
 
       expect(mockStripe.paymentMethods.create).toHaveBeenCalledWith({
         type: 'card',
@@ -288,7 +302,9 @@ describe('PaymentService Stripe Integration Tests', () => {
 
       const result = await paymentService.getPaymentMethod('pm_test_retrieve');
 
-      expect(mockStripe.paymentMethods.retrieve).toHaveBeenCalledWith('pm_test_retrieve');
+      expect(mockStripe.paymentMethods.retrieve).toHaveBeenCalledWith(
+        'pm_test_retrieve'
+      );
       expect(result.id).toBe('pm_test_retrieve');
       expect(result.metadata.last4).toBe('1234');
     });
@@ -298,7 +314,9 @@ describe('PaymentService Stripe Integration Tests', () => {
 
       await paymentService.deletePaymentMethod('pm_test_delete');
 
-      expect(mockStripe.paymentMethods.detach).toHaveBeenCalledWith('pm_test_delete');
+      expect(mockStripe.paymentMethods.detach).toHaveBeenCalledWith(
+        'pm_test_delete'
+      );
     });
   });
 
@@ -308,12 +326,14 @@ describe('PaymentService Stripe Integration Tests', () => {
       mockStripe.paymentIntents.create.mockRejectedValue(stripeError);
 
       const paymentRequest: PaymentRequest = {
-        amount: 100.00,
+        amount: 100.0,
         currency: 'USD',
         paymentMethodId: 'pm_test_declined',
       };
 
-      await expect(paymentService.processPayment(paymentRequest)).rejects.toThrow();
+      await expect(
+        paymentService.processPayment(paymentRequest)
+      ).rejects.toThrow();
     });
 
     it('should handle gateway not found errors', async () => {

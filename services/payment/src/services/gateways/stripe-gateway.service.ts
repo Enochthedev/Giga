@@ -1,8 +1,19 @@
 import Stripe from 'stripe';
 import { Decimal } from '../../lib/decimal';
 import { logger } from '../../lib/logger';
-import { GatewayConfig, GatewayStatus, WebhookEvent } from '../../types/gateway.types';
-import { PaymentMethod, PaymentMethodType, PaymentRequest, PaymentResponse, PaymentStatus, Refund } from '../../types/payment.types';
+import {
+  GatewayConfig,
+  GatewayStatus,
+  WebhookEvent,
+} from '../../types/gateway.types';
+import {
+  PaymentMethod,
+  PaymentMethodType,
+  PaymentRequest,
+  PaymentResponse,
+  PaymentStatus,
+  Refund,
+} from '../../types/payment.types';
 import { BaseGateway } from './base-gateway.service';
 
 export class StripeGateway extends BaseGateway {
@@ -24,7 +35,7 @@ export class StripeGateway extends BaseGateway {
 
     logger.info('Stripe gateway initialized', {
       gatewayId: this.getId(),
-      apiVersion: '2023-10-16'
+      apiVersion: '2023-10-16',
     });
   }
 
@@ -35,7 +46,7 @@ export class StripeGateway extends BaseGateway {
       this.logOperation('processPayment', {
         amount: request.amount,
         currency: request.currency,
-        paymentMethodId: request.paymentMethodId
+        paymentMethodId: request.paymentMethodId,
       });
 
       try {
@@ -52,15 +63,17 @@ export class StripeGateway extends BaseGateway {
             merchantId: request.merchantId || '',
             internalReference: request.internalReference || '',
             externalReference: request.externalReference || '',
-            ...request.metadata
-          }
+            ...request.metadata,
+          },
         };
 
         // Handle payment method
         if (request.paymentMethodId) {
           paymentIntentParams.payment_method = request.paymentMethodId;
-          paymentIntentParams.confirmation_method = request.options?.confirmationMethod || 'automatic';
-          paymentIntentParams.confirm = request.options?.confirmationMethod !== 'manual';
+          paymentIntentParams.confirmation_method =
+            request.options?.confirmationMethod || 'automatic';
+          paymentIntentParams.confirm =
+            request.options?.confirmationMethod !== 'manual';
         } else if (request.paymentMethodData?.card) {
           // Create payment method from card data
           const paymentMethod = await this.stripe.paymentMethods.create({
@@ -69,19 +82,22 @@ export class StripeGateway extends BaseGateway {
               number: request.paymentMethodData.card.number,
               exp_month: request.paymentMethodData.card.expiryMonth,
               exp_year: request.paymentMethodData.card.expiryYear,
-              cvc: request.paymentMethodData.card.cvc
+              cvc: request.paymentMethodData.card.cvc,
             },
             billing_details: {
               name: request.paymentMethodData.card.holderName,
-              address: request.paymentMethodData.billingAddress ? {
-                line1: request.paymentMethodData.billingAddress.line1,
-                line2: request.paymentMethodData.billingAddress.line2,
-                city: request.paymentMethodData.billingAddress.city,
-                state: request.paymentMethodData.billingAddress.state,
-                postal_code: request.paymentMethodData.billingAddress.postalCode,
-                country: request.paymentMethodData.billingAddress.country
-              } : undefined
-            }
+              address: request.paymentMethodData.billingAddress
+                ? {
+                    line1: request.paymentMethodData.billingAddress.line1,
+                    line2: request.paymentMethodData.billingAddress.line2,
+                    city: request.paymentMethodData.billingAddress.city,
+                    state: request.paymentMethodData.billingAddress.state,
+                    postal_code:
+                      request.paymentMethodData.billingAddress.postalCode,
+                    country: request.paymentMethodData.billingAddress.country,
+                  }
+                : undefined,
+            },
           });
 
           paymentIntentParams.payment_method = paymentMethod.id;
@@ -96,16 +112,19 @@ export class StripeGateway extends BaseGateway {
 
         // Set setup future usage
         if (request.options?.setupFutureUsage) {
-          paymentIntentParams.setup_future_usage = request.options.setupFutureUsage;
+          paymentIntentParams.setup_future_usage =
+            request.options.setupFutureUsage;
         }
 
         // Set statement descriptor
         if (request.options?.statementDescriptor) {
-          paymentIntentParams.statement_descriptor = request.options.statementDescriptor;
+          paymentIntentParams.statement_descriptor =
+            request.options.statementDescriptor;
         }
 
         // Create payment intent
-        const paymentIntent = await this.stripe.paymentIntents.create(paymentIntentParams);
+        const paymentIntent =
+          await this.stripe.paymentIntents.create(paymentIntentParams);
 
         // Map Stripe status to our status
         const status = this.mapStripeStatus(paymentIntent.status);
@@ -117,44 +136,61 @@ export class StripeGateway extends BaseGateway {
           currency: paymentIntent.currency.toUpperCase(),
           clientSecret: paymentIntent.client_secret || undefined,
           requiresAction: paymentIntent.status === 'requires_action',
-          nextAction: paymentIntent.next_action ? {
-            type: paymentIntent.next_action.type,
-            redirectUrl: paymentIntent.next_action.redirect_to_url?.url,
-            useStripeSdk: paymentIntent.next_action.use_stripe_sdk?.type === 'three_d_secure_redirect'
-          } : undefined,
-          paymentMethod: paymentIntent.payment_method ? {
-            id: typeof paymentIntent.payment_method === 'string'
-              ? paymentIntent.payment_method
-              : paymentIntent.payment_method.id,
-            type: 'card', // Default to card for now
-            metadata: {}
-          } : undefined,
+          nextAction: paymentIntent.next_action
+            ? {
+                type: paymentIntent.next_action.type,
+                redirectUrl: paymentIntent.next_action.redirect_to_url?.url,
+                useStripeSdk:
+                  paymentIntent.next_action.use_stripe_sdk?.type ===
+                  'three_d_secure_redirect',
+              }
+            : undefined,
+          paymentMethod: paymentIntent.payment_method
+            ? {
+                id:
+                  typeof paymentIntent.payment_method === 'string'
+                    ? paymentIntent.payment_method
+                    : paymentIntent.payment_method.id,
+                type: 'card', // Default to card for now
+                metadata: {},
+              }
+            : undefined,
           metadata: paymentIntent.metadata,
-          createdAt: new Date(paymentIntent.created * 1000)
+          createdAt: new Date(paymentIntent.created * 1000),
         };
 
         this.logOperation('processPayment completed', {
           paymentId: response.id,
           status: response.status,
-          stripeStatus: paymentIntent.status
+          stripeStatus: paymentIntent.status,
         });
 
         return response;
       } catch (error) {
-        this.logError('processPayment', error instanceof Error ? error : new Error('Unknown error'), {
-          amount: request.amount,
-          currency: request.currency
-        });
-        throw this.createGatewayError(error instanceof Error ? error : new Error('Unknown error'), 'processPayment');
+        this.logError(
+          'processPayment',
+          error instanceof Error ? error : new Error('Unknown error'),
+          {
+            amount: request.amount,
+            currency: request.currency,
+          }
+        );
+        throw this.createGatewayError(
+          error instanceof Error ? error : new Error('Unknown error'),
+          'processPayment'
+        );
       }
     }, 'processPayment');
   }
 
-  async capturePayment(transactionId: string, amount?: number): Promise<PaymentResponse> {
+  async capturePayment(
+    transactionId: string,
+    amount?: number
+  ): Promise<PaymentResponse> {
     return this.executeWithRetry(async () => {
       this.logOperation('capturePayment', {
         transactionId,
-        amount
+        amount,
       });
 
       try {
@@ -164,7 +200,10 @@ export class StripeGateway extends BaseGateway {
           captureParams.amount_to_capture = Math.round(amount * 100);
         }
 
-        const paymentIntent = await this.stripe.paymentIntents.capture(transactionId, captureParams);
+        const paymentIntent = await this.stripe.paymentIntents.capture(
+          transactionId,
+          captureParams
+        );
 
         const response: PaymentResponse = {
           id: paymentIntent.id,
@@ -172,21 +211,28 @@ export class StripeGateway extends BaseGateway {
           amount: new Decimal(paymentIntent.amount / 100),
           currency: paymentIntent.currency.toUpperCase(),
           metadata: paymentIntent.metadata,
-          createdAt: new Date(paymentIntent.created * 1000)
+          createdAt: new Date(paymentIntent.created * 1000),
         };
 
         this.logOperation('capturePayment completed', {
           transactionId,
-          status: response.status
+          status: response.status,
         });
 
         return response;
       } catch (error) {
-        this.logError('capturePayment', error instanceof Error ? error : new Error('Unknown error'), {
-          transactionId,
-          amount
-        });
-        throw this.createGatewayError(error instanceof Error ? error : new Error('Unknown error'), 'capturePayment');
+        this.logError(
+          'capturePayment',
+          error instanceof Error ? error : new Error('Unknown error'),
+          {
+            transactionId,
+            amount,
+          }
+        );
+        throw this.createGatewayError(
+          error instanceof Error ? error : new Error('Unknown error'),
+          'capturePayment'
+        );
       }
     }, 'capturePayment');
   }
@@ -194,11 +240,12 @@ export class StripeGateway extends BaseGateway {
   async cancelPayment(transactionId: string): Promise<PaymentResponse> {
     return this.executeWithRetry(async () => {
       this.logOperation('cancelPayment', {
-        transactionId
+        transactionId,
       });
 
       try {
-        const paymentIntent = await this.stripe.paymentIntents.cancel(transactionId);
+        const paymentIntent =
+          await this.stripe.paymentIntents.cancel(transactionId);
 
         const response: PaymentResponse = {
           id: paymentIntent.id,
@@ -206,36 +253,47 @@ export class StripeGateway extends BaseGateway {
           amount: new Decimal(paymentIntent.amount / 100),
           currency: paymentIntent.currency.toUpperCase(),
           metadata: paymentIntent.metadata,
-          createdAt: new Date(paymentIntent.created * 1000)
+          createdAt: new Date(paymentIntent.created * 1000),
         };
 
         this.logOperation('cancelPayment completed', {
           transactionId,
-          status: response.status
+          status: response.status,
         });
 
         return response;
       } catch (error) {
-        this.logError('cancelPayment', error instanceof Error ? error : new Error('Unknown error'), {
-          transactionId
-        });
-        throw this.createGatewayError(error instanceof Error ? error : new Error('Unknown error'), 'cancelPayment');
+        this.logError(
+          'cancelPayment',
+          error instanceof Error ? error : new Error('Unknown error'),
+          {
+            transactionId,
+          }
+        );
+        throw this.createGatewayError(
+          error instanceof Error ? error : new Error('Unknown error'),
+          'cancelPayment'
+        );
       }
     }, 'cancelPayment');
   }
 
-  async refundPayment(transactionId: string, amount?: number, reason?: string): Promise<Refund> {
+  async refundPayment(
+    transactionId: string,
+    amount?: number,
+    reason?: string
+  ): Promise<Refund> {
     return this.executeWithRetry(async () => {
       this.logOperation('refundPayment', {
         transactionId,
         amount,
-        reason
+        reason,
       });
 
       try {
         const refundParams: Stripe.RefundCreateParams = {
           payment_intent: transactionId,
-          reason: this.mapRefundReason(reason)
+          reason: this.mapRefundReason(reason),
         };
 
         if (amount !== undefined) {
@@ -253,24 +311,34 @@ export class StripeGateway extends BaseGateway {
           status: this.mapStripeRefundStatus(stripeRefund.status),
           gatewayRefundId: stripeRefund.id,
           metadata: stripeRefund.metadata,
-          processedAt: stripeRefund.status === 'succeeded' ? new Date(stripeRefund.created * 1000) : undefined,
+          processedAt:
+            stripeRefund.status === 'succeeded'
+              ? new Date(stripeRefund.created * 1000)
+              : undefined,
           createdAt: new Date(stripeRefund.created * 1000),
-          updatedAt: new Date()
+          updatedAt: new Date(),
         };
 
         this.logOperation('refundPayment completed', {
           refundId: refund.id,
-          status: refund.status
+          status: refund.status,
         });
 
         return refund;
       } catch (error) {
-        this.logError('refundPayment', error instanceof Error ? error : new Error('Unknown error'), {
-          transactionId,
-          amount,
-          reason
-        });
-        throw this.createGatewayError(error instanceof Error ? error : new Error('Unknown error'), 'refundPayment');
+        this.logError(
+          'refundPayment',
+          error instanceof Error ? error : new Error('Unknown error'),
+          {
+            transactionId,
+            amount,
+            reason,
+          }
+        );
+        throw this.createGatewayError(
+          error instanceof Error ? error : new Error('Unknown error'),
+          'refundPayment'
+        );
       }
     }, 'refundPayment');
   }
@@ -279,12 +347,12 @@ export class StripeGateway extends BaseGateway {
     return this.executeWithRetry(async () => {
       this.logOperation('createPaymentMethod', {
         type: data.type,
-        userId: data.userId
+        userId: data.userId,
       });
 
       try {
         const paymentMethodParams: Stripe.PaymentMethodCreateParams = {
-          type: data.type || 'card'
+          type: data.type || 'card',
         };
 
         if (data.type === 'card' && data.card) {
@@ -292,7 +360,7 @@ export class StripeGateway extends BaseGateway {
             number: data.card.number,
             exp_month: data.card.expiryMonth,
             exp_year: data.card.expiryYear,
-            cvc: data.card.cvc
+            cvc: data.card.cvc,
           };
         }
 
@@ -301,23 +369,26 @@ export class StripeGateway extends BaseGateway {
             name: data.billingDetails.name,
             email: data.billingDetails.email,
             phone: data.billingDetails.phone,
-            address: data.billingDetails.address ? {
-              line1: data.billingDetails.address.line1,
-              line2: data.billingDetails.address.line2,
-              city: data.billingDetails.address.city,
-              state: data.billingDetails.address.state,
-              postal_code: data.billingDetails.address.postalCode,
-              country: data.billingDetails.address.country
-            } : undefined
+            address: data.billingDetails.address
+              ? {
+                  line1: data.billingDetails.address.line1,
+                  line2: data.billingDetails.address.line2,
+                  city: data.billingDetails.address.city,
+                  state: data.billingDetails.address.state,
+                  postal_code: data.billingDetails.address.postalCode,
+                  country: data.billingDetails.address.country,
+                }
+              : undefined,
           };
         }
 
-        const stripePaymentMethod = await this.stripe.paymentMethods.create(paymentMethodParams);
+        const stripePaymentMethod =
+          await this.stripe.paymentMethods.create(paymentMethodParams);
 
         // Attach to customer if provided
         if (data.customerId) {
           await this.stripe.paymentMethods.attach(stripePaymentMethod.id, {
-            customer: data.customerId
+            customer: data.customerId,
           });
         }
 
@@ -333,32 +404,47 @@ export class StripeGateway extends BaseGateway {
             brand: stripePaymentMethod.card?.brand,
             expiryMonth: stripePaymentMethod.card?.exp_month,
             expiryYear: stripePaymentMethod.card?.exp_year,
-            holderName: stripePaymentMethod.billing_details?.name
+            holderName: stripePaymentMethod.billing_details?.name,
           },
-          billingAddress: stripePaymentMethod.billing_details?.address ? {
-            line1: stripePaymentMethod.billing_details.address.line1 || '',
-            line2: stripePaymentMethod.billing_details.address.line2 || undefined,
-            city: stripePaymentMethod.billing_details.address.city || '',
-            state: stripePaymentMethod.billing_details.address.state || undefined,
-            postalCode: stripePaymentMethod.billing_details.address.postal_code || '',
-            country: stripePaymentMethod.billing_details.address.country || ''
-          } : undefined,
+          billingAddress: stripePaymentMethod.billing_details?.address
+            ? {
+                line1: stripePaymentMethod.billing_details.address.line1 || '',
+                line2:
+                  stripePaymentMethod.billing_details.address.line2 ||
+                  undefined,
+                city: stripePaymentMethod.billing_details.address.city || '',
+                state:
+                  stripePaymentMethod.billing_details.address.state ||
+                  undefined,
+                postalCode:
+                  stripePaymentMethod.billing_details.address.postal_code || '',
+                country:
+                  stripePaymentMethod.billing_details.address.country || '',
+              }
+            : undefined,
           isActive: true,
           createdAt: new Date(stripePaymentMethod.created * 1000),
-          updatedAt: new Date()
+          updatedAt: new Date(),
         };
 
         this.logOperation('createPaymentMethod completed', {
           paymentMethodId: paymentMethod.id,
-          type: paymentMethod.type
+          type: paymentMethod.type,
         });
 
         return paymentMethod;
       } catch (error) {
-        this.logError('createPaymentMethod', error instanceof Error ? error : new Error('Unknown error'), {
-          type: data.type
-        });
-        throw this.createGatewayError(error instanceof Error ? error : new Error('Unknown error'), 'createPaymentMethod');
+        this.logError(
+          'createPaymentMethod',
+          error instanceof Error ? error : new Error('Unknown error'),
+          {
+            type: data.type,
+          }
+        );
+        throw this.createGatewayError(
+          error instanceof Error ? error : new Error('Unknown error'),
+          'createPaymentMethod'
+        );
       }
     }, 'createPaymentMethod');
   }
@@ -366,7 +452,7 @@ export class StripeGateway extends BaseGateway {
   async updatePaymentMethod(id: string, data: unknown): Promise<PaymentMethod> {
     return this.executeWithRetry(async () => {
       this.logOperation('updatePaymentMethod', {
-        paymentMethodId: id
+        paymentMethodId: id,
       });
 
       try {
@@ -377,14 +463,16 @@ export class StripeGateway extends BaseGateway {
             name: data.billingDetails.name,
             email: data.billingDetails.email,
             phone: data.billingDetails.phone,
-            address: data.billingDetails.address ? {
-              line1: data.billingDetails.address.line1,
-              line2: data.billingDetails.address.line2,
-              city: data.billingDetails.address.city,
-              state: data.billingDetails.address.state,
-              postal_code: data.billingDetails.address.postalCode,
-              country: data.billingDetails.address.country
-            } : undefined
+            address: data.billingDetails.address
+              ? {
+                  line1: data.billingDetails.address.line1,
+                  line2: data.billingDetails.address.line2,
+                  city: data.billingDetails.address.city,
+                  state: data.billingDetails.address.state,
+                  postal_code: data.billingDetails.address.postalCode,
+                  country: data.billingDetails.address.country,
+                }
+              : undefined,
           };
         }
 
@@ -392,7 +480,10 @@ export class StripeGateway extends BaseGateway {
           updateParams.metadata = data.metadata;
         }
 
-        const stripePaymentMethod = await this.stripe.paymentMethods.update(id, updateParams);
+        const stripePaymentMethod = await this.stripe.paymentMethods.update(
+          id,
+          updateParams
+        );
 
         const paymentMethod: PaymentMethod = {
           id: stripePaymentMethod.id,
@@ -406,31 +497,46 @@ export class StripeGateway extends BaseGateway {
             brand: stripePaymentMethod.card?.brand,
             expiryMonth: stripePaymentMethod.card?.exp_month,
             expiryYear: stripePaymentMethod.card?.exp_year,
-            holderName: stripePaymentMethod.billing_details?.name
+            holderName: stripePaymentMethod.billing_details?.name,
           },
-          billingAddress: stripePaymentMethod.billing_details?.address ? {
-            line1: stripePaymentMethod.billing_details.address.line1 || '',
-            line2: stripePaymentMethod.billing_details.address.line2 || undefined,
-            city: stripePaymentMethod.billing_details.address.city || '',
-            state: stripePaymentMethod.billing_details.address.state || undefined,
-            postalCode: stripePaymentMethod.billing_details.address.postal_code || '',
-            country: stripePaymentMethod.billing_details.address.country || ''
-          } : undefined,
+          billingAddress: stripePaymentMethod.billing_details?.address
+            ? {
+                line1: stripePaymentMethod.billing_details.address.line1 || '',
+                line2:
+                  stripePaymentMethod.billing_details.address.line2 ||
+                  undefined,
+                city: stripePaymentMethod.billing_details.address.city || '',
+                state:
+                  stripePaymentMethod.billing_details.address.state ||
+                  undefined,
+                postalCode:
+                  stripePaymentMethod.billing_details.address.postal_code || '',
+                country:
+                  stripePaymentMethod.billing_details.address.country || '',
+              }
+            : undefined,
           isActive: true,
           createdAt: new Date(stripePaymentMethod.created * 1000),
-          updatedAt: new Date()
+          updatedAt: new Date(),
         };
 
         this.logOperation('updatePaymentMethod completed', {
-          paymentMethodId: id
+          paymentMethodId: id,
         });
 
         return paymentMethod;
       } catch (error) {
-        this.logError('updatePaymentMethod', error instanceof Error ? error : new Error('Unknown error'), {
-          paymentMethodId: id
-        });
-        throw this.createGatewayError(error instanceof Error ? error : new Error('Unknown error'), 'updatePaymentMethod');
+        this.logError(
+          'updatePaymentMethod',
+          error instanceof Error ? error : new Error('Unknown error'),
+          {
+            paymentMethodId: id,
+          }
+        );
+        throw this.createGatewayError(
+          error instanceof Error ? error : new Error('Unknown error'),
+          'updatePaymentMethod'
+        );
       }
     }, 'updatePaymentMethod');
   }
@@ -438,20 +544,27 @@ export class StripeGateway extends BaseGateway {
   async deletePaymentMethod(id: string): Promise<void> {
     return this.executeWithRetry(async () => {
       this.logOperation('deletePaymentMethod', {
-        paymentMethodId: id
+        paymentMethodId: id,
       });
 
       try {
         await this.stripe.paymentMethods.detach(id);
 
         this.logOperation('deletePaymentMethod completed', {
-          paymentMethodId: id
+          paymentMethodId: id,
         });
       } catch (error) {
-        this.logError('deletePaymentMethod', error instanceof Error ? error : new Error('Unknown error'), {
-          paymentMethodId: id
-        });
-        throw this.createGatewayError(error instanceof Error ? error : new Error('Unknown error'), 'deletePaymentMethod');
+        this.logError(
+          'deletePaymentMethod',
+          error instanceof Error ? error : new Error('Unknown error'),
+          {
+            paymentMethodId: id,
+          }
+        );
+        throw this.createGatewayError(
+          error instanceof Error ? error : new Error('Unknown error'),
+          'deletePaymentMethod'
+        );
       }
     }, 'deletePaymentMethod');
   }
@@ -459,11 +572,12 @@ export class StripeGateway extends BaseGateway {
   async getPaymentMethod(id: string): Promise<PaymentMethod> {
     return this.executeWithRetry(async () => {
       this.logOperation('getPaymentMethod', {
-        paymentMethodId: id
+        paymentMethodId: id,
       });
 
       try {
-        const stripePaymentMethod = await this.stripe.paymentMethods.retrieve(id);
+        const stripePaymentMethod =
+          await this.stripe.paymentMethods.retrieve(id);
 
         const paymentMethod: PaymentMethod = {
           id: stripePaymentMethod.id,
@@ -477,32 +591,47 @@ export class StripeGateway extends BaseGateway {
             brand: stripePaymentMethod.card?.brand,
             expiryMonth: stripePaymentMethod.card?.exp_month,
             expiryYear: stripePaymentMethod.card?.exp_year,
-            holderName: stripePaymentMethod.billing_details?.name
+            holderName: stripePaymentMethod.billing_details?.name,
           },
-          billingAddress: stripePaymentMethod.billing_details?.address ? {
-            line1: stripePaymentMethod.billing_details.address.line1 || '',
-            line2: stripePaymentMethod.billing_details.address.line2 || undefined,
-            city: stripePaymentMethod.billing_details.address.city || '',
-            state: stripePaymentMethod.billing_details.address.state || undefined,
-            postalCode: stripePaymentMethod.billing_details.address.postal_code || '',
-            country: stripePaymentMethod.billing_details.address.country || ''
-          } : undefined,
+          billingAddress: stripePaymentMethod.billing_details?.address
+            ? {
+                line1: stripePaymentMethod.billing_details.address.line1 || '',
+                line2:
+                  stripePaymentMethod.billing_details.address.line2 ||
+                  undefined,
+                city: stripePaymentMethod.billing_details.address.city || '',
+                state:
+                  stripePaymentMethod.billing_details.address.state ||
+                  undefined,
+                postalCode:
+                  stripePaymentMethod.billing_details.address.postal_code || '',
+                country:
+                  stripePaymentMethod.billing_details.address.country || '',
+              }
+            : undefined,
           isActive: true,
           createdAt: new Date(stripePaymentMethod.created * 1000),
-          updatedAt: new Date()
+          updatedAt: new Date(),
         };
 
         this.logOperation('getPaymentMethod completed', {
           paymentMethodId: id,
-          type: paymentMethod.type
+          type: paymentMethod.type,
         });
 
         return paymentMethod;
       } catch (error) {
-        this.logError('getPaymentMethod', error instanceof Error ? error : new Error('Unknown error'), {
-          paymentMethodId: id
-        });
-        throw this.createGatewayError(error instanceof Error ? error : new Error('Unknown error'), 'getPaymentMethod');
+        this.logError(
+          'getPaymentMethod',
+          error instanceof Error ? error : new Error('Unknown error'),
+          {
+            paymentMethodId: id,
+          }
+        );
+        throw this.createGatewayError(
+          error instanceof Error ? error : new Error('Unknown error'),
+          'getPaymentMethod'
+        );
       }
     }, 'getPaymentMethod');
   }
@@ -512,7 +641,7 @@ export class StripeGateway extends BaseGateway {
       const webhookSecret = this.config.credentials.webhookSecret;
       if (!webhookSecret) {
         logger.error('Webhook secret not configured for Stripe gateway', {
-          gatewayId: this.getId()
+          gatewayId: this.getId(),
         });
         return false;
       }
@@ -521,14 +650,14 @@ export class StripeGateway extends BaseGateway {
       this.stripe.webhooks.constructEvent(payload, signature, webhookSecret);
 
       logger.debug('Stripe webhook signature verified successfully', {
-        gatewayId: this.getId()
+        gatewayId: this.getId(),
       });
 
       return true;
     } catch (error) {
       logger.error('Stripe webhook verification failed', {
         gatewayId: this.getId(),
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
       return false;
     }
@@ -556,22 +685,22 @@ export class StripeGateway extends BaseGateway {
         metadata: {
           stripeEventType: stripeEvent.type,
           livemode: stripeEvent.livemode,
-          apiVersion: stripeEvent.api_version
-        }
+          apiVersion: stripeEvent.api_version,
+        },
       };
 
       logger.info('Stripe webhook parsed successfully', {
         gatewayId: this.getId(),
         eventType: webhookEvent.type,
         stripeEventType: stripeEvent.type,
-        eventId: webhookEvent.id
+        eventId: webhookEvent.id,
       });
 
       return webhookEvent;
     } catch (error) {
       logger.error('Stripe webhook parsing failed', {
         gatewayId: this.getId(),
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
       throw error;
     }
@@ -580,7 +709,7 @@ export class StripeGateway extends BaseGateway {
   async healthCheck(): Promise<boolean> {
     try {
       logger.debug('Performing Stripe health check', {
-        gatewayId: this.getId()
+        gatewayId: this.getId(),
       });
 
       // Perform a simple API call to check connectivity
@@ -588,14 +717,14 @@ export class StripeGateway extends BaseGateway {
       await this.stripe.accounts.retrieve();
 
       logger.debug('Stripe health check completed successfully', {
-        gatewayId: this.getId()
+        gatewayId: this.getId(),
       });
 
       return true;
     } catch (error) {
       logger.error('Stripe health check failed', {
         gatewayId: this.getId(),
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
       return false;
     }
@@ -608,7 +737,7 @@ export class StripeGateway extends BaseGateway {
     } catch (error) {
       logger.error('Failed to get Stripe gateway status', {
         gatewayId: this.getId(),
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
       return 'error';
     }
@@ -705,7 +834,7 @@ export class StripeGateway extends BaseGateway {
       'invoice.created': 'invoice.created',
       'invoice.paid': 'invoice.paid',
       'invoice.payment_failed': 'invoice.payment_failed',
-      'invoice.upcoming': 'invoice.upcoming'
+      'invoice.upcoming': 'invoice.upcoming',
     };
 
     return eventMap[stripeEventType] || stripeEventType;

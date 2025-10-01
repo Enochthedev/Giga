@@ -5,7 +5,7 @@ import {
   GatewayResponse,
   GatewayStatus,
   PaymentGateway,
-  WebhookEvent
+  WebhookEvent,
 } from '../../types/gateway.types';
 import { PaymentRequest } from '../../types/payment.types';
 
@@ -25,12 +25,22 @@ export abstract class BaseGateway extends PaymentGateway {
    * Validates the gateway configuration
    */
   protected validateConfig(): void {
-    if (!this.config.credentials || Object.keys(this.config.credentials).length === 0) {
-      throw new Error(`Gateway ${this.getId()} is missing required credentials`);
+    if (
+      !this.config.credentials ||
+      Object.keys(this.config.credentials).length === 0
+    ) {
+      throw new Error(
+        `Gateway ${this.getId()} is missing required credentials`
+      );
     }
 
-    if (!this.config.settings.supportedCurrencies || this.config.settings.supportedCurrencies.length === 0) {
-      throw new Error(`Gateway ${this.getId()} must support at least one currency`);
+    if (
+      !this.config.settings.supportedCurrencies ||
+      this.config.settings.supportedCurrencies.length === 0
+    ) {
+      throw new Error(
+        `Gateway ${this.getId()} must support at least one currency`
+      );
     }
   }
 
@@ -48,7 +58,7 @@ export abstract class BaseGateway extends PaymentGateway {
         logger.debug(`Executing ${operationName} (attempt ${attempt})`, {
           gatewayId: this.getId(),
           attempt,
-          maxRetries: this.maxRetries
+          maxRetries: this.maxRetries,
         });
 
         const result = await operation();
@@ -56,7 +66,7 @@ export abstract class BaseGateway extends PaymentGateway {
         if (attempt > 1) {
           logger.info(`${operationName} succeeded after retry`, {
             gatewayId: this.getId(),
-            attempt
+            attempt,
           });
         }
 
@@ -67,14 +77,14 @@ export abstract class BaseGateway extends PaymentGateway {
         logger.warn(`${operationName} failed (attempt ${attempt})`, {
           gatewayId: this.getId(),
           attempt,
-          error: lastError.message
+          error: lastError.message,
         });
 
         // Don't retry on certain types of errors
         if (this.isNonRetryableError(lastError)) {
           logger.debug('Error is non-retryable, not attempting retry', {
             gatewayId: this.getId(),
-            error: lastError.message
+            error: lastError.message,
           });
           break;
         }
@@ -86,7 +96,10 @@ export abstract class BaseGateway extends PaymentGateway {
       }
     }
 
-    throw this.createGatewayError(lastError || new Error('Operation failed'), operationName);
+    throw this.createGatewayError(
+      lastError || new Error('Operation failed'),
+      operationName
+    );
   }
 
   /**
@@ -100,7 +113,7 @@ export abstract class BaseGateway extends PaymentGateway {
       'not found',
       'bad request',
       'authentication',
-      'permission'
+      'permission',
     ];
 
     const errorMessage = error.message.toLowerCase();
@@ -111,7 +124,9 @@ export abstract class BaseGateway extends PaymentGateway {
    * Creates a standardized gateway error
    */
   protected createGatewayError(error: Error, operation: string): GatewayError {
-    const gatewayError = new Error(`Gateway ${this.getId()} ${operation} failed: ${error.message}`) as GatewayError;
+    const gatewayError = new Error(
+      `Gateway ${this.getId()} ${operation} failed: ${error.message}`
+    ) as GatewayError;
     gatewayError.gatewayId = this.getId();
     gatewayError.isRetryable = !this.isNonRetryableError(error);
     gatewayError.name = 'GatewayError';
@@ -122,11 +137,14 @@ export abstract class BaseGateway extends PaymentGateway {
   /**
    * Creates a standardized success response
    */
-  protected createSuccessResponse<T>(data: T, metadata?: Record<string, any>): GatewayResponse<T> {
+  protected createSuccessResponse<T>(
+    data: T,
+    metadata?: Record<string, any>
+  ): GatewayResponse<T> {
     return {
       success: true,
       data,
-      metadata
+      metadata,
     };
   }
 
@@ -143,8 +161,8 @@ export abstract class BaseGateway extends PaymentGateway {
       error: {
         code,
         message,
-        details
-      }
+        details,
+      },
     };
   }
 
@@ -161,7 +179,9 @@ export abstract class BaseGateway extends PaymentGateway {
     }
 
     if (!this.supportsCurrency(request.currency)) {
-      throw new Error(`Currency ${request.currency} is not supported by gateway ${this.getId()}`);
+      throw new Error(
+        `Currency ${request.currency} is not supported by gateway ${this.getId()}`
+      );
     }
 
     if (!this.supportsAmount(request.amount)) {
@@ -175,7 +195,10 @@ export abstract class BaseGateway extends PaymentGateway {
   /**
    * Validates a refund request
    */
-  protected validateRefundRequest(transactionId: string, amount?: number): void {
+  protected validateRefundRequest(
+    transactionId: string,
+    amount?: number
+  ): void {
     if (!transactionId) {
       throw new Error('Transaction ID is required for refund');
     }
@@ -199,19 +222,23 @@ export abstract class BaseGateway extends PaymentGateway {
     logger.info(`Gateway operation: ${operation}`, {
       gatewayId: this.getId(),
       gatewayType: this.getType(),
-      ...data
+      ...data,
     });
   }
 
   /**
    * Logs gateway error
    */
-  protected logError(operation: string, error: Error, data?: Record<string, any>): void {
+  protected logError(
+    operation: string,
+    error: Error,
+    data?: Record<string, any>
+  ): void {
     logger.error(`Gateway operation failed: ${operation}`, {
       gatewayId: this.getId(),
       gatewayType: this.getType(),
       error: error.message,
-      ...data
+      ...data,
     });
   }
 
@@ -227,7 +254,7 @@ export abstract class BaseGateway extends PaymentGateway {
       priority: this.config.priority,
       settings: this.config.settings,
       healthCheck: this.config.healthCheck,
-      rateLimit: this.config.rateLimit
+      rateLimit: this.config.rateLimit,
     };
   }
 
@@ -237,7 +264,7 @@ export abstract class BaseGateway extends PaymentGateway {
    */
   verifyWebhook(payload: string, signature: string): boolean {
     logger.warn('Default webhook verification used - should be overridden', {
-      gatewayId: this.getId()
+      gatewayId: this.getId(),
     });
     return false;
   }
@@ -248,7 +275,7 @@ export abstract class BaseGateway extends PaymentGateway {
    */
   parseWebhook(payload: string): WebhookEvent {
     logger.warn('Default webhook parsing used - should be overridden', {
-      gatewayId: this.getId()
+      gatewayId: this.getId(),
     });
 
     return {
@@ -259,7 +286,7 @@ export abstract class BaseGateway extends PaymentGateway {
       data: { payload },
       timestamp: new Date(),
       processed: false,
-      retryCount: 0
+      retryCount: 0,
     };
   }
 
@@ -273,7 +300,10 @@ export abstract class BaseGateway extends PaymentGateway {
       this.validateConfig();
       return true;
     } catch (error) {
-      this.logError('healthCheck', error instanceof Error ? error : new Error('Unknown error'));
+      this.logError(
+        'healthCheck',
+        error instanceof Error ? error : new Error('Unknown error')
+      );
       return false;
     }
   }
@@ -286,7 +316,10 @@ export abstract class BaseGateway extends PaymentGateway {
       const isHealthy = await this.healthCheck();
       return isHealthy ? 'active' : 'error';
     } catch (error) {
-      this.logError('getStatus', error instanceof Error ? error : new Error('Unknown error'));
+      this.logError(
+        'getStatus',
+        error instanceof Error ? error : new Error('Unknown error')
+      );
       return 'error';
     }
   }

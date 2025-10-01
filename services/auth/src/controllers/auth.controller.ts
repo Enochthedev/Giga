@@ -261,15 +261,16 @@ export class AuthController {
       });
 
       // Analyze login attempt for security
-      const loginAnalysis = await this.securityMonitoringService.analyzeLoginAttempt(req.prisma, {
-        userId: user.id,
-        email: user.email,
-        ipAddress: req.clientIp || 'unknown',
-        deviceFingerprint: req.deviceFingerprint,
-        userAgent: req.deviceInfo?.userAgent,
-        success: true,
-        timestamp: new Date(),
-      });
+      const loginAnalysis =
+        await this.securityMonitoringService.analyzeLoginAttempt(req.prisma, {
+          userId: user.id,
+          email: user.email,
+          ipAddress: req.clientIp || 'unknown',
+          deviceFingerprint: req.deviceFingerprint,
+          userAgent: req.deviceInfo?.userAgent,
+          success: true,
+          timestamp: new Date(),
+        });
 
       // Check if login should be blocked based on security analysis
       if (loginAnalysis.recommendedAction === 'block_access') {
@@ -285,7 +286,8 @@ export class AuthController {
           success: false,
           error: 'Login blocked due to suspicious activity',
           code: 'LOGIN_BLOCKED',
-          message: 'Your login attempt has been blocked for security reasons. Please contact support if you believe this is an error.',
+          message:
+            'Your login attempt has been blocked for security reasons. Please contact support if you believe this is an error.',
           timestamp: new Date().toISOString(),
         });
       }
@@ -388,7 +390,8 @@ export class AuthController {
           success: false,
           error: 'Invalid or expired refresh token',
           code: 'INVALID_REFRESH_TOKEN',
-          message: 'Token refresh failed due to security validation or rate limiting',
+          message:
+            'Token refresh failed due to security validation or rate limiting',
           timestamp: new Date().toISOString(),
         });
       }
@@ -442,7 +445,9 @@ export class AuthController {
         } else {
           // Revoke specific session/device tokens
           const deviceInfo = req.deviceInfo;
-          const deviceId = deviceInfo ? this.generateDeviceId(deviceInfo) : undefined;
+          const deviceId = deviceInfo
+            ? this.generateDeviceId(deviceInfo)
+            : undefined;
 
           if (deviceId) {
             await this.tokenManagementService.revokeTokens(req.prisma, userId, {
@@ -465,7 +470,9 @@ export class AuthController {
 
       res.json({
         success: true,
-        message: logoutAll ? 'Logged out from all devices successfully' : 'Logged out successfully',
+        message: logoutAll
+          ? 'Logged out from all devices successfully'
+          : 'Logged out successfully',
         timestamp: new Date().toISOString(),
       });
     } catch (error) {
@@ -1592,18 +1599,22 @@ export class AuthController {
       // Always return success to prevent email enumeration
       const successResponse = {
         success: true,
-        message: 'If an account with this email exists, a password reset link has been sent',
+        message:
+          'If an account with this email exists, a password reset link has been sent',
         timestamp: new Date().toISOString(),
       };
 
       if (!user || !user.isActive) {
         // Log security event for monitoring
-        console.warn(`Password reset requested for non-existent/inactive user:`, {
-          email: email,
-          ipAddress: req.clientIp,
-          userAgent: req.headers['user-agent'],
-          timestamp: new Date().toISOString(),
-        });
+        console.warn(
+          `Password reset requested for non-existent/inactive user:`,
+          {
+            email: email,
+            ipAddress: req.clientIp,
+            userAgent: req.headers['user-agent'],
+            timestamp: new Date().toISOString(),
+          }
+        );
 
         // Return success to prevent email enumeration
         return res.json(successResponse);
@@ -1832,7 +1843,10 @@ export class AuthController {
 
       // Check if new password matches any recent passwords
       for (const historyEntry of passwordHistory) {
-        const isReused = await bcrypt.compare(newPassword, historyEntry.passwordHash);
+        const isReused = await bcrypt.compare(
+          newPassword,
+          historyEntry.passwordHash
+        );
         if (isReused) {
           return res.status(400).json({
             success: false,
@@ -1848,7 +1862,7 @@ export class AuthController {
       const newPasswordHash = await bcrypt.hash(newPassword, 12);
 
       // Update password and add to history in a transaction
-      await req.prisma.$transaction((tx) => {
+      await req.prisma.$transaction(tx => {
         // Add current password to history before updating
         await tx.passwordHistory.create({
           data: {
@@ -1889,10 +1903,14 @@ export class AuthController {
         });
 
         // Blacklist any active access tokens
-        await this.tokenManagementService.revokeTokens(tx as any, tokenRecord.user.id, {
-          allDevices: true,
-          reason: 'password_reset',
-        });
+        await this.tokenManagementService.revokeTokens(
+          tx as any,
+          tokenRecord.user.id,
+          {
+            allDevices: true,
+            reason: 'password_reset',
+          }
+        );
       });
 
       // Log successful password reset
@@ -1905,7 +1923,8 @@ export class AuthController {
 
       res.json({
         success: true,
-        message: 'Password reset successfully. Please log in with your new password.',
+        message:
+          'Password reset successfully. Please log in with your new password.',
         timestamp: new Date().toISOString(),
       });
     } catch (error) {
@@ -1925,6 +1944,10 @@ export class AuthController {
   private generateDeviceId(deviceInfo: unknown): string {
     const crypto = require('crypto');
     const deviceString = `${deviceInfo?.userAgent || 'unknown'}|${deviceInfo?.platform || 'unknown'}|${deviceInfo?.language || 'en-US'}`;
-    return crypto.createHash('sha256').update(deviceString).digest('hex').substring(0, 16);
+    return crypto
+      .createHash('sha256')
+      .update(deviceString)
+      .digest('hex')
+      .substring(0, 16);
   }
 }

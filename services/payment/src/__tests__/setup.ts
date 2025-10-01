@@ -73,7 +73,9 @@ export const createTestGateway = async () => {
   });
 };
 
-export const createTestPaymentMethod = async (userId: string = 'test-user-1') => {
+export const createTestPaymentMethod = async (
+  userId: string = 'test-user-1'
+) => {
   return await prisma.paymentMethod.create({
     data: {
       userId,
@@ -99,12 +101,15 @@ export const createTestPaymentMethod = async (userId: string = 'test-user-1') =>
   });
 };
 
-export const createTestTransaction = async (gatewayId: string, paymentMethodId?: string) => {
+export const createTestTransaction = async (
+  gatewayId: string,
+  paymentMethodId?: string
+) => {
   return await prisma.transaction.create({
     data: {
       type: 'PAYMENT',
       status: 'PENDING',
-      amount: 100.00,
+      amount: 100.0,
       currency: 'USD',
       description: 'Test payment',
       userId: 'test-user-1',

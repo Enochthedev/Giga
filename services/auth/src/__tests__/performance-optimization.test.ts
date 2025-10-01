@@ -70,7 +70,7 @@ describe('Performance Optimization Services', () => {
         user: { id: 'test-user', email: 'test@example.com' } as any,
         roles: [],
         profiles: {},
-        lastCached: Date.now()
+        lastCached: Date.now(),
       };
 
       await cacheService.cacheUserProfile('test-user', mockUserData);
@@ -201,12 +201,12 @@ describe('Performance Optimization Services', () => {
         cacheStats,
         connectionStats,
         performanceReport,
-        compressionReport
+        compressionReport,
       ] = await Promise.all([
         cacheService.getCacheStats(),
         Promise.resolve(connectionPoolService.getConnectionStats()),
         Promise.resolve(performanceProfiler.getPerformanceReport()),
-        Promise.resolve(responseCompressionService.getPerformanceReport())
+        Promise.resolve(responseCompressionService.getPerformanceReport()),
       ]);
 
       expect(cacheStats).toBeDefined();

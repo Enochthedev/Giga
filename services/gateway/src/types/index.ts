@@ -83,7 +83,17 @@ export interface RouteMatch {
 }
 
 export interface ServiceEvent {
-  type: 'register' | 'deregister' | 'health_change' | 'config_update' | 'discovery_error' | 'endpoints_update' | 'version_register' | 'version_deprecate' | 'rewrite_rule_add' | 'rewrite_rule_remove';
+  type:
+    | 'register'
+    | 'deregister'
+    | 'health_change'
+    | 'config_update'
+    | 'discovery_error'
+    | 'endpoints_update'
+    | 'version_register'
+    | 'version_deprecate'
+    | 'rewrite_rule_add'
+    | 'rewrite_rule_remove';
   serviceId: string;
   timestamp: Date;
   data: any;

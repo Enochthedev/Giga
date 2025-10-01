@@ -27,23 +27,23 @@ interface MockPrismaClient {
     update(args: any): Promise<any>;
     deleteMany(): Promise<any>;
   };
-  refund: { deleteMany(): Promise<any>; };
-  dispute: { deleteMany(): Promise<any>; };
-  fraudAssessment: { deleteMany(): Promise<any>; };
-  fraudRule: { deleteMany(): Promise<any>; };
-  usageRecord: { deleteMany(): Promise<any>; };
-  invoicePayment: { deleteMany(): Promise<any>; };
-  invoiceItem: { deleteMany(): Promise<any>; };
-  invoice: { deleteMany(): Promise<any>; };
-  subscription: { deleteMany(): Promise<any>; };
-  subscriptionPlan: { deleteMany(): Promise<any>; };
-  gatewayHealthStatus: { deleteMany(): Promise<any>; };
-  gatewayMetrics: { deleteMany(): Promise<any>; };
-  blacklistEntry: { deleteMany(): Promise<any>; };
-  whitelistEntry: { deleteMany(): Promise<any>; };
-  webhookDelivery: { deleteMany(): Promise<any>; };
-  webhookEvent: { deleteMany(): Promise<any>; };
-  webhookEndpoint: { deleteMany(): Promise<any>; };
+  refund: { deleteMany(): Promise<any> };
+  dispute: { deleteMany(): Promise<any> };
+  fraudAssessment: { deleteMany(): Promise<any> };
+  fraudRule: { deleteMany(): Promise<any> };
+  usageRecord: { deleteMany(): Promise<any> };
+  invoicePayment: { deleteMany(): Promise<any> };
+  invoiceItem: { deleteMany(): Promise<any> };
+  invoice: { deleteMany(): Promise<any> };
+  subscription: { deleteMany(): Promise<any> };
+  subscriptionPlan: { deleteMany(): Promise<any> };
+  gatewayHealthStatus: { deleteMany(): Promise<any> };
+  gatewayMetrics: { deleteMany(): Promise<any> };
+  blacklistEntry: { deleteMany(): Promise<any> };
+  whitelistEntry: { deleteMany(): Promise<any> };
+  webhookDelivery: { deleteMany(): Promise<any> };
+  webhookEvent: { deleteMany(): Promise<any> };
+  webhookEndpoint: { deleteMany(): Promise<any> };
 }
 
 // Mock implementation for testing
@@ -102,7 +102,7 @@ const mockPrisma: MockPrismaClient = {
         id: args.where.id,
         type: 'PAYMENT',
         status: 'SUCCEEDED',
-        amount: 100.00,
+        amount: 100.0,
         currency: 'USD',
         description: 'Test transaction',
         userId: 'test-user-1',
@@ -143,7 +143,7 @@ const mockPrisma: MockPrismaClient = {
         id: args.where.id,
         type: 'PAYMENT',
         status: args.data.status || 'SUCCEEDED',
-        amount: 100.00,
+        amount: 100.0,
         currency: 'USD',
         description: 'Test transaction',
         userId: 'test-user-1',
@@ -277,7 +277,7 @@ const mockPrisma: MockPrismaClient = {
         id: args.where.id,
         transactionId: 'txn-123',
         recipientId: 'recipient-123',
-        amount: 80.00,
+        amount: 80.0,
         currency: 'USD',
         type: 'FIXED',
         description: 'Test split',
@@ -294,23 +294,91 @@ const mockPrisma: MockPrismaClient = {
   },
 
   // Mock cleanup methods for all other models
-  refund: { async deleteMany() { return { count: 0 }; } },
-  dispute: { async deleteMany() { return { count: 0 }; } },
-  fraudAssessment: { async deleteMany() { return { count: 0 }; } },
-  fraudRule: { async deleteMany() { return { count: 0 }; } },
-  usageRecord: { async deleteMany() { return { count: 0 }; } },
-  invoicePayment: { async deleteMany() { return { count: 0 }; } },
-  invoiceItem: { async deleteMany() { return { count: 0 }; } },
-  invoice: { async deleteMany() { return { count: 0 }; } },
-  subscription: { async deleteMany() { return { count: 0 }; } },
-  subscriptionPlan: { async deleteMany() { return { count: 0 }; } },
-  gatewayHealthStatus: { async deleteMany() { return { count: 0 }; } },
-  gatewayMetrics: { async deleteMany() { return { count: 0 }; } },
-  blacklistEntry: { async deleteMany() { return { count: 0 }; } },
-  whitelistEntry: { async deleteMany() { return { count: 0 }; } },
-  webhookDelivery: { async deleteMany() { return { count: 0 }; } },
-  webhookEvent: { async deleteMany() { return { count: 0 }; } },
-  webhookEndpoint: { async deleteMany() { return { count: 0 }; } },
+  refund: {
+    async deleteMany() {
+      return { count: 0 };
+    },
+  },
+  dispute: {
+    async deleteMany() {
+      return { count: 0 };
+    },
+  },
+  fraudAssessment: {
+    async deleteMany() {
+      return { count: 0 };
+    },
+  },
+  fraudRule: {
+    async deleteMany() {
+      return { count: 0 };
+    },
+  },
+  usageRecord: {
+    async deleteMany() {
+      return { count: 0 };
+    },
+  },
+  invoicePayment: {
+    async deleteMany() {
+      return { count: 0 };
+    },
+  },
+  invoiceItem: {
+    async deleteMany() {
+      return { count: 0 };
+    },
+  },
+  invoice: {
+    async deleteMany() {
+      return { count: 0 };
+    },
+  },
+  subscription: {
+    async deleteMany() {
+      return { count: 0 };
+    },
+  },
+  subscriptionPlan: {
+    async deleteMany() {
+      return { count: 0 };
+    },
+  },
+  gatewayHealthStatus: {
+    async deleteMany() {
+      return { count: 0 };
+    },
+  },
+  gatewayMetrics: {
+    async deleteMany() {
+      return { count: 0 };
+    },
+  },
+  blacklistEntry: {
+    async deleteMany() {
+      return { count: 0 };
+    },
+  },
+  whitelistEntry: {
+    async deleteMany() {
+      return { count: 0 };
+    },
+  },
+  webhookDelivery: {
+    async deleteMany() {
+      return { count: 0 };
+    },
+  },
+  webhookEvent: {
+    async deleteMany() {
+      return { count: 0 };
+    },
+  },
+  webhookEndpoint: {
+    async deleteMany() {
+      return { count: 0 };
+    },
+  },
 };
 
 export const prisma = mockPrisma;

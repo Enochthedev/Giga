@@ -3,25 +3,128 @@
  */
 
 // Property types
-export { CancellationPolicy, ChildPolicy, ImageType, PetPolicy, PropertyAmenity, PropertyCategory, PropertySortBy, PropertyStatus, SmokingPolicy, SortOrder } from './property.types';
-export type { AppliedFilters, ContactInformation, CreatePropertyRequest, GeoCoordinates, LocationFilter, PriceRange, Property, PropertyAddress, PropertyImage, PropertyPolicies, PropertySearchCriteria, PropertySearchResult, PropertySettings, RoomRequirement, UpdatePropertyRequest } from './property.types';
+export {
+  CancellationPolicy,
+  ChildPolicy,
+  ImageType,
+  PetPolicy,
+  PropertyAmenity,
+  PropertyCategory,
+  PropertySortBy,
+  PropertyStatus,
+  SmokingPolicy,
+  SortOrder,
+} from './property.types';
+export type {
+  AppliedFilters,
+  ContactInformation,
+  CreatePropertyRequest,
+  GeoCoordinates,
+  LocationFilter,
+  PriceRange,
+  Property,
+  PropertyAddress,
+  PropertyImage,
+  PropertyPolicies,
+  PropertySearchCriteria,
+  PropertySearchResult,
+  PropertySettings,
+  RoomRequirement,
+  UpdatePropertyRequest,
+} from './property.types';
 
-// Room types  
-export { BedType, RoomAmenity, RoomCategory, RoomSizeUnit, RoomTypeSortBy, RoomView } from './room.types';
-export type { BedConfiguration, CreateRoomTypeRequest, RoomImage, RoomType, RoomTypeSearchCriteria, RoomTypeSearchResult, UpdateRoomTypeRequest } from './room.types';
+// Room types
+export {
+  BedType,
+  RoomAmenity,
+  RoomCategory,
+  RoomSizeUnit,
+  RoomTypeSortBy,
+  RoomView,
+} from './room.types';
+export type {
+  BedConfiguration,
+  CreateRoomTypeRequest,
+  RoomImage,
+  RoomType,
+  RoomTypeSearchCriteria,
+  RoomTypeSearchResult,
+  UpdateRoomTypeRequest,
+} from './room.types';
 
 // Booking types
-export { BookingSortBy, BookingSource, BookingStatus, DiscountType, FeeType, FloorPreference, HousekeepingPreference, NoShowPolicy, PaymentMethod, PaymentStatus, SmokingPreference, TaxType } from './booking.types';
-export type { AccessibilityRequirements, BookedRoom, Booking, BookingPricing, BookingResult, BookingSearchCriteria, BookingSearchResult, CancellationRequest, CancellationResult, CreateBookingRequest, DiscountBreakdown, FeeBreakdown, GuestDetails, GuestPreferences, ModificationResult, PricingImpact, RoomPreferences, ServicePreferences, TaxBreakdown, UpdateBookingRequest } from './booking.types';
+export {
+  BookingSortBy,
+  BookingSource,
+  BookingStatus,
+  DiscountType,
+  FeeType,
+  FloorPreference,
+  HousekeepingPreference,
+  NoShowPolicy,
+  PaymentMethod,
+  PaymentStatus,
+  SmokingPreference,
+  TaxType,
+} from './booking.types';
+export type {
+  AccessibilityRequirements,
+  BookedRoom,
+  Booking,
+  BookingPricing,
+  BookingResult,
+  BookingSearchCriteria,
+  BookingSearchResult,
+  CancellationRequest,
+  CancellationResult,
+  CreateBookingRequest,
+  DiscountBreakdown,
+  FeeBreakdown,
+  GuestDetails,
+  GuestPreferences,
+  ModificationResult,
+  PricingImpact,
+  RoomPreferences,
+  ServicePreferences,
+  TaxBreakdown,
+  UpdateBookingRequest,
+} from './booking.types';
 
 // Availability types
-export type { AvailabilityRequest, AvailabilityResult, AvailableProperty, AvailableRoom, InventoryLock, InventoryRecord, InventoryReservation } from './availability.types';
+export type {
+  AvailabilityRequest,
+  AvailabilityResult,
+  AvailableProperty,
+  AvailableRoom,
+  InventoryLock,
+  InventoryRecord,
+  InventoryReservation,
+} from './availability.types';
 
 // Pricing types
-export type { AppliedPromotion, DiscountItem, FeeItem, NightlyRate, PriceBreakdown, PriceCalculation, PriceCalculationRequest, RateAdjustment, RoomCharge, TaxItem } from './pricing.types';
+export type {
+  AppliedPromotion,
+  DiscountItem,
+  FeeItem,
+  NightlyRate,
+  PriceBreakdown,
+  PriceCalculation,
+  PriceCalculationRequest,
+  RateAdjustment,
+  RoomCharge,
+  TaxItem,
+} from './pricing.types';
 
 // Guest types
-export type { CreateGuestProfileRequest, GuestProfile, GuestSearchCriteria, LoyaltyStatus, PersonalInformation, UpdateGuestProfileRequest, VIPStatus } from './guest.types';
+export type {
+  CreateGuestProfileRequest,
+  GuestProfile,
+  GuestSearchCriteria,
+  LoyaltyStatus,
+  PersonalInformation,
+  UpdateGuestProfileRequest,
+  VIPStatus,
+} from './guest.types';
 
 // Common types
 export interface ApiResponse<T = never> {
@@ -275,5 +378,5 @@ export enum HotelEventType {
   PROMOTION_UPDATED = 'promotion.updated',
 
   GUEST_PROFILE_CREATED = 'guest_profile.created',
-  GUEST_PROFILE_UPDATED = 'guest_profile.updated'
+  GUEST_PROFILE_UPDATED = 'guest_profile.updated',
 }

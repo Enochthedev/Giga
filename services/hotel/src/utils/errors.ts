@@ -7,7 +7,12 @@ export class HotelServiceError extends Error {
   public readonly statusCode: number;
   public readonly details?: any;
 
-  constructor(message: string, code: string, statusCode: number = 500, details?: any) {
+  constructor(
+    message: string,
+    code: string,
+    statusCode: number = 500,
+    details?: any
+  ) {
     super(message);
     this.name = this.constructor.name;
     this.code = code;
@@ -62,7 +67,12 @@ export class RateLimitError extends HotelServiceError {
 
 export class ExternalServiceError extends HotelServiceError {
   constructor(service: string, message: string, details?: any) {
-    super(`External service error from ${service}: ${message}`, 'EXTERNAL_SERVICE_ERROR', 502, details);
+    super(
+      `External service error from ${service}: ${message}`,
+      'EXTERNAL_SERVICE_ERROR',
+      502,
+      details
+    );
   }
 }
 
@@ -146,7 +156,8 @@ export const getErrorResponse = (error: any) => {
       error: {
         code: 'DATABASE_ERROR',
         message: 'Database operation failed',
-        details: process.env.NODE_ENV === 'development' ? error.message : undefined,
+        details:
+          process.env.NODE_ENV === 'development' ? error.message : undefined,
       },
       timestamp: new Date(),
     };
@@ -170,7 +181,10 @@ export const getErrorResponse = (error: any) => {
     success: false,
     error: {
       code: 'INTERNAL_SERVER_ERROR',
-      message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error',
+      message:
+        process.env.NODE_ENV === 'development'
+          ? error.message
+          : 'Internal server error',
     },
     timestamp: new Date(),
   };

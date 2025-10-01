@@ -9,19 +9,22 @@ export class HealthController {
     try {
       const healthStatus = await healthService.getHealthStatus();
 
-      const statusCode = healthStatus.status === 'healthy' ? 200
-        : healthStatus.status === 'degraded' ? 200
-          : 503;
+      const statusCode =
+        healthStatus.status === 'healthy'
+          ? 200
+          : healthStatus.status === 'degraded'
+            ? 200
+            : 503;
 
       logger.info('Health check requested', {
         ...req.logContext,
         healthStatus: healthStatus.status,
-        responseTime: Date.now() - (req.startTime || Date.now())
+        responseTime: Date.now() - (req.startTime || Date.now()),
       });
 
       res.status(statusCode).json({
         success: true,
-        data: healthStatus
+        data: healthStatus,
       });
     } catch (error) {
       logger.error('Health check failed', error as Error, req.logContext);
@@ -29,7 +32,7 @@ export class HealthController {
       res.status(503).json({
         success: false,
         error: 'Health check failed',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
   }
@@ -42,12 +45,12 @@ export class HealthController {
       if (isAlive) {
         res.status(200).json({
           status: 'alive',
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       } else {
         res.status(503).json({
           status: 'dead',
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       }
     } catch (error) {
@@ -56,7 +59,7 @@ export class HealthController {
       res.status(503).json({
         status: 'dead',
         timestamp: new Date().toISOString(),
-        error: (error as Error).message
+        error: (error as Error).message,
       });
     }
   }
@@ -69,12 +72,12 @@ export class HealthController {
       if (isReady) {
         res.status(200).json({
           status: 'ready',
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       } else {
         res.status(503).json({
           status: 'not_ready',
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       }
     } catch (error) {
@@ -83,7 +86,7 @@ export class HealthController {
       res.status(503).json({
         status: 'not_ready',
         timestamp: new Date().toISOString(),
-        error: (error as Error).message
+        error: (error as Error).message,
       });
     }
   }
@@ -108,14 +111,14 @@ export class HealthController {
             performance: performanceMetrics,
             database: databaseMetrics,
             redis: redisMetrics,
-            timestamp: new Date().toISOString()
-          }
+            timestamp: new Date().toISOString(),
+          },
         });
       }
 
       logger.debug('Metrics requested', {
         ...req.logContext,
-        format: format || 'json'
+        format: format || 'json',
       });
     } catch (error) {
       logger.error('Metrics request failed', error as Error, req.logContext);
@@ -123,7 +126,7 @@ export class HealthController {
       res.status(500).json({
         success: false,
         error: 'Failed to retrieve metrics',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
   }
@@ -142,22 +145,26 @@ export class HealthController {
         pid: process.pid,
         memory: process.memoryUsage(),
         cpuUsage: process.cpuUsage(),
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
 
       logger.debug('System info requested', req.logContext);
 
       res.status(200).json({
         success: true,
-        data: systemInfo
+        data: systemInfo,
       });
     } catch (error) {
-      logger.error('System info request failed', error as Error, req.logContext);
+      logger.error(
+        'System info request failed',
+        error as Error,
+        req.logContext
+      );
 
       res.status(500).json({
         success: false,
         error: 'Failed to retrieve system information',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
   }
@@ -172,15 +179,19 @@ export class HealthController {
       res.status(200).json({
         success: true,
         data: metrics,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     } catch (error) {
-      logger.error('Performance metrics request failed', error as Error, req.logContext);
+      logger.error(
+        'Performance metrics request failed',
+        error as Error,
+        req.logContext
+      );
 
       res.status(500).json({
         success: false,
         error: 'Failed to retrieve performance metrics',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
   }
@@ -195,15 +206,19 @@ export class HealthController {
       res.status(200).json({
         success: true,
         data: metrics,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     } catch (error) {
-      logger.error('Database metrics request failed', error as Error, req.logContext);
+      logger.error(
+        'Database metrics request failed',
+        error as Error,
+        req.logContext
+      );
 
       res.status(500).json({
         success: false,
         error: 'Failed to retrieve database metrics',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
   }
@@ -218,15 +233,19 @@ export class HealthController {
       res.status(200).json({
         success: true,
         data: metrics,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     } catch (error) {
-      logger.error('Redis metrics request failed', error as Error, req.logContext);
+      logger.error(
+        'Redis metrics request failed',
+        error as Error,
+        req.logContext
+      );
 
       res.status(500).json({
         success: false,
         error: 'Failed to retrieve Redis metrics',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
   }
@@ -240,12 +259,12 @@ export class HealthController {
         performanceReport,
         cacheStats,
         connectionStats,
-        compressionReport
+        compressionReport,
       ] = await Promise.all([
         performanceProfiler.getPerformanceReport(timeWindow),
         cacheService.getCacheStats(),
         connectionPoolService.getConnectionStats(),
-        responseCompressionService.getPerformanceReport()
+        responseCompressionService.getPerformanceReport(),
       ]);
 
       res.status(200).json({
@@ -255,14 +274,18 @@ export class HealthController {
           cache: cacheStats,
           database: connectionStats,
           compression: compressionReport,
-          timestamp: new Date().toISOString()
-        }
+          timestamp: new Date().toISOString(),
+        },
       });
     } catch (error) {
-      logger.error('Failed to get performance report', error as Error, req.logContext);
+      logger.error(
+        'Failed to get performance report',
+        error as Error,
+        req.logContext
+      );
       res.status(500).json({
         success: false,
-        error: 'Failed to generate performance report'
+        error: 'Failed to generate performance report',
       });
     }
   }
@@ -278,7 +301,7 @@ export class HealthController {
           const performance = await cacheService.monitorCachePerformance();
           res.status(200).json({
             success: true,
-            data: { stats, performance }
+            data: { stats, performance },
           });
           break;
         }
@@ -287,7 +310,7 @@ export class HealthController {
           await cacheService.preloadFrequentData();
           res.status(200).json({
             success: true,
-            message: 'Cache preload initiated'
+            message: 'Cache preload initiated',
           });
           break;
 
@@ -295,21 +318,25 @@ export class HealthController {
           await cacheService.cleanupExpiredCache();
           res.status(200).json({
             success: true,
-            message: 'Cache cleanup completed'
+            message: 'Cache cleanup completed',
           });
           break;
 
         default:
           res.status(400).json({
             success: false,
-            error: 'Invalid action. Use: stats, preload, or cleanup'
+            error: 'Invalid action. Use: stats, preload, or cleanup',
           });
       }
     } catch (error) {
-      logger.error('Cache management operation failed', error as Error, req.logContext);
+      logger.error(
+        'Cache management operation failed',
+        error as Error,
+        req.logContext
+      );
       res.status(500).json({
         success: false,
-        error: 'Cache management operation failed'
+        error: 'Cache management operation failed',
       });
     }
   }
@@ -319,7 +346,7 @@ export class HealthController {
     try {
       const [stats, healthCheck] = await Promise.all([
         connectionPoolService.getConnectionStats(),
-        connectionPoolService.healthCheck()
+        connectionPoolService.healthCheck(),
       ]);
 
       res.status(200).json({
@@ -327,14 +354,18 @@ export class HealthController {
         data: {
           stats,
           health: healthCheck,
-          timestamp: new Date().toISOString()
-        }
+          timestamp: new Date().toISOString(),
+        },
       });
     } catch (error) {
-      logger.error('Connection pool status request failed', error as Error, req.logContext);
+      logger.error(
+        'Connection pool status request failed',
+        error as Error,
+        req.logContext
+      );
       res.status(500).json({
         success: false,
-        error: 'Failed to get connection pool status'
+        error: 'Failed to get connection pool status',
       });
     }
   }

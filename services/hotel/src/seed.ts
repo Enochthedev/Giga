@@ -1,8 +1,13 @@
 import prisma from '@/lib/prisma';
-import { BedType, PropertyCategory, PropertyStatus, RoomCategory } from '@/types';
+import {
+  BedType,
+  PropertyCategory,
+  PropertyStatus,
+  RoomCategory,
+} from '@/types';
 import logger from '@/utils/logger';
 
-const seedData = () => {
+const seedData = async () => {
   try {
     logger.info('Starting database seeding...');
 
@@ -10,7 +15,8 @@ const seedData = () => {
     const property1 = await prisma.property.create({
       data: {
         name: 'Grand Plaza Hotel',
-        description: 'A luxurious hotel in the heart of the city with world-class amenities and exceptional service.',
+        description:
+          'A luxurious hotel in the heart of the city with world-class amenities and exceptional service.',
         category: PropertyCategory.HOTEL,
         address: JSON.stringify({
           street: '123 Main Street',
@@ -21,7 +27,7 @@ const seedData = () => {
         }),
         coordinates: JSON.stringify({
           latitude: 40.7128,
-          longitude: -74.0060,
+          longitude: -74.006,
         }),
         timezone: 'America/New_York',
         starRating: 5,
@@ -87,7 +93,8 @@ const seedData = () => {
     const property2 = await prisma.property.create({
       data: {
         name: 'Seaside Resort & Spa',
-        description: 'A beautiful beachfront resort offering relaxation and luxury by the ocean.',
+        description:
+          'A beautiful beachfront resort offering relaxation and luxury by the ocean.',
         category: PropertyCategory.RESORT,
         address: JSON.stringify({
           street: '456 Ocean Drive',
@@ -178,7 +185,8 @@ const seedData = () => {
       data: {
         propertyId: property1.id,
         name: 'Deluxe Room',
-        description: 'Spacious room with premium amenities and stunning city views.',
+        description:
+          'Spacious room with premium amenities and stunning city views.',
         category: RoomCategory.DELUXE,
         maxOccupancy: 3,
         bedConfiguration: JSON.stringify([
@@ -213,7 +221,8 @@ const seedData = () => {
       data: {
         propertyId: property1.id,
         name: 'Executive Suite',
-        description: 'Luxurious suite with separate living area and premium amenities.',
+        description:
+          'Luxurious suite with separate living area and premium amenities.',
         category: RoomCategory.SUITE,
         maxOccupancy: 4,
         bedConfiguration: JSON.stringify([
@@ -428,10 +437,11 @@ const seedData = () => {
     logger.info('Database seeding completed successfully');
     logger.info(`Created ${await prisma.property.count()} properties`);
     logger.info(`Created ${await prisma.roomType.count()} room types`);
-    logger.info(`Created ${await prisma.inventoryRecord.count()} inventory records`);
+    logger.info(
+      `Created ${await prisma.inventoryRecord.count()} inventory records`
+    );
     logger.info(`Created ${await prisma.rateRecord.count()} rate records`);
     logger.info(`Created ${await prisma.promotion.count()} promotions`);
-
   } catch (error) {
     logger.error('Error seeding database:', error);
     throw error;
@@ -445,7 +455,7 @@ if (require.main === module) {
       logger.info('Seeding completed');
       process.exit(0);
     })
-    .catch((error) => {
+    .catch(error => {
       logger.error('Seeding failed:', error);
       process.exit(1);
     });

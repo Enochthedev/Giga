@@ -15,13 +15,15 @@ describe('PaymentService Failover Integration', () => {
   let mockPrimaryGateway: any;
   let mockFallbackGateway: any;
 
-  const createMockPaymentRequest = (overrides: Partial<PaymentRequest> = {}): PaymentRequest => ({
-    amount: 100.00,
+  const createMockPaymentRequest = (
+    overrides: Partial<PaymentRequest> = {}
+  ): PaymentRequest => ({
+    amount: 100.0,
     currency: 'USD',
     description: 'Test payment',
     userId: 'user-123',
     paymentMethodId: 'pm-123',
-    ...overrides
+    ...overrides,
   });
 
   const createMockTransaction = () => ({
@@ -29,10 +31,10 @@ describe('PaymentService Failover Integration', () => {
     type: 'payment',
     status: 'pending',
     amount: {
-      toNumber: () => 100.00,
+      toNumber: () => 100.0,
       gt: vi.fn().mockReturnValue(false),
-      plus: vi.fn().mockReturnValue({ toNumber: () => 100.00 }),
-      equals: vi.fn().mockReturnValue(true)
+      plus: vi.fn().mockReturnValue({ toNumber: () => 100.0 }),
+      equals: vi.fn().mockReturnValue(true),
     },
     currency: 'USD',
     description: 'Test payment',
@@ -41,7 +43,7 @@ describe('PaymentService Failover Integration', () => {
     gatewayId: 'stripe',
     createdAt: new Date(),
     metadata: {},
-    refunds: []
+    refunds: [],
   });
 
   beforeEach(() => {
@@ -55,7 +57,7 @@ describe('PaymentService Failover Integration', () => {
       processPayment: vi.fn(),
       capturePayment: vi.fn(),
       cancelPayment: vi.fn(),
-      refundPayment: vi.fn()
+      refundPayment: vi.fn(),
     };
 
     mockFallbackGateway = {
@@ -64,7 +66,7 @@ describe('PaymentService Failover Integration', () => {
       processPayment: vi.fn(),
       capturePayment: vi.fn(),
       cancelPayment: vi.fn(),
-      refundPayment: vi.fn()
+      refundPayment: vi.fn(),
     };
 
     // Create mock services
@@ -73,21 +75,25 @@ describe('PaymentService Failover Integration', () => {
       handleGatewayFailure: vi.fn(),
       recordMetrics: vi.fn(),
       registerGateway: vi.fn(),
-      getActiveGateways: vi.fn().mockReturnValue([mockPrimaryGateway, mockFallbackGateway]),
+      getActiveGateways: vi
+        .fn()
+        .mockReturnValue([mockPrimaryGateway, mockFallbackGateway]),
       enableFailover: vi.fn(),
-      getGateway: vi.fn()
+      getGateway: vi.fn(),
     } as any;
 
     mockTransactionService = {
       create: vi.fn(),
       update: vi.fn(),
       getById: vi.fn(),
-      updateStatus: vi.fn()
+      updateStatus: vi.fn(),
     } as any;
 
     // Mock constructors
     vi.mocked(GatewayManager).mockImplementation(() => mockGatewayManager);
-    vi.mocked(TransactionService).mockImplementation(() => mockTransactionService);
+    vi.mocked(TransactionService).mockImplementation(
+      () => mockTransactionService
+    );
 
     // Create PaymentService instance
     paymentService = new PaymentService();
@@ -100,7 +106,9 @@ describe('PaymentService Failover Integration', () => {
   describe('Gateway Failover Scenarios', () => {
     beforeEach(() => {
       // Setup default mocks
-      mockGatewayManager.selectBestGateway.mockResolvedValue(mockPrimaryGateway);
+      mockGatewayManager.selectBestGateway.mockResolvedValue(
+        mockPrimaryGateway
+      );
       mockTransactionService.create.mockResolvedValue(createMockTransaction());
       mockTransactionService.update.mockResolvedValue(createMockTransaction());
     });
@@ -110,8 +118,8 @@ describe('PaymentService Failover Integration', () => {
       const mockPaymentResult = {
         id: 'stripe_pi_123',
         status: 'succeeded',
-        amount: 100.00,
-        currency: 'USD'
+        amount: 100.0,
+        currency: 'USD',
       };
 
       mockPrimaryGateway.processPayment.mockResolvedValue(mockPaymentResult);
@@ -128,7 +136,7 @@ describe('PaymentService Failover Integration', () => {
         expect.objectContaining({
           transactionCount: 1,
           successRate: 1.0,
-          errorRate: 0.0
+          errorRate: 0.0,
         })
       );
     });
@@ -139,15 +147,17 @@ describe('PaymentService Failover Integration', () => {
       const mockFallbackResult = {
         id: 'paystack_txn_456',
         status: 'succeeded',
-        amount: 100.00,
-        currency: 'USD'
+        amount: 100.0,
+        currency: 'USD',
       };
 
       // Primary gateway fails
       mockPrimaryGateway.processPayment.mockRejectedValue(primaryError);
 
       // Failover returns backup gateway
-      mockGatewayManager.handleGatewayFailure.mockResolvedValue(mockFallbackGateway);
+      mockGatewayManager.handleGatewayFailure.mockResolvedValue(
+        mockFallbackGateway
+      );
 
       // Backup gateway succeeds
       mockFallbackGateway.processPayment.mockResolvedValue(mockFallbackResult);
@@ -169,14 +179,14 @@ describe('PaymentService Failover Integration', () => {
         'stripe',
         expect.objectContaining({
           successRate: 0.0,
-          errorRate: 1.0
+          errorRate: 1.0,
         })
       );
       expect(mockGatewayManager.recordMetrics).toHaveBeenCalledWith(
         'paystack',
         expect.objectContaining({
           successRate: 1.0,
-          errorRate: 0.0
+          errorRate: 0.0,
         })
       );
 
@@ -184,7 +194,7 @@ describe('PaymentService Failover Integration', () => {
       expect(mockTransactionService.update).toHaveBeenCalledWith(
         'txn-123',
         expect.objectContaining({
-          gatewayId: 'paystack'
+          gatewayId: 'paystack',
         })
       );
     });
@@ -198,14 +208,16 @@ describe('PaymentService Failover Integration', () => {
       mockPrimaryGateway.processPayment.mockRejectedValue(primaryError);
 
       // Failover returns backup gateway
-      mockGatewayManager.handleGatewayFailure.mockResolvedValue(mockFallbackGateway);
+      mockGatewayManager.handleGatewayFailure.mockResolvedValue(
+        mockFallbackGateway
+      );
 
       // Backup gateway also fails
       mockFallbackGateway.processPayment.mockRejectedValue(fallbackError);
 
-      await expect(paymentService.processPayment(paymentRequest)).rejects.toThrow(
-        'Fallback gateway error'
-      );
+      await expect(
+        paymentService.processPayment(paymentRequest)
+      ).rejects.toThrow('Fallback gateway error');
 
       expect(mockPrimaryGateway.processPayment).toHaveBeenCalled();
       expect(mockFallbackGateway.processPayment).toHaveBeenCalled();
@@ -231,9 +243,9 @@ describe('PaymentService Failover Integration', () => {
       // No fallback gateway available
       mockGatewayManager.handleGatewayFailure.mockResolvedValue(null);
 
-      await expect(paymentService.processPayment(paymentRequest)).rejects.toThrow(
-        'Gateway timeout'
-      );
+      await expect(
+        paymentService.processPayment(paymentRequest)
+      ).rejects.toThrow('Gateway timeout');
 
       expect(mockPrimaryGateway.processPayment).toHaveBeenCalled();
       expect(mockGatewayManager.handleGatewayFailure).toHaveBeenCalledWith(
@@ -246,9 +258,9 @@ describe('PaymentService Failover Integration', () => {
     it('should handle validation errors without triggering failover', async () => {
       const paymentRequest = createMockPaymentRequest({ currency: 'INVALID' });
 
-      await expect(paymentService.processPayment(paymentRequest)).rejects.toThrow(
-        'Currency must be a 3-letter ISO code'
-      );
+      await expect(
+        paymentService.processPayment(paymentRequest)
+      ).rejects.toThrow('Currency must be a 3-letter ISO code');
 
       expect(mockPrimaryGateway.processPayment).not.toHaveBeenCalled();
       expect(mockGatewayManager.handleGatewayFailure).not.toHaveBeenCalled();
@@ -260,7 +272,7 @@ describe('PaymentService Failover Integration', () => {
       const mockTransaction = {
         ...createMockTransaction(),
         status: 'pending',
-        gatewayId: 'stripe'
+        gatewayId: 'stripe',
       };
 
       mockTransactionService.getById.mockResolvedValue(mockTransaction);
@@ -273,15 +285,17 @@ describe('PaymentService Failover Integration', () => {
       const mockCaptureResult = {
         id: 'paystack_capture_123',
         status: 'succeeded',
-        amount: 100.00,
-        currency: 'USD'
+        amount: 100.0,
+        currency: 'USD',
       };
 
       // Primary gateway capture fails
       mockPrimaryGateway.capturePayment.mockRejectedValue(captureError);
 
       // Failover returns backup gateway
-      mockGatewayManager.handleGatewayFailure.mockResolvedValue(mockFallbackGateway);
+      mockGatewayManager.handleGatewayFailure.mockResolvedValue(
+        mockFallbackGateway
+      );
 
       // Backup gateway capture succeeds
       mockFallbackGateway.capturePayment.mockResolvedValue(mockCaptureResult);
@@ -302,7 +316,7 @@ describe('PaymentService Failover Integration', () => {
         ...createMockTransaction(),
         status: 'succeeded',
         gatewayId: 'stripe',
-        refunds: []
+        refunds: [],
       };
 
       mockTransactionService.getById.mockResolvedValue(mockTransaction);
@@ -315,15 +329,17 @@ describe('PaymentService Failover Integration', () => {
       const mockRefundResult = {
         id: 'paystack_refund_123',
         status: 'succeeded',
-        amount: 100.00,
-        currency: 'USD'
+        amount: 100.0,
+        currency: 'USD',
       };
 
       // Primary gateway refund fails
       mockPrimaryGateway.refundPayment.mockRejectedValue(refundError);
 
       // Failover returns backup gateway
-      mockGatewayManager.handleGatewayFailure.mockResolvedValue(mockFallbackGateway);
+      mockGatewayManager.handleGatewayFailure.mockResolvedValue(
+        mockFallbackGateway
+      );
 
       // Backup gateway refund succeeds
       mockFallbackGateway.refundPayment.mockResolvedValue(mockRefundResult);
@@ -344,12 +360,14 @@ describe('PaymentService Failover Integration', () => {
       const mockPaymentResult = {
         id: 'stripe_pi_123',
         status: 'succeeded',
-        amount: 100.00,
-        currency: 'USD'
+        amount: 100.0,
+        currency: 'USD',
       };
 
       // Ensure gateway is returned properly
-      mockGatewayManager.selectBestGateway.mockResolvedValue(mockPrimaryGateway);
+      mockGatewayManager.selectBestGateway.mockResolvedValue(
+        mockPrimaryGateway
+      );
       mockPrimaryGateway.processPayment.mockResolvedValue(mockPaymentResult);
 
       await paymentService.processPayment(paymentRequest);
@@ -360,7 +378,7 @@ describe('PaymentService Failover Integration', () => {
           transactionCount: 1,
           successRate: 1.0,
           errorRate: 0.0,
-          responseTime: expect.any(Number)
+          responseTime: expect.any(Number),
         })
       );
     });
@@ -370,18 +388,22 @@ describe('PaymentService Failover Integration', () => {
       const gatewayError = new Error('Gateway error');
 
       // Ensure gateway is returned properly
-      mockGatewayManager.selectBestGateway.mockResolvedValue(mockPrimaryGateway);
+      mockGatewayManager.selectBestGateway.mockResolvedValue(
+        mockPrimaryGateway
+      );
       mockPrimaryGateway.processPayment.mockRejectedValue(gatewayError);
       mockGatewayManager.handleGatewayFailure.mockResolvedValue(null);
 
-      await expect(paymentService.processPayment(paymentRequest)).rejects.toThrow();
+      await expect(
+        paymentService.processPayment(paymentRequest)
+      ).rejects.toThrow();
 
       expect(mockGatewayManager.recordMetrics).toHaveBeenCalledWith(
         'stripe',
         expect.objectContaining({
           transactionCount: 1,
           successRate: 0.0,
-          errorRate: 1.0
+          errorRate: 1.0,
         })
       );
     });

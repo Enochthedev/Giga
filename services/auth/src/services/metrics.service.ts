@@ -39,14 +39,14 @@ class MetricsService {
     requestCount: 0,
     errorCount: 0,
     totalResponseTime: 0,
-    activeConnections: 0
+    activeConnections: 0,
   };
 
   private databaseCounters = {
     queryCount: 0,
     totalQueryTime: 0,
     slowQueries: 0,
-    connectionErrors: 0
+    connectionErrors: 0,
   };
 
   private redisCounters = {
@@ -54,19 +54,24 @@ class MetricsService {
     totalOperationTime: 0,
     cacheHits: 0,
     cacheMisses: 0,
-    connectionErrors: 0
+    connectionErrors: 0,
   };
 
   private responseTimings: number[] = [];
 
   // Record a metric
-  recordMetric(name: string, value: number, unit: string, tags?: Record<string, string>): void {
+  recordMetric(
+    name: string,
+    value: number,
+    unit: string,
+    tags?: Record<string, string>
+  ): void {
     const metric: MetricData = {
       name,
       value,
       unit,
       timestamp: new Date(),
-      tags
+      tags,
     };
 
     if (!this.metrics.has(name)) {
@@ -85,22 +90,28 @@ class MetricsService {
       metric: name,
       value,
       unit,
-      tags
+      tags,
     });
   }
 
   // Performance tracking
   incrementRequestCount(): void {
     this.performanceCounters.requestCount++;
-    this.recordMetric('http_requests_total', this.performanceCounters.requestCount, 'count');
+    this.recordMetric(
+      'http_requests_total',
+      this.performanceCounters.requestCount,
+      'count'
+    );
   }
 
   incrementErrorCount(): void {
     this.performanceCounters.errorCount++;
-    this.recordMetric('http_errors_total', this.performanceCounters.errorCount, 'count');
+    this.recordMetric(
+      'http_errors_total',
+      this.performanceCounters.errorCount,
+      'count'
+    );
   }
-
-
 
   setActiveConnections(count: number): void {
     this.performanceCounters.activeConnections = count;
@@ -108,29 +119,46 @@ class MetricsService {
   }
 
   // Database metrics
-  recordDatabaseQuery(duration: number, operation: string, table?: string): void {
+  recordDatabaseQuery(
+    duration: number,
+    operation: string,
+    table?: string
+  ): void {
     this.databaseCounters.queryCount++;
     this.databaseCounters.totalQueryTime += duration;
 
-    if (duration > 1000) { // Slow query threshold: 1 second
+    if (duration > 1000) {
+      // Slow query threshold: 1 second
       this.databaseCounters.slowQueries++;
     }
 
     this.recordMetric('database_query_duration', duration, 'ms', {
       operation,
-      table: table || 'unknown'
+      table: table || 'unknown',
     });
 
-    this.recordMetric('database_queries_total', this.databaseCounters.queryCount, 'count');
+    this.recordMetric(
+      'database_queries_total',
+      this.databaseCounters.queryCount,
+      'count'
+    );
   }
 
   recordDatabaseError(): void {
     this.databaseCounters.connectionErrors++;
-    this.recordMetric('database_errors_total', this.databaseCounters.connectionErrors, 'count');
+    this.recordMetric(
+      'database_errors_total',
+      this.databaseCounters.connectionErrors,
+      'count'
+    );
   }
 
   // Redis metrics
-  recordRedisOperation(duration: number, operation: string, hit?: boolean): void {
+  recordRedisOperation(
+    duration: number,
+    operation: string,
+    hit?: boolean
+  ): void {
     this.redisCounters.operationCount++;
     this.redisCounters.totalOperationTime += duration;
 
@@ -142,29 +170,52 @@ class MetricsService {
       }
     }
 
-    this.recordMetric('redis_operation_duration', duration, 'ms', { operation });
-    this.recordMetric('redis_operations_total', this.redisCounters.operationCount, 'count');
+    this.recordMetric('redis_operation_duration', duration, 'ms', {
+      operation,
+    });
+    this.recordMetric(
+      'redis_operations_total',
+      this.redisCounters.operationCount,
+      'count'
+    );
 
     if (hit !== undefined) {
-      this.recordMetric('redis_cache_hits_total', this.redisCounters.cacheHits, 'count');
-      this.recordMetric('redis_cache_misses_total', this.redisCounters.cacheMisses, 'count');
+      this.recordMetric(
+        'redis_cache_hits_total',
+        this.redisCounters.cacheHits,
+        'count'
+      );
+      this.recordMetric(
+        'redis_cache_misses_total',
+        this.redisCounters.cacheMisses,
+        'count'
+      );
     }
   }
 
   recordRedisError(): void {
     this.redisCounters.connectionErrors++;
-    this.recordMetric('redis_errors_total', this.redisCounters.connectionErrors, 'count');
+    this.recordMetric(
+      'redis_errors_total',
+      this.redisCounters.connectionErrors,
+      'count'
+    );
   }
 
   // Get current performance metrics
   getPerformanceMetrics(): PerformanceMetrics {
-    const averageResponseTime = this.performanceCounters.requestCount > 0
-      ? this.performanceCounters.totalResponseTime / this.performanceCounters.requestCount
-      : 0;
+    const averageResponseTime =
+      this.performanceCounters.requestCount > 0
+        ? this.performanceCounters.totalResponseTime /
+          this.performanceCounters.requestCount
+        : 0;
 
-    const errorRate = this.performanceCounters.requestCount > 0
-      ? (this.performanceCounters.errorCount / this.performanceCounters.requestCount) * 100
-      : 0;
+    const errorRate =
+      this.performanceCounters.requestCount > 0
+        ? (this.performanceCounters.errorCount /
+            this.performanceCounters.requestCount) *
+          100
+        : 0;
 
     return {
       requestCount: this.performanceCounters.requestCount,
@@ -172,42 +223,48 @@ class MetricsService {
       errorRate,
       activeConnections: this.performanceCounters.activeConnections,
       memoryUsage: process.memoryUsage(),
-      cpuUsage: process.cpuUsage().user / 1000000 // Convert to seconds
+      cpuUsage: process.cpuUsage().user / 1000000, // Convert to seconds
     };
   }
 
   // Get database metrics
   getDatabaseMetrics(): DatabaseMetrics {
-    const averageQueryTime = this.databaseCounters.queryCount > 0
-      ? this.databaseCounters.totalQueryTime / this.databaseCounters.queryCount
-      : 0;
+    const averageQueryTime =
+      this.databaseCounters.queryCount > 0
+        ? this.databaseCounters.totalQueryTime /
+          this.databaseCounters.queryCount
+        : 0;
 
     return {
       connectionCount: 1, // Will be updated by health check
       queryCount: this.databaseCounters.queryCount,
       averageQueryTime,
       slowQueries: this.databaseCounters.slowQueries,
-      connectionErrors: this.databaseCounters.connectionErrors
+      connectionErrors: this.databaseCounters.connectionErrors,
     };
   }
 
   // Get Redis metrics
   getRedisMetrics(): RedisMetrics {
-    const averageOperationTime = this.redisCounters.operationCount > 0
-      ? this.redisCounters.totalOperationTime / this.redisCounters.operationCount
-      : 0;
+    const averageOperationTime =
+      this.redisCounters.operationCount > 0
+        ? this.redisCounters.totalOperationTime /
+          this.redisCounters.operationCount
+        : 0;
 
-    const totalCacheOperations = this.redisCounters.cacheHits + this.redisCounters.cacheMisses;
-    const cacheHitRate = totalCacheOperations > 0
-      ? (this.redisCounters.cacheHits / totalCacheOperations) * 100
-      : 0;
+    const totalCacheOperations =
+      this.redisCounters.cacheHits + this.redisCounters.cacheMisses;
+    const cacheHitRate =
+      totalCacheOperations > 0
+        ? (this.redisCounters.cacheHits / totalCacheOperations) * 100
+        : 0;
 
     return {
       connectionCount: 1, // Will be updated by health check
       operationCount: this.redisCounters.operationCount,
       averageOperationTime,
       cacheHitRate,
-      connectionErrors: this.redisCounters.connectionErrors
+      connectionErrors: this.redisCounters.connectionErrors,
     };
   }
 
@@ -230,7 +287,12 @@ class MetricsService {
       this.responseTimings = this.responseTimings.slice(-1000);
     }
 
-    this.recordMetric('response_time', responseTime, 'ms', path ? { path } : undefined);
+    this.recordMetric(
+      'response_time',
+      responseTime,
+      'ms',
+      path ? { path } : undefined
+    );
   }
 
   // Get all metrics for a specific name
@@ -250,20 +312,20 @@ class MetricsService {
       requestCount: 0,
       errorCount: 0,
       totalResponseTime: 0,
-      activeConnections: 0
+      activeConnections: 0,
     };
     this.databaseCounters = {
       queryCount: 0,
       totalQueryTime: 0,
       slowQueries: 0,
-      connectionErrors: 0
+      connectionErrors: 0,
     };
     this.redisCounters = {
       operationCount: 0,
       totalOperationTime: 0,
       cacheHits: 0,
       cacheMisses: 0,
-      connectionErrors: 0
+      connectionErrors: 0,
     };
   }
 

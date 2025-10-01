@@ -63,8 +63,14 @@ describe('E2E: Admin User Management', () => {
           lastName: 'Customer',
           isActive: false,
         }),
-        await testDataFactory.createMultiRoleUser([RoleName.CUSTOMER, RoleName.VENDOR]),
-        await testDataFactory.createMultiRoleUser([RoleName.DRIVER, RoleName.HOST]),
+        await testDataFactory.createMultiRoleUser([
+          RoleName.CUSTOMER,
+          RoleName.VENDOR,
+        ]),
+        await testDataFactory.createMultiRoleUser([
+          RoleName.DRIVER,
+          RoleName.HOST,
+        ]),
       ];
     });
 
@@ -97,7 +103,9 @@ describe('E2E: Admin User Management', () => {
 
       expect(vendorFilterResponse.body.success).toBe(true);
       expect(vendorFilterResponse.body.data.users).toHaveLength(1);
-      expect(vendorFilterResponse.body.data.users[0].roles).toContain(RoleName.VENDOR);
+      expect(vendorFilterResponse.body.data.users[0].roles).toContain(
+        RoleName.VENDOR
+      );
 
       // Filter by DRIVER role
       const driverFilterResponse = await request(app)
@@ -110,7 +118,9 @@ describe('E2E: Admin User Management', () => {
 
       expect(driverFilterResponse.body.success).toBe(true);
       expect(driverFilterResponse.body.data.users).toHaveLength(1);
-      expect(driverFilterResponse.body.data.users[0].roles).toContain(RoleName.DRIVER);
+      expect(driverFilterResponse.body.data.users[0].roles).toContain(
+        RoleName.DRIVER
+      );
     });
 
     it('should filter users by status', () => {
@@ -201,8 +211,12 @@ describe('E2E: Admin User Management', () => {
       expect(secondPageResponse.body.data.pagination.page).toBe(2);
 
       // Verify different users on different pages
-      const firstPageIds = firstPageResponse.body.data.users.map((u: any) => u.id);
-      const secondPageIds = secondPageResponse.body.data.users.map((u: any) => u.id);
+      const firstPageIds = firstPageResponse.body.data.users.map(
+        (u: any) => u.id
+      );
+      const secondPageIds = secondPageResponse.body.data.users.map(
+        (u: any) => u.id
+      );
       expect(firstPageIds).not.toEqual(secondPageIds);
     });
   });

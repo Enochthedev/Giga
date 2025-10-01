@@ -263,8 +263,10 @@ async function createVendorProfile(userId: string) {
   await prisma.vendorProfile.create({
     data: {
       _userId: userId,
-      businessName: businessNames[Math.floor(Math.random() * businessNames.length)],
-      description: 'A quality business providing excellent products and services to our customers.',
+      businessName:
+        businessNames[Math.floor(Math.random() * businessNames.length)],
+      description:
+        'A quality business providing excellent products and services to our customers.',
       website: 'https://example-business.com',
     },
   });
@@ -278,13 +280,17 @@ async function createDriverProfile(userId: string) {
   await prisma.driverProfile.create({
     data: {
       _userId: userId,
-      licenseNumber: `DL${Math.floor(Math.random() * 1000000).toString().padStart(6, '0')}`,
+      licenseNumber: `DL${Math.floor(Math.random() * 1000000)
+        .toString()
+        .padStart(6, '0')}`,
       vehicleInfo: {
         make: makes[Math.floor(Math.random() * makes.length)],
         model: models[Math.floor(Math.random() * models.length)],
         year: 2015 + Math.floor(Math.random() * 9), // 2015-2023
         color: colors[Math.floor(Math.random() * colors.length)],
-        licensePlate: `ABC${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`,
+        licensePlate: `ABC${Math.floor(Math.random() * 1000)
+          .toString()
+          .padStart(3, '0')}`,
       },
     },
   });
@@ -302,8 +308,10 @@ async function createHostProfile(userId: string) {
   await prisma.hostProfile.create({
     data: {
       _userId: userId,
-      businessName: businessNames[Math.floor(Math.random() * businessNames.length)],
-      description: 'Providing comfortable and clean accommodations for travelers.',
+      businessName:
+        businessNames[Math.floor(Math.random() * businessNames.length)],
+      description:
+        'Providing comfortable and clean accommodations for travelers.',
     },
   });
 }
@@ -413,8 +421,10 @@ async function createSampleAuditLogs() {
       await prisma.auditLog.create({
         data: {
           action: actions[Math.floor(Math.random() * actions.length)],
-          adminUserId: adminUsers[Math.floor(Math.random() * adminUsers.length)].id,
-          targetUserId: regularUsers[Math.floor(Math.random() * regularUsers.length)].id,
+          adminUserId:
+            adminUsers[Math.floor(Math.random() * adminUsers.length)].id,
+          targetUserId:
+            regularUsers[Math.floor(Math.random() * regularUsers.length)].id,
           details: {
             timestamp: new Date().toISOString(),
             changes: {
@@ -489,7 +499,6 @@ async function main() {
     console.log('Host: host1@example.com / HostPassword123!');
     console.log('Advertiser: advertiser1@example.com / AdvertiserPassword123!');
     console.log('Multi-role: multirole@example.com / MultiRolePassword123!');
-
   } catch (error) {
     console.error('❌ Seeding failed:', error);
     throw error;
@@ -500,11 +509,10 @@ async function main() {
 
 // Run the seeding
 if (require.main === module) {
-  main()
-    .catch((error) => {
-      console.error(error);
-      process.exit(1);
-    });
+  main().catch(error => {
+    console.error(error);
+    process.exit(1);
+  });
 }
 
 export default main;

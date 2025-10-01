@@ -39,14 +39,18 @@ export class IPAccessControlMiddleware {
           error: 'Access denied',
           code: 'IP_BLACKLISTED',
           details: {
-            reason: 'Your IP address has been blocked due to suspicious activity',
+            reason:
+              'Your IP address has been blocked due to suspicious activity',
           },
           timestamp: new Date().toISOString(),
         });
       }
 
       // Check for suspicious activity patterns
-      const suspiciousActivity = await this.checkSuspiciousActivity(clientIp, req);
+      const suspiciousActivity = await this.checkSuspiciousActivity(
+        clientIp,
+        req
+      );
       if (suspiciousActivity.isSuspicious) {
         console.warn(`Suspicious activity detected from IP: ${clientIp}`, {
           ...suspiciousActivity,
@@ -117,7 +121,10 @@ export class IPAccessControlMiddleware {
     try {
       // Check request frequency
       const requestKey = `ip_requests:${ip}`;
-      const requestCount = await redisService.incrementRateLimit(requestKey, 3600);
+      const requestCount = await redisService.incrementRateLimit(
+        requestKey,
+        3600
+      );
 
       if (requestCount > this.SUSPICIOUS_IP_THRESHOLD) {
         reasons.push('High request frequency');
@@ -211,7 +218,9 @@ export class IPAccessControlMiddleware {
   /**
    * Get geolocation data for IP (mock implementation)
    */
-  private static async getGeolocationData(ip: string): Promise<GeolocationData | null> {
+  private static async getGeolocationData(
+    ip: string
+  ): Promise<GeolocationData | null> {
     try {
       // Skip geolocation for local/private IPs
       if (this.isPrivateIP(ip)) {
@@ -343,11 +352,14 @@ export class IPAccessControlMiddleware {
         blockDuration
       );
 
-      console.warn(`Temporarily blocked IP ${ip} for ${blockDuration} seconds`, {
-        score,
-        duration: blockDuration,
-        timestamp: new Date().toISOString(),
-      });
+      console.warn(
+        `Temporarily blocked IP ${ip} for ${blockDuration} seconds`,
+        {
+          score,
+          duration: blockDuration,
+          timestamp: new Date().toISOString(),
+        }
+      );
     } catch (error) {
       console.error('Error temporarily blocking IP:', error);
     }

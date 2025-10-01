@@ -17,12 +17,14 @@ const logger = winston.createLogger({
 
 // If we're not in production, log to the console with a simple format
 if (config.nodeEnv !== 'production') {
-  logger.add(new winston.transports.Console({
-    format: winston.format.combine(
-      winston.format.colorize(),
-      winston.format.simple()
-    )
-  }));
+  logger.add(
+    new winston.transports.Console({
+      format: winston.format.combine(
+        winston.format.colorize(),
+        winston.format.simple()
+      ),
+    })
+  );
 }
 
 export default logger;

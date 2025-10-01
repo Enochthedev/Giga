@@ -37,7 +37,10 @@ export class TokenManagementService {
     const sessionId = crypto.randomUUID();
 
     // Create device fingerprint for security
-    const deviceFingerprint = this.createDeviceFingerprint(deviceInfo, ipAddress);
+    const deviceFingerprint = this.createDeviceFingerprint(
+      deviceInfo,
+      ipAddress
+    );
 
     // Generate tokens with device context
     const accessToken = this.jwtService.generateAccessToken(user, {
@@ -125,10 +128,16 @@ export class TokenManagementService {
 
     // Verify device consistency
     const deviceId = this.generateDeviceId(deviceInfo);
-    const currentFingerprint = this.createDeviceFingerprint(deviceInfo, ipAddress);
+    const currentFingerprint = this.createDeviceFingerprint(
+      deviceInfo,
+      ipAddress
+    );
 
     // Get stored device session
-    const storedSession = await this.getDeviceSession(tokenRecord.userId, deviceId);
+    const storedSession = await this.getDeviceSession(
+      tokenRecord.userId,
+      deviceId
+    );
 
     // Check for suspicious activity
     const suspiciousActivity = await this.detectSuspiciousActivity(
@@ -152,9 +161,13 @@ export class TokenManagementService {
 
     // Check refresh rate limiting
     const rateLimitKey = `refresh_rate:${tokenRecord.userId}:${deviceId}`;
-    const refreshCount = await this.redisService.incrementRateLimit(rateLimitKey, 300); // 5 minutes
+    const refreshCount = await this.redisService.incrementRateLimit(
+      rateLimitKey,
+      300
+    ); // 5 minutes
 
-    if (refreshCount > 10) { // Max 10 refreshes per 5 minutes per device
+    if (refreshCount > 10) {
+      // Max 10 refreshes per 5 minutes per device
       await this.logTokenEvent(prisma, {
         userId: tokenRecord.userId,
         eventType: 'REFRESH_RATE_LIMITED',
@@ -351,7 +364,10 @@ export class TokenManagementService {
     let riskScore = 0;
 
     // Check device fingerprint consistency
-    if (storedSession && storedSession.deviceFingerprint !== currentFingerprint) {
+    if (
+      storedSession &&
+      storedSession.deviceFingerprint !== currentFingerprint
+    ) {
       suspiciousIndicators.push('device_fingerprint_mismatch');
       riskScore += 30;
     }
@@ -364,7 +380,9 @@ export class TokenManagementService {
     }
 
     // Check for rapid token refreshes
-    const recentRefreshes = await this.redisService.get(`refresh_rate:${userId}:${deviceId}`);
+    const recentRefreshes = await this.redisService.get(
+      `refresh_rate:${userId}:${deviceId}`
+    );
     if (recentRefreshes && parseInt(recentRefreshes) > 5) {
       suspiciousIndicators.push('rapid_token_refresh');
       riskScore += 25;
@@ -381,7 +399,8 @@ export class TokenManagementService {
     if (storedSession) {
       const lastUsed = new Date(storedSession.lastUsed);
       const timeDiff = Date.now() - lastUsed.getTime();
-      if (timeDiff < 60000) { // Less than 1 minute
+      if (timeDiff < 60000) {
+        // Less than 1 minute
         suspiciousIndicators.push('rapid_successive_requests');
         riskScore += 10;
       }
@@ -433,13 +452,20 @@ export class TokenManagementService {
    */
   private generateDeviceId(deviceInfo: DeviceInfo): string {
     const deviceString = `${deviceInfo.userAgent}|${deviceInfo.platform}|${deviceInfo.language}`;
-    return crypto.createHash('sha256').update(deviceString).digest('hex').substring(0, 16);
+    return crypto
+      .createHash('sha256')
+      .update(deviceString)
+      .digest('hex')
+      .substring(0, 16);
   }
 
   /**
    * Create device fingerprint
    */
-  private createDeviceFingerprint(deviceInfo: DeviceInfo, ipAddress: string): string {
+  private createDeviceFingerprint(
+    deviceInfo: DeviceInfo,
+    ipAddress: string
+  ): string {
     const fingerprintData = {
       userAgent: deviceInfo.userAgent,
       platform: deviceInfo.platform,
@@ -460,7 +486,11 @@ export class TokenManagementService {
    * Hash IP address for privacy
    */
   private hashIP(ipAddress: string): string {
-    return crypto.createHash('sha256').update(ipAddress).digest('hex').substring(0, 16);
+    return crypto
+      .createHash('sha256')
+      .update(ipAddress)
+      .digest('hex')
+      .substring(0, 16);
   }
 
   /**
@@ -484,22 +514,41 @@ export class TokenManagementService {
    * Hash token for logging
    */
   private hashToken(token: string): string {
-    return crypto.createHash('sha256').update(token).digest('hex').substring(0, 16);
+    return crypto
+      .createHash('sha256')
+      .update(token)
+      .digest('hex')
+      .substring(0, 16);
   }
 
   // Redis operations for device sessions
-  private async storeDeviceSession(_userId: string, deviceId: string, sessionData: any): Promise<void> {
+  private async storeDeviceSession(
+    _userId: string,
+    deviceId: string,
+    sessionData: any
+  ): Promise<void> {
     const _key = `device_session:${userId}:${deviceId}`;
-    await this.redisService.set(key, JSON.stringify(sessionData), 7 * 24 * 60 * 60); // 7 days
+    await this.redisService.set(
+      key,
+      JSON.stringify(sessionData),
+      7 * 24 * 60 * 60
+    ); // 7 days
   }
 
-  private async getDeviceSession(_userId: string, deviceId: string): Promise<any> {
+  private async getDeviceSession(
+    _userId: string,
+    deviceId: string
+  ): Promise<any> {
     const _key = `device_session:${userId}:${deviceId}`;
     const data = await this.redisService.get(key);
     return data ? JSON.parse(data) : null;
   }
 
-  private async updateDeviceSession(_userId: string, deviceId: string, updates: any): Promise<void> {
+  private async updateDeviceSession(
+    _userId: string,
+    deviceId: string,
+    updates: any
+  ): Promise<void> {
     const existing = await this.getDeviceSession(userId, deviceId);
     if (existing) {
       const updated = { ...existing, ...updates };
@@ -507,7 +556,10 @@ export class TokenManagementService {
     }
   }
 
-  private async clearDeviceSession(_userId: string, deviceId: string): Promise<void> {
+  private async clearDeviceSession(
+    _userId: string,
+    deviceId: string
+  ): Promise<void> {
     const _key = `device_session:${userId}:${deviceId}`;
     await this.redisService.del(key);
   }
@@ -530,7 +582,10 @@ export class TokenManagementService {
     await this.redisService.set(key, '1', 7 * 24 * 60 * 60); // 7 days
   }
 
-  private async logTokenEvent(_prisma: PrismaClient, event: TokenEventData): Promise<void> {
+  private async logTokenEvent(
+    _prisma: PrismaClient,
+    event: TokenEventData
+  ): Promise<void> {
     try {
       await prisma.tokenEvent.create({
         data: {

@@ -17,26 +17,26 @@ describe('GatewayFailoverManager', () => {
     mockGateway1 = {
       getId: vi.fn().mockReturnValue('gateway-1'),
       isActive: vi.fn().mockReturnValue(true),
-      healthCheck: vi.fn().mockResolvedValue(true)
+      healthCheck: vi.fn().mockResolvedValue(true),
     } as any;
 
     mockGateway2 = {
       getId: vi.fn().mockReturnValue('gateway-2'),
       isActive: vi.fn().mockReturnValue(true),
-      healthCheck: vi.fn().mockResolvedValue(true)
+      healthCheck: vi.fn().mockResolvedValue(true),
     } as any;
 
     mockGateway3 = {
       getId: vi.fn().mockReturnValue('gateway-3'),
       isActive: vi.fn().mockReturnValue(true),
-      healthCheck: vi.fn().mockResolvedValue(true)
+      healthCheck: vi.fn().mockResolvedValue(true),
     } as any;
 
     // Set up gateway registry
     gatewayRegistry = new Map([
       ['gateway-1', mockGateway1],
       ['gateway-2', mockGateway2],
-      ['gateway-3', mockGateway3]
+      ['gateway-3', mockGateway3],
     ]);
 
     failoverManager.setGatewayRegistry(gatewayRegistry);
@@ -80,7 +80,10 @@ describe('GatewayFailoverManager', () => {
       const error = new Error('Gateway failure');
       const context = { error };
 
-      const fallbackGateway = await failoverManager.executeFailover('gateway-1', context);
+      const fallbackGateway = await failoverManager.executeFailover(
+        'gateway-1',
+        context
+      );
 
       expect(fallbackGateway).toBe(mockGateway2);
       expect(mockGateway2.healthCheck).toHaveBeenCalled();
@@ -92,7 +95,10 @@ describe('GatewayFailoverManager', () => {
       const error = new Error('Gateway failure');
       const context = { error };
 
-      const fallbackGateway = await failoverManager.executeFailover('gateway-1', context);
+      const fallbackGateway = await failoverManager.executeFailover(
+        'gateway-1',
+        context
+      );
 
       expect(fallbackGateway).toBe(mockGateway3);
       expect(mockGateway2.healthCheck).toHaveBeenCalled();
@@ -105,7 +111,10 @@ describe('GatewayFailoverManager', () => {
       const error = new Error('Gateway failure');
       const context = { error };
 
-      const fallbackGateway = await failoverManager.executeFailover('gateway-1', context);
+      const fallbackGateway = await failoverManager.executeFailover(
+        'gateway-1',
+        context
+      );
 
       expect(fallbackGateway).toBe(mockGateway3);
       expect(mockGateway2.healthCheck).not.toHaveBeenCalled();
@@ -118,7 +127,10 @@ describe('GatewayFailoverManager', () => {
       const error = new Error('Gateway failure');
       const context = { error };
 
-      const fallbackGateway = await failoverManager.executeFailover('gateway-1', context);
+      const fallbackGateway = await failoverManager.executeFailover(
+        'gateway-1',
+        context
+      );
 
       expect(fallbackGateway).toBe(mockGateway3);
       expect(mockGateway2.healthCheck).not.toHaveBeenCalled();
@@ -132,7 +144,10 @@ describe('GatewayFailoverManager', () => {
       const error = new Error('Gateway failure');
       const context = { error };
 
-      const fallbackGateway = await failoverManager.executeFailover('gateway-1', context);
+      const fallbackGateway = await failoverManager.executeFailover(
+        'gateway-1',
+        context
+      );
 
       expect(fallbackGateway).toBeNull();
     });
@@ -143,7 +158,10 @@ describe('GatewayFailoverManager', () => {
       const error = new Error('Gateway failure');
       const context = { error };
 
-      const fallbackGateway = await failoverManager.executeFailover('gateway-1', context);
+      const fallbackGateway = await failoverManager.executeFailover(
+        'gateway-1',
+        context
+      );
 
       expect(fallbackGateway).toBeNull();
     });
@@ -152,18 +170,27 @@ describe('GatewayFailoverManager', () => {
       const error = new Error('Gateway failure');
       const context = { error };
 
-      const fallbackGateway = await failoverManager.executeFailover('gateway-4', context);
+      const fallbackGateway = await failoverManager.executeFailover(
+        'gateway-4',
+        context
+      );
 
       expect(fallbackGateway).toBeNull();
     });
 
     it('should handle gateway not found in registry', async () => {
-      failoverManager.setFailoverChain('gateway-1', ['gateway-2', 'non-existent']);
+      failoverManager.setFailoverChain('gateway-1', [
+        'gateway-2',
+        'non-existent',
+      ]);
 
       const error = new Error('Gateway failure');
       const context = { error };
 
-      const fallbackGateway = await failoverManager.executeFailover('gateway-1', context);
+      const fallbackGateway = await failoverManager.executeFailover(
+        'gateway-1',
+        context
+      );
 
       expect(fallbackGateway).toBe(mockGateway2);
     });
@@ -291,7 +318,8 @@ describe('GatewayFailoverManager', () => {
     });
 
     it('should schedule recovery check', async () => {
-      const attemptRecoverySpy = vi.spyOn(failoverManager, 'attemptRecovery')
+      const attemptRecoverySpy = vi
+        .spyOn(failoverManager, 'attemptRecovery')
         .mockResolvedValue(true);
 
       failoverManager.scheduleRecoveryCheck('gateway-1', 1000);
@@ -359,8 +387,12 @@ describe('GatewayFailoverManager', () => {
       const error = new Error('Test failure');
 
       // Should not throw errors
-      await expect(failoverManager.notifyFailure('unknown', error)).resolves.toBeUndefined();
-      await expect(failoverManager.notifySuccess('unknown')).resolves.toBeUndefined();
+      await expect(
+        failoverManager.notifyFailure('unknown', error)
+      ).resolves.toBeUndefined();
+      await expect(
+        failoverManager.notifySuccess('unknown')
+      ).resolves.toBeUndefined();
     });
   });
 
@@ -371,12 +403,17 @@ describe('GatewayFailoverManager', () => {
     });
 
     it('should handle health check errors during failover', async () => {
-      mockGateway2.healthCheck.mockRejectedValue(new Error('Health check failed'));
+      mockGateway2.healthCheck.mockRejectedValue(
+        new Error('Health check failed')
+      );
 
       const error = new Error('Gateway failure');
       const context = { error };
 
-      const fallbackGateway = await failoverManager.executeFailover('gateway-1', context);
+      const fallbackGateway = await failoverManager.executeFailover(
+        'gateway-1',
+        context
+      );
 
       expect(fallbackGateway).toBeNull();
     });
@@ -390,8 +427,9 @@ describe('GatewayFailoverManager', () => {
     });
 
     it('should handle errors in scheduled recovery check', async () => {
-      vi.spyOn(failoverManager, 'attemptRecovery')
-        .mockRejectedValue(new Error('Recovery error'));
+      vi.spyOn(failoverManager, 'attemptRecovery').mockRejectedValue(
+        new Error('Recovery error')
+      );
 
       // Should not throw
       failoverManager.scheduleRecoveryCheck('gateway-1', 100);

@@ -5,7 +5,7 @@ import {
   RouteMatch,
   RoutingCondition,
   RoutingRule,
-  ServiceConfig
+  ServiceConfig,
 } from '../types/index.js';
 import { ServiceRegistry } from './service-registry.js';
 
@@ -202,7 +202,9 @@ export class RequestRouter {
       if (ruleIndex >= 0) {
         const removedRule = rules.splice(ruleIndex, 1)[0];
         this.pathPatternCache.delete(removedRule.pattern);
-        console.log(`Removed routing rule: ${ruleId} from service ${serviceId}`);
+        console.log(
+          `Removed routing rule: ${ruleId} from service ${serviceId}`
+        );
         return;
       }
     }
@@ -257,7 +259,10 @@ export class RequestRouter {
       }
 
       // Handle service versioning
-      const versionedServiceConfig = this.resolveServiceVersion(request, serviceConfig);
+      const versionedServiceConfig = this.resolveServiceVersion(
+        request,
+        serviceConfig
+      );
 
       // Apply transformations to get final path
       let transformedPath = this.applyTransformations(
@@ -267,7 +272,10 @@ export class RequestRouter {
       );
 
       // Apply path rewrite rules
-      transformedPath = this.applyPathRewriteRules(transformedPath, versionedServiceConfig.pathRewriteRules || []);
+      transformedPath = this.applyPathRewriteRules(
+        transformedPath,
+        versionedServiceConfig.pathRewriteRules || []
+      );
 
       return {
         serviceConfig: versionedServiceConfig,
@@ -283,7 +291,10 @@ export class RequestRouter {
   /**
    * Match path against pattern with parameter extraction
    */
-  private matchPath(path: string, pattern: string): {
+  private matchPath(
+    path: string,
+    pattern: string
+  ): {
     matches: boolean;
     params: Record<string, string>;
   } {
@@ -343,8 +354,11 @@ export class RequestRouter {
     regexPattern = regexPattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
     // Replace placeholders with capture groups
-// eslint-disable-next-line security/detect-unsafe-regex
-    regexPattern = regexPattern.replace(new RegExp(paramPlaceholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), '([^/]+)');
+    // eslint-disable-next-line security/detect-unsafe-regex
+    regexPattern = regexPattern.replace(
+      new RegExp(paramPlaceholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'),
+      '([^/]+)'
+    );
 
     // Replace escaped asterisks with .*
     regexPattern = regexPattern.replace(/\\\*/g, '.*');
@@ -361,7 +375,7 @@ export class RequestRouter {
       regexPattern += '$';
     }
 
-// eslint-disable-next-line security/detect-unsafe-regex
+    // eslint-disable-next-line security/detect-unsafe-regex
     return new RegExp(regexPattern);
   }
 
@@ -383,7 +397,10 @@ export class RequestRouter {
   /**
    * Evaluate routing conditions
    */
-  private evaluateConditions(request: FastifyRequest, conditions: RoutingCondition[]): boolean {
+  private evaluateConditions(
+    request: FastifyRequest,
+    conditions: RoutingCondition[]
+  ): boolean {
     for (const condition of conditions) {
       if (!this.evaluateCondition(request, condition)) {
         return false;
@@ -395,7 +412,10 @@ export class RequestRouter {
   /**
    * Evaluate a single routing condition
    */
-  private evaluateCondition(request: FastifyRequest, condition: RoutingCondition): boolean {
+  private evaluateCondition(
+    request: FastifyRequest,
+    condition: RoutingCondition
+  ): boolean {
     let actualValue: any;
 
     switch (condition.type) {
@@ -423,10 +443,16 @@ export class RequestRouter {
       case 'equals':
         return actualValue === condition.value;
       case 'contains':
-        return typeof actualValue === 'string' && actualValue.includes(condition.value);
+        return (
+          typeof actualValue === 'string' &&
+          actualValue.includes(condition.value)
+        );
       case 'regex':
-// eslint-disable-next-line security/detect-unsafe-regex
-        return typeof actualValue === 'string' && new RegExp(condition.value).test(actualValue);
+        // eslint-disable-next-line security/detect-unsafe-regex
+        return (
+          typeof actualValue === 'string' &&
+          new RegExp(condition.value).test(actualValue)
+        );
       case 'exists':
         return actualValue !== undefined && actualValue !== null;
       default:
@@ -449,14 +475,20 @@ export class RequestRouter {
         switch (transformation.action) {
           case 'rewrite':
             if (transformation.pattern && transformation.replacement) {
-// eslint-disable-next-line security/detect-unsafe-regex
+              // eslint-disable-next-line security/detect-unsafe-regex
               const regex = new RegExp(transformation.pattern);
-              transformedPath = transformedPath.replace(regex, transformation.replacement);
+              transformedPath = transformedPath.replace(
+                regex,
+                transformation.replacement
+              );
             }
             break;
           case 'replace':
             if (transformation.field && transformation.value) {
-              transformedPath = transformedPath.replace(transformation.field, transformation.value);
+              transformedPath = transformedPath.replace(
+                transformation.field,
+                transformation.value
+              );
             }
             break;
         }
@@ -474,16 +506,22 @@ export class RequestRouter {
   /**
    * Apply path rewrite rules
    */
-  private applyPathRewriteRules(path: string, rules: PathRewriteRule[]): string {
+  private applyPathRewriteRules(
+    path: string,
+    rules: PathRewriteRule[]
+  ): string {
     let rewrittenPath = path;
 
     for (const rule of rules) {
       try {
-// eslint-disable-next-line security/detect-unsafe-regex
+        // eslint-disable-next-line security/detect-unsafe-regex
         const regex = new RegExp(rule.pattern, rule.flags || 'g');
         rewrittenPath = rewrittenPath.replace(regex, rule.replacement);
       } catch (error) {
-        console.warn(`Invalid path rewrite rule pattern: ${rule.pattern}`, error);
+        console.warn(
+          `Invalid path rewrite rule pattern: ${rule.pattern}`,
+          error
+        );
       }
     }
 
@@ -493,7 +531,10 @@ export class RequestRouter {
   /**
    * Resolve service version based on request
    */
-  private resolveServiceVersion(request: FastifyRequest, serviceConfig: ServiceConfig): ServiceConfig {
+  private resolveServiceVersion(
+    request: FastifyRequest,
+    serviceConfig: ServiceConfig
+  ): ServiceConfig {
     if (!serviceConfig.versioning.enabled) {
       return serviceConfig;
     }
@@ -503,7 +544,9 @@ export class RequestRouter {
     // Extract version from request based on strategy
     switch (serviceConfig.versioning.strategy) {
       case 'header':
-        requestedVersion = request.headers[serviceConfig.versioning.headerName?.toLowerCase() || 'x-api-version'] as string;
+        requestedVersion = request.headers[
+          serviceConfig.versioning.headerName?.toLowerCase() || 'x-api-version'
+        ] as string;
         break;
       case 'path': {
         // Extract version from path prefix (e.g., /v1/users -> v1)
@@ -512,12 +555,17 @@ export class RequestRouter {
         break;
       }
       case 'query':
-        requestedVersion = (request.query as any)?.[serviceConfig.versioning.queryParam || 'version'];
+        requestedVersion = (request.query as any)?.[
+          serviceConfig.versioning.queryParam || 'version'
+        ];
         break;
     }
 
     if (requestedVersion) {
-      const versionConfig = this.serviceRegistry.getServiceVersion(serviceConfig.id, requestedVersion);
+      const versionConfig = this.serviceRegistry.getServiceVersion(
+        serviceConfig.id,
+        requestedVersion
+      );
       if (versionConfig && versionConfig.isActive) {
         // Create a modified service config for this version
         return {
@@ -534,7 +582,9 @@ export class RequestRouter {
     }
 
     // Fall back to default version
-    const defaultVersion = this.serviceRegistry.getDefaultServiceVersion(serviceConfig.id);
+    const defaultVersion = this.serviceRegistry.getDefaultServiceVersion(
+      serviceConfig.id
+    );
     if (defaultVersion && defaultVersion.isActive) {
       return {
         ...serviceConfig,
@@ -587,14 +637,18 @@ export class RequestRouter {
     // Validate all rules before applying
     for (const rule of rules) {
       if (!this.validateRoutingPattern(rule.pattern)) {
-        throw new Error(`Invalid routing pattern in rule ${rule.id}: ${rule.pattern}`);
+        throw new Error(
+          `Invalid routing pattern in rule ${rule.id}: ${rule.pattern}`
+        );
       }
     }
 
     // Apply the rules
     this.updateServiceRoutingRules(serviceId, rules);
 
-    console.log(`Hot reloaded ${rules.length} routing rules for service: ${serviceId}`);
+    console.log(
+      `Hot reloaded ${rules.length} routing rules for service: ${serviceId}`
+    );
   }
 
   /**

@@ -1,471 +1,630 @@
 import { Request, Response } from 'express';
-import { StorageManager } from '../services/storage-manager.service';
-import { UploadService } from '../services/upload.service';
-import { EntityType, FileData } from '../types/upload.types';
+import pLimit from 'p-limit';
+import { z } from 'zod';
+import { logger } from '../lib/logger';
+import { AsyncProcessingService } from '../services/async-processing.service';
+import { FileValidatorService } from '../services/file-validator.service';
+import { MetadataService } from '../services/metadata.service';
+import { ProcessingStatusService } from '../services/processing-status.service';
+import { StorageManagerService } from '../services/storage-manager.service';
+import {
+  AccessLevel,
+  EntityType,
+  FileStatus,
+  UploadRequest,
+  UploadResult,
+} from '../types/upload.types';
+import { AppError } from '../utils/error-utils';
+import { generateFileId, sanitizeFileName } from '../utils/file-utils';
+
+// Validation schemas
+const uploadRequestSchema = z.object({
+  entityType: z.nativeEnum(EntityType),
+  entityId: z.string().min(1),
+  uploadedBy: z.string().min(1),
+  accessLevel: z
+    .nativeEnum(AccessLevel)
+    .optional()
+    .default(AccessLevel.PRIVATE),
+  metadata: z.record(z.any()).optional(),
+  tags: z.array(z.string()).optional(),
+});
+
+const multipleUploadSchema = z.object({
+  files: z.array(
+    z.object({
+      entityType: z.nativeEnum(EntityType),
+      entityId: z.string().min(1),
+      accessLevel: z
+        .nativeEnum(AccessLevel)
+        .optional()
+        .default(AccessLevel.PRIVATE),
+      metadata: z.record(z.any()).optional(),
+      tags: z.array(z.string()).optional(),
+    })
+  ),
+  uploadedBy: z.string().min(1),
+});
 
 export class UploadController {
-  private uploadService: UploadService;
-  private storageManager: StorageManager;
+  private concurrencyLimit = pLimit(parseInt(process.env.MAX_CONCURRENT_UPLOADS || '10'));
 
-  constructor() {
-    this.uploadService = UploadService.getInstance();
-    this.storageManager = StorageManager.getInstance();
+  constructor(
+    private fileValidator: FileValidatorService,
+    private storageManager: StorageManagerService,
+    private metadataService: MetadataService,
+    private asyncProcessingService: AsyncProcessingService,
+    private processingStatusService: ProcessingStatusService
+  ) { }
+
+  /**
+   * Upload a single file with streaming
+   */
+  async uploadFile(req: Request, res: Response): Promise<void> {
+    try {
+      if (!req.file) {
+        throw new AppError('No file provided', 'INVALID_REQUEST', 400);
+      }
+
+      // Memory monitoring handled by middleware
+      const validatedData = uploadRequestSchema.parse(req.body);
+
+      const uploadRequest: UploadRequest = {
+        file: {
+          buffer: req.file.buffer,
+          originalName: req.file.originalname,
+          mimeType: req.file.mimetype,
+          size: req.file.size,
+        },
+        ...validatedData,
+      };
+
+      const result = await this.processStreamingUpload(uploadRequest);
+
+      res.status(201).json(result);
+    } catch (error) {
+      logger.error('Upload failed:', error);
+      this.handleError(error, res);
+    }
+  }
+
+  /**
+   * Upload multiple files with streaming and memory management
+   */
+  async uploadMultipleFiles(req: Request, res: Response): Promise<void> {
+    try {
+      if (!req.files || !Array.isArray(req.files) || req.files.length === 0) {
+        throw new AppError('No files provided', 'INVALID_REQUEST', 400);
+      }
+
+      const validatedData = multipleUploadSchema.parse(req.body);
+      const files = req.files as Express.Multer.File[];
+
+      if (files.length !== validatedData.files.length) {
+        throw new AppError(
+          'File count mismatch with metadata',
+          'INVALID_REQUEST',
+          400
+        );
+      }
+
+      // Memory monitoring handled by middleware
+      const uploadPromises = files.map((file, index) => {
+        const fileData = validatedData.files[index];
+        if (!fileData) {
+          throw new AppError('Missing file metadata', 'INVALID_REQUEST', 400);
+        }
+
+        const uploadRequest: UploadRequest = {
+          file: {
+            buffer: file.buffer,
+            originalName: file.originalname,
+            mimeType: file.mimetype,
+            size: file.size,
+          },
+          uploadedBy: validatedData.uploadedBy,
+          ...fileData,
+        };
+        // Use concurrency limit to prevent memory explosion
+        return this.concurrencyLimit(() => this.processStreamingUpload(uploadRequest));
+      });
+
+      const results = await Promise.allSettled(uploadPromises);
+
+      // Process results and handle failures gracefully
+      const successResults: UploadResult['data'][] = [];
+      const errors: Array<{ index: number; fileName: string; error: string }> = [];
+
+      results.forEach((result, index) => {
+        const file = files[index];
+        if (!file) return;
+
+        if (result.status === 'fulfilled') {
+          successResults.push(result.value.data);
+        } else {
+          errors.push({
+            index,
+            fileName: file.originalname,
+            error: result.reason instanceof Error ? result.reason.message : 'Unknown error',
+          });
+        }
+      });
+
+      res.status(201).json({
+        success: true,
+        data: {
+          results: successResults,
+          totalProcessed: results.length,
+          successCount: successResults.length,
+          errorCount: errors.length,
+          errors: errors.length > 0 ? errors : undefined,
+        },
+      });
+    } catch (error) {
+      logger.error('Multiple upload failed:', error);
+      this.handleError(error, res);
+    }
   }
 
   /**
    * Upload profile photo
    */
-  async uploadProfilePhoto(_req: Request, res: Response) {
+  async uploadProfilePhoto(req: Request, res: Response): Promise<void> {
     try {
       if (!req.file) {
-        return res.status(400).json({
-          success: false,
-          error: 'No file uploaded',
-          code: 'NO_FILE',
-          timestamp: new Date().toISOString(),
-        });
+        throw new AppError('No file provided', 'INVALID_REQUEST', 400);
       }
 
-      const { userId } = req.body;
-      if (!userId) {
-        return res.status(400).json({
-          success: false,
-          error: 'userId is required',
-          code: 'MISSING_PARAMETER',
-          timestamp: new Date().toISOString(),
-        });
-      }
+      // Memory monitoring handled by middleware
 
-      const fileData: FileData = {
-        buffer: req.file.buffer,
-        originalName: req.file.originalname,
-        mimeType: req.file.mimetype,
-        size: req.file.size,
+      const { userId } = req.params;
+      const uploadedBy = req.body.uploadedBy || userId;
+
+      const uploadRequest: UploadRequest = {
+        file: {
+          buffer: req.file.buffer,
+          originalName: req.file.originalname,
+          mimeType: req.file.mimetype,
+          size: req.file.size,
+        },
+        entityType: EntityType.USER_PROFILE,
+        entityId: userId,
+        uploadedBy,
+        accessLevel: AccessLevel.PUBLIC,
+        metadata: { category: 'profile_photo' },
+        tags: ['profile', 'avatar'],
       };
 
-      const result = await this.uploadService.uploadProfilePhoto(userId, fileData);
+      const result = await this.processStreamingUpload(uploadRequest);
 
-      if (result.success) {
-        res.json({
-          success: true,
-          data: result.data,
-          message: 'Profile photo uploaded successfully',
-          timestamp: new Date().toISOString(),
-        });
-      } else {
-        res.status(400).json({
-          success: false,
-          error: result.error,
-          code: result.code,
-          timestamp: new Date().toISOString(),
-        });
-      }
+      res.status(201).json(result);
     } catch (error) {
-      console.error('Upload profile photo error:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to upload profile photo',
-        code: 'UPLOAD_ERROR',
-        timestamp: new Date().toISOString(),
-      });
+      logger.error('Profile photo upload failed:', error);
+      this.handleError(error, res);
     }
   }
 
   /**
    * Upload product image
    */
-  async uploadProductImage(_req: Request, res: Response) {
+  async uploadProductImage(req: Request, res: Response): Promise<void> {
     try {
       if (!req.file) {
-        return res.status(400).json({
-          success: false,
-          error: 'No file uploaded',
-          code: 'NO_FILE',
-          timestamp: new Date().toISOString(),
-        });
+        throw new AppError('No file provided', 'INVALID_REQUEST', 400);
       }
 
-      const { productId, vendorId } = req.body;
-      if (!productId || !vendorId) {
-        return res.status(400).json({
-          success: false,
-          error: 'productId and vendorId are required',
-          code: 'MISSING_PARAMETER',
-          timestamp: new Date().toISOString(),
-        });
-      }
+      // Memory monitoring handled by middleware
 
-      const fileData: FileData = {
-        buffer: req.file.buffer,
-        originalName: req.file.originalname,
-        mimeType: req.file.mimetype,
-        size: req.file.size,
+      const { productId } = req.params;
+      const { uploadedBy, isPrimary = false } = req.body;
+
+      const uploadRequest: UploadRequest = {
+        file: {
+          buffer: req.file.buffer,
+          originalName: req.file.originalname,
+          mimeType: req.file.mimetype,
+          size: req.file.size,
+        },
+        entityType: EntityType.PRODUCT,
+        entityId: productId,
+        uploadedBy,
+        accessLevel: AccessLevel.PUBLIC,
+        metadata: {
+          category: 'product_image',
+          isPrimary: Boolean(isPrimary),
+        },
+        tags: ['product', 'ecommerce'],
       };
 
-      const result = await this.uploadService.uploadProductImage(productId, vendorId, fileData);
+      const result = await this.processStreamingUpload(uploadRequest);
 
-      if (result.success) {
-        res.json({
-          success: true,
-          data: result.data,
-          message: 'Product image uploaded successfully',
-          timestamp: new Date().toISOString(),
-        });
-      } else {
-        res.status(400).json({
-          success: false,
-          error: result.error,
-          code: result.code,
-          timestamp: new Date().toISOString(),
-        });
-      }
+      res.status(201).json(result);
     } catch (error) {
-      console.error('Upload product image error:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to upload product image',
-        code: 'UPLOAD_ERROR',
-        timestamp: new Date().toISOString(),
-      });
+      logger.error('Product image upload failed:', error);
+      this.handleError(error, res);
     }
   }
 
   /**
    * Upload property photo
    */
-  async uploadPropertyPhoto(_req: Request, res: Response) {
+  async uploadPropertyPhoto(req: Request, res: Response): Promise<void> {
     try {
       if (!req.file) {
-        return res.status(400).json({
-          success: false,
-          error: 'No file uploaded',
-          code: 'NO_FILE',
-          timestamp: new Date().toISOString(),
-        });
+        throw new AppError('No file provided', 'INVALID_REQUEST', 400);
       }
 
-      const { propertyId, hostId } = req.body;
-      if (!propertyId || !hostId) {
-        return res.status(400).json({
-          success: false,
-          error: 'propertyId and hostId are required',
-          code: 'MISSING_PARAMETER',
-          timestamp: new Date().toISOString(),
-        });
-      }
+      // Memory monitoring handled by middleware
 
-      const fileData: FileData = {
-        buffer: req.file.buffer,
-        originalName: req.file.originalname,
-        mimeType: req.file.mimetype,
-        size: req.file.size,
+      const { propertyId } = req.params;
+      const { uploadedBy, roomType, isPrimary = false } = req.body;
+
+      const uploadRequest: UploadRequest = {
+        file: {
+          buffer: req.file.buffer,
+          originalName: req.file.originalname,
+          mimeType: req.file.mimetype,
+          size: req.file.size,
+        },
+        entityType: EntityType.PROPERTY,
+        entityId: propertyId,
+        uploadedBy,
+        accessLevel: AccessLevel.PUBLIC,
+        metadata: {
+          category: 'property_photo',
+          roomType: roomType || 'general',
+          isPrimary: Boolean(isPrimary),
+        },
+        tags: ['property', 'hotel', 'accommodation'],
       };
 
-      const result = await this.uploadService.uploadPropertyPhoto(propertyId, hostId, fileData);
+      const result = await this.processStreamingUpload(uploadRequest);
 
-      if (result.success) {
-        res.json({
-          success: true,
-          data: result.data,
-          message: 'Property photo uploaded successfully',
-          timestamp: new Date().toISOString(),
-        });
-      } else {
-        res.status(400).json({
-          success: false,
-          error: result.error,
-          code: result.code,
-          timestamp: new Date().toISOString(),
-        });
-      }
+      res.status(201).json(result);
     } catch (error) {
-      console.error('Upload property photo error:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to upload property photo',
-        code: 'UPLOAD_ERROR',
-        timestamp: new Date().toISOString(),
-      });
+      logger.error('Property photo upload failed:', error);
+      this.handleError(error, res);
     }
   }
 
   /**
    * Upload vehicle photo
    */
-  async uploadVehiclePhoto(_req: Request, res: Response) {
+  async uploadVehiclePhoto(req: Request, res: Response): Promise<void> {
     try {
       if (!req.file) {
-        return res.status(400).json({
-          success: false,
-          error: 'No file uploaded',
-          code: 'NO_FILE',
-          timestamp: new Date().toISOString(),
-        });
+        throw new AppError('No file provided', 'INVALID_REQUEST', 400);
       }
 
-      const { vehicleId, driverId } = req.body;
-      if (!vehicleId || !driverId) {
-        return res.status(400).json({
-          success: false,
-          error: 'vehicleId and driverId are required',
-          code: 'MISSING_PARAMETER',
-          timestamp: new Date().toISOString(),
-        });
-      }
+      // Memory monitoring handled by middleware
 
-      const fileData: FileData = {
-        buffer: req.file.buffer,
-        originalName: req.file.originalname,
-        mimeType: req.file.mimetype,
-        size: req.file.size,
+      const { vehicleId } = req.params;
+      const { uploadedBy, photoType = 'exterior' } = req.body;
+
+      const uploadRequest: UploadRequest = {
+        file: {
+          buffer: req.file.buffer,
+          originalName: req.file.originalname,
+          mimeType: req.file.mimetype,
+          size: req.file.size,
+        },
+        entityType: EntityType.VEHICLE,
+        entityId: vehicleId,
+        uploadedBy,
+        accessLevel: AccessLevel.PUBLIC,
+        metadata: {
+          category: 'vehicle_photo',
+          photoType,
+        },
+        tags: ['vehicle', 'taxi', 'transport'],
       };
 
-      const result = await this.uploadService.uploadVehiclePhoto(vehicleId, driverId, fileData);
+      const result = await this.processStreamingUpload(uploadRequest);
 
-      if (result.success) {
-        res.json({
-          success: true,
-          data: result.data,
-          message: 'Vehicle photo uploaded successfully',
-          timestamp: new Date().toISOString(),
-        });
-      } else {
-        res.status(400).json({
-          success: false,
-          error: result.error,
-          code: result.code,
-          timestamp: new Date().toISOString(),
-        });
-      }
+      res.status(201).json(result);
     } catch (error) {
-      console.error('Upload vehicle photo error:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to upload vehicle photo',
-        code: 'UPLOAD_ERROR',
-        timestamp: new Date().toISOString(),
-      });
+      logger.error('Vehicle photo upload failed:', error);
+      this.handleError(error, res);
     }
   }
 
   /**
    * Upload document
    */
-  async uploadDocument(_req: Request, res: Response) {
+  async uploadDocument(req: Request, res: Response): Promise<void> {
     try {
       if (!req.file) {
-        return res.status(400).json({
-          success: false,
-          error: 'No file uploaded',
-          code: 'NO_FILE',
-          timestamp: new Date().toISOString(),
-        });
+        throw new AppError('No file provided', 'INVALID_REQUEST', 400);
       }
 
-      const { entityId, entityType, uploadedBy } = req.body;
-      if (!entityId || !entityType || !uploadedBy) {
-        return res.status(400).json({
-          success: false,
-          error: 'entityId, entityType, and uploadedBy are required',
-          code: 'MISSING_PARAMETER',
-          timestamp: new Date().toISOString(),
-        });
-      }
+      // Memory monitoring handled by middleware
 
-      // Validate entityType
-      if (!Object.values(EntityType).includes(entityType)) {
-        return res.status(400).json({
-          success: false,
-          error: 'Invalid entityType',
-          code: 'INVALID_PARAMETER',
-          timestamp: new Date().toISOString(),
-        });
-      }
+      const validatedData = uploadRequestSchema.parse(req.body);
 
-      const fileData: FileData = {
-        buffer: req.file.buffer,
-        originalName: req.file.originalname,
-        mimeType: req.file.mimetype,
-        size: req.file.size,
+      const uploadRequest: UploadRequest = {
+        file: {
+          buffer: req.file.buffer,
+          originalName: req.file.originalname,
+          mimeType: req.file.mimetype,
+          size: req.file.size,
+        },
+        ...validatedData,
+        metadata: {
+          ...validatedData.metadata,
+          category: 'document',
+        },
+        tags: [...(validatedData.tags || []), 'document'],
       };
 
-      const result = await this.uploadService.uploadDocument(entityId, entityType, uploadedBy, fileData);
+      const result = await this.processStreamingUpload(uploadRequest);
 
-      if (result.success) {
-        res.json({
-          success: true,
-          data: result.data,
-          message: 'Document uploaded successfully',
-          timestamp: new Date().toISOString(),
-        });
-      } else {
-        res.status(400).json({
-          success: false,
-          error: result.error,
-          code: result.code,
-          timestamp: new Date().toISOString(),
-        });
-      }
+      res.status(201).json(result);
     } catch (error) {
-      console.error('Upload document error:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to upload document',
-        code: 'UPLOAD_ERROR',
-        timestamp: new Date().toISOString(),
-      });
+      logger.error('Document upload failed:', error);
+      this.handleError(error, res);
     }
   }
 
   /**
-   * Upload multiple files
+   * Get file metadata
    */
-  async uploadMultipleFiles(_req: Request, res: Response) {
+  async getFile(req: Request, res: Response): Promise<void> {
     try {
-      if (!req.files || !Array.isArray(req.files) || req.files.length === 0) {
-        return res.status(400).json({
-          success: false,
-          error: 'No files uploaded',
-          code: 'NO_FILES',
-          timestamp: new Date().toISOString(),
-        });
-      }
+      const { fileId } = req.params;
 
-      const { entityId, entityType, uploadedBy } = req.body;
-      if (!entityId || !entityType || !uploadedBy) {
-        return res.status(400).json({
-          success: false,
-          error: 'entityId, entityType, and uploadedBy are required',
-          code: 'MISSING_PARAMETER',
-          timestamp: new Date().toISOString(),
-        });
-      }
-
-      const results = [];
-      const errors = [];
-
-      for (const file of req.files) {
-        const fileData: FileData = {
-          buffer: file.buffer,
-          originalName: file.originalname,
-          mimeType: file.mimetype,
-          size: file.size,
-        };
-
-        try {
-          const result = await this.uploadService.uploadDocument(entityId, entityType, uploadedBy, fileData);
-          if (result.success) {
-            results.push(result.data);
-          } else {
-            errors.push({
-              fileName: file.originalname,
-              error: result.error,
-              code: result.code
-            });
-          }
-        } catch (error) {
-          errors.push({
-            fileName: file.originalname,
-            error: error instanceof Error ? error.message : 'Unknown error',
-            code: 'UPLOAD_ERROR'
-          });
-        }
+      const metadata = await this.metadataService.getMetadata(fileId);
+      if (!metadata) {
+        throw new AppError('File not found', 'NOT_FOUND', 404);
       }
 
       res.json({
         success: true,
-        data: {
-          uploaded: results,
-          errors: errors,
-          summary: {
-            total: req.files.length,
-            successful: results.length,
-            failed: errors.length
-          }
-        },
-        message: `${results.length} of ${req.files.length} files uploaded successfully`,
-        timestamp: new Date().toISOString(),
+        data: metadata,
       });
-
     } catch (error) {
-      console.error('Upload multiple files error:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to upload files',
-        code: 'UPLOAD_ERROR',
-        timestamp: new Date().toISOString(),
-      });
+      logger.error('Get file failed:', error);
+      this.handleError(error, res);
     }
   }
 
   /**
    * Delete file
    */
-  async deleteFile(_req: Request, res: Response) {
+  async deleteFile(req: Request, res: Response): Promise<void> {
     try {
       const { fileId } = req.params;
-      if (!fileId) {
-        return res.status(400).json({
-          success: false,
-          error: 'fileId is required',
-          code: 'MISSING_PARAMETER',
-          timestamp: new Date().toISOString(),
-        });
+
+      const metadata = await this.metadataService.getMetadata(fileId);
+      if (!metadata) {
+        throw new AppError('File not found', 'NOT_FOUND', 404);
       }
 
-      const result = await this.uploadService.deleteFile(fileId);
+      // Cancel any ongoing processing
+      await this.asyncProcessingService.cancelProcessing(fileId);
 
-      if (result) {
-        res.json({
-          success: true,
-          message: 'File deleted successfully',
-          timestamp: new Date().toISOString(),
-        });
-      } else {
-        res.status(404).json({
-          success: false,
-          error: 'File not found or could not be deleted',
-          code: 'FILE_NOT_FOUND',
-          timestamp: new Date().toISOString(),
-        });
-      }
-    } catch (error) {
-      console.error('Delete file error:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to delete file',
-        code: 'DELETE_ERROR',
-        timestamp: new Date().toISOString(),
+      // Delete from storage
+      await this.storageManager.delete(metadata.path);
+
+      // Update metadata status
+      await this.metadataService.updateMetadata(fileId, {
+        status: FileStatus.DELETED,
+        updatedAt: new Date(),
       });
+
+      res.json({
+        success: true,
+        message: 'File deleted successfully',
+      });
+    } catch (error) {
+      logger.error('Delete file failed:', error);
+      this.handleError(error, res);
     }
   }
 
   /**
-   * Get upload service statistics
+   * Get file processing status
    */
-  async getStats(_req: Request, res: Response) {
+  async getProcessingStatus(req: Request, res: Response): Promise<void> {
     try {
-      const _stats = await this.storageManager.getStorageStats();
+      const { fileId } = req.params;
+
+      const status =
+        await this.asyncProcessingService.getProcessingStatus(fileId);
 
       res.json({
         success: true,
-        data: {
-          storage: stats,
-          service: {
-            uptime: process.uptime(),
-            memory: process.memoryUsage(),
-            version: process.env.npm_package_version || '1.0.0'
-          }
-        },
-        timestamp: new Date().toISOString(),
+        data: status,
       });
     } catch (error) {
-      console.error('Get stats error:', error);
+      logger.error('Get processing status failed:', error);
+      this.handleError(error, res);
+    }
+  }
+
+  /**
+   * Retry failed processing
+   */
+  async retryProcessing(req: Request, res: Response): Promise<void> {
+    try {
+      const { fileId } = req.params;
+
+      const success =
+        await this.asyncProcessingService.retryFailedProcessing(fileId);
+
+      if (!success) {
+        throw new AppError('Failed to retry processing', 'RETRY_FAILED', 500);
+      }
+
+      res.json({
+        success: true,
+        message: 'Processing retry initiated',
+      });
+    } catch (error) {
+      logger.error('Retry processing failed:', error);
+      this.handleError(error, res);
+    }
+  }
+
+  /**
+   * Cancel file processing
+   */
+  async cancelProcessing(req: Request, res: Response): Promise<void> {
+    try {
+      const { fileId } = req.params;
+
+      const success =
+        await this.asyncProcessingService.cancelProcessing(fileId);
+
+      res.json({
+        success: true,
+        cancelled: success,
+        message: success
+          ? 'Processing cancelled'
+          : 'No active processing to cancel',
+      });
+    } catch (error) {
+      logger.error('Cancel processing failed:', error);
+      this.handleError(error, res);
+    }
+  }
+
+  /**
+   * Get queue health status
+   */
+  async getQueueHealth(req: Request, res: Response): Promise<void> {
+    try {
+      const health = await this.asyncProcessingService.getQueueHealth();
+
+      res.json({
+        success: true,
+        data: health,
+      });
+    } catch (error) {
+      logger.error('Get queue health failed:', error);
+      this.handleError(error, res);
+    }
+  }
+
+  /**
+   * Process upload request with streaming for memory efficiency
+   */
+  private async processStreamingUpload(
+    uploadRequest: UploadRequest
+  ): Promise<UploadResult> {
+    // Basic file validation (quick checks only)
+    const basicValidation = await this.fileValidator.validateBasicFile(
+      uploadRequest.file
+    );
+    if (!basicValidation.isValid) {
+      throw new AppError(
+        `File validation failed: ${basicValidation.errors.join(', ')}`,
+        'VALIDATION_FAILED',
+        400
+      );
+    }
+
+    // Generate file ID and sanitize filename
+    const fileId = generateFileId();
+    const sanitizedName = sanitizeFileName(uploadRequest.file.originalName);
+    const fileExtension = sanitizedName.split('.').pop() || '';
+    const fileName = `${fileId}.${fileExtension}`;
+    const filePath = `${uploadRequest.entityType}/${uploadRequest.entityId}/${fileName}`;
+
+    // Store file using storage manager (already optimized for streaming)
+    const storageResult = await this.storageManager.store(
+      uploadRequest.file,
+      filePath
+    );
+
+    // Create initial metadata with processing status
+    const fileUrl = storageResult.url || `/api/v1/uploads/${fileId}`;
+    const metadata = await this.metadataService.createMetadata({
+      id: fileId,
+      originalName: uploadRequest.file.originalName,
+      fileName,
+      mimeType: uploadRequest.file.mimeType,
+      size: uploadRequest.file.size,
+      path: filePath,
+      url: fileUrl,
+      uploadedBy: uploadRequest.uploadedBy,
+      entityType: uploadRequest.entityType,
+      entityId: uploadRequest.entityId,
+      accessLevel: uploadRequest.accessLevel,
+      status: FileStatus.PROCESSING, // Set to processing initially
+      metadata: uploadRequest.metadata || {},
+      tags: uploadRequest.tags || [],
+    });
+
+    // Queue async processing
+    try {
+      const jobIds = await this.asyncProcessingService.processFileUpload({
+        fileId,
+        filePath,
+        originalName: uploadRequest.file.originalName,
+        mimeType: uploadRequest.file.mimeType,
+        size: uploadRequest.file.size,
+        entityType: uploadRequest.entityType,
+        entityId: uploadRequest.entityId,
+      });
+
+      logger.info(`Async processing queued for file ${fileId}:`, jobIds);
+
+      return {
+        success: true,
+        data: {
+          id: fileId,
+          url: fileUrl,
+          metadata: metadata,
+        },
+      };
+    } catch (processingError) {
+      logger.error(
+        `Failed to queue async processing for file ${fileId}:`,
+        processingError
+      );
+
+      // Update status to failed
+      await this.metadataService.updateMetadata(fileId, {
+        status: FileStatus.FAILED,
+        updatedAt: new Date(),
+      });
+
+      throw new AppError(
+        'Failed to queue file processing',
+        'PROCESSING_QUEUE_FAILED',
+        500
+      );
+    }
+  }
+
+  /**
+   * Handle errors
+   */
+  private handleError(error: unknown, res: Response): void {
+    if (error instanceof AppError) {
+      res.status(error.statusCode).json({
+        success: false,
+        error: {
+          code: error.code,
+          message: error.message,
+        },
+      });
+    } else if (error instanceof z.ZodError) {
+      res.status(400).json({
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Invalid request data',
+          details: error.errors,
+        },
+      });
+    } else {
       res.status(500).json({
         success: false,
-        error: 'Failed to get statistics',
-        code: 'STATS_ERROR',
-        timestamp: new Date().toISOString(),
+        error: {
+          code: 'INTERNAL_ERROR',
+          message: 'An unexpected error occurred',
+        },
       });
     }
   }

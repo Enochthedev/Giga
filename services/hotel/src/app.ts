@@ -1,11 +1,11 @@
+import config from '@/config';
+import { createErrorHandler } from '@/utils/errors';
+import logger from '@/utils/logger';
 import compression from 'compression';
 import cors from 'cors';
 import express, { Application, NextFunction, Request, Response } from 'express';
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
-import config from '@/config';
-import { createErrorHandler } from '@/utils/errors';
-import logger from '@/utils/logger';
 
 const app: Application = express();
 
@@ -13,10 +13,12 @@ const app: Application = express();
 app.use(helmet());
 
 // CORS configuration
-app.use(cors({
-  origin: config.corsOrigin,
-  credentials: true,
-}));
+app.use(
+  cors({
+    origin: config.corsOrigin,
+    credentials: true,
+  })
+);
 
 // Compression middleware
 app.use(compression());
@@ -44,7 +46,7 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Request logging middleware
-app.use((_req: Request, res: Response, next: NextFunction) => {
+app.use((req: Request, res: Response, next: NextFunction) => {
   logger.info(`${req.method} ${req.path}`, {
     ip: req.ip,
     userAgent: req.get('User-Agent'),
@@ -91,7 +93,7 @@ app.get('/api/docs', (_req: Request, res: Response) => {
 });
 
 // 404 handler
-app.use('*', (_req: Request, res: Response) => {
+app.use('*', (req: Request, res: Response) => {
   res.status(404).json({
     success: false,
     error: {

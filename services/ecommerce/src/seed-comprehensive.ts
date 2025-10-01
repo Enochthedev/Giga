@@ -608,7 +608,9 @@ async function updateProductStats() {
         },
       });
 
-      console.log(`✅ Updated stats for product: ${product.name} (${completedOrders.length} completed orders)`);
+      console.log(
+        `✅ Updated stats for product: ${product.name} (${completedOrders.length} completed orders)`
+      );
     } catch (error) {
       console.error(`❌ Failed to update stats for ${product.name}:`, error);
     }

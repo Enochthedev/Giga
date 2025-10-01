@@ -2,7 +2,10 @@
  * Queue management types and interfaces
  */
 
-import { NotificationPriority, NotificationRequest } from './notification.types';
+import {
+  NotificationPriority,
+  NotificationRequest,
+} from './notification.types';
 
 export interface QueuedNotification {
   id: string;
@@ -146,7 +149,7 @@ export enum JobStatus {
   FAILED = 'failed',
   DELAYED = 'delayed',
   PAUSED = 'paused',
-  CANCELLED = 'cancelled'
+  CANCELLED = 'cancelled',
 }
 
 export interface QueueHealthCheck {
@@ -173,7 +176,13 @@ export interface BulkQueueOperation {
 }
 
 export interface QueueEvent {
-  eventType: 'job.added' | 'job.started' | 'job.completed' | 'job.failed' | 'queue.paused' | 'queue.resumed';
+  eventType:
+    | 'job.added'
+    | 'job.started'
+    | 'job.completed'
+    | 'job.failed'
+    | 'queue.paused'
+    | 'queue.resumed';
   queueName: string;
   jobId?: string;
   timestamp: Date;

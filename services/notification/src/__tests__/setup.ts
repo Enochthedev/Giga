@@ -50,24 +50,24 @@ export const mockEmailProvider = {
   sendEmail: vi.fn().mockResolvedValue({
     success: true,
     messageId: 'test-message-id',
-    status: 'sent'
-  })
+    status: 'sent',
+  }),
 };
 
 export const mockSMSProvider = {
   sendSMS: vi.fn().mockResolvedValue({
     success: true,
     messageId: 'test-sms-id',
-    status: 'sent'
-  })
+    status: 'sent',
+  }),
 };
 
 export const mockPushProvider = {
   sendPushNotification: vi.fn().mockResolvedValue({
     success: true,
     messageId: 'test-push-id',
-    status: 'sent'
-  })
+    status: 'sent',
+  }),
 };
 
 // Test utilities
@@ -77,12 +77,12 @@ export const createTestNotificationRequest = (overrides = {}) => ({
   content: {
     subject: 'Test Notification',
     htmlBody: '<p>Test message</p>',
-    textBody: 'Test message'
+    textBody: 'Test message',
   },
   category: 'transactional',
   priority: 'normal',
   fromService: 'test-service',
-  ...overrides
+  ...overrides,
 });
 
 export const createTestTemplate = (overrides = {}) => ({
@@ -94,14 +94,14 @@ export const createTestTemplate = (overrides = {}) => ({
       email: {
         subject: 'Test Subject {{name}}',
         htmlBody: '<p>Hello {{name}}</p>',
-        textBody: 'Hello {{name}}'
-      }
-    }
+        textBody: 'Hello {{name}}',
+      },
+    },
   },
   requiredVariables: ['name'],
   defaultLanguage: 'en',
   languages: ['en'],
-  ...overrides
+  ...overrides,
 });
 
 export const createTestUserPreferences = (overrides = {}) => ({
@@ -110,26 +110,44 @@ export const createTestUserPreferences = (overrides = {}) => ({
     email: { enabled: true },
     sms: { enabled: true },
     push: { enabled: true },
-    inApp: { enabled: true }
+    inApp: { enabled: true },
   },
   categories: {
-    transactional: { enabled: true, channels: ['email'], frequency: 'immediate' },
+    transactional: {
+      enabled: true,
+      channels: ['email'],
+      frequency: 'immediate',
+    },
     marketing: { enabled: false, channels: [], frequency: 'never' },
-    security: { enabled: true, channels: ['email', 'sms'], frequency: 'immediate' },
+    security: {
+      enabled: true,
+      channels: ['email', 'sms'],
+      frequency: 'immediate',
+    },
     system: { enabled: true, channels: ['email'], frequency: 'immediate' },
-    social: { enabled: true, channels: ['push', 'in_app'], frequency: 'immediate' },
-    authentication: { enabled: true, channels: ['email'], frequency: 'immediate' }
+    social: {
+      enabled: true,
+      channels: ['push', 'in_app'],
+      frequency: 'immediate',
+    },
+    authentication: {
+      enabled: true,
+      channels: ['email'],
+      frequency: 'immediate',
+    },
   },
   globalOptOut: false,
   updatedAt: new Date(),
-  ...overrides
+  ...overrides,
 });
 
 // Helper to wait for async operations in tests
-export const waitFor = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+export const waitFor = (ms: number) =>
+  new Promise(resolve => setTimeout(resolve, ms));
 
 // Helper to generate test IDs
-export const generateTestId = () => `test-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+export const generateTestId = () =>
+  `test-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
 // Mock console methods to reduce test noise
 const originalConsole = { ...console };

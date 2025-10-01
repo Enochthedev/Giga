@@ -26,7 +26,7 @@ describe('GatewayMetricsCollector', () => {
         gatewayId: 'test-gateway',
         success: true,
         responseTime: 200,
-        amount: 100
+        amount: 100,
       });
     });
 
@@ -39,7 +39,7 @@ describe('GatewayMetricsCollector', () => {
         gatewayId: 'test-gateway',
         success: false,
         responseTime: 500,
-        amount: 100
+        amount: 100,
       });
     });
 
@@ -67,7 +67,11 @@ describe('GatewayMetricsCollector', () => {
 
   describe('Error Recording', () => {
     it('should record error with type and message', () => {
-      metricsCollector.recordError('test-gateway', 'TimeoutError', 'Request timeout');
+      metricsCollector.recordError(
+        'test-gateway',
+        'TimeoutError',
+        'Request timeout'
+      );
 
       const history = metricsCollector.getMetricsHistory('test-gateway', 1);
       expect(history).toHaveLength(1);
@@ -75,14 +79,26 @@ describe('GatewayMetricsCollector', () => {
         gatewayId: 'test-gateway',
         success: false,
         errorType: 'TimeoutError',
-        errorMessage: 'Request timeout'
+        errorMessage: 'Request timeout',
       });
     });
 
     it('should record multiple error types', () => {
-      metricsCollector.recordError('test-gateway', 'TimeoutError', 'Request timeout');
-      metricsCollector.recordError('test-gateway', 'AuthError', 'Invalid credentials');
-      metricsCollector.recordError('test-gateway', 'TimeoutError', 'Another timeout');
+      metricsCollector.recordError(
+        'test-gateway',
+        'TimeoutError',
+        'Request timeout'
+      );
+      metricsCollector.recordError(
+        'test-gateway',
+        'AuthError',
+        'Invalid credentials'
+      );
+      metricsCollector.recordError(
+        'test-gateway',
+        'TimeoutError',
+        'Another timeout'
+      );
 
       const history = metricsCollector.getMetricsHistory('test-gateway');
       expect(history).toHaveLength(3);
@@ -196,7 +212,7 @@ describe('GatewayMetricsCollector', () => {
         transactionCount: 1,
         transactionVolume: new Decimal(50),
         statusCounts: { success: 1, error: 0 },
-        errorTypes: {}
+        errorTypes: {},
       };
 
       await metricsCollector.recordMetrics('test-gateway', cachedMetrics);
@@ -226,7 +242,7 @@ describe('GatewayMetricsCollector', () => {
     it('should record partial metrics', async () => {
       const partialMetrics = {
         responseTime: 150,
-        successRate: 0.95
+        successRate: 0.95,
       };
 
       await metricsCollector.recordMetrics('test-gateway', partialMetrics);
@@ -241,13 +257,13 @@ describe('GatewayMetricsCollector', () => {
       // Record initial metrics
       await metricsCollector.recordMetrics('test-gateway', {
         responseTime: 100,
-        successRate: 0.9
+        successRate: 0.9,
       });
 
       // Update with new metrics
       await metricsCollector.recordMetrics('test-gateway', {
         responseTime: 200,
-        errorRate: 0.05
+        errorRate: 0.05,
       });
 
       const latest = await metricsCollector.getLatestMetrics('test-gateway');
@@ -260,7 +276,12 @@ describe('GatewayMetricsCollector', () => {
   describe('Metrics History', () => {
     beforeEach(() => {
       for (let i = 0; i < 10; i++) {
-        metricsCollector.recordTransaction('test-gateway', i % 2 === 0, 100 + i * 10, 50 + i * 5);
+        metricsCollector.recordTransaction(
+          'test-gateway',
+          i % 2 === 0,
+          100 + i * 10,
+          50 + i * 5
+        );
       }
     });
 
@@ -322,7 +343,9 @@ describe('GatewayMetricsCollector', () => {
 
       metricsCollector.destroy();
 
-      expect(metricsCollector.getMetricsHistory('test-gateway')).toHaveLength(0);
+      expect(metricsCollector.getMetricsHistory('test-gateway')).toHaveLength(
+        0
+      );
     });
   });
 });

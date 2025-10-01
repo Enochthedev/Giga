@@ -5,7 +5,7 @@ import { PrismaClient } from './generated/prisma-client';
 import {
   APIAnalyticsMiddleware,
   APICacheMiddleware,
-  ResponseOptimizationMiddleware
+  ResponseOptimizationMiddleware,
 } from './middleware/apiOptimization.middleware';
 import { APIVersioningMiddleware } from './middleware/apiVersioning.middleware';
 import { extractDeviceInfo } from './middleware/device.middleware';
@@ -15,7 +15,7 @@ import {
   correlationIdMiddleware,
   errorLoggingMiddleware,
   requestLoggingMiddleware,
-  securityLoggingMiddleware
+  securityLoggingMiddleware,
 } from './middleware/logging.middleware';
 import { apiRateLimit } from './middleware/rateLimit.middleware';
 import {
@@ -65,10 +65,12 @@ app.use(
 app.use(EnhancedSecurityMiddleware.configureCORS());
 
 // Response compression
-app.use(responseCompressionService.compress({
-  threshold: 1024, // Compress responses larger than 1KB
-  level: 6 // Balanced compression level
-}));
+app.use(
+  responseCompressionService.compress({
+    threshold: 1024, // Compress responses larger than 1KB
+    level: 6, // Balanced compression level
+  })
+);
 
 // Request size limit and JSON parsing
 app.use(
@@ -158,7 +160,11 @@ app.use(
     res: express.Response,
     _next: express.NextFunction
   ) => {
-    logger.error('Unhandled error in global error handler', err as Error, req.logContext);
+    logger.error(
+      'Unhandled error in global error handler',
+      err as Error,
+      req.logContext
+    );
 
     res.status(err?.statusCode || 500).json({
       success: false,

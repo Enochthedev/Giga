@@ -31,7 +31,7 @@ class RedisService {
 
     await this.client.connect();
     logger.info('✅ Connected to Redis', {
-      url: process.env.REDIS_URL || 'redis://localhost:6380'
+      url: process.env.REDIS_URL || 'redis://localhost:6380',
     });
     return this.client;
   }
@@ -54,12 +54,14 @@ class RedisService {
     try {
       const result = await fn();
       const duration = Date.now() - startTime;
-      const hit = cacheOperation ? result !== null && result !== undefined : undefined;
+      const hit = cacheOperation
+        ? result !== null && result !== undefined
+        : undefined;
 
       logger.debug(`Redis operation: ${operation}`, {
         operation,
         duration,
-        hit
+        hit,
       });
 
       metricsService.recordRedisOperation(duration, operation, hit);
@@ -70,7 +72,7 @@ class RedisService {
 
       logger.error(`Redis operation failed: ${operation}`, error as Error, {
         operation,
-        duration
+        duration,
       });
 
       metricsService.recordRedisError();
@@ -91,9 +93,13 @@ class RedisService {
 
   get(key: string) {
     if (!this.client) await this.connect();
-    return this.executeWithLogging('GET', () => {
-      return this.client!.get(key);
-    }, true);
+    return this.executeWithLogging(
+      'GET',
+      () => {
+        return this.client!.get(key);
+      },
+      true
+    );
   }
 
   del(key: string) {
@@ -153,7 +159,12 @@ class RedisService {
   }
 
   // Device session management
-  storeDeviceSession(_userId: string, deviceId: string, sessionData: any, ttlSeconds = 604800) {
+  storeDeviceSession(
+    _userId: string,
+    deviceId: string,
+    sessionData: any,
+    ttlSeconds = 604800
+  ) {
     const _key = `device:${userId}:${deviceId}`;
     return this.set(key, JSON.stringify(sessionData), ttlSeconds);
   }
@@ -170,7 +181,11 @@ class RedisService {
   }
 
   // Suspicious activity tracking
-  trackSuspiciousActivity(_userId: string, activityType: string, ttlSeconds = 3600) {
+  trackSuspiciousActivity(
+    _userId: string,
+    activityType: string,
+    ttlSeconds = 3600
+  ) {
     const _key = `suspicious:${userId}:${activityType}`;
     return this.incrementRateLimit(key, ttlSeconds);
   }
@@ -233,7 +248,12 @@ class SimpleRedisClient {
     });
   }
 
-  set(key: string, value: string, mode?: string, duration?: number): Promise<string | null> {
+  set(
+    key: string,
+    value: string,
+    mode?: string,
+    duration?: number
+  ): Promise<string | null> {
     if (mode === 'EX' && duration) {
       return redisService.set(key, value, duration);
     }

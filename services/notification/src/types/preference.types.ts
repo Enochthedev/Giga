@@ -2,7 +2,10 @@
  * User preference management types and interfaces
  */
 
-import { NotificationCategory, NotificationChannel } from './notification.types';
+import {
+  NotificationCategory,
+  NotificationChannel,
+} from './notification.types';
 
 export interface NotificationPreferences {
   _userId: string;
@@ -47,7 +50,7 @@ export interface CategoryPreference {
 
 export interface QuietHours {
   start: string; // HH:MM format
-  end: string;   // HH:MM format
+  end: string; // HH:MM format
   timezone: string;
   enabled: boolean;
 }
@@ -56,7 +59,7 @@ export enum NotificationFrequency {
   IMMEDIATE = 'immediate',
   DAILY = 'daily',
   WEEKLY = 'weekly',
-  NEVER = 'never'
+  NEVER = 'never',
 }
 
 export interface PreferenceUpdate {

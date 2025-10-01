@@ -10,7 +10,7 @@ import {
 } from '../generated/prisma-client';
 
 export class TestDataFactory {
-  constructor(private _prisma: PrismaClient) { }
+  constructor(private _prisma: PrismaClient) {}
 
   createVendor(overrides: Partial<Vendor> = {}): Promise<Vendor> {
     return this.prisma.vendor.create({

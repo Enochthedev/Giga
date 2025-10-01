@@ -1,270 +1,222 @@
-import fs from 'fs/promises';
-import path from 'path';
-import { FileData, StorageResult } from '../types/upload.types';
+import {
+  IStorageManager,
+  StorageConfig,
+  StorageInfo,
+  StorageListResult,
+  StorageResult,
+} from '../interfaces/storage.interface';
+import { logger } from '../lib/logger';
+import { FileData } from '../types/upload.types';
+import { LocalStorageProvider } from './storage/local-storage.provider';
 
-export class StorageManager {
-  private static instance: StorageManager;
-  private baseUrl: string;
-  private uploadDir: string;
+/**
+ * Storage manager service that provides abstraction over different storage backends
+ */
+export class StorageManagerService implements IStorageManager {
+  private provider: IStorageManager;
 
-  private constructor() {
-    this.baseUrl = process.env.BASE_URL || 'http://localhost:3003';
-    this.uploadDir = process.env.UPLOAD_DIR || './uploads';
+  constructor(private config: StorageConfig) {
+    this.provider = this.createProvider(config);
   }
 
-  static getInstance(): StorageManager {
-    if (!StorageManager.instance) {
-      StorageManager.instance = new StorageManager();
+  private createProvider(config: StorageConfig): IStorageManager {
+    switch (config.type) {
+      case 'local':
+        return new LocalStorageProvider(config);
+      case 's3':
+        // TODO: Implement S3 provider in future tasks
+        throw new Error('S3 storage provider not implemented yet');
+      case 'gcs':
+        // TODO: Implement GCS provider in future tasks
+        throw new Error('GCS storage provider not implemented yet');
+      case 'azure':
+        // TODO: Implement Azure provider in future tasks
+        throw new Error('Azure storage provider not implemented yet');
+      default:
+        throw new Error(`Unsupported storage type: ${config.type}`);
     }
-    return StorageManager.instance;
   }
 
-  /**
-   * Store a file to the configured storage backend
-   */
-  async store(file: FileData, relativePath: string): Promise<StorageResult> {
+  async store(file: FileData, path: string): Promise<StorageResult> {
     try {
-      // For now, we'll use local filesystem storage
-      // TODO: Add support for S3, Google Cloud Storage, etc.
-
-      const fullPath = path.join(this.uploadDir, relativePath);
-      const directory = path.dirname(fullPath);
-
-      // Ensure directory exists
-      await fs.mkdir(directory, { recursive: true });
-
-      // Write file to disk
-      await fs.writeFile(fullPath, file.buffer);
-
-      // Generate URL
-      const url = this.generateFileUrl(relativePath);
-
-      return {
-        success: true,
-        path: relativePath,
-        url
-      };
-
+      logger.debug('Storing file', {
+        path,
+        size: file.size,
+        mimeType: file.mimeType,
+      });
+      const result = await this.provider.store(file, path);
+      logger.info('File stored successfully', {
+        path,
+        success: result.success,
+      });
+      return result;
     } catch (error) {
-      console.error('Storage error:', error);
+      logger.error('Failed to store file', {
+        path,
+        error: error instanceof Error ? error.message : String(error),
+      });
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown storage error'
+        error: error instanceof Error ? error.message : String(error),
       };
     }
   }
 
-  /**
-   * Retrieve a file from storage
-   */
-  async retrieve(relativePath: string): Promise<FileData | null> {
+  async retrieve(path: string): Promise<FileData> {
     try {
-      const fullPath = path.join(this.uploadDir, relativePath);
-      const buffer = await fs.readFile(fullPath);
-      const _stats = await fs.stat(fullPath);
-
-      return {
-        buffer,
-        originalName: path.basename(relativePath),
-        mimeType: this.getMimeTypeFromExtension(relativePath),
-        size: stats.size
-      };
-
+      logger.debug('Retrieving file', { path });
+      const result = await this.provider.retrieve(path);
+      logger.debug('File retrieved successfully', { path, size: result.size });
+      return result;
     } catch (error) {
-      console.error('Retrieve error:', error);
-      return null;
+      logger.error('Failed to retrieve file', {
+        path,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
     }
   }
 
-  /**
-   * Delete a file from storage
-   */
-  async delete(relativePath: string): Promise<boolean> {
+  async delete(path: string): Promise<boolean> {
     try {
-      const fullPath = path.join(this.uploadDir, relativePath);
-      await fs.unlink(fullPath);
-      return true;
-
+      logger.debug('Deleting file', { path });
+      const result = await this.provider.delete(path);
+      logger.info('File deletion completed', { path, success: result });
+      return result;
     } catch (error) {
-      console.error('Delete error:', error);
+      logger.error('Failed to delete file', {
+        path,
+        error: error instanceof Error ? error.message : String(error),
+      });
       return false;
     }
   }
 
-  /**
-   * Check if a file exists in storage
-   */
-  async exists(relativePath: string): Promise<boolean> {
+  async exists(path: string): Promise<boolean> {
     try {
-      const fullPath = path.join(this.uploadDir, relativePath);
-      await fs.access(fullPath);
-      return true;
-
-    } catch {
+      return await this.provider.exists(path);
+    } catch (error) {
+      logger.error('Failed to check file existence', {
+        path,
+        error: error instanceof Error ? error.message : String(error),
+      });
       return false;
     }
   }
 
-  /**
-   * Generate a presigned URL for direct upload (for future cloud storage integration)
-   */
-  generatePresignedUrl(
-    relativePath: string,
+  async generatePresignedUrl(
+    path: string,
     operation: 'read' | 'write',
-    _expiresIn: number = 3600
+    expiresIn: number
   ): Promise<string> {
-    // TODO: Implement presigned URLs for cloud storage
-    // For now, return regular URL for local storage
-
-    if (operation === 'write') {
-      // For write operations, return upload endpoint
-      return `${this.baseUrl}/api/v1/upload/presigned/${encodeURIComponent(relativePath)}`;
-    } else {
-      // For read operations, return file URL
-      return this.generateFileUrl(relativePath);
+    try {
+      logger.debug('Generating presigned URL', { path, operation, expiresIn });
+      const url = await this.provider.generatePresignedUrl(
+        path,
+        operation,
+        expiresIn
+      );
+      logger.debug('Presigned URL generated', { path, operation });
+      return url;
+    } catch (error) {
+      logger.error('Failed to generate presigned URL', {
+        path,
+        operation,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
     }
   }
 
   /**
-   * Store multiple files (batch operation)
+   * Generate CDN URL for a file path
    */
-  async storeMultiple(files: FileData[], paths: string[]): Promise<StorageResult[]> {
+  generateCDNUrl(path: string, baseUrl?: string): string {
+    const cdnBaseUrl = baseUrl || this.config.options?.cdnBaseUrl || '';
+    if (!cdnBaseUrl) {
+      return `/files/${path}`;
+    }
+    return `${cdnBaseUrl}/${path}`;
+  }
+
+  async storeMultiple(
+    files: FileData[],
+    paths: string[]
+  ): Promise<StorageResult[]> {
     if (files.length !== paths.length) {
       throw new Error('Files and paths arrays must have the same length');
     }
 
-    const results: StorageResult[] = [];
-
-    for (let i = 0; i < files.length; i++) {
-      const result = await this.store(files[i], paths[i]);
-      results.push(result);
+    try {
+      logger.debug('Storing multiple files', { count: files.length });
+      const result = await this.provider.storeMultiple(files, paths);
+      const successCount = result.filter(r => r.success).length;
+      logger.info('Multiple files storage completed', {
+        total: files.length,
+        successful: successCount,
+        failed: files.length - successCount,
+      });
+      return result;
+    } catch (error) {
+      logger.error('Failed to store multiple files', {
+        count: files.length,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
     }
-
-    return results;
   }
 
-  /**
-   * Delete multiple files (batch operation)
-   */
   async deleteMultiple(paths: string[]): Promise<boolean[]> {
-    const results: boolean[] = [];
-
-    for (const path of paths) {
-      const result = await this.delete(path);
-      results.push(result);
-    }
-
-    return results;
-  }
-
-  /**
-   * Get storage statistics
-   */
-  async getStorageStats(): Promise<{
-    totalFiles: number;
-    totalSize: number;
-    availableSpace: number;
-  }> {
     try {
-      const _stats = await this.calculateDirectoryStats(this.uploadDir);
-
-      // TODO: Calculate available space based on storage backend
-      const availableSpace = 1024 * 1024 * 1024 * 100; // 100GB placeholder
-
-      return {
-        totalFiles: stats.fileCount,
-        totalSize: stats.totalSize,
-        availableSpace
-      };
-
+      logger.debug('Deleting multiple files', { count: paths.length });
+      const result = await this.provider.deleteMultiple(paths);
+      const successCount = result.filter(r => r).length;
+      logger.info('Multiple files deletion completed', {
+        total: paths.length,
+        successful: successCount,
+        failed: paths.length - successCount,
+      });
+      return result;
     } catch (error) {
-      console.error('Storage stats error:', error);
-      return {
-        totalFiles: 0,
-        totalSize: 0,
-        availableSpace: 0
-      };
+      logger.error('Failed to delete multiple files', {
+        count: paths.length,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
     }
   }
 
-  /**
-   * Private helper methods
-   */
-  private generateFileUrl(relativePath: string): string {
-    return `${this.baseUrl}/uploads/${relativePath.replace(/\\/g, '/')}`;
-  }
-
-  private getMimeTypeFromExtension(filePath: string): string {
-    const ext = path.extname(filePath).toLowerCase();
-
-    const mimeTypes: { [key: string]: string } = {
-      '.jpg': 'image/jpeg',
-      '.jpeg': 'image/jpeg',
-      '.png': 'image/png',
-      '.gif': 'image/gif',
-      '.webp': 'image/webp',
-      '.pdf': 'application/pdf',
-      '.txt': 'text/plain',
-      '.doc': 'application/msword',
-      '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-    };
-
-    return mimeTypes[ext] || 'application/octet-stream';
-  }
-
-  private async calculateDirectoryStats(dirPath: string): Promise<{
-    fileCount: number;
-    totalSize: number;
-  }> {
-    let fileCount = 0;
-    let totalSize = 0;
-
+  async getStorageInfo(path: string): Promise<StorageInfo> {
     try {
-      const items = await fs.readdir(dirPath, { withFileTypes: true });
-
-      for (const item of items) {
-        const itemPath = path.join(dirPath, item.name);
-
-        if (item.isDirectory()) {
-          const subStats = await this.calculateDirectoryStats(itemPath);
-          fileCount += subStats.fileCount;
-          totalSize += subStats.totalSize;
-        } else if (item.isFile()) {
-          const _stats = await fs.stat(itemPath);
-          fileCount++;
-          totalSize += stats.size;
-        }
-      }
+      logger.debug('Getting storage info', { path });
+      const info = await this.provider.getStorageInfo(path);
+      logger.debug('Storage info retrieved', { path, size: info.size });
+      return info;
     } catch (error) {
-      console.error('Error calculating directory stats:', error);
+      logger.error('Failed to get storage info', {
+        path,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
     }
-
-    return { fileCount, totalSize };
   }
 
-  /**
-   * Cleanup empty directories
-   */
-  async cleanupEmptyDirectories(dirPath: string = this.uploadDir): Promise<void> {
+  async listFiles(prefix: string, limit?: number): Promise<StorageListResult> {
     try {
-      const items = await fs.readdir(dirPath, { withFileTypes: true });
-
-      for (const item of items) {
-        if (item.isDirectory()) {
-          const subDirPath = path.join(dirPath, item.name);
-          await this.cleanupEmptyDirectories(subDirPath);
-
-          // Check if directory is now empty
-          const subItems = await fs.readdir(subDirPath);
-          if (subItems.length === 0) {
-            await fs.rmdir(subDirPath);
-          }
-        }
-      }
+      logger.debug('Listing files', { prefix, limit });
+      const result = await this.provider.listFiles(prefix, limit);
+      logger.debug('Files listed', {
+        prefix,
+        count: result.files.length,
+        hasMore: result.hasMore,
+      });
+      return result;
     } catch (error) {
-      console.error('Cleanup empty directories error:', error);
+      logger.error('Failed to list files', {
+        prefix,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
     }
   }
 }
-
-export default StorageManager;
