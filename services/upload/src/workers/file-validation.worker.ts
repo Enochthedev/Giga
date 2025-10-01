@@ -1,5 +1,5 @@
-import { Job } from 'bull';
 import fs from 'fs/promises';
+import { Job } from 'bull';
 import {
   FileValidationJobData,
   QueueProcessor,
@@ -237,7 +237,8 @@ export class FileValidationWorker
   ): Promise<{ valid: boolean; error?: string }> {
     try {
       // Use the existing file validator service for image validation
-      const result = await this.fileValidatorService.validateImageContent(buffer);
+      const result =
+        await this.fileValidatorService.validateImageContent(buffer);
       return { valid: result };
     } catch (error) {
       return {

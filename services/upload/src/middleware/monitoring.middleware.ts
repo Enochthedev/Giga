@@ -37,7 +37,6 @@ export const metricsMiddleware = (
         ? chunk.length
         : Buffer.byteLength(chunk, encoding);
     }
-    return originalEnd.call(this, chunk, encoding);
 
     const duration = (Date.now() - startTime) / 1000; // Convert to seconds
     const route = getRoutePattern(req);
@@ -69,7 +68,7 @@ export const metricsMiddleware = (
     }
 
     // Call original end method
-    originalEnd.call(this, chunk, encoding);
+    return originalEnd.call(this, chunk, encoding);
   };
 
   next();

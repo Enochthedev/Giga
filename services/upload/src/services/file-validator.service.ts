@@ -221,6 +221,7 @@ export class FileValidatorService implements IFileValidator {
 
     // Remove path separators and dangerous characters
     let sanitized = fileName
+      // eslint-disable-next-line no-control-regex
       .replace(/[<>:"/\\|?*\u0000-\u001f]/g, '_') // Replace dangerous characters
       .replace(/^\.+/, '') // Remove leading dots
       .replace(/\.+$/, '') // Remove trailing dots

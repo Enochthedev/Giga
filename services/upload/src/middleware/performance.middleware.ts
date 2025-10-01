@@ -39,8 +39,6 @@ export const requestPerformanceMiddleware = (
     performanceMonitorService.recordRequest(duration);
     performanceMonitorService.updateActiveConnections(-1);
 
-    return originalEnd.call(this, chunk, encoding);
-
     // Log slow requests
     if (duration > 2000) {
       logger.warn('Slow request detected', {
@@ -60,7 +58,7 @@ export const requestPerformanceMiddleware = (
       duration / 1000
     );
 
-    originalEnd.call(this, chunk, encoding);
+    return originalEnd.call(this, chunk, encoding);
   };
 
   next();

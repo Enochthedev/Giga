@@ -1,6 +1,6 @@
-import { redisClient } from '@/lib/redis';
 import { afterAll, afterEach, beforeAll, beforeEach } from 'vitest';
 import { PrismaClient } from '../generated/prisma-client';
+import { redisClient } from '@/lib/redis';
 
 // Test database instance
 const prisma = new PrismaClient({
@@ -103,7 +103,7 @@ export const createTestProperty = async (overrides: any = {}) => {
 
 export const createTestRoomType = async (
   propertyId: string,
-  overrides: unknown = {}
+  overrides: Record<string, any> = {}
 ) => {
   return prisma.roomType.create({
     data: {
@@ -119,6 +119,7 @@ export const createTestRoomType = async (
       totalRooms: 10,
       baseRate: 100,
       currency: 'USD',
+      images: JSON.stringify([]),
       isActive: true,
       ...overrides,
     },
@@ -127,7 +128,7 @@ export const createTestRoomType = async (
 
 export const createTestBooking = async (
   propertyId: string,
-  overrides: unknown = {}
+  overrides: Record<string, any> = {}
 ) => {
   const checkInDate = new Date();
   checkInDate.setDate(checkInDate.getDate() + 1);
@@ -173,6 +174,7 @@ export const createTestBooking = async (
       paymentStatus: 'paid',
       cancellationPolicy: 'moderate',
       noShowPolicy: 'charge_first_night',
+      additionalGuests: JSON.stringify([]),
       bookedAt: new Date(),
       ...overrides,
     },

@@ -1,11 +1,11 @@
-import config from '@/config';
-import { createErrorHandler } from '@/utils/errors';
-import logger from '@/utils/logger';
 import compression from 'compression';
 import cors from 'cors';
 import express, { Application, NextFunction, Request, Response } from 'express';
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
+import config from '@/config';
+import { createErrorHandler } from '@/utils/errors';
+import logger from '@/utils/logger';
 
 const app: Application = express();
 

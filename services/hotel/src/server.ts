@@ -1,8 +1,8 @@
+import app from './app';
 import config from '@/config';
 import prisma from '@/lib/prisma';
 import { connectRedis } from '@/lib/redis';
 import logger from '@/utils/logger';
-import app from './app';
 
 const startServer = async () => {
   try {
