@@ -18,9 +18,9 @@ export class ImageProcessingWorker
       fileId,
       filePath,
       originalName,
-      mimeType,
-      entityType,
-      entityId,
+      mimeType: _mimeType,
+      entityType: _entityType,
+      entityId: _entityId,
       processingOptions,
     } = job.data;
 
@@ -230,7 +230,7 @@ export class ImageProcessingWorker
     }
   }
 
-  private async generateFileUrl(filePath: string): Promise<string> {
+  private generateFileUrl(filePath: string): string {
     // This would typically generate a CDN URL or public URL
     // For now, return a relative path
     const relativePath = path.relative(process.cwd(), filePath);

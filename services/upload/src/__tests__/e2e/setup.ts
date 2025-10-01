@@ -169,7 +169,7 @@ export const createTestFile = (content: string, filename: string): Buffer => {
 
 export const getTestImageBuffer = async (): Promise<Buffer> => {
   const testImagePath = path.join(__dirname, 'fixtures', 'test-image.jpg');
-  return await fs.readFile(testImagePath);
+  return fs.readFile(testImagePath);
 };
 
 export const cleanupTestFiles = async (fileIds: string[]): Promise<void> => {
