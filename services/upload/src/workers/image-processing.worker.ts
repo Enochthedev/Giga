@@ -1,6 +1,6 @@
-import { Job } from 'bull';
 import fs from 'fs/promises';
 import path from 'path';
+import { Job } from 'bull';
 import sharp from 'sharp';
 import {
   ImageProcessingJobData,
@@ -243,7 +243,7 @@ export class ImageProcessingWorker
   ): Promise<void> {
     await prisma.fileMetadata.update({
       where: { id: fileId },
-      data: { status: status as any },
+      data: { status: status as unknown },
     });
   }
 

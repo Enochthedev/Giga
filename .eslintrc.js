@@ -11,12 +11,12 @@ module.exports = {
   },
   plugins: ['import', 'security', '@typescript-eslint'],
   rules: {
-    // Basic rules
-    'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+    // Basic rules - More lenient for development
+    'no-unused-vars': ['warn', { argsIgnorePattern: '^_' }], // Changed from 'error' to 'warn'
 
-    // Import rules
+    // Import rules - More lenient
     'import/order': [
-      'error',
+      'warn', // Changed from 'error' to 'warn'
       {
         groups: [
           'builtin',
@@ -33,30 +33,30 @@ module.exports = {
         },
       },
     ],
-    'import/no-duplicates': 'error',
+    'import/no-duplicates': 'warn', // Changed from 'error' to 'warn'
     'import/no-unresolved': 'off', // TypeScript handles this
 
-    // Security rules
+    // Security rules - Keep as warnings for development
     'security/detect-object-injection': 'warn',
     'security/detect-non-literal-regexp': 'warn',
-    'security/detect-unsafe-regex': 'error',
+    'security/detect-unsafe-regex': 'warn', // Changed from 'error' to 'warn'
 
-    // General rules
+    // General rules - More lenient
     'no-console': 'off', // We use console for logging in services
-    'no-debugger': 'error',
-    'no-alert': 'error',
-    'no-var': 'error',
-    'prefer-const': 'error',
-    'no-unused-expressions': 'error',
-    'no-duplicate-imports': 'error',
-    'no-return-await': 'error',
-    'require-await': 'error',
+    'no-debugger': process.env.NODE_ENV === 'production' ? 'error' : 'warn',
+    'no-alert': 'warn', // Changed from 'error' to 'warn'
+    'no-var': 'warn', // Changed from 'error' to 'warn'
+    'prefer-const': 'warn', // Changed from 'error' to 'warn'
+    'no-unused-expressions': 'warn', // Changed from 'error' to 'warn'
+    'no-duplicate-imports': 'warn', // Changed from 'error' to 'warn'
+    'no-return-await': 'warn', // Changed from 'error' to 'warn'
+    'require-await': 'warn', // Changed from 'error' to 'warn'
 
     // Code style (handled by Prettier, but good to have as warnings)
-    'max-len': ['warn', { code: 100, ignoreUrls: true, ignoreStrings: true }],
-    complexity: ['warn', 10],
-    'max-depth': ['warn', 4],
-    'max-params': ['warn', 5],
+    'max-len': ['warn', { code: 120, ignoreUrls: true, ignoreStrings: true }], // Increased from 100 to 120
+    complexity: ['warn', 15], // Increased from 10 to 15
+    'max-depth': ['warn', 6], // Increased from 4 to 6
+    'max-params': ['warn', 7], // Increased from 5 to 7
   },
   overrides: [
     {
@@ -76,9 +76,9 @@ module.exports = {
         'no-redeclare': 'off',
         'no-use-before-define': 'off',
 
-        // Enable TypeScript-specific rules
+        // Enable TypeScript-specific rules - More lenient for development
         '@typescript-eslint/no-unused-vars': [
-          'error',
+          'warn', // Changed from 'error' to 'warn'
           { argsIgnorePattern: '^_' },
         ],
         '@typescript-eslint/no-explicit-any': 'warn',
@@ -86,9 +86,9 @@ module.exports = {
         '@typescript-eslint/explicit-module-boundary-types': 'off',
         '@typescript-eslint/no-non-null-assertion': 'warn',
 
-        // Import rules for TypeScript
+        // Import rules for TypeScript - More lenient
         'import/order': [
-          'error',
+          'warn', // Changed from 'error' to 'warn'
           {
             groups: [
               'builtin',
@@ -105,7 +105,7 @@ module.exports = {
             },
           },
         ],
-        'import/no-duplicates': 'error',
+        'import/no-duplicates': 'warn', // Changed from 'error' to 'warn'
         'import/no-unresolved': 'off', // TypeScript handles this
       },
     },

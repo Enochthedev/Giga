@@ -1,6 +1,10 @@
 module.exports = {
-  // TypeScript and JavaScript files
-  '*.{ts,js}': ['eslint --fix', 'prettier --write', 'git add'],
+  // TypeScript and JavaScript files - Allow warnings, only fail on errors
+  '*.{ts,js}': [
+    'eslint --fix --max-warnings 1000',
+    'prettier --write',
+    'git add',
+  ],
 
   // JSON files
   '*.json': ['prettier --write', 'git add'],

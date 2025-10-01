@@ -1,6 +1,6 @@
-import { Application } from 'express';
 import fs from 'fs/promises';
 import path from 'path';
+import { Application } from 'express';
 import { afterAll, afterEach, beforeAll, beforeEach } from 'vitest';
 import { createApp } from '../../app';
 import { PrismaClient } from '../../generated/prisma-client';
@@ -8,7 +8,7 @@ import { PrismaClient } from '../../generated/prisma-client';
 // Global test state
 let testApp: Application;
 let testPrisma: PrismaClient;
-let testServer: any;
+let testServer: unknown;
 
 // Test environment setup
 beforeAll(async () => {
