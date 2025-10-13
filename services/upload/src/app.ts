@@ -4,7 +4,7 @@ import helmet from 'helmet';
 import * as swaggerUi from 'swagger-ui-express';
 import { getConfig } from './config';
 import { DeliveryController } from './controllers/delivery.controller';
-import { requestLogger } from './lib/logger';
+import { createLogger, requestLogger } from './lib/logger';
 import { connectDatabase } from './lib/prisma';
 import { connectRedis } from './lib/redis';
 import performanceMiddleware from './middleware/performance.middleware';
@@ -26,7 +26,7 @@ import swaggerSpecs from './swagger';
 
 const config = getConfig();
 
-export function createApp(): express.Application {
+export async function createApp(): Promise<express.Application> {
   const app = express();
 
   // Security middleware
@@ -63,10 +63,11 @@ export function createApp(): express.Application {
   app.use(performanceMiddleware.performanceMonitoringMiddleware);
 
   // Monitoring middleware
-  // TODO: Implement metrics middleware
-  // app.use(metricsMiddleware);
-  // app.use(uploadMetricsMiddleware);
-  // app.use(securityMetricsMiddleware);
+  const { metricsMiddleware, uploadMetricsMiddleware } = await import(
+    './middleware/metrics.middleware'
+  );
+  app.use(metricsMiddleware);
+  app.use(uploadMetricsMiddleware);
 
   // Health and monitoring routes
   app.get('/health', async (req, res) => {
@@ -95,9 +96,26 @@ export function createApp(): express.Application {
   // Metrics endpoint
   app.get('/metrics', async (req, res) => {
     try {
-      const metrics = await metricsService.getMetrics();
-      res.set('Content-Type', 'text/plain');
-      res.send(metrics);
+      const { getMetrics } = await import('./middleware/metrics.middleware');
+      const { systemMetricsCollector } = await import(
+        './services/system-metrics.service'
+      );
+
+      const requestMetrics = getMetrics();
+      const systemMetrics = systemMetricsCollector.getCurrentMetrics();
+      const systemInfo = systemMetricsCollector.getSystemInfo();
+
+      const allMetrics = {
+        service: 'upload-service',
+        timestamp: new Date().toISOString(),
+        system: {
+          info: systemInfo,
+          current: systemMetrics,
+        },
+        requests: requestMetrics,
+      };
+
+      res.json(allMetrics);
     } catch (error) {
       res.status(500).json({ error: 'Failed to get metrics' });
     }
@@ -105,7 +123,7 @@ export function createApp(): express.Application {
 
   // Initialize services for delivery
   const metadataService = new MetadataService({} as any);
-  const storageManager = new StorageManagerService(config.storage);
+  const storageManager = await StorageManagerService.create(config.storage);
   const permissionService = PermissionService.getInstance();
   const cdnService = new CDNService(config.cdn);
   const deliveryService = new DeliveryService(
@@ -118,11 +136,15 @@ export function createApp(): express.Application {
   const deliveryController = new DeliveryController(deliveryService);
 
   // Swagger documentation
-  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs, {
-    explorer: true,
-    customCss: '.swagger-ui .topbar { display: none }',
-    customSiteTitle: 'Upload Service API Documentation',
-  }));
+  app.use(
+    '/api-docs',
+    swaggerUi.serve,
+    swaggerUi.setup(swaggerSpecs, {
+      explorer: true,
+      customCss: '.swagger-ui .topbar { display: none }',
+      customSiteTitle: 'Upload Service API Documentation',
+    })
+  );
 
   // Swagger JSON endpoint
   app.get('/api-docs.json', (req, res) => {
@@ -135,17 +157,24 @@ export function createApp(): express.Application {
   app.use('/api/v1', createDeliveryRoutes(deliveryController));
   // Note: In a real implementation, these would be properly initialized
   // For now, we'll create placeholder instances that would be replaced with actual instances
-  const prismaClient = {} as any; // This would be the actual Prisma client instance
-  const loggerInstance = {} as any; // This would be the actual logger instance
+  const prismaClient = {} as unknown; // This would be the actual Prisma client instance
+  const loggerInstance = createLogger('RetentionRoutes'); // Actual logger instance
 
   app.use(
     '/api/v1/retention',
-    createRetentionRoutes(prismaClient, loggerInstance, storageManager, metadataService)
+    createRetentionRoutes(
+      prismaClient,
+      loggerInstance,
+      storageManager,
+      metadataService
+    )
   );
 
   // Error handling middleware with metrics
-  // TODO: Implement error metrics middleware
-  // app.use(errorMetricsMiddleware);
+  const { errorMetricsMiddleware } = await import(
+    './middleware/metrics.middleware'
+  );
+  app.use(errorMetricsMiddleware);
   app.use(
     (
       error: unknown,
@@ -209,8 +238,10 @@ export async function initializeServices(): Promise<void> {
     console.log('✅ Monitoring services initialized');
 
     // Start system metrics collection
-    // TODO: Implement system metrics collector
-    // systemMetricsCollector();
+    const { systemMetricsCollector } = await import(
+      './services/system-metrics.service'
+    );
+    systemMetricsCollector.start(30000); // Collect metrics every 30 seconds
     console.log('✅ System metrics collection started');
 
     // Initialize worker manager
@@ -237,6 +268,13 @@ export async function shutdownServices(): Promise<void> {
     // Clear cache
     await cacheService.clear();
     console.log('✅ Cache cleared');
+
+    // Stop system metrics collection
+    const { systemMetricsCollector } = await import(
+      './services/system-metrics.service'
+    );
+    systemMetricsCollector.stop();
+    console.log('✅ System metrics collection stopped');
 
     // Cleanup monitoring services
     healthService.cleanup();

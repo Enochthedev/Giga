@@ -8,7 +8,7 @@ import { PrismaClient } from '../../generated/prisma-client';
 // Global test state
 let testApp: Application;
 let testPrisma: PrismaClient;
-let testServer: unknown;
+let testServer: any;
 
 // Test environment setup
 beforeAll(async () => {
@@ -36,7 +36,7 @@ beforeAll(async () => {
   }
 
   // Create test app instance
-  testApp = createApp();
+  testApp = await createApp();
 
   // Create test upload directories
   const testUploadDir = path.join(process.cwd(), 'test-uploads');
@@ -87,7 +87,7 @@ afterAll(async () => {
   console.log('Cleaning up E2E test environment...');
 
   // Close server if running
-  if (testServer) {
+  if (testServer && typeof testServer.close === 'function') {
     await new Promise<void>(resolve => {
       testServer.close(() => resolve());
     });

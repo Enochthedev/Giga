@@ -127,10 +127,12 @@ export class RetentionServiceImpl implements RetentionService {
         where: { id },
         include: { rules: true },
       });
-      return policy ? {
-        ...policy,
-        entityType: policy.entityType as any,
-      } as RetentionPolicy : null;
+      return policy
+        ? ({
+            ...policy,
+            entityType: policy.entityType as any,
+          } as RetentionPolicy)
+        : null;
     } catch (error) {
       this.logger.error('Failed to get retention policy', { error, id });
       return null;
@@ -219,10 +221,12 @@ export class RetentionServiceImpl implements RetentionService {
       const hold = await this.prisma.legalHold.findUnique({
         where: { id },
       });
-      return hold ? {
-        ...hold,
-        entityType: hold.entityType as any,
-      } as LegalHold : null;
+      return hold
+        ? ({
+            ...hold,
+            entityType: hold.entityType as any,
+          } as LegalHold)
+        : null;
     } catch (error) {
       this.logger.error('Failed to get legal hold', { error, id });
       return null;
@@ -434,12 +438,14 @@ export class RetentionServiceImpl implements RetentionService {
       const request = await this.prisma.dataDeletionRequest.findUnique({
         where: { id },
       });
-      return request ? {
-        ...request,
-        entityType: request.entityType as any,
-        requestType: request.requestType as any,
-        status: request.status as any,
-      } as DataDeletionRequest : null;
+      return request
+        ? ({
+            ...request,
+            entityType: request.entityType as any,
+            requestType: request.requestType as any,
+            status: request.status as any,
+          } as DataDeletionRequest)
+        : null;
     } catch (error) {
       this.logger.error('Failed to get data deletion request', { error, id });
       return null;
@@ -837,10 +843,12 @@ export class RetentionServiceImpl implements RetentionService {
       return {
         fileId,
         currentStatus: file.status,
-        retentionPolicy: retentionPolicy ? {
-          ...retentionPolicy,
-          entityType: retentionPolicy.entityType as any,
-        } as RetentionPolicy : undefined,
+        retentionPolicy: retentionPolicy
+          ? ({
+              ...retentionPolicy,
+              entityType: retentionPolicy.entityType as any,
+            } as RetentionPolicy)
+          : undefined,
         expirationDate,
         legalHolds: legalHolds.map(hold => ({
           ...hold,
@@ -868,7 +876,7 @@ export class RetentionServiceImpl implements RetentionService {
     try {
       await this.prisma.retentionAuditLog.create({
         data: {
-          action: action as unknown,
+          action: action as any,
           details,
           performedBy: 'system',
         },

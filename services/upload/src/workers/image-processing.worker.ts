@@ -243,7 +243,7 @@ export class ImageProcessingWorker
   ): Promise<void> {
     await prisma.fileMetadata.update({
       where: { id: fileId },
-      data: { status: status as unknown },
+      data: { status: status as any },
     });
   }
 

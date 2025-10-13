@@ -268,7 +268,7 @@ export class FileValidationWorker
             validatedAt: new Date().toISOString(),
             ...metadata,
           },
-        } as unknown,
+        } as any,
       },
     });
   }

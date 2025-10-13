@@ -21,6 +21,15 @@ async function startServer(): Promise<void> {
         host: config.host,
         environment: process.env.NODE_ENV || 'development',
       });
+
+      // Log helpful documentation URLs
+      const baseUrl = `http://${config.host === '0.0.0.0' ? 'localhost' : config.host}:${config.port}`;
+      console.log('\n📚 API Documentation Available:');
+      console.log(`   Swagger UI: ${baseUrl}/api-docs`);
+      console.log(`   OpenAPI JSON: ${baseUrl}/api-docs.json`);
+      console.log(`   Health Check: ${baseUrl}/health`);
+      console.log(`   Metrics: ${baseUrl}/metrics`);
+      console.log('\n🚀 Upload Service Ready!\n');
     });
 
     // Graceful shutdown handling

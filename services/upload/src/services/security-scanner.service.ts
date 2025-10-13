@@ -35,13 +35,13 @@ export interface SecurityScanResult {
 export interface SecurityThreat {
   id: string;
   type:
-  | 'malware'
-  | 'virus'
-  | 'trojan'
-  | 'suspicious_content'
-  | 'injection_attempt'
-  | 'data_exfiltration'
-  | 'unknown';
+    | 'malware'
+    | 'virus'
+    | 'trojan'
+    | 'suspicious_content'
+    | 'injection_attempt'
+    | 'data_exfiltration'
+    | 'unknown';
   severity: 'low' | 'medium' | 'high' | 'critical';
   name: string;
   description: string;
@@ -886,7 +886,7 @@ export class SecurityScannerService {
                 );
                 break;
 
-              case 'injection_attempt':
+              case 'injection_attempt': {
                 const injectionType = threat.name.includes('SQL')
                   ? 'SQL'
                   : threat.name.includes('Script')
@@ -901,6 +901,7 @@ export class SecurityScannerService {
                   eventDetails
                 );
                 break;
+              }
 
               case 'suspicious_content':
                 await securityEventLogger.logSuspiciousContent(
@@ -912,7 +913,7 @@ export class SecurityScannerService {
                 );
                 break;
 
-              default:
+              default: {
                 // Log as general security event
                 const severity = this.mapThreatSeverityToEventSeverity(
                   threat.severity
@@ -924,23 +925,29 @@ export class SecurityScannerService {
                   eventDetails,
                   threat.mitigation ? [threat.mitigation] : undefined
                 );
+                break;
+              }
             }
           }
         }
-      }
 
-      // Log legacy format for backward compatibility
-      securityLogger.logSecurityEvent('file_security_scan', result.riskLevel, {
-        scanId: result.scanId,
-        fileName: file.originalName,
-        fileSize: file.size,
-        mimeType: file.mimeType,
-        isSecure: result.isSecure,
-        threatCount: result.threats.length,
-        riskLevel: result.riskLevel,
-        scanTime: result.scanTime,
-        uploadContext,
-      });
+        // Log legacy format for backward compatibility
+        securityLogger.logSecurityEvent(
+          'file_security_scan',
+          result.riskLevel,
+          {
+            scanId: result.scanId,
+            fileName: file.originalName,
+            fileSize: file.size,
+            mimeType: file.mimeType,
+            isSecure: result.isSecure,
+            threatCount: result.threats.length,
+            riskLevel: result.riskLevel,
+            scanTime: result.scanTime,
+            uploadContext,
+          }
+        );
+      }
     } catch (error) {
       // Fallback to basic logging if security event logger is not available
       securityLogger.warn('Security event logging failed, using fallback', {
@@ -1112,7 +1119,7 @@ export class SecurityScannerService {
    */
   private mapThreatSeverityToEventSeverity(
     threatSeverity: 'low' | 'medium' | 'high' | 'critical'
-  ): typeof SecurityEventSeverity[keyof typeof SecurityEventSeverity] {
+  ): (typeof SecurityEventSeverity)[keyof typeof SecurityEventSeverity] {
     switch (threatSeverity) {
       case 'critical':
         return SecurityEventSeverity.CRITICAL;
