@@ -46,11 +46,11 @@ export class UserController {
     }
   }
 
-  async getUserById(_req: Request, res: Response) {
+  async getUserById(req: Request, res: Response) {
     try {
       const { id } = req.params;
 
-      const user = await req.prisma.user.findUnique({
+      const user = await req._prisma.user.findUnique({
         where: { id },
         include: {
           roles: {
@@ -76,7 +76,7 @@ export class UserController {
 
       // Log admin action
       await this.logAdminAction(
-        req.prisma,
+        req._prisma,
         'VIEW_USER',
         req.user!.sub,
         id,
@@ -124,7 +124,7 @@ export class UserController {
     }
   }
 
-  async listUsers(_req: Request, res: Response) {
+  async listUsers(req: Request, res: Response) {
     try {
       const {
         page = 1,
@@ -221,7 +221,7 @@ export class UserController {
       orderBy[sortField] = order;
 
       const [users, total] = await Promise.all([
-        req.prisma.user.findMany({
+        req._prisma.user.findMany({
           where,
           skip,
           take,
@@ -234,12 +234,12 @@ export class UserController {
           },
           orderBy,
         }),
-        req.prisma.user.count({ where }),
+        req._prisma.user.count({ where }),
       ]);
 
       // Log admin action
       await this.logAdminAction(
-        req.prisma,
+        req._prisma,
         'LIST_USERS',
         req.user!.sub,
         undefined,
@@ -299,7 +299,7 @@ export class UserController {
     }
   }
 
-  async updateUserStatus(_req: Request, res: Response) {
+  async updateUserStatus(req: Request, res: Response) {
     try {
       const { id } = req.params;
       const { isActive } = req.body;
@@ -313,7 +313,7 @@ export class UserController {
       }
 
       // Get current user state for audit log
-      const currentUser = await req.prisma.user.findUnique({
+      const currentUser = await req._prisma.user.findUnique({
         where: { id },
         select: { isActive: true, email: true },
       });
@@ -326,7 +326,7 @@ export class UserController {
         });
       }
 
-      const user = await req.prisma.user.update({
+      const user = await req._prisma.user.update({
         where: { id },
         data: { isActive },
         include: {
@@ -340,7 +340,7 @@ export class UserController {
 
       // Log admin action
       await this.logAdminAction(
-        req.prisma,
+        req._prisma,
         'UPDATE_USER_STATUS',
         req.user!.sub,
         id,
@@ -378,7 +378,7 @@ export class UserController {
     }
   }
 
-  async bulkUpdateUsers(_req: Request, res: Response) {
+  async bulkUpdateUsers(req: Request, res: Response) {
     try {
       const { userIds, action, data } = req.body;
 
@@ -451,7 +451,7 @@ export class UserController {
       }
 
       // Perform bulk update
-      const result = await req.prisma.user.updateMany({
+      const result = await req._prisma.user.updateMany({
         where: {
           id: {
             in: userIds,
@@ -462,7 +462,7 @@ export class UserController {
 
       // Log admin action
       await this.logAdminAction(
-        req.prisma,
+        req._prisma,
         'BULK_UPDATE_USERS',
         req.user!.sub,
         undefined,
@@ -495,7 +495,7 @@ export class UserController {
     }
   }
 
-  async assignUserRole(_req: Request, res: Response) {
+  async assignUserRole(req: Request, res: Response) {
     try {
       const { id } = req.params;
       const { role } = req.body;
@@ -509,7 +509,7 @@ export class UserController {
       }
 
       // Check if user exists
-      const user = await req.prisma.user.findUnique({
+      const user = await req._prisma.user.findUnique({
         where: { id },
         include: {
           roles: {
@@ -539,7 +539,7 @@ export class UserController {
       }
 
       // Get the role record
-      const roleRecord = await req.prisma.role.findUnique({
+      const roleRecord = await req._prisma.role.findUnique({
         where: { name: role },
       });
 
@@ -552,7 +552,7 @@ export class UserController {
       }
 
       // Assign role to user
-      await req.prisma.userRole.create({
+      await req._prisma.userRole.create({
         data: {
           userId: id,
           roleId: roleRecord.id,
@@ -560,11 +560,11 @@ export class UserController {
       });
 
       // Create appropriate profile if needed
-      await this.createRoleProfile(req.prisma, id, role);
+      await this.createRoleProfile(req._prisma, id, role);
 
       // Log admin action
       await this.logAdminAction(
-        req.prisma,
+        req._prisma,
         'ASSIGN_USER_ROLE',
         req.user!.sub,
         id,
@@ -591,7 +591,7 @@ export class UserController {
     }
   }
 
-  async removeUserRole(_req: Request, res: Response) {
+  async removeUserRole(req: Request, res: Response) {
     try {
       const { id } = req.params;
       const { role } = req.body;
@@ -614,7 +614,7 @@ export class UserController {
       }
 
       // Check if user exists and has the role
-      const user = await req.prisma.user.findUnique({
+      const user = await req._prisma.user.findUnique({
         where: { id },
         include: {
           roles: {
@@ -643,7 +643,7 @@ export class UserController {
       }
 
       // Remove role from user
-      await req.prisma.userRole.delete({
+      await req._prisma.userRole.delete({
         where: {
           id: userRole.id,
         },
@@ -651,7 +651,7 @@ export class UserController {
 
       // If this was the active role, switch to CUSTOMER
       if (user.activeRole === role) {
-        await req.prisma.user.update({
+        await req._prisma.user.update({
           where: { id },
           data: { activeRole: 'CUSTOMER' },
         });
@@ -659,7 +659,7 @@ export class UserController {
 
       // Log admin action
       await this.logAdminAction(
-        req.prisma,
+        req._prisma,
         'REMOVE_USER_ROLE',
         req.user!.sub,
         id,
@@ -687,7 +687,7 @@ export class UserController {
     }
   }
 
-  async exportUsers(_req: Request, res: Response) {
+  async exportUsers(req: Request, res: Response) {
     try {
       const { format = 'json', filters = {} } = req.query;
 
@@ -727,7 +727,7 @@ export class UserController {
       }
 
       // Get users with limit for export (max 10000)
-      const users = await req.prisma.user.findMany({
+      const users = await req._prisma.user.findMany({
         where,
         take: 10000,
         include: {
@@ -760,7 +760,7 @@ export class UserController {
 
       // Log admin action
       await this.logAdminAction(
-        req.prisma,
+        req._prisma,
         'EXPORT_USERS',
         req.user!.sub,
         undefined,
@@ -826,7 +826,7 @@ export class UserController {
     }
   }
 
-  async getUserActivity(_req: Request, res: Response) {
+  async getUserActivity(req: Request, res: Response) {
     try {
       const { id } = req.params;
       const { page = 1, limit = 20, action } = req.query;
@@ -835,7 +835,7 @@ export class UserController {
       const take = Math.min(Number(limit), 100);
 
       // Check if user exists
-      const user = await req.prisma.user.findUnique({
+      const user = await req._prisma.user.findUnique({
         where: { id },
         select: { email: true, firstName: true, lastName: true },
       });
@@ -859,7 +859,7 @@ export class UserController {
 
       // Get audit logs for this user
       const [auditLogs, totalAuditLogs] = await Promise.all([
-        req.prisma.auditLog.findMany({
+        req._prisma.auditLog.findMany({
           where,
           skip,
           take,
@@ -875,11 +875,11 @@ export class UserController {
           },
           orderBy: { createdAt: 'desc' },
         }),
-        req.prisma.auditLog.count({ where }),
+        req._prisma.auditLog.count({ where }),
       ]);
 
       // Get user details and recent tokens
-      const userDetails = await req.prisma.user.findUnique({
+      const userDetails = await req._prisma.user.findUnique({
         where: { id },
         include: {
           roles: {
@@ -896,7 +896,7 @@ export class UserController {
 
       // Log admin action
       await this.logAdminAction(
-        req.prisma,
+        req._prisma,
         'VIEW_USER_ACTIVITY',
         req.user!.sub,
         id,
@@ -959,7 +959,7 @@ export class UserController {
     }
   }
 
-  async getAuditLogs(_req: Request, res: Response) {
+  async getAuditLogs(req: Request, res: Response) {
     try {
       const {
         page = 1,
@@ -1005,7 +1005,7 @@ export class UserController {
       }
 
       const [auditLogs, total] = await Promise.all([
-        req.prisma.auditLog.findMany({
+        req._prisma.auditLog.findMany({
           where,
           skip,
           take,
@@ -1029,12 +1029,12 @@ export class UserController {
           },
           orderBy: { createdAt: 'desc' },
         }),
-        req.prisma.auditLog.count({ where }),
+        req._prisma.auditLog.count({ where }),
       ]);
 
       // Log admin action
       await this.logAdminAction(
-        req.prisma,
+        req._prisma,
         'VIEW_AUDIT_LOGS',
         req.user!.sub,
         undefined,
@@ -1106,7 +1106,7 @@ export class UserController {
     }
   }
 
-  async getAuditReport(_req: Request, res: Response) {
+  async getAuditReport(req: Request, res: Response) {
     try {
       const {
         startDate,
@@ -1133,20 +1133,20 @@ export class UserController {
       // Get audit log statistics
       const [totalLogs, actionStats, adminStats, dailyStats] =
         await Promise.all([
-          req.prisma.auditLog.count({ where }),
-          req.prisma.auditLog.groupBy({
+          req._prisma.auditLog.count({ where }),
+          req._prisma.auditLog.groupBy({
             by: ['action'],
             where,
             _count: { action: true },
             orderBy: { _count: { action: 'desc' } },
           }),
-          req.prisma.auditLog.groupBy({
+          req._prisma.auditLog.groupBy({
             by: ['adminUserId'],
             where,
             _count: { adminUserId: true },
             orderBy: { _count: { adminUserId: 'desc' } },
           }),
-          req.prisma.$queryRaw`
+          req._prisma.$queryRaw`
           SELECT DATE(created_at) as date, COUNT(*) as count
           FROM audit_logs
           WHERE created_at >= ${new Date(startDate as string)}
@@ -1158,7 +1158,7 @@ export class UserController {
 
       // Get admin user details for stats
       const adminUserIds = adminStats.map((stat: any) => stat.adminUserId);
-      const adminUsers = await req.prisma.user.findMany({
+      const adminUsers = await req._prisma.user.findMany({
         where: { id: { in: adminUserIds } },
         select: { id: true, email: true, firstName: true, lastName: true },
       });
@@ -1192,7 +1192,7 @@ export class UserController {
 
       // Log admin action
       await this.logAdminAction(
-        req.prisma,
+        req._prisma,
         'GENERATE_AUDIT_REPORT',
         req.user!.sub,
         undefined,
@@ -1210,7 +1210,7 @@ export class UserController {
         const csvLines = [
           'Date,Action,Admin Email,Target User,IP Address,Details',
           ...(
-            await req.prisma.auditLog.findMany({
+            await req._prisma.auditLog.findMany({
               where,
               include: {
                 adminUser: { select: { email: true } },
@@ -1255,7 +1255,7 @@ export class UserController {
     }
   }
 
-  async getUserStats(_req: Request, res: Response) {
+  async getUserStats(req: Request, res: Response) {
     try {
       const { startDate, endDate } = req.query;
 
@@ -1280,15 +1280,15 @@ export class UserController {
         roleStats,
         recentRegistrations,
       ] = await Promise.all([
-        req.prisma.user.count({ where }),
-        req.prisma.user.count({ where: { ...where, isActive: true } }),
-        req.prisma.user.count({ where: { ...where, isEmailVerified: true } }),
-        req.prisma.user.count({ where: { ...where, isPhoneVerified: true } }),
-        req.prisma.userRole.groupBy({
+        req._prisma.user.count({ where }),
+        req._prisma.user.count({ where: { ...where, isActive: true } }),
+        req._prisma.user.count({ where: { ...where, isEmailVerified: true } }),
+        req._prisma.user.count({ where: { ...where, isPhoneVerified: true } }),
+        req._prisma.userRole.groupBy({
           by: ['roleId'],
           _count: { roleId: true },
         }),
-        req.prisma.user.findMany({
+        req._prisma.user.findMany({
           where: {
             createdAt: {
               gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // Last 30 days
@@ -1301,7 +1301,7 @@ export class UserController {
       ]);
 
       // Get role details
-      const roles = await req.prisma.role.findMany();
+      const roles = await req._prisma.role.findMany();
       const roleStatsWithNames = roleStats.map(stat => {
         const role = roles.find(r => r.id === stat.roleId);
         return {
@@ -1322,7 +1322,7 @@ export class UserController {
 
       // Log admin action
       await this.logAdminAction(
-        req.prisma,
+        req._prisma,
         'VIEW_USER_STATS',
         req.user!.sub,
         undefined,
@@ -1379,8 +1379,8 @@ export class UserController {
   }
 
   private async createRoleProfile(
-    prisma: any,
-    _userId: string,
+    prisma: unknown,
+    userId: string,
     role: RoleName
   ) {
     try {

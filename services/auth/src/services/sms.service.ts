@@ -1,156 +1,121 @@
-import crypto from 'crypto';
+/**
+ * SMS Service that integrates with the notification service
+ */
+export class SmsService {
+  private notificationServiceUrl: string;
 
-export interface PhoneVerificationData {
-  phone: string;
-  firstName: string;
-  verificationCode: string;
-}
-
-export interface SMSTemplate {
-  message: string;
-}
-
-export class SMSService {
-  private static instance: SMSService;
-
-  private constructor() {}
-
-  static getInstance(): SMSService {
-    if (!SMSService.instance) {
-      SMSService.instance = new SMSService();
-    }
-    return SMSService.instance;
+  constructor() {
+    this.notificationServiceUrl =
+      process.env.NOTIFICATION_SERVICE_URL || 'http://localhost:3002';
   }
 
-  /**
-   * Generate a secure 6-digit verification code
-   */
-  generateVerificationCode(): string {
-    // Generate cryptographically secure random 6-digit code
-    const randomBytes = crypto.randomBytes(4);
-    const randomNumber = randomBytes.readUInt32BE(0);
-    const code = ((randomNumber % 900000) + 100000).toString();
-    return code;
-  }
-
-  /**
-   * Create SMS verification template
-   */
-  createVerificationSMSTemplate(data: PhoneVerificationData): SMSTemplate {
-    const { firstName, verificationCode } = data;
-
-    const message = `Hello ${firstName}! Your verification code is: ${verificationCode}. This code will expire in 10 minutes. Do not share this code with anyone. If you didn't request this, please ignore this message.`;
-
-    return { message };
-  }
-
-  /**
-   * Send SMS verification code (mock implementation)
-   * In production, this would integrate with an SMS service like Twilio, AWS SNS, etc.
-   */
-  async sendVerificationSMS(data: PhoneVerificationData): Promise<void> {
+  async sendVerificationCode(phoneNumber: string, code: string): Promise<void> {
     try {
-      const template = this.createVerificationSMSTemplate(data);
-
-      // Mock SMS sending - in production, integrate with actual SMS service
-      console.log('📱 SMS Verification Sent:', {
-        to: data.phone,
-        message: template.message,
-        code: data.verificationCode,
-        timestamp: new Date().toISOString(),
+      await this.sendSMS(phoneNumber, {
+        template: 'verification_code',
+        data: { code },
+        priority: 'high',
       });
 
-      // Simulate SMS service delay
-      await new Promise(resolve => setTimeout(resolve, 200));
-
-      // In production, you would do something like:
-      // await this.smsProvider.send({
-      //   to: data.phone,
-      //   message: template.message
-      // });
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`[DEV] SMS Verification Code for ${phoneNumber}: ${code}`);
+      }
     } catch (error) {
-      console.error('Failed to send verification SMS:', error);
-      throw new Error('Failed to send verification SMS');
+      console.error('Failed to send SMS verification code:', error);
+      throw new Error('Failed to send SMS verification code');
     }
   }
 
-  /**
-   * Send security alert SMS
-   */
-  async sendSecurityAlert(phone: string, message: string): Promise<void> {
+  async sendPasswordResetCode(
+    phoneNumber: string,
+    code: string
+  ): Promise<void> {
     try {
-      console.log('🔒 Security Alert SMS Sent:', {
-        to: phone,
-        message,
-        timestamp: new Date().toISOString(),
+      await this.sendSMS(phoneNumber, {
+        template: 'password_reset_code',
+        data: { code },
+        priority: 'high',
       });
 
-      // Simulate async operation
-      await new Promise(resolve => setTimeout(resolve, 100));
+      if (process.env.NODE_ENV === 'development') {
+        console.log(
+          `[DEV] SMS Password Reset Code for ${phoneNumber}: ${code}`
+        );
+      }
+    } catch (error) {
+      console.error('Failed to send password reset SMS:', error);
+      throw new Error('Failed to send password reset SMS');
+    }
+  }
+
+  async sendSecurityAlert(phoneNumber: string, message: string): Promise<void> {
+    try {
+      await this.sendSMS(phoneNumber, {
+        template: 'security_alert',
+        data: { message },
+        priority: 'urgent',
+      });
+
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`[DEV] SMS Security Alert for ${phoneNumber}: ${message}`);
+      }
     } catch (error) {
       console.error('Failed to send security alert SMS:', error);
-      // Don't throw error for security alert failure
+      throw new Error('Failed to send security alert SMS');
     }
   }
 
-  /**
-   * Validate phone number format
-   */
-  validatePhoneNumber(phone: string): { isValid: boolean; error?: string } {
-    // Remove all non-digit characters for validation
-    const cleanPhone = phone.replace(/\D/g, '');
+  private async sendSMS(
+    phoneNumber: string,
+    options: {
+      template: string;
+      data: Record<string, unknown>;
+      priority: 'low' | 'normal' | 'high' | 'urgent';
+    }
+  ): Promise<void> {
+    try {
+      const response = await fetch(
+        `${this.notificationServiceUrl}/api/notifications/sms`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${process.env.INTERNAL_SERVICE_TOKEN || 'dev-token'}`,
+          },
+          body: JSON.stringify({
+            recipient: phoneNumber,
+            template: options.template,
+            data: options.data,
+            priority: options.priority,
+            source: 'auth-service',
+          }),
+        }
+      );
 
-    // Check if it's a valid length (10-15 digits)
-    if (cleanPhone.length < 10 || cleanPhone.length > 15) {
-      return {
-        isValid: false,
-        error: 'Phone number must be between 10 and 15 digits',
+      if (!response.ok) {
+        throw new Error(
+          `SMS service responded with status: ${response.status}`
+        );
+      }
+
+      const result = (await response.json()) as {
+        success: boolean;
+        error?: string;
       };
+      if (!result.success) {
+        throw new Error(result.error || 'SMS sending failed');
+      }
+    } catch (error) {
+      // Fallback to console logging in development
+      if (process.env.NODE_ENV === 'development') {
+        console.log(
+          `[FALLBACK] SMS to ${phoneNumber}: ${JSON.stringify(options.data)}`
+        );
+        return;
+      }
+      throw error;
     }
-
-    // Check for valid international format patterns
-    const validPatterns = [
-      /^\+?1[2-9]\d{9}$/, // US/Canada
-      /^\+?44[1-9]\d{8,9}$/, // UK
-      /^\+?49[1-9]\d{7,11}$/, // Germany
-      /^\+?33[1-9]\d{8}$/, // France
-      /^\+?39[0-9]\d{6,11}$/, // Italy
-      /^\+?34[6-9]\d{8}$/, // Spain
-      /^\+?91[6-9]\d{9}$/, // India
-      /^\+?86[1-9]\d{9,10}$/, // China
-      /^\+?81[1-9]\d{8,9}$/, // Japan
-      /^\+?82[1-9]\d{7,8}$/, // South Korea
-      /^\+?61[2-9]\d{8}$/, // Australia
-      /^\+?55[1-9]\d{8,10}$/, // Brazil
-      /^\+?7[3-9]\d{9}$/, // Russia
-      /^\+?[1-9]\d{7,14}$/, // Generic international format
-    ];
-
-    const isValidFormat = validPatterns.some(pattern => pattern.test(phone));
-
-    if (!isValidFormat) {
-      return {
-        isValid: false,
-        error: 'Invalid phone number format',
-      };
-    }
-
-    return { isValid: true };
-  }
-
-  /**
-   * Format phone number for storage
-   */
-  formatPhoneNumber(phone: string): string {
-    // Remove all non-digit characters except +
-    const cleaned = phone.replace(/[^\d+]/g, '');
-
-    // Ensure it starts with + for international format
-    if (!cleaned.startsWith('+')) {
-      // Assume US number if no country code
-      return `+1${cleaned}`;
-    }
-
-    return cleaned;
   }
 }
+
+export const smsService = new SmsService();

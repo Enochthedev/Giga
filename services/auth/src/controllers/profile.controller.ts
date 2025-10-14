@@ -3,6 +3,8 @@ import {
   ProfileService,
   ProfileValidationError,
 } from '../services/profile.service';
+import { InputSanitizer } from '../utils/input-sanitizer';
+import { PhoneNumberValidator } from '../utils/phone-validator';
 
 export class ProfileController {
   private profileService = ProfileService.getInstance();
@@ -10,7 +12,7 @@ export class ProfileController {
   /**
    * Update basic user profile information
    */
-  async updateBasicProfile(_req: Request, res: Response) {
+  async updateBasicProfile(req: Request, res: Response) {
     try {
       if (!req.user) {
         return res.status(401).json({
@@ -70,7 +72,7 @@ export class ProfileController {
           }
 
           // Check if phone is already taken by another user
-          const existingUser = await req.prisma.user.findFirst({
+          const existingUser = await req._prisma.user.findFirst({
             where: {
               phone: phoneValidation.formatted,
               id: { not: req.user.sub },
@@ -88,7 +90,7 @@ export class ProfileController {
 
           updateData.phone = phoneValidation.formatted;
           // Reset phone verification if phone number changed
-          const currentUser = await req.prisma.user.findUnique({
+          const currentUser = await req._prisma.user.findUnique({
             where: { id: req.user.sub },
             select: { phone: true },
           });
@@ -162,7 +164,7 @@ export class ProfileController {
       }
 
       // Update user profile
-      const updatedUser = await req.prisma.user.update({
+      const updatedUser = await req._prisma.user.update({
         where: { id: req.user.sub },
         data: updateData,
         select: {
@@ -172,8 +174,6 @@ export class ProfileController {
           lastName: true,
           phone: true,
           avatar: true,
-          dateOfBirth: true,
-          gender: true,
           isEmailVerified: true,
           isPhoneVerified: true,
           updatedAt: true,
@@ -210,7 +210,7 @@ export class ProfileController {
   /**
    * Get complete user profile with all role-specific profiles
    */
-  async getCompleteProfile(_req: Request, res: Response) {
+  async getCompleteProfile(req: Request, res: Response) {
     try {
       if (!req.user) {
         return res.status(401).json({
@@ -222,7 +222,7 @@ export class ProfileController {
       }
 
       const userWithProfiles = await this.profileService.getUserWithProfiles(
-        req.prisma,
+        req._prisma,
         req.user.sub
       );
 
@@ -246,8 +246,7 @@ export class ProfileController {
             ? PhoneNumberValidator.formatForDisplay(userWithProfiles.phone)
             : null,
           avatar: userWithProfiles.avatar,
-          dateOfBirth: userWithProfiles.dateOfBirth,
-          gender: userWithProfiles.gender,
+
           isEmailVerified: userWithProfiles.isEmailVerified,
           isPhoneVerified: userWithProfiles.isPhoneVerified,
           activeRole: userWithProfiles.activeRole,
@@ -263,10 +262,15 @@ export class ProfileController {
           id: userWithProfiles.customerProfile.id,
           preferences: userWithProfiles.customerProfile.preferences,
           addresses: userWithProfiles.customerProfile.addresses,
-          loyaltyPoints: userWithProfiles.customerProfile.loyaltyPoints,
-          membershipTier: userWithProfiles.customerProfile.membershipTier,
-          totalOrders: userWithProfiles.customerProfile.totalOrders,
-          totalSpent: userWithProfiles.customerProfile.totalSpent,
+          loyaltyPoints:
+            (userWithProfiles.customerProfile as any)?.loyaltyPoints || 0,
+          membershipTier:
+            (userWithProfiles.customerProfile as any)?.membershipTier ||
+            'BRONZE',
+          totalOrders:
+            (userWithProfiles.customerProfile as any)?.totalOrders || 0,
+          totalSpent:
+            (userWithProfiles.customerProfile as any)?.totalSpent || 0,
           createdAt: userWithProfiles.customerProfile.createdAt,
           updatedAt: userWithProfiles.customerProfile.updatedAt,
         };
@@ -310,7 +314,8 @@ export class ProfileController {
         profileData.profiles.host = {
           id: userWithProfiles.hostProfile.id,
           businessName: userWithProfiles.hostProfile.businessName,
-          hostType: userWithProfiles.hostProfile.hostType,
+          hostType:
+            (userWithProfiles.hostProfile as any)?.hostType || 'INDIVIDUAL',
           description: userWithProfiles.hostProfile.description,
           rating: userWithProfiles.hostProfile.rating,
           totalBookings: userWithProfiles.hostProfile.totalBookings,
@@ -330,8 +335,11 @@ export class ProfileController {
           industry: userWithProfiles.advertiserProfile.industry,
           website: userWithProfiles.advertiserProfile.website,
           totalSpend: userWithProfiles.advertiserProfile.totalSpend,
-          totalCampaigns: userWithProfiles.advertiserProfile.totalCampaigns,
-          subscriptionTier: userWithProfiles.advertiserProfile.subscriptionTier,
+          totalCampaigns:
+            (userWithProfiles.advertiserProfile as any)?.totalCampaigns || 0,
+          subscriptionTier:
+            (userWithProfiles.advertiserProfile as any)?.subscriptionTier ||
+            'BASIC',
           isVerified: userWithProfiles.advertiserProfile.isVerified,
           createdAt: userWithProfiles.advertiserProfile.createdAt,
           updatedAt: userWithProfiles.advertiserProfile.updatedAt,
@@ -357,7 +365,7 @@ export class ProfileController {
   /**
    * Update customer profile
    */
-  async updateCustomerProfile(_req: Request, res: Response) {
+  async updateCustomerProfile(req: Request, res: Response) {
     try {
       if (!req.user) {
         return res.status(401).json({
@@ -369,7 +377,7 @@ export class ProfileController {
       }
 
       // Check if user has CUSTOMER role
-      const user = await req.prisma.user.findUnique({
+      const user = await req._prisma.user.findUnique({
         where: { id: req.user.sub },
         include: {
           roles: {
@@ -391,7 +399,7 @@ export class ProfileController {
       }
 
       const updatedProfile = await this.profileService.updateCustomerProfile(
-        req.prisma,
+        req._prisma,
         req.user.sub,
         req.body
       );
@@ -418,7 +426,7 @@ export class ProfileController {
   /**
    * Update vendor profile
    */
-  async updateVendorProfile(_req: Request, res: Response) {
+  async updateVendorProfile(req: Request, res: Response) {
     try {
       if (!req.user) {
         return res.status(401).json({
@@ -431,7 +439,7 @@ export class ProfileController {
 
       // Check if user has VENDOR role
       const hasVendorRole = await this.profileService.verifyUserRole(
-        req.prisma,
+        req._prisma,
         req.user.sub,
         'VENDOR'
       );
@@ -446,7 +454,7 @@ export class ProfileController {
       }
 
       const updatedProfile = await this.profileService.updateVendorProfile(
-        req.prisma,
+        req._prisma,
         req.user.sub,
         req.body
       );
@@ -484,7 +492,7 @@ export class ProfileController {
   /**
    * Update driver profile
    */
-  async updateDriverProfile(_req: Request, res: Response) {
+  async updateDriverProfile(req: Request, res: Response) {
     try {
       if (!req.user) {
         return res.status(401).json({
@@ -497,7 +505,7 @@ export class ProfileController {
 
       // Check if user has DRIVER role
       const hasDriverRole = await this.profileService.verifyUserRole(
-        req.prisma,
+        req._prisma,
         req.user.sub,
         'DRIVER'
       );
@@ -512,7 +520,7 @@ export class ProfileController {
       }
 
       const updatedProfile = await this.profileService.updateDriverProfile(
-        req.prisma,
+        req._prisma,
         req.user.sub,
         req.body
       );
@@ -550,7 +558,7 @@ export class ProfileController {
   /**
    * Update host profile
    */
-  async updateHostProfile(_req: Request, res: Response) {
+  async updateHostProfile(req: Request, res: Response) {
     try {
       if (!req.user) {
         return res.status(401).json({
@@ -563,7 +571,7 @@ export class ProfileController {
 
       // Check if user has HOST role
       const hasHostRole = await this.profileService.verifyUserRole(
-        req.prisma,
+        req._prisma,
         req.user.sub,
         'HOST'
       );
@@ -578,7 +586,7 @@ export class ProfileController {
       }
 
       const updatedProfile = await this.profileService.updateHostProfile(
-        req.prisma,
+        req._prisma,
         req.user.sub,
         req.body
       );
@@ -616,7 +624,7 @@ export class ProfileController {
   /**
    * Update advertiser profile
    */
-  async updateAdvertiserProfile(_req: Request, res: Response) {
+  async updateAdvertiserProfile(req: Request, res: Response) {
     try {
       if (!req.user) {
         return res.status(401).json({
@@ -629,7 +637,7 @@ export class ProfileController {
 
       // Check if user has ADVERTISER role
       const hasAdvertiserRole = await this.profileService.verifyUserRole(
-        req.prisma,
+        req._prisma,
         req.user.sub,
         'ADVERTISER'
       );
@@ -644,7 +652,7 @@ export class ProfileController {
       }
 
       const updatedProfile = await this.profileService.updateAdvertiserProfile(
-        req.prisma,
+        req._prisma,
         req.user.sub,
         req.body
       );
@@ -682,7 +690,7 @@ export class ProfileController {
   /**
    * Add customer address
    */
-  async addCustomerAddress(_req: Request, res: Response) {
+  async addCustomerAddress(req: Request, res: Response) {
     try {
       if (!req.user) {
         return res.status(401).json({
@@ -694,7 +702,7 @@ export class ProfileController {
       }
 
       // Check if user has CUSTOMER role
-      const user = await req.prisma.user.findUnique({
+      const user = await req._prisma.user.findUnique({
         where: { id: req.user.sub },
         include: {
           roles: {
@@ -716,7 +724,7 @@ export class ProfileController {
       }
 
       const address = await this.profileService.addCustomerAddress(
-        req.prisma,
+        req._prisma,
         req.user.sub,
         req.body
       );
@@ -756,7 +764,7 @@ export class ProfileController {
   /**
    * Update customer address
    */
-  async updateCustomerAddress(_req: Request, res: Response) {
+  async updateCustomerAddress(req: Request, res: Response) {
     try {
       if (!req.user) {
         return res.status(401).json({
@@ -770,7 +778,7 @@ export class ProfileController {
       const { addressId } = req.params;
 
       const address = await this.profileService.updateCustomerAddress(
-        req.prisma,
+        req._prisma,
         req.user.sub,
         addressId,
         req.body
@@ -811,7 +819,7 @@ export class ProfileController {
   /**
    * Delete customer address
    */
-  async deleteCustomerAddress(_req: Request, res: Response) {
+  async deleteCustomerAddress(req: Request, res: Response) {
     try {
       if (!req.user) {
         return res.status(401).json({
@@ -825,7 +833,7 @@ export class ProfileController {
       const { addressId } = req.params;
 
       await this.profileService.deleteCustomerAddress(
-        req.prisma,
+        req._prisma,
         req.user.sub,
         addressId
       );
@@ -862,7 +870,7 @@ export class ProfileController {
   /**
    * Get profile statistics for current user's role
    */
-  async getProfileStats(_req: Request, res: Response) {
+  async getProfileStats(req: Request, res: Response) {
     try {
       if (!req.user) {
         return res.status(401).json({
@@ -887,7 +895,7 @@ export class ProfileController {
 
       // Verify user has the requested role
       const hasRole = await this.profileService.verifyUserRole(
-        req.prisma,
+        req._prisma,
         req.user.sub,
         role.toUpperCase() as any
       );
@@ -905,25 +913,25 @@ export class ProfileController {
       switch (role) {
         case 'vendor':
           stats = await this.profileService.getVendorStats(
-            req.prisma,
+            req._prisma,
             req.user.sub
           );
           break;
         case 'driver':
           stats = await this.profileService.getDriverStats(
-            req.prisma,
+            req._prisma,
             req.user.sub
           );
           break;
         case 'host':
           stats = await this.profileService.getHostStats(
-            req.prisma,
+            req._prisma,
             req.user.sub
           );
           break;
         case 'advertiser':
           stats = await this.profileService.getAdvertiserStats(
-            req.prisma,
+            req._prisma,
             req.user.sub
           );
           break;
@@ -961,7 +969,7 @@ export class ProfileController {
   /**
    * Update profile verification status (admin only)
    */
-  async updateProfileVerification(_req: Request, res: Response) {
+  async updateProfileVerification(req: Request, res: Response) {
     try {
       if (!req.user) {
         return res.status(401).json({
@@ -974,7 +982,7 @@ export class ProfileController {
 
       // Check if user has ADMIN role
       const hasAdminRole = await this.profileService.verifyUserRole(
-        req.prisma,
+        req._prisma,
         req.user.sub,
         'ADMIN'
       );
@@ -992,7 +1000,7 @@ export class ProfileController {
 
       const updatedProfile =
         await this.profileService.updateProfileVerification(
-          req.prisma,
+          req._prisma,
           userId,
           role,
           isVerified,
@@ -1031,7 +1039,7 @@ export class ProfileController {
   /**
    * Update profile rating (for external rating systems)
    */
-  async updateProfileRating(_req: Request, res: Response) {
+  async updateProfileRating(req: Request, res: Response) {
     try {
       if (!req.user) {
         return res.status(401).json({
@@ -1050,7 +1058,7 @@ export class ProfileController {
       const targetUserId = userId || req.user.sub;
 
       const updatedProfile = await this.profileService.updateProfileRating(
-        req.prisma,
+        req._prisma,
         targetUserId,
         role,
         rating

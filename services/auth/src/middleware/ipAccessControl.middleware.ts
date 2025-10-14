@@ -12,7 +12,7 @@ export class IPAccessControlMiddleware {
    * IP whitelist/blacklist checking
    */
   static checkIPAccess = async (
-    _req: Request,
+    req: Request,
     res: Response,
     next: NextFunction
   ) => {
@@ -433,7 +433,7 @@ export class IPAccessControlMiddleware {
   /**
    * Remove IP from blacklist (admin function)
    */
-  static removeFromBlacklist = (ip: string, adminUserId: string) => {
+  static removeFromBlacklist = async (ip: string, adminUserId: string) => {
     try {
       const blacklistKey = `ip_blacklist:${ip}`;
       await redisService.del(blacklistKey);
@@ -453,7 +453,7 @@ export class IPAccessControlMiddleware {
   /**
    * Get IP analytics data
    */
-  static getIPAnalytics = (ip: string) => {
+  static getIPAnalytics = async (ip: string) => {
     try {
       const [usage, suspicious, blacklist, geoData] = await Promise.all([
         redisService.get(`ip_usage:${ip}`),

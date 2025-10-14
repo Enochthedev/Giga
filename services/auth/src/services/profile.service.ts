@@ -1,5 +1,7 @@
 import { Prisma, PrismaClient, RoleName } from '../generated/prisma-client';
 
+const prisma = new PrismaClient();
+
 interface CustomerProfileUpdateData {
   preferences?: Prisma.InputJsonValue;
 }
@@ -87,8 +89,8 @@ export class ProfileService {
    * Create all necessary profiles for user roles with enhanced initialization
    */
   async createProfilesForRoles(
-    _prisma: PrismaClient,
-    _userId: string,
+    prismaClient: PrismaClient,
+    userId: string,
     roles: RoleName[]
   ): Promise<void> {
     const profileCreationPromises = [];
@@ -100,7 +102,7 @@ export class ProfileService {
             prisma.customerProfile.upsert({
               where: { userId },
               create: {
-                userId,
+                userId: userId,
                 preferences: {
                   language: 'en',
                   currency: 'USD',
@@ -125,7 +127,7 @@ export class ProfileService {
             prisma.vendorProfile.upsert({
               where: { userId },
               create: {
-                userId,
+                userId: userId,
                 businessName: '',
                 businessType: '',
                 subscriptionTier: 'BASIC',
@@ -144,7 +146,7 @@ export class ProfileService {
             prisma.driverProfile.upsert({
               where: { userId },
               create: {
-                userId,
+                userId: userId,
                 licenseNumber: '',
                 vehicleInfo: {
                   verified: false,
@@ -167,7 +169,7 @@ export class ProfileService {
             prisma.hostProfile.upsert({
               where: { userId },
               create: {
-                userId,
+                userId: userId,
                 totalBookings: 0,
                 isVerified: false,
                 subscriptionTier: 'BASIC',
@@ -185,7 +187,7 @@ export class ProfileService {
             prisma.advertiserProfile.upsert({
               where: { userId },
               create: {
-                userId,
+                userId: userId,
                 companyName: '',
                 industry: '',
                 totalSpend: 0,
@@ -204,7 +206,7 @@ export class ProfileService {
   /**
    * Get user profile with all role-specific profiles
    */
-  getUserWithProfiles(_prisma: PrismaClient, _userId: string) {
+  async getUserWithProfiles(prismaClient: PrismaClient, userId: string) {
     return prisma.user.findUnique({
       where: { id: userId },
       include: {
@@ -229,9 +231,9 @@ export class ProfileService {
   /**
    * Update customer profile
    */
-  updateCustomerProfile(
-    _prisma: PrismaClient,
-    _userId: string,
+  async updateCustomerProfile(
+    prismaClient: PrismaClient,
+    userId: string,
     data: CustomerProfileUpdateData
   ) {
     return prisma.customerProfile.update({
@@ -249,8 +251,8 @@ export class ProfileService {
    * Update vendor profile with enhanced business logic
    */
   async updateVendorProfile(
-    _prisma: PrismaClient,
-    _userId: string,
+    prismaClient: PrismaClient,
+    userId: string,
     data: VendorProfileUpdateData
   ) {
     // Get current profile to validate business rules
@@ -357,8 +359,8 @@ export class ProfileService {
    * Update driver profile with enhanced business logic
    */
   async updateDriverProfile(
-    _prisma: PrismaClient,
-    _userId: string,
+    prismaClient: PrismaClient,
+    userId: string,
     data: DriverProfileUpdateData
   ) {
     // Get current profile to validate business rules
@@ -488,8 +490,8 @@ export class ProfileService {
    * Update host profile with enhanced business logic
    */
   async updateHostProfile(
-    _prisma: PrismaClient,
-    _userId: string,
+    prismaClient: PrismaClient,
+    userId: string,
     data: HostProfileUpdateData
   ) {
     // Get current profile to validate business rules
@@ -560,8 +562,8 @@ export class ProfileService {
    * Update advertiser profile with enhanced business logic
    */
   async updateAdvertiserProfile(
-    _prisma: PrismaClient,
-    _userId: string,
+    prismaClient: PrismaClient,
+    userId: string,
     data: AdvertiserProfileUpdateData
   ) {
     // Get current profile to validate business rules
@@ -645,8 +647,8 @@ export class ProfileService {
    * Add address to customer profile
    */
   async addCustomerAddress(
-    _prisma: PrismaClient,
-    _userId: string,
+    prismaClient: PrismaClient,
+    userId: string,
     addressData: AddressCreateData
   ) {
     // Get customer profile
@@ -683,8 +685,8 @@ export class ProfileService {
    * Update customer address
    */
   async updateCustomerAddress(
-    _prisma: PrismaClient,
-    _userId: string,
+    prismaClient: PrismaClient,
+    userId: string,
     addressId: string,
     addressData: AddressUpdateData
   ) {
@@ -731,8 +733,8 @@ export class ProfileService {
    * Delete customer address
    */
   async deleteCustomerAddress(
-    _prisma: PrismaClient,
-    _userId: string,
+    prismaClient: PrismaClient,
+    userId: string,
     addressId: string
   ) {
     // Verify the address belongs to the user
@@ -758,8 +760,8 @@ export class ProfileService {
    * Verify user has specific role
    */
   async verifyUserRole(
-    _prisma: PrismaClient,
-    _userId: string,
+    prismaClient: PrismaClient,
+    userId: string,
     requiredRole: RoleName
   ): Promise<boolean> {
     const user = await prisma.user.findUnique({
@@ -781,7 +783,7 @@ export class ProfileService {
   /**
    * Get profile statistics for vendor
    */
-  async getVendorStats(_prisma: PrismaClient, _userId: string) {
+  async getVendorStats(prismaClient: PrismaClient, userId: string) {
     const profile = await prisma.vendorProfile.findUnique({
       where: { userId },
     });
@@ -805,7 +807,7 @@ export class ProfileService {
   /**
    * Get profile statistics for driver
    */
-  async getDriverStats(_prisma: PrismaClient, _userId: string) {
+  async getDriverStats(prismaClient: PrismaClient, userId: string) {
     const profile = await prisma.driverProfile.findUnique({
       where: { userId },
     });
@@ -829,7 +831,7 @@ export class ProfileService {
   /**
    * Get profile statistics for host
    */
-  async getHostStats(_prisma: PrismaClient, _userId: string) {
+  async getHostStats(prismaClient: PrismaClient, userId: string) {
     const profile = await prisma.hostProfile.findUnique({
       where: { userId },
     });
@@ -854,7 +856,7 @@ export class ProfileService {
   /**
    * Get profile statistics for advertiser
    */
-  async getAdvertiserStats(_prisma: PrismaClient, _userId: string) {
+  async getAdvertiserStats(prismaClient: PrismaClient, userId: string) {
     const profile = await prisma.advertiserProfile.findUnique({
       where: { userId },
     });
@@ -879,7 +881,7 @@ export class ProfileService {
    */
   updateProfileVerification(
     _prisma: PrismaClient,
-    _userId: string,
+    userId: string,
     role: RoleName,
     isVerified: boolean,
     _adminUserId: string
@@ -921,7 +923,7 @@ export class ProfileService {
    */
   updateProfileRating(
     _prisma: PrismaClient,
-    _userId: string,
+    userId: string,
     role: RoleName,
     rating: number
   ) {

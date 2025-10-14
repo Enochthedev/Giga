@@ -1,4 +1,9 @@
 import crypto from 'crypto';
+import { logger } from './logger.service';
+import {
+  ExternalServiceManager,
+  ResilientExternalService,
+} from './resilient-external-service';
 
 export interface EmailVerificationData {
   email: string;
@@ -23,9 +28,36 @@ export interface EmailTemplate {
 export class EmailService {
   private static instance: EmailService;
   private baseUrl: string;
+  private resilientService: ResilientExternalService;
 
   private constructor() {
     this.baseUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+
+    // Initialize resilient external service for email
+    const serviceManager = ExternalServiceManager.getInstance();
+    this.resilientService = serviceManager.register({
+      name: 'email-service',
+      baseUrl: process.env.EMAIL_SERVICE_URL,
+      timeout: 10000,
+      circuitBreaker: {
+        failureThreshold: 5,
+        recoveryTimeout: 60000,
+        monitoringPeriod: 300000,
+      },
+      retry: {
+        maxAttempts: 3,
+        baseDelay: 1000,
+        maxDelay: 10000,
+      },
+      fallback: {
+        enabled: true,
+        handler: async () => {
+          // Fallback: log email instead of sending
+          logger.warn('Email service unavailable, logging email instead');
+          return { success: true, fallback: true };
+        },
+      },
+    });
   }
 
   static getInstance(): EmailService {
@@ -140,35 +172,35 @@ This is an automated message. Please do not reply to this email.
   }
 
   /**
-   * Send email verification (mock implementation)
-   * In production, this would integrate with an email service like SendGrid, AWS SES, etc.
+   * Send email verification with resilience and fallback
    */
   async sendVerificationEmail(data: EmailVerificationData): Promise<void> {
-    try {
-      const template = this.createVerificationEmailTemplate(data);
+    const template = this.createVerificationEmailTemplate(data);
 
-      // Mock email sending - in production, integrate with actual email service
-      console.log('📧 Email Verification Sent:', {
-        to: data.email,
-        subject: template.subject,
-        verificationUrl: data.verificationUrl,
-        timestamp: new Date().toISOString(),
-      });
+    await this.resilientService.execute(
+      async () => {
+        // In production, this would call the actual email service
+        // For now, we'll simulate the email sending with potential failures
+        if (Math.random() < 0.1) {
+          // 10% chance of failure for testing
+          throw new Error('Email service temporarily unavailable');
+        }
 
-      // Simulate email service delay
-      await new Promise(resolve => setTimeout(resolve, 100));
+        console.log('📧 Email Verification Sent:', {
+          to: data.email,
+          subject: template.subject,
+          verificationUrl: data.verificationUrl,
+          timestamp: new Date().toISOString(),
+        });
 
-      // In production, you would do something like:
-      // await this.emailProvider.send({
-      //   to: data.email,
-      //   subject: template.subject,
-      //   html: template.html,
-      //   text: template.text
-      // });
-    } catch (error) {
-      console.error('Failed to send verification email:', error);
-      throw new Error('Failed to send verification email');
-    }
+        // Simulate email service delay
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+        return { success: true };
+      },
+      'send-verification-email',
+      { success: true } // Fallback value
+    );
   }
 
   /**
@@ -297,34 +329,34 @@ This is an automated security message. Please do not reply to this email.
   }
 
   /**
-   * Send password reset email
+   * Send password reset email with resilience and fallback
    */
   async sendPasswordResetEmail(data: PasswordResetData): Promise<void> {
-    try {
-      const template = this.createPasswordResetEmailTemplate(data);
+    const template = this.createPasswordResetEmailTemplate(data);
 
-      // Mock email sending - in production, integrate with actual email service
-      console.log('📧 Password Reset Email Sent:', {
-        to: data.email,
-        subject: template.subject,
-        resetUrl: data.resetUrl,
-        timestamp: new Date().toISOString(),
-      });
+    await this.resilientService.execute(
+      async () => {
+        // In production, this would call the actual email service
+        if (Math.random() < 0.1) {
+          // 10% chance of failure for testing
+          throw new Error('Email service temporarily unavailable');
+        }
 
-      // Simulate email service delay
-      await new Promise(resolve => setTimeout(resolve, 100));
+        console.log('📧 Password Reset Email Sent:', {
+          to: data.email,
+          subject: template.subject,
+          resetUrl: data.resetUrl,
+          timestamp: new Date().toISOString(),
+        });
 
-      // In production, you would do something like:
-      // await this.emailProvider.send({
-      //   to: data.email,
-      //   subject: template.subject,
-      //   html: template.html,
-      //   text: template.text
-      // });
-    } catch (error) {
-      console.error('Failed to send password reset email:', error);
-      throw new Error('Failed to send password reset email');
-    }
+        // Simulate email service delay
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+        return { success: true };
+      },
+      'send-password-reset-email',
+      { success: true }
+    );
   }
 
   /**
@@ -335,24 +367,52 @@ This is an automated security message. Please do not reply to this email.
   }
 
   /**
-   * Send welcome email after successful verification
+   * Send welcome email after successful verification with graceful degradation
    */
   async sendWelcomeEmail(email: string, firstName: string): Promise<void> {
     try {
-      const subject = 'Welcome to Our Platform!';
+      await this.resilientService.execute(
+        async () => {
+          const subject = 'Welcome to Our Platform!';
 
-      console.log('📧 Welcome Email Sent:', {
-        to: email,
-        subject,
-        firstName,
-        timestamp: new Date().toISOString(),
-      });
+          console.log('📧 Welcome Email Sent:', {
+            to: email,
+            subject,
+            firstName,
+            timestamp: new Date().toISOString(),
+          });
 
-      // Simulate async operation
-      await new Promise(resolve => setTimeout(resolve, 50));
+          // Simulate async operation
+          await new Promise(resolve => setTimeout(resolve, 50));
+          return { success: true };
+        },
+        'send-welcome-email',
+        { success: true }
+      );
     } catch (error) {
-      console.error('Failed to send welcome email:', error);
-      // Don't throw error for welcome email failure
+      // Graceful degradation: log error but don't fail the operation
+      logger.warn(
+        'Failed to send welcome email, continuing with graceful degradation',
+        {
+          email,
+          firstName,
+          errorMessage: (error as Error).message,
+        }
+      );
     }
+  }
+
+  /**
+   * Get email service health status
+   */
+  getServiceHealth() {
+    return this.resilientService.getHealth();
+  }
+
+  /**
+   * Get email service statistics
+   */
+  getServiceStats() {
+    return this.resilientService.getStats();
   }
 }

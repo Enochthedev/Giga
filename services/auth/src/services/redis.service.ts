@@ -81,7 +81,7 @@ class RedisService {
     }
   }
 
-  set(key: string, value: string, ttlSeconds?: number) {
+  async set(key: string, value: string, ttlSeconds?: number) {
     if (!this.client) await this.connect();
     return this.executeWithLogging('SET', () => {
       if (ttlSeconds) {
@@ -91,7 +91,7 @@ class RedisService {
     });
   }
 
-  get(key: string) {
+  async get(key: string) {
     if (!this.client) await this.connect();
     return this.executeWithLogging(
       'GET',
@@ -102,7 +102,7 @@ class RedisService {
     );
   }
 
-  del(key: string) {
+  async del(key: string) {
     if (!this.client) await this.connect();
     return this.executeWithLogging('DEL', () => {
       return this.client!.del(key);
@@ -118,22 +118,22 @@ class RedisService {
 
   // Session management helpers
   setSession(
-    _userId: string,
+    userId: string,
     sessionData: Record<string, unknown>,
     ttlSeconds = 86400
   ) {
-    const _key = `session:${userId}`;
+    const key = `session:${userId}`;
     return this.set(key, JSON.stringify(sessionData), ttlSeconds);
   }
 
-  async getSession(_userId: string) {
-    const _key = `session:${userId}`;
+  async getSession(userId: string) {
+    const key = `session:${userId}`;
     const data = await this.get(key);
     return data ? JSON.parse(data) : null;
   }
 
-  deleteSession(_userId: string) {
-    const _key = `session:${userId}`;
+  deleteSession(userId: string) {
+    const key = `session:${userId}`;
     return this.del(key);
   }
 
@@ -149,56 +149,56 @@ class RedisService {
 
   // Token blacklist management
   blacklistToken(tokenHash: string, ttlSeconds: number) {
-    const _key = `blacklist:${tokenHash}`;
+    const key = `blacklist:${tokenHash}`;
     return this.set(key, '1', ttlSeconds);
   }
 
   async isTokenBlacklisted(tokenHash: string) {
-    const _key = `blacklist:${tokenHash}`;
+    const key = `blacklist:${tokenHash}`;
     return this.exists(key);
   }
 
   // Device session management
   storeDeviceSession(
-    _userId: string,
+    userId: string,
     deviceId: string,
     sessionData: any,
     ttlSeconds = 604800
   ) {
-    const _key = `device:${userId}:${deviceId}`;
+    const key = `device:${userId}:${deviceId}`;
     return this.set(key, JSON.stringify(sessionData), ttlSeconds);
   }
 
-  async getDeviceSession(_userId: string, deviceId: string) {
-    const _key = `device:${userId}:${deviceId}`;
+  async getDeviceSession(userId: string, deviceId: string) {
+    const key = `device:${userId}:${deviceId}`;
     const data = await this.get(key);
     return data ? JSON.parse(data) : null;
   }
 
-  removeDeviceSession(_userId: string, deviceId: string) {
-    const _key = `device:${userId}:${deviceId}`;
+  removeDeviceSession(userId: string, deviceId: string) {
+    const key = `device:${userId}:${deviceId}`;
     return this.del(key);
   }
 
   // Suspicious activity tracking
   trackSuspiciousActivity(
-    _userId: string,
+    userId: string,
     activityType: string,
     ttlSeconds = 3600
   ) {
-    const _key = `suspicious:${userId}:${activityType}`;
+    const key = `suspicious:${userId}:${activityType}`;
     return this.incrementRateLimit(key, ttlSeconds);
   }
 
-  async getSuspiciousActivityCount(_userId: string, activityType: string) {
-    const _key = `suspicious:${userId}:${activityType}`;
+  async getSuspiciousActivityCount(userId: string, activityType: string) {
+    const key = `suspicious:${userId}:${activityType}`;
     const count = await this.get(key);
     return count ? parseInt(count) : 0;
   }
 
   // Token refresh rate limiting
-  trackTokenRefresh(_userId: string, deviceId: string, windowSeconds = 300) {
-    const _key = `refresh:${userId}:${deviceId}`;
+  trackTokenRefresh(userId: string, deviceId: string, windowSeconds = 300) {
+    const key = `refresh:${userId}:${deviceId}`;
     return this.incrementRateLimit(key, windowSeconds);
   }
 
@@ -242,7 +242,7 @@ export { RedisService };
 // Create a simple client for backward compatibility
 class SimpleRedisClient {
   ping(): Promise<string> {
-    return redisService.executeWithLogging('PING', () => {
+    return redisService.executeWithLogging('PING', async () => {
       const client = await redisService.connect();
       return client.ping();
     });

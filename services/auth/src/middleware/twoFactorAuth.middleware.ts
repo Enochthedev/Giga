@@ -17,7 +17,7 @@ export class TwoFactorAuthMiddleware {
    * Check if 2FA is required for the request
    */
   static check2FARequirement = async (
-    _req: Request,
+    req: Request,
     res: Response,
     next: NextFunction
   ) => {
@@ -72,7 +72,7 @@ export class TwoFactorAuthMiddleware {
   /**
    * Generate 2FA setup data for user
    */
-  static generate2FASetup = (_userId: string, userEmail: string) => {
+  static generate2FASetup = async (userId: string, userEmail: string) => {
     try {
       // Generate TOTP secret
       const secret = speakeasy.generateSecret({
@@ -122,7 +122,7 @@ export class TwoFactorAuthMiddleware {
    * Verify 2FA setup and activate
    */
   static verify2FASetup = async (
-    _userId: string,
+    userId: string,
     token: string,
     backupCodeVerification?: string
   ) => {
@@ -186,7 +186,7 @@ export class TwoFactorAuthMiddleware {
    * Verify 2FA token for authentication
    */
   static verify2FAToken = async (
-    _userId: string,
+    userId: string,
     token: string,
     isBackupCode = false
   ) => {
@@ -212,7 +212,7 @@ export class TwoFactorAuthMiddleware {
    * Verify TOTP token
    */
   private static async verifyTOTPToken(
-    _userId: string,
+    userId: string,
     token: string
   ): Promise<boolean> {
     try {
@@ -249,7 +249,7 @@ export class TwoFactorAuthMiddleware {
    * Verify backup code
    */
   private static async verifyBackupCode(
-    _userId: string,
+    userId: string,
     code: string
   ): Promise<boolean> {
     try {
@@ -293,7 +293,7 @@ export class TwoFactorAuthMiddleware {
   /**
    * Mark session as 2FA verified
    */
-  static mark2FAVerified = (sessionId: string, _userId: string) => {
+  static mark2FAVerified = async (sessionId: string, userId: string) => {
     try {
       const verificationData = {
         userId,
@@ -352,7 +352,7 @@ export class TwoFactorAuthMiddleware {
   /**
    * Get user 2FA status
    */
-  private static async getUser2FAStatus(_userId: string) {
+  private static async getUser2FAStatus(userId: string) {
     try {
       const user2FAData = await redisService.get(`user_2fa:${userId}`);
 
@@ -427,7 +427,7 @@ export class TwoFactorAuthMiddleware {
   /**
    * Log 2FA event
    */
-  private static async log2FAEvent(_userId: string, eventType: string) {
+  private static async log2FAEvent(userId: string, eventType: string) {
     try {
       const eventData = {
         userId,
@@ -454,14 +454,14 @@ export class TwoFactorAuthMiddleware {
   /**
    * Disable 2FA for user (admin function)
    */
-  static disable2FA = (_userId: string, adminUserId: string) => {
+  static disable2FA = async (userId: string, adminUserId: string) => {
     try {
       await redisService.del(`user_2fa:${userId}`);
 
       // Clear any active 2FA verifications
       const sessions = await redisService.keys(`2fa_verified:*`);
       for (const sessionKey of sessions) {
-        const _sessionData = await redisService.get(sessionKey);
+        const sessionData = await redisService.get(sessionKey);
         if (sessionData) {
           const session = JSON.parse(sessionData);
           if (session.userId === userId) {
@@ -486,7 +486,7 @@ export class TwoFactorAuthMiddleware {
   /**
    * Generate new backup codes (replace existing ones)
    */
-  static generateNewBackupCodes = (_userId: string) => {
+  static generateNewBackupCodes = async (userId: string) => {
     try {
       const user2FAData = await redisService.get(`user_2fa:${userId}`);
       if (!user2FAData) {
@@ -518,7 +518,7 @@ export class TwoFactorAuthMiddleware {
   /**
    * Get 2FA analytics for user
    */
-  static get2FAAnalytics = (_userId: string) => {
+  static get2FAAnalytics = async (userId: string) => {
     try {
       const user2FA = await this.getUser2FAStatus(userId);
 

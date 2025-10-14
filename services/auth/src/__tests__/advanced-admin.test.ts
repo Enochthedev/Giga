@@ -349,7 +349,8 @@ describe('Advanced Admin User Management', () => {
         where: { name: 'VENDOR' },
       });
       await prisma.userRole.create({
-        data: { userId: testUserId, roleId: vendorRole!.id },
+        data: {
+        _userId: testUserId, roleId: vendorRole!.id },
       });
 
       const response = await request(app)

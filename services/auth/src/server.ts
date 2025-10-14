@@ -44,7 +44,7 @@ async function gracefulShutdown(signal: string) {
     // Stop accepting new connections
     server.close(async (err: unknown) => {
       if (err) {
-        logger.error('Error during server shutdown', err);
+        logger.error('Error during server shutdown', err as Error);
         process.exit(1);
       }
 
@@ -92,7 +92,8 @@ process.on('unhandledRejection', (reason, promise) => {
   process.exit(1);
 });
 
-if (require.main === module) {
+// Start the server if this file is run directly
+if (import.meta.url === `file://${process.argv[1]}`) {
   start();
 }
 

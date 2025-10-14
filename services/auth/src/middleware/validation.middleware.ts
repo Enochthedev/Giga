@@ -525,7 +525,7 @@ export const removeUserRoleSchema = z
 
 // Enhanced validation middleware with comprehensive security checks
 export const validate = (schema: z.ZodSchema) => {
-  return (_req: Request, res: Response, next: NextFunction) => {
+  return (req: Request, res: Response, next: NextFunction) => {
     try {
       // Pre-validation security checks
       const sizeValidation = RequestValidator.validateRequestSize(req);
@@ -633,7 +633,7 @@ export const validate = (schema: z.ZodSchema) => {
 
 // Security middleware for additional request validation
 export const securityValidation = (
-  _req: Request,
+  req: Request,
   res: Response,
   next: NextFunction
 ) => {

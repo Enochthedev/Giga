@@ -1,3 +1,4 @@
+import * as zlib from 'zlib';
 import { Role, User, UserRole } from '../generated/prisma-client';
 import { logger } from './logger.service';
 import { metricsService } from './metrics.service';
@@ -51,20 +52,20 @@ class CacheService {
         profileTypes: Object.keys(userData.profiles),
       });
 
-      metricsService.recordCacheOperation('SET', 'user_profile', true);
+      metricsService.recordRedisOperation(0, 'SET', true);
     } catch (error) {
       logger.error('Failed to cache user profile', error as Error, { userId });
-      metricsService.recordCacheOperation('SET', 'user_profile', false);
+      metricsService.recordRedisOperation(0, 'SET', false);
     }
   }
 
-  async getCachedUserProfile(_userId: string): Promise<UserCacheData | null> {
-    const _key = this.getUserCacheKey(userId);
+  async getCachedUserProfile(userId: string): Promise<UserCacheData | null> {
+    const key = this.getUserCacheKey(userId);
 
     try {
       const cached = await redisService.get(key);
       if (!cached) {
-        metricsService.recordCacheOperation('GET', 'user_profile', false);
+        metricsService.recordRedisOperation(0, 'GET', false);
         return null;
       }
 
@@ -74,7 +75,7 @@ class CacheService {
       const cacheAge = Date.now() - userData.lastCached;
       if (cacheAge > this.USER_PROFILE_TTL * 1000) {
         await this.invalidateUserCache(userId);
-        metricsService.recordCacheOperation('GET', 'user_profile', false);
+        metricsService.recordRedisOperation(0, 'GET', false);
         return null;
       }
 
@@ -83,19 +84,19 @@ class CacheService {
         cacheAge: Math.round(cacheAge / 1000),
       });
 
-      metricsService.recordCacheOperation('GET', 'user_profile', true);
+      metricsService.recordRedisOperation(0, 'GET', true);
       return userData;
     } catch (error) {
       logger.error('Failed to get cached user profile', error as Error, {
         userId,
       });
-      metricsService.recordCacheOperation('GET', 'user_profile', false);
+      metricsService.recordRedisOperation(0, 'GET', false);
       return null;
     }
   }
 
-  async invalidateUserCache(_userId: string): Promise<void> {
-    const _key = this.getUserCacheKey(userId);
+  async invalidateUserCache(userId: string): Promise<void> {
+    const key = this.getUserCacheKey(userId);
 
     try {
       await redisService.del(key);
@@ -109,11 +110,11 @@ class CacheService {
 
   // Role-based caching
   async cacheUserRoles(
-    _userId: string,
+    userId: string,
     roles: (UserRole & { role: Role })[],
     options?: CacheOptions
   ): Promise<void> {
-    const _key = this.getUserRolesKey(userId);
+    const key = this.getUserRolesKey(userId);
     const ttl = options?.ttl || this.ROLE_TTL;
 
     try {
@@ -130,22 +131,22 @@ class CacheService {
         ttl,
       });
 
-      metricsService.recordCacheOperation('SET', 'user_roles', true);
+      metricsService.recordRedisOperation(0, 'SET', true);
     } catch (error) {
       logger.error('Failed to cache user roles', error as Error, { userId });
-      metricsService.recordCacheOperation('SET', 'user_roles', false);
+      metricsService.recordRedisOperation(0, 'SET', false);
     }
   }
 
   async getCachedUserRoles(
-    _userId: string
+    userId: string
   ): Promise<(UserRole & { role: Role })[] | null> {
-    const _key = this.getUserRolesKey(userId);
+    const key = this.getUserRolesKey(userId);
 
     try {
       const cached = await redisService.get(key);
       if (!cached) {
-        metricsService.recordCacheOperation('GET', 'user_roles', false);
+        metricsService.recordRedisOperation(0, 'GET', false);
         return null;
       }
 
@@ -156,13 +157,13 @@ class CacheService {
         roleCount: data.roles.length,
       });
 
-      metricsService.recordCacheOperation('GET', 'user_roles', true);
+      metricsService.recordRedisOperation(0, 'GET', true);
       return data.roles;
     } catch (error) {
       logger.error('Failed to get cached user roles', error as Error, {
         userId,
       });
-      metricsService.recordCacheOperation('GET', 'user_roles', false);
+      metricsService.recordRedisOperation(0, 'GET', false);
       return null;
     }
   }
@@ -174,10 +175,10 @@ class CacheService {
 
     try {
       await redisService.set(cacheKey, JSON.stringify(data), cacheTtl);
-      metricsService.recordCacheOperation('SET', 'frequent_data', true);
+      metricsService.recordRedisOperation(0, 'SET', true);
     } catch (error) {
       logger.error('Failed to cache frequent data', error as Error, { key });
-      metricsService.recordCacheOperation('SET', 'frequent_data', false);
+      metricsService.recordRedisOperation(0, 'SET', false);
     }
   }
 
@@ -187,21 +188,21 @@ class CacheService {
     try {
       const cached = await redisService.get(cacheKey);
       if (!cached) {
-        metricsService.recordCacheOperation('GET', 'frequent_data', false);
+        metricsService.recordRedisOperation(0, 'GET', false);
         return null;
       }
 
-      metricsService.recordCacheOperation('GET', 'frequent_data', true);
+      metricsService.recordRedisOperation(0, 'GET', true);
       return JSON.parse(cached);
     } catch (error) {
       logger.error('Failed to get frequent data', error as Error, { key });
-      metricsService.recordCacheOperation('GET', 'frequent_data', false);
+      metricsService.recordRedisOperation(0, 'GET', false);
       return null;
     }
   }
 
   // Cache warming for frequently accessed data
-  async warmCache(_userId: string, userData: UserCacheData): Promise<void> {
+  async warmCache(userId: string, userData: UserCacheData): Promise<void> {
     try {
       // Cache user profile
       await this.cacheUserProfile(userId, userData);
@@ -302,11 +303,11 @@ class CacheService {
   }
 
   // Helper methods for cache key generation
-  private getUserCacheKey(_userId: string): string {
+  private getUserCacheKey(userId: string): string {
     return `user:${userId}`;
   }
 
-  private getUserRolesKey(_userId: string): string {
+  private getUserRolesKey(userId: string): string {
     return `roles:${userId}`;
   }
 
@@ -364,7 +365,7 @@ class CacheService {
   }
 
   // Cache invalidation patterns
-  async invalidateUserRelatedCache(_userId: string): Promise<void> {
+  async invalidateUserRelatedCache(userId: string): Promise<void> {
     try {
       await Promise.all([
         this.invalidateUserCache(userId),
@@ -389,7 +390,7 @@ class CacheService {
     memoryUsage: number;
   }> {
     try {
-      const _stats = await this.getCacheStats();
+      const stats = await this.getCacheStats();
 
       // Get Redis memory info (if available)
       const client = await redisService.connect();
@@ -433,7 +434,7 @@ class CacheService {
         } catch (error) {
           logger.warn('Failed to preload user data', {
             userId,
-            error: (error as Error).message,
+            errorMessage: (error as Error).message,
           });
         }
       });
@@ -460,13 +461,16 @@ class CacheService {
   }
 
   // Cache compression for large objects
-  async cacheCompressed(key: string, data: any, ttl: number): Promise<void> {
+  async cacheCompressed(
+    key: string,
+    data: unknown,
+    ttl: number
+  ): Promise<void> {
     try {
       const jsonString = JSON.stringify(data);
 
       // Only compress if data is large enough
       if (jsonString.length > 1024) {
-        const zlib = require('zlib');
         const compressed = zlib.gzipSync(jsonString);
         await redisService.set(
           `${key}:compressed`,
@@ -509,7 +513,6 @@ class CacheService {
         const compressedData = await redisService.get(`${key}:compressed`);
         if (!compressedData) return null;
 
-        const zlib = require('zlib');
         const buffer = Buffer.from(compressedData, 'base64');
         const decompressed = zlib.gunzipSync(buffer);
         return JSON.parse(decompressed.toString());

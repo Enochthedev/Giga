@@ -4,7 +4,7 @@ import { NextFunction, Request, Response } from 'express';
  * Middleware to require phone verification for certain endpoints
  */
 export const requirePhoneVerification = (
-  _req: Request,
+  req: Request,
   res: Response,
   next: NextFunction
 ) => {
@@ -49,7 +49,7 @@ export const requirePhoneVerification = (
  * Middleware to check phone verification status and add warning if not verified
  */
 export const checkPhoneVerificationStatus = (
-  _req: Request,
+  req: Request,
   res: Response,
   next: NextFunction
 ) => {
@@ -78,7 +78,7 @@ export const checkPhoneVerificationStatus = (
  * Middleware to require phone number to be set before verification
  */
 export const requirePhoneNumber = (
-  _req: Request,
+  req: Request,
   res: Response,
   next: NextFunction
 ) => {

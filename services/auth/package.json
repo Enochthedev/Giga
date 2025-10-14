@@ -2,6 +2,7 @@
   "name": "@platform/auth",
   "version": "1.0.0",
   "description": "Authentication service with multi-role support",
+  "type": "module",
   "main": "dist/index.js",
   "scripts": {
     "dev": "tsx watch src/server.ts",

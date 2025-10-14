@@ -34,7 +34,7 @@ class HealthService {
   private startTime: Date;
 
   constructor() {
-    this.prisma = new PrismaClient();
+    this._prisma = new PrismaClient();
     this.startTime = new Date();
   }
 
@@ -43,7 +43,7 @@ class HealthService {
 
     try {
       // Simple query to check database connectivity
-      await this.prisma.$queryRaw`SELECT 1`;
+      await this._prisma.$queryRaw`SELECT 1`;
 
       const responseTime = Date.now() - startTime;
 
@@ -379,7 +379,7 @@ class HealthService {
 
   async cleanup(): Promise<void> {
     try {
-      await this.prisma.$disconnect();
+      await this._prisma.$disconnect();
       logger.info('Health service cleanup completed');
     } catch (error) {
       logger.error('Health service cleanup failed', error as Error);

@@ -7,7 +7,7 @@ const jwtService = JWTService.getInstance();
  * Enhanced authentication middleware with comprehensive security
  */
 export const authenticateToken = async (
-  _req: Request,
+  req: Request,
   res: Response,
   next: NextFunction
 ) => {
@@ -54,7 +54,7 @@ export const authenticateToken = async (
 
     // Fetch current user data including verification status
     try {
-      const user = await req.prisma.user.findUnique({
+      const user = await req._prisma.user.findUnique({
         where: { id: decoded.sub },
         select: {
           id: true,
@@ -125,7 +125,7 @@ export const authenticateToken = async (
  * Enhanced role-based authorization middleware
  */
 export const requireRole = (roles: string[]) => {
-  return (_req: Request, res: Response, next: NextFunction) => {
+  return (req: Request, res: Response, next: NextFunction) => {
     if (!req.user) {
       return res.status(401).json({
         success: false,
@@ -168,7 +168,7 @@ export const requireRole = (roles: string[]) => {
  * Admin-only access middleware
  */
 export const requireAdmin = (
-  _req: Request,
+  req: Request,
   res: Response,
   next: NextFunction
 ) => {
@@ -179,7 +179,7 @@ export const requireAdmin = (
  * Active role validation middleware
  */
 export const requireActiveRole = (role: string) => {
-  return (_req: Request, res: Response, next: NextFunction) => {
+  return (req: Request, res: Response, next: NextFunction) => {
     if (!req.user) {
       return res.status(401).json({
         success: false,
@@ -207,7 +207,7 @@ export const requireActiveRole = (role: string) => {
  * Optional authentication middleware (doesn't fail if no token)
  */
 export const optionalAuth = (
-  _req: Request,
+  req: Request,
   res: Response,
   next: NextFunction
 ) => {
@@ -233,7 +233,7 @@ export const optionalAuth = (
  * Token validation middleware (for debugging/monitoring)
  */
 export const validateTokenHealth = (
-  _req: Request,
+  req: Request,
   res: Response,
   next: NextFunction
 ) => {

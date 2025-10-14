@@ -2,6 +2,8 @@ import * as crypto from 'crypto';
 import { PrismaClient } from '../generated/prisma-client';
 import { RedisService } from './redis.service';
 
+const prisma = new PrismaClient();
+
 /**
  * Security Monitoring Service
  * Handles suspicious activity detection, security alerts, and monitoring
@@ -25,7 +27,7 @@ export class SecurityMonitoringService {
    * Analyze login attempt for suspicious patterns
    */
   async analyzeLoginAttempt(
-    _prisma: PrismaClient,
+    prismaClient: PrismaClient,
     attempt: LoginAttempt
   ): Promise<SecurityAnalysis> {
     const riskFactors: RiskFactor[] = [];
@@ -148,7 +150,7 @@ export class SecurityMonitoringService {
    * Monitor token refresh patterns for anomalies
    */
   async monitorTokenRefresh(
-    _prisma: PrismaClient,
+    prismaClient: PrismaClient,
     refresh: TokenRefreshAttempt
   ): Promise<SecurityAnalysis> {
     const riskFactors: RiskFactor[] = [];
@@ -257,7 +259,7 @@ export class SecurityMonitoringService {
    * Get security metrics and statistics
    */
   async getSecurityMetrics(
-    _prisma: PrismaClient,
+    prismaClient: PrismaClient,
     timeRange: { from: Date; to: Date }
   ): Promise<SecurityMetrics> {
     const [
@@ -310,7 +312,7 @@ export class SecurityMonitoringService {
   /**
    * Check if IP address is from unusual location for user
    */
-  private checkUnusualLocation(
+  private async checkUnusualLocation(
     userId?: string,
     ipAddress?: string
   ): Promise<boolean> {
@@ -364,7 +366,7 @@ export class SecurityMonitoringService {
     ipAddress: string,
     windowSeconds: number
   ): Promise<number> {
-    const _key = `login_attempts:${this.hashIP(ipAddress)}`;
+    const key = `login_attempts:${this.hashIP(ipAddress)}`;
     return this.redisService.getCounter(key);
   }
 
@@ -375,14 +377,14 @@ export class SecurityMonitoringService {
     ipAddress: string,
     windowSeconds: number
   ): Promise<number> {
-    const _key = `failed_attempts:${this.hashIP(ipAddress)}`;
+    const key = `failed_attempts:${this.hashIP(ipAddress)}`;
     return this.redisService.getCounter(key);
   }
 
   /**
    * Get concurrent sessions count
    */
-  private getConcurrentSessions(userId?: string): Promise<number> {
+  private async getConcurrentSessions(userId?: string): Promise<number> {
     if (!userId) return 0;
 
     // This would query active sessions from database or Redis
@@ -427,7 +429,7 @@ export class SecurityMonitoringService {
    * Log security event
    */
   private async logSecurityEvent(
-    _prisma: PrismaClient,
+    prismaClient: PrismaClient,
     event: SecurityEventData
   ): Promise<void> {
     try {
@@ -452,20 +454,20 @@ export class SecurityMonitoringService {
   /**
    * Get top risk factors from security events
    */
-  private getTopRiskFactors(
-    _prisma: PrismaClient,
+  private async getTopRiskFactors(
+    prismaClient: PrismaClient,
     timeRange: { from: Date; to: Date }
   ): Promise<Array<{ factor: string; count: number }>> {
     // This would require a more complex query to extract risk factors from the array
     // For now, return empty array
-    return [];
+    return Promise.resolve([]);
   }
 
   /**
    * Get risk score distribution
    */
   private async getRiskDistribution(
-    _prisma: PrismaClient,
+    prismaClient: PrismaClient,
     timeRange: { from: Date; to: Date }
   ): Promise<Array<{ riskLevel: string; count: number }>> {
     const distribution = await prisma.securityEvent.groupBy({
@@ -476,7 +478,7 @@ export class SecurityMonitoringService {
       _count: { id: true },
     });
 
-    return distribution.map(d => ({
+    return distribution.map((d: any) => ({
       riskLevel: d.riskLevel || 'unknown',
       count: d._count.id,
     }));
@@ -495,7 +497,7 @@ export interface LoginAttempt {
 }
 
 export interface TokenRefreshAttempt {
-  _userId: string;
+  userId: string;
   deviceId: string;
   ipAddress: string;
   deviceFingerprint?: string;

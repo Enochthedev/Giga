@@ -18,7 +18,7 @@ export class APIVersioningMiddleware {
    * Extract and validate API version from request
    */
   static validateVersion() {
-    return (_req: Request, res: Response, next: NextFunction) => {
+    return (req: Request, res: Response, next: NextFunction) => {
       // Extract version from URL path (e.g., /api/v1/auth/login)
       const pathVersion = req.path.match(/^\/api\/v(\d+(?:\.\d+)*)/)?.[1];
 
@@ -118,7 +118,7 @@ export class APIVersioningMiddleware {
    * Handle version-specific routing
    */
   static versionRouter() {
-    return (_req: Request, res: Response, next: NextFunction) => {
+    return (req: Request, res: Response, next: NextFunction) => {
       const version = req.apiVersion || APIVersioningMiddleware.LATEST_VERSION;
 
       // Add version-specific context

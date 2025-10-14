@@ -13,7 +13,7 @@ export class APIController {
   /**
    * Get API version information
    */
-  getVersionInfo(_req: Request, res: Response): void {
+  getVersionInfo(req: Request, res: Response): void {
     try {
       const versionInfo = APIVersioningMiddleware.getVersionInfo();
 
@@ -40,7 +40,7 @@ export class APIController {
   /**
    * Get API usage analytics
    */
-  async getUsageAnalytics(_req: Request, res: Response): Promise<void> {
+  async getUsageAnalytics(req: Request, res: Response): Promise<void> {
     try {
       const { startDate, endDate, granularity = 'day' } = req.query;
 
@@ -94,7 +94,7 @@ export class APIController {
   /**
    * Get API endpoint documentation
    */
-  getEndpointDocs(_req: Request, res: Response): void {
+  getEndpointDocs(req: Request, res: Response): void {
     try {
       const { endpoint } = req.params;
 
@@ -139,7 +139,7 @@ export class APIController {
   /**
    * Get API rate limit status
    */
-  async getRateLimitStatus(_req: Request, res: Response): Promise<void> {
+  async getRateLimitStatus(req: Request, res: Response): Promise<void> {
     try {
       const userId = req.user?.sub;
       const ip = req.ip;
@@ -201,7 +201,7 @@ export class APIController {
   /**
    * Get API health and status
    */
-  async getAPIStatus(_req: Request, res: Response): Promise<void> {
+  async getAPIStatus(req: Request, res: Response): Promise<void> {
     try {
       const performanceMetrics = await metricsService.getPerformanceMetrics();
       const databaseMetrics = await metricsService.getDatabaseMetrics();
@@ -261,7 +261,7 @@ export class APIController {
   /**
    * Get API usage report
    */
-  async getUsageReport(_req: Request, res: Response): Promise<void> {
+  async getUsageReport(req: Request, res: Response): Promise<void> {
     try {
       const {
         startDate,

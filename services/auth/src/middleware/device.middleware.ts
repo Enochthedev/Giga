@@ -5,7 +5,7 @@ import { DeviceInfo } from '../services/token-management.service';
  * Middleware to extract and parse device information from request headers
  */
 export function extractDeviceInfo(
-  _req: Request,
+  req: Request,
   res: Response,
   next: NextFunction
 ): void {
@@ -136,7 +136,7 @@ function parseScreenResolution(
  * Middleware to validate device fingerprint consistency
  */
 export function validateDeviceFingerprint(
-  _req: Request,
+  req: Request,
   res: Response,
   next: NextFunction
 ): void {
@@ -163,7 +163,7 @@ export function deviceTokenRateLimit(
   maxRequests: number = 10,
   windowMinutes: number = 5
 ) {
-  return (_req: Request, res: Response, next: NextFunction) => {
+  return (req: Request, res: Response, next: NextFunction) => {
     try {
       if (!req.deviceInfo || !req.clientIp) {
         return next();

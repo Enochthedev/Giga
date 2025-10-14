@@ -6,9 +6,9 @@ import { PrismaClient } from '../generated/prisma-client';
 let _prisma: PrismaClient;
 let redis: ReturnType<typeof Redis.createClient> | null = null;
 
-beforeAll(() => {
+beforeAll(async () => {
   // Initialize test database connection
-  prisma = new PrismaClient({
+  _prisma = new PrismaClient({
     datasources: {
       db: {
         url: process.env.TEST_DATABASE_URL || process.env.DATABASE_URL,
@@ -46,10 +46,10 @@ beforeAll(() => {
   }
 });
 
-afterAll(() => {
+afterAll(async () => {
   // Cleanup connections
   try {
-    await prisma.$disconnect();
+    await _prisma.$disconnect();
   } catch (error) {
     console.warn('Prisma disconnect failed:', error);
   }
@@ -67,12 +67,12 @@ afterAll(() => {
   }
 });
 
-beforeEach(() => {
+beforeEach(async () => {
   // Clean up test data before each test
   await cleanupTestData();
 });
 
-afterEach(() => {
+afterEach(async () => {
   // Clean up test data after each test
   await cleanupTestData();
 });
@@ -80,17 +80,17 @@ afterEach(() => {
 async function cleanupTestData() {
   try {
     // Clean up in reverse dependency order
-    await prisma.passwordResetToken.deleteMany();
-    await prisma.emailVerificationToken.deleteMany();
-    await prisma.refreshToken.deleteMany();
-    await prisma.address.deleteMany();
-    await prisma.advertiserProfile.deleteMany();
-    await prisma.hostProfile.deleteMany();
-    await prisma.driverProfile.deleteMany();
-    await prisma.vendorProfile.deleteMany();
-    await prisma.customerProfile.deleteMany();
-    await prisma.userRole.deleteMany();
-    await prisma.user.deleteMany();
+    await _prisma.passwordResetToken.deleteMany();
+    await _prisma.emailVerificationToken.deleteMany();
+    await _prisma.refreshToken.deleteMany();
+    await _prisma.address.deleteMany();
+    await _prisma.advertiserProfile.deleteMany();
+    await _prisma.hostProfile.deleteMany();
+    await _prisma.driverProfile.deleteMany();
+    await _prisma.vendorProfile.deleteMany();
+    await _prisma.customerProfile.deleteMany();
+    await _prisma.userRole.deleteMany();
+    await _prisma.user.deleteMany();
 
     // Clear Redis test data if Redis is available
     if (redis) {
@@ -109,4 +109,4 @@ async function cleanupTestData() {
 }
 
 // Export for use in tests
-export { prisma, redis };
+export { _prisma as prisma, redis };

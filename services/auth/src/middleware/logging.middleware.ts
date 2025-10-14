@@ -13,7 +13,7 @@ declare global {
 }
 
 export function correlationIdMiddleware(
-  _req: Request,
+  req: Request,
   res: Response,
   next: NextFunction
 ): void {
@@ -36,7 +36,7 @@ export function correlationIdMiddleware(
 }
 
 export function requestLoggingMiddleware(
-  _req: Request,
+  req: Request,
   res: Response,
   next: NextFunction
 ): void {
@@ -103,7 +103,7 @@ export function requestLoggingMiddleware(
 
 export function errorLoggingMiddleware(
   err: Error,
-  _req: Request,
+  req: Request,
   res: Response,
   next: NextFunction
 ): void {
@@ -126,7 +126,7 @@ export function errorLoggingMiddleware(
 }
 
 export function securityLoggingMiddleware(
-  _req: Request,
+  req: Request,
   res: Response,
   next: NextFunction
 ): void {

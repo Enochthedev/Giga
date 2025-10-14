@@ -62,8 +62,8 @@ export class EnhancedSecurityMiddleware {
   /**
    * Comprehensive security headers middleware
    */
-  static setSecurityHeaders = (
-    _req: Request,
+  static setSecurityHeaders = async (
+    req: Request,
     res: Response,
     next: NextFunction
   ) => {
@@ -143,8 +143,8 @@ export class EnhancedSecurityMiddleware {
   /**
    * Advanced request validation middleware
    */
-  static validateRequest = (
-    _req: Request,
+  static validateRequest = async (
+    req: Request,
     res: Response,
     next: NextFunction
   ) => {
@@ -241,8 +241,8 @@ export class EnhancedSecurityMiddleware {
   /**
    * Security monitoring middleware
    */
-  static securityMonitoring = (
-    _req: Request,
+  static securityMonitoring = async (
+    req: Request,
     res: Response,
     next: NextFunction
   ) => {
@@ -430,7 +430,7 @@ export class EnhancedSecurityMiddleware {
   /**
    * Determine if request should be logged
    */
-  private static shouldLogRequest(_req: Request, res: Response): boolean {
+  private static shouldLogRequest(req: Request, res: Response): boolean {
     // Always log authentication endpoints
     if (req.path.includes('/auth/')) return true;
 
@@ -451,7 +451,7 @@ export class EnhancedSecurityMiddleware {
    * Check if response pattern is suspicious
    */
   private static isSuspiciousResponse(
-    _req: Request,
+    req: Request,
     res: Response,
     duration: number
   ): boolean {
@@ -477,8 +477,8 @@ export class EnhancedSecurityMiddleware {
   /**
    * Security headers for API responses
    */
-  static setAPIResponseHeaders = (
-    _req: Request,
+  static setAPIResponseHeaders = async (
+    req: Request,
     res: Response,
     next: NextFunction
   ) => {

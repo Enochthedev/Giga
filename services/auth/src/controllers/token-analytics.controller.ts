@@ -13,7 +13,7 @@ export class TokenAnalyticsController {
   /**
    * Get token usage analytics for the authenticated user
    */
-  async getUserTokenAnalytics(_req: Request, res: Response): Promise<void> {
+  async getUserTokenAnalytics(req: Request, res: Response): Promise<void> {
     try {
       if (!req.user) {
         res.status(401).json({
@@ -34,7 +34,7 @@ export class TokenAnalyticsController {
       };
 
       const analytics = await this.tokenManagementService.getTokenAnalytics(
-        req.prisma,
+        req._prisma,
         req.user.sub,
         timeRange
       );
@@ -61,7 +61,7 @@ export class TokenAnalyticsController {
   /**
    * Get security metrics for the authenticated user
    */
-  async getUserSecurityMetrics(_req: Request, res: Response): Promise<void> {
+  async getUserSecurityMetrics(req: Request, res: Response): Promise<void> {
     try {
       if (!req.user) {
         res.status(401).json({
@@ -82,7 +82,7 @@ export class TokenAnalyticsController {
       };
 
       const metrics = await this.securityMonitoringService.getSecurityMetrics(
-        req.prisma,
+        req._prisma,
         timeRange
       );
 
@@ -108,7 +108,7 @@ export class TokenAnalyticsController {
   /**
    * Get active device sessions for the authenticated user
    */
-  async getActiveDevices(_req: Request, res: Response): Promise<void> {
+  async getActiveDevices(req: Request, res: Response): Promise<void> {
     try {
       if (!req.user) {
         res.status(401).json({
@@ -121,7 +121,7 @@ export class TokenAnalyticsController {
       }
 
       // Get active refresh tokens with device information
-      const activeTokens = await req.prisma.refreshToken.findMany({
+      const activeTokens = await req._prisma.refreshToken.findMany({
         where: {
           userId: req.user.sub,
           expiresAt: { gt: new Date() },
@@ -138,7 +138,7 @@ export class TokenAnalyticsController {
       });
 
       // Get device sessions from database
-      const deviceSessions = await req.prisma.deviceSession.findMany({
+      const deviceSessions = await req._prisma.deviceSession.findMany({
         where: {
           userId: req.user.sub,
           isActive: true,
@@ -190,7 +190,7 @@ export class TokenAnalyticsController {
   /**
    * Revoke tokens for a specific device
    */
-  async revokeDevice(_req: Request, res: Response): Promise<void> {
+  async revokeDevice(req: Request, res: Response): Promise<void> {
     try {
       if (!req.user) {
         res.status(401).json({
@@ -215,7 +215,7 @@ export class TokenAnalyticsController {
       }
 
       // Revoke tokens for the specific device
-      await this.tokenManagementService.revokeTokens(req.prisma, req.user.sub, {
+      await this.tokenManagementService.revokeTokens(req._prisma, req.user.sub, {
         deviceId,
         reason: 'user_revoked_device',
       });
@@ -243,7 +243,7 @@ export class TokenAnalyticsController {
   /**
    * Revoke all tokens except current device
    */
-  async revokeAllOtherDevices(_req: Request, res: Response): Promise<void> {
+  async revokeAllOtherDevices(req: Request, res: Response): Promise<void> {
     try {
       if (!req.user) {
         res.status(401).json({
@@ -258,7 +258,7 @@ export class TokenAnalyticsController {
       const currentDeviceId = this.getCurrentDeviceId(req);
 
       // Get all refresh tokens except current device
-      const tokensToRevoke = await req.prisma.refreshToken.findMany({
+      const tokensToRevoke = await req._prisma.refreshToken.findMany({
         where: {
           userId: req.user.sub,
           deviceId: { not: currentDeviceId },
@@ -269,7 +269,7 @@ export class TokenAnalyticsController {
       for (const token of tokensToRevoke) {
         if (token.deviceId) {
           await this.tokenManagementService.revokeTokens(
-            req.prisma,
+            req._prisma,
             req.user.sub,
             {
               deviceId: token.deviceId,
@@ -302,7 +302,7 @@ export class TokenAnalyticsController {
   /**
    * Get token refresh rate limits status
    */
-  getRefreshRateLimits(_req: Request, res: Response): void {
+  getRefreshRateLimits(req: Request, res: Response): void {
     try {
       if (!req.user) {
         res.status(401).json({
@@ -347,7 +347,7 @@ export class TokenAnalyticsController {
   /**
    * Admin endpoint: Get system-wide token analytics
    */
-  async getSystemTokenAnalytics(_req: Request, res: Response): Promise<void> {
+  async getSystemTokenAnalytics(req: Request, res: Response): Promise<void> {
     try {
       // Check admin permissions
       if (!req.user || !req.user.roles?.includes('ADMIN')) {
@@ -370,12 +370,12 @@ export class TokenAnalyticsController {
 
       const [tokenAnalytics, securityMetrics] = await Promise.all([
         this.tokenManagementService.getTokenAnalytics(
-          req.prisma,
+          req._prisma,
           undefined,
           timeRange
         ),
         this.securityMonitoringService.getSecurityMetrics(
-          req.prisma,
+          req._prisma,
           timeRange
         ),
       ]);

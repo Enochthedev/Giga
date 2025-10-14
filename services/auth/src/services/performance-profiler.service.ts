@@ -218,7 +218,7 @@ class PerformanceProfilerService {
         });
       }
 
-      const _stats = operationStats.get(profile.operation)!;
+      const stats = operationStats.get(profile.operation)!;
       stats.durations.push(profile.duration);
       stats.totalDuration += profile.duration;
       stats.count++;
@@ -339,9 +339,13 @@ class PerformanceProfilerService {
       );
 
       if (criticalBottlenecks.length > 0) {
-        logger.error('Critical performance bottlenecks detected', {
-          bottlenecks: criticalBottlenecks,
-        });
+        logger.error(
+          'Critical performance bottlenecks detected',
+          new Error('Performance bottlenecks detected'),
+          {
+            bottlenecks: criticalBottlenecks,
+          }
+        );
       }
     }, intervalMs);
 

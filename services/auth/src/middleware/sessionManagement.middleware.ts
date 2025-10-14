@@ -19,8 +19,8 @@ export class SessionManagementMiddleware {
    * Initialize session on login
    */
   static initializeSession = async (
-    _userId: string,
-    _req: Request,
+    userId: string,
+    req: Request,
     tokenData: { accessToken: string; refreshToken: string }
   ) => {
     try {
@@ -105,7 +105,7 @@ export class SessionManagementMiddleware {
    * Validate and update session
    */
   static validateSession = async (
-    _req: Request,
+    req: Request,
     res: Response,
     next: NextFunction
   ) => {
@@ -208,7 +208,7 @@ export class SessionManagementMiddleware {
   /**
    * Enforce concurrent session limit
    */
-  private static async enforceSessionLimit(_userId: string) {
+  private static async enforceSessionLimit(userId: string) {
     try {
       // Get active sessions for user
       const activeSessions = await prisma.deviceSession.findMany({
@@ -296,7 +296,7 @@ export class SessionManagementMiddleware {
   /**
    * Add session to active sessions list
    */
-  private static async addToActiveSessions(_userId: string, sessionId: string) {
+  private static async addToActiveSessions(userId: string, sessionId: string) {
     try {
       const activeSessionsKey = `active_sessions:${userId}`;
       const activeSessions = await redisService.get(activeSessionsKey);
@@ -361,7 +361,7 @@ export class SessionManagementMiddleware {
    * Invalidate session
    */
   private static invalidateSession(
-    _req: Request,
+    req: Request,
     res: Response,
     reason: string
   ) {
@@ -384,7 +384,7 @@ export class SessionManagementMiddleware {
   /**
    * Terminate session
    */
-  static terminateSession = (sessionId: string, reason: string) => {
+  static terminateSession = async (sessionId: string, reason: string) => {
     try {
       // Remove from Redis
       await redisService.del(`session:${sessionId}`);
@@ -426,7 +426,7 @@ export class SessionManagementMiddleware {
    * Log security event
    */
   private static async logSecurityEvent(
-    _userId: string,
+    userId: string,
     eventType: string,
     metadata: any
   ) {
@@ -449,7 +449,7 @@ export class SessionManagementMiddleware {
   /**
    * Get user sessions (admin function)
    */
-  static getUserSessions = (_userId: string) => {
+  static getUserSessions = async (userId: string) => {
     try {
       const sessions = await prisma.deviceSession.findMany({
         where: {
@@ -477,7 +477,7 @@ export class SessionManagementMiddleware {
   /**
    * Terminate all user sessions (admin function)
    */
-  static terminateAllUserSessions = (_userId: string, reason: string) => {
+  static terminateAllUserSessions = async (userId: string, reason: string) => {
     try {
       const sessions = await prisma.deviceSession.findMany({
         where: {
@@ -510,7 +510,7 @@ export class SessionManagementMiddleware {
   /**
    * Cleanup expired sessions (background job)
    */
-  static cleanupExpiredSessions = () => {
+  static cleanupExpiredSessions = async () => {
     try {
       const expiredSessions = await prisma.deviceSession.findMany({
         where: {

@@ -6,7 +6,7 @@ export class CleanupService {
   private cleanupInterval: NodeJS.Timeout | null = null;
 
   private constructor() {
-    this.prisma = new PrismaClient();
+    this._prisma = new PrismaClient();
   }
 
   static getInstance(): CleanupService {
@@ -47,7 +47,7 @@ export class CleanupService {
    */
   async cleanupExpiredEmailVerificationTokens(): Promise<number> {
     try {
-      const result = await this.prisma.emailVerificationToken.deleteMany({
+      const result = await this._prisma.emailVerificationToken.deleteMany({
         where: {
           expiresAt: {
             lt: new Date(),
@@ -76,7 +76,7 @@ export class CleanupService {
    */
   async cleanupExpiredRefreshTokens(): Promise<number> {
     try {
-      const result = await this.prisma.refreshToken.deleteMany({
+      const result = await this._prisma.refreshToken.deleteMany({
         where: {
           expiresAt: {
             lt: new Date(),
@@ -100,7 +100,7 @@ export class CleanupService {
    */
   async cleanupExpiredPasswordResetTokens(): Promise<number> {
     try {
-      const result = await this.prisma.passwordResetToken.deleteMany({
+      const result = await this._prisma.passwordResetToken.deleteMany({
         where: {
           expiresAt: {
             lt: new Date(),
@@ -126,7 +126,7 @@ export class CleanupService {
    */
   async cleanupExpiredPhoneVerificationCodes(): Promise<number> {
     try {
-      const result = await this.prisma.phoneVerificationCode.deleteMany({
+      const result = await this._prisma.phoneVerificationCode.deleteMany({
         where: {
           expiresAt: {
             lt: new Date(),
@@ -201,16 +201,16 @@ export class CleanupService {
         expiredPasswordResetTokens,
         expiredPhoneCodes,
       ] = await Promise.all([
-        this.prisma.emailVerificationToken.count({
+        this._prisma.emailVerificationToken.count({
           where: { expiresAt: { lt: now } },
         }),
-        this.prisma.refreshToken.count({
+        this._prisma.refreshToken.count({
           where: { expiresAt: { lt: now } },
         }),
-        this.prisma.passwordResetToken.count({
+        this._prisma.passwordResetToken.count({
           where: { expiresAt: { lt: now } },
         }),
-        this.prisma.phoneVerificationCode.count({
+        this._prisma.phoneVerificationCode.count({
           where: { expiresAt: { lt: now } },
         }),
       ]);
@@ -243,19 +243,19 @@ export class CleanupService {
   /**
    * Clean up tokens for a specific user
    */
-  async cleanupUserTokens(_userId: string): Promise<void> {
+  async cleanupUserTokens(userId: string): Promise<void> {
     try {
       await Promise.all([
-        this.prisma.emailVerificationToken.deleteMany({
+        this._prisma.emailVerificationToken.deleteMany({
           where: { userId },
         }),
-        this.prisma.refreshToken.deleteMany({
+        this._prisma.refreshToken.deleteMany({
           where: { userId },
         }),
-        this.prisma.passwordResetToken.deleteMany({
+        this._prisma.passwordResetToken.deleteMany({
           where: { userId },
         }),
-        this.prisma.phoneVerificationCode.deleteMany({
+        this._prisma.phoneVerificationCode.deleteMany({
           where: { userId },
         }),
       ]);
@@ -271,7 +271,7 @@ export class CleanupService {
    */
   async shutdown(): Promise<void> {
     this.stopAutomaticCleanup();
-    await this.prisma.$disconnect();
+    await this._prisma.$disconnect();
     console.log('🧹 Cleanup service shutdown complete');
   }
 }

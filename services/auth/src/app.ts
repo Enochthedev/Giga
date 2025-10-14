@@ -18,6 +18,7 @@ import {
   securityLoggingMiddleware,
 } from './middleware/logging.middleware';
 import { apiRateLimit } from './middleware/rateLimit.middleware';
+import { ResilienceMiddleware } from './middleware/resilience.middleware';
 import {
   advancedXSSProtection,
   comprehensiveSecurityValidation,
@@ -34,6 +35,7 @@ import { apiRoutes } from './routes/api';
 import { authRoutes } from './routes/auth';
 import healthRoutes from './routes/health';
 import { profileRoutes } from './routes/profile';
+import { resilienceRoutes } from './routes/resilience';
 import tokenAnalyticsRoutes from './routes/token-analytics';
 import { userRoutes } from './routes/user';
 import { CleanupService } from './services/cleanup.service';
@@ -52,6 +54,9 @@ cleanupService.startAutomaticCleanup();
 
 // Start performance monitoring
 performanceProfiler.startContinuousMonitoring();
+
+// Initialize resilience middleware
+const resilienceMiddleware = ResilienceMiddleware.getInstance();
 
 // Enhanced security middleware
 app.use(
@@ -80,6 +85,9 @@ app.use(
     type: 'application/json',
   })
 );
+
+// Resilience middleware (must be early in the stack)
+app.use(resilienceMiddleware.middleware());
 
 // Logging middleware (must be early in the stack)
 app.use(correlationIdMiddleware);
@@ -115,9 +123,9 @@ app.use(apiRateLimit);
 app.use(extractDeviceInfo);
 
 // Add optimized Prisma client to request context
-app.use((req, _res, next) => {
+app.use(async (req, _res, next) => {
   try {
-    req.prisma = await connectionPoolService.getClient('api');
+    req._prisma = await connectionPoolService.getClient('api');
     next();
   } catch (error) {
     logger.error('Failed to get database connection', error as Error);
@@ -143,6 +151,7 @@ app.use(EnhancedSecurityMiddleware.setAPIResponseHeaders);
 
 // Routes
 app.use('/health', healthRoutes);
+app.use('/resilience', resilienceRoutes);
 app.use('/api/v1/api', apiRoutes);
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/profiles', profileRoutes);
@@ -152,28 +161,8 @@ app.use('/api/v1/token-analytics', tokenAnalyticsRoutes);
 // Error logging middleware
 app.use(errorLoggingMiddleware);
 
-// Global error handler
-app.use(
-  (
-    err: unknown,
-    req: express.Request,
-    res: express.Response,
-    _next: express.NextFunction
-  ) => {
-    logger.error(
-      'Unhandled error in global error handler',
-      err as Error,
-      req.logContext
-    );
-
-    res.status(err?.statusCode || 500).json({
-      success: false,
-      error: err?.message || 'Internal Server Error',
-      code: err?.code || 'INTERNAL_ERROR',
-      timestamp: new Date().toISOString(),
-    });
-  }
-);
+// Resilience error handler
+app.use(resilienceMiddleware.errorHandler());
 
 // 404 handler
 app.use('*', (req, res) => {

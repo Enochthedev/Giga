@@ -84,7 +84,7 @@ export class UploadService {
    */
   async processAvatar(
     file: Express.Multer.File,
-    _userId: string
+    userId: string
   ): Promise<UploadResult> {
     try {
       if (!file) {
@@ -212,7 +212,7 @@ export class UploadService {
 
       for (const file of files) {
         const filepath = path.join(tempDir, file);
-        const _stats = await fs.stat(filepath);
+        const stats = await fs.stat(filepath);
 
         if (stats.mtime.getTime() < cutoffTime) {
           await fs.unlink(filepath);
@@ -226,8 +226,8 @@ export class UploadService {
   /**
    * Generate presigned URL for direct upload (for cloud storage)
    */
-  generatePresignedUrl(
-    _userId: string,
+  async generatePresignedUrl(
+    userId: string,
     fileType: string
   ): Promise<{
     uploadUrl: string;

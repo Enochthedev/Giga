@@ -3,6 +3,8 @@ import { PrismaClient } from '../generated/prisma-client';
 import { JWTService } from './jwt.service';
 import { RedisService } from './redis.service';
 
+const prisma = new PrismaClient();
+
 /**
  * Enhanced Token Management Service
  * Handles device-based tokens, blacklisting, analytics, and security monitoring
@@ -28,7 +30,7 @@ export class TokenManagementService {
    * Generate device-specific tokens with enhanced tracking
    */
   async generateDeviceTokens(
-    _prisma: PrismaClient,
+    prismaClient: PrismaClient,
     user: any,
     deviceInfo: DeviceInfo,
     ipAddress: string
@@ -102,7 +104,7 @@ export class TokenManagementService {
    * Validate and refresh tokens with device verification
    */
   async refreshDeviceToken(
-    _prisma: PrismaClient,
+    prismaClient: PrismaClient,
     refreshToken: string,
     deviceInfo: DeviceInfo,
     ipAddress: string
@@ -135,13 +137,13 @@ export class TokenManagementService {
 
     // Get stored device session
     const storedSession = await this.getDeviceSession(
-      tokenRecord.userId,
+      tokenRecord.user.id,
       deviceId
     );
 
     // Check for suspicious activity
     const suspiciousActivity = await this.detectSuspiciousActivity(
-      tokenRecord.userId,
+      tokenRecord.user.id,
       deviceId,
       currentFingerprint,
       ipAddress,
@@ -150,7 +152,7 @@ export class TokenManagementService {
 
     if (suspiciousActivity.isSuspicious) {
       await this.handleSuspiciousActivity(prisma, {
-        userId: tokenRecord.userId,
+        userId: tokenRecord.user.id,
         deviceId,
         ipAddress,
         suspiciousActivity,
@@ -160,7 +162,7 @@ export class TokenManagementService {
     }
 
     // Check refresh rate limiting
-    const rateLimitKey = `refresh_rate:${tokenRecord.userId}:${deviceId}`;
+    const rateLimitKey = `refresh_rate:${tokenRecord.user.id}:${deviceId}`;
     const refreshCount = await this.redisService.incrementRateLimit(
       rateLimitKey,
       300
@@ -169,7 +171,7 @@ export class TokenManagementService {
     if (refreshCount > 10) {
       // Max 10 refreshes per 5 minutes per device
       await this.logTokenEvent(prisma, {
-        userId: tokenRecord.userId,
+        userId: tokenRecord.user.id,
         eventType: 'REFRESH_RATE_LIMITED',
         deviceId,
         ipAddress: this.hashIP(ipAddress),
@@ -196,7 +198,7 @@ export class TokenManagementService {
     });
 
     // Update device session
-    await this.updateDeviceSession(tokenRecord.userId, deviceId, {
+    await this.updateDeviceSession(tokenRecord.user.id, deviceId, {
       lastUsed: new Date().toISOString(),
       refreshCount: (storedSession?.refreshCount || 0) + 1,
     });
@@ -208,8 +210,8 @@ export class TokenManagementService {
    * Blacklist tokens and revoke device sessions
    */
   async revokeTokens(
-    _prisma: PrismaClient,
-    _userId: string,
+    prismaClient: PrismaClient,
+    userId: string,
     options: {
       deviceId?: string;
       sessionId?: string;
@@ -291,7 +293,7 @@ export class TokenManagementService {
    * Get token usage analytics
    */
   async getTokenAnalytics(
-    _prisma: PrismaClient,
+    prismaClient: PrismaClient,
     userId?: string,
     timeRange: { from: Date; to: Date } = {
       from: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // 30 days ago
@@ -354,7 +356,7 @@ export class TokenManagementService {
    * Detect suspicious token activity
    */
   private async detectSuspiciousActivity(
-    _userId: string,
+    userId: string,
     deviceId: string,
     currentFingerprint: string,
     ipAddress: string,
@@ -417,9 +419,9 @@ export class TokenManagementService {
    * Handle suspicious activity
    */
   private async handleSuspiciousActivity(
-    _prisma: PrismaClient,
+    prismaClient: PrismaClient,
     activity: {
-      _userId: string;
+      userId: string;
       deviceId: string;
       ipAddress: string;
       suspiciousActivity: SuspiciousActivityResult;
@@ -523,11 +525,11 @@ export class TokenManagementService {
 
   // Redis operations for device sessions
   private async storeDeviceSession(
-    _userId: string,
+    userId: string,
     deviceId: string,
     sessionData: any
   ): Promise<void> {
-    const _key = `device_session:${userId}:${deviceId}`;
+    const key = `device_session:${userId}:${deviceId}`;
     await this.redisService.set(
       key,
       JSON.stringify(sessionData),
@@ -536,16 +538,16 @@ export class TokenManagementService {
   }
 
   private async getDeviceSession(
-    _userId: string,
+    userId: string,
     deviceId: string
   ): Promise<any> {
-    const _key = `device_session:${userId}:${deviceId}`;
+    const key = `device_session:${userId}:${deviceId}`;
     const data = await this.redisService.get(key);
     return data ? JSON.parse(data) : null;
   }
 
   private async updateDeviceSession(
-    _userId: string,
+    userId: string,
     deviceId: string,
     updates: any
   ): Promise<void> {
@@ -557,33 +559,33 @@ export class TokenManagementService {
   }
 
   private async clearDeviceSession(
-    _userId: string,
+    userId: string,
     deviceId: string
   ): Promise<void> {
-    const _key = `device_session:${userId}:${deviceId}`;
+    const key = `device_session:${userId}:${deviceId}`;
     await this.redisService.del(key);
   }
 
-  private async clearAllDeviceSessions(_userId: string): Promise<void> {
+  private async clearAllDeviceSessions(userId: string): Promise<void> {
     // This would require scanning Redis keys, which is expensive
     // In production, consider using a different data structure
-    const _pattern = `device_session:${userId}:*`;
+    const pattern = `device_session:${userId}:*`;
     // Implementation would depend on Redis client capabilities
   }
 
-  private async getActiveDeviceSessions(_userId: string): Promise<any[]> {
+  private async getActiveDeviceSessions(userId: string): Promise<any[]> {
     // This would require scanning Redis keys
     // In production, consider maintaining a set of active device IDs
     return [];
   }
 
   private async blacklistRefreshToken(token: string): Promise<void> {
-    const _key = `blacklisted_refresh:${this.hashToken(token)}`;
+    const key = `blacklisted_refresh:${this.hashToken(token)}`;
     await this.redisService.set(key, '1', 7 * 24 * 60 * 60); // 7 days
   }
 
   private async logTokenEvent(
-    _prisma: PrismaClient,
+    prismaClient: PrismaClient,
     event: TokenEventData
   ): Promise<void> {
     try {

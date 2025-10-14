@@ -11,7 +11,7 @@ export class APICacheMiddleware {
    * Cache GET responses for specified duration
    */
   static cache(ttlSeconds = 300, keyGenerator?: (req: Request) => string) {
-    return (_req: Request, res: Response, next: NextFunction) => {
+    return async (req: Request, res: Response, next: NextFunction) => {
       // Only cache GET requests
       if (req.method !== 'GET') {
         return next();
@@ -145,7 +145,7 @@ export class APICacheMiddleware {
    * Cache invalidation middleware
    */
   static invalidateCache(patterns: string[]) {
-    return (_req: Request, res: Response, next: NextFunction) => {
+    return (req: Request, res: Response, next: NextFunction) => {
       const originalSend = res.json;
 
       res.json = function (data: any) {
@@ -177,7 +177,7 @@ export class ResponseOptimizationMiddleware {
    * Add performance and optimization headers
    */
   static addOptimizationHeaders() {
-    return (_req: Request, res: Response, next: NextFunction) => {
+    return (req: Request, res: Response, next: NextFunction) => {
       const startTime = Date.now();
 
       // Add security and performance headers
@@ -211,7 +211,7 @@ export class ResponseOptimizationMiddleware {
    * Conditional requests support (ETag, If-None-Match)
    */
   static conditionalRequests() {
-    return (_req: Request, res: Response, next: NextFunction) => {
+    return (req: Request, res: Response, next: NextFunction) => {
       const ifNoneMatch = req.headers['if-none-match'];
 
       if (ifNoneMatch && req.method === 'GET') {
@@ -249,7 +249,7 @@ export class ResponseOptimizationMiddleware {
    * Response pagination optimization
    */
   static optimizePagination() {
-    return (_req: Request, res: Response, next: NextFunction) => {
+    return (req: Request, res: Response, next: NextFunction) => {
       const originalSend = res.json;
 
       res.json = function (data: any) {
@@ -309,7 +309,7 @@ export class APIAnalyticsMiddleware {
    * Track API usage and generate analytics
    */
   static trackUsage() {
-    return (_req: Request, res: Response, next: NextFunction) => {
+    return (req: Request, res: Response, next: NextFunction) => {
       const startTime = Date.now();
       const timestamp = new Date().toISOString();
       const date = timestamp.split('T')[0]; // YYYY-MM-DD format
@@ -472,7 +472,7 @@ export class APIAnalyticsMiddleware {
 
       analytics.errorRate =
         analytics.totalRequests > 0
-          ? (totalErrors / analytics.totalRequests) * 100
+          ? (_totalErrors / analytics.totalRequests) * 100
           : 0;
 
       return analytics;

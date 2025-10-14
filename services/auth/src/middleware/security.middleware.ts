@@ -7,7 +7,7 @@ import { InputSanitizer } from '../utils/security.utils';
  * Sanitizes request data to prevent cross-site scripting attacks
  */
 export const xssProtection = (
-  _req: Request,
+  req: Request,
   res: Response,
   next: NextFunction
 ) => {
@@ -72,7 +72,7 @@ function sanitizeObject(obj: any): any {
  * Sets security headers to prevent various attacks
  */
 export const contentSecurityPolicy = (
-  _req: Request,
+  req: Request,
   res: Response,
   next: NextFunction
 ) => {
@@ -131,7 +131,7 @@ export const contentSecurityPolicy = (
  * Performs comprehensive input sanitization
  */
 export const requestSanitization = (
-  _req: Request,
+  req: Request,
   res: Response,
   next: NextFunction
 ) => {
@@ -317,7 +317,7 @@ function getObjectDepth(obj: any, depth = 0): number {
  * Validates and normalizes IP addresses
  */
 export const ipValidation = (
-  _req: Request,
+  req: Request,
   res: Response,
   next: NextFunction
 ) => {
@@ -387,7 +387,7 @@ function isValidIP(ip: string): boolean {
  * Adds request timing for security monitoring
  */
 export const requestTiming = (
-  _req: Request,
+  req: Request,
   res: Response,
   next: NextFunction
 ) => {
@@ -413,7 +413,7 @@ export const requestTiming = (
  * Combines multiple security checks in one middleware
  */
 export const comprehensiveSecurityValidation = (
-  _req: Request,
+  req: Request,
   res: Response,
   next: NextFunction
 ) => {
@@ -505,7 +505,7 @@ export const comprehensiveSecurityValidation = (
  * Advanced XSS protection with content analysis
  */
 export const advancedXSSProtection = (
-  _req: Request,
+  req: Request,
   res: Response,
   next: NextFunction
 ) => {

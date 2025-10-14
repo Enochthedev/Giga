@@ -9,7 +9,7 @@ export const rateLimit = (
   windowMinutes = 15,
   options: RateLimitOptions = {}
 ) => {
-  return (_req: Request, res: Response, next: NextFunction) => {
+  return async (req: Request, res: Response, next: NextFunction) => {
     try {
       // Get client IP with enhanced detection
       const ip = getClientIP(req);
@@ -166,16 +166,16 @@ function getClientIP(req: Request): string {
 const memoryStore = new Map<string, { count: number; resetTime: number }>();
 
 function memoryRateLimit(maxRequests: number, windowMinutes: number) {
-  return (_req: Request, res: Response, next: NextFunction) => {
+  return (req: Request, res: Response, next: NextFunction) => {
     const ip = getClientIP(req);
     const _key = `${req.path}:${ip}`;
     const now = Date.now();
     const windowMs = windowMinutes * 60 * 1000;
 
-    const record = memoryStore.get(key);
+    const record = memoryStore.get(_key);
 
     if (!record || now > record.resetTime) {
-      memoryStore.set(key, { count: 1, resetTime: now + windowMs });
+      memoryStore.set(_key, { count: 1, resetTime: now + windowMs });
       return next();
     }
 

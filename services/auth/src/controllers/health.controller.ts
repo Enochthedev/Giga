@@ -1,11 +1,15 @@
 import { Request, Response } from 'express';
+import { cacheService } from '../services/cache.service';
+import { connectionPoolService } from '../services/connection-pool.service';
 import { healthService } from '../services/health.service';
 import { logger } from '../services/logger.service';
 import { metricsService } from '../services/metrics.service';
+import { performanceProfiler } from '../services/performance-profiler.service';
+import { responseCompressionService } from '../services/response-compression.service';
 
 export class HealthController {
   // Comprehensive health check
-  async getHealth(_req: Request, res: Response): Promise<void> {
+  async getHealth(req: Request, res: Response): Promise<void> {
     try {
       const healthStatus = await healthService.getHealthStatus();
 
@@ -38,7 +42,7 @@ export class HealthController {
   }
 
   // Liveness probe (Kubernetes)
-  async getLiveness(_req: Request, res: Response): Promise<void> {
+  async getLiveness(req: Request, res: Response): Promise<void> {
     try {
       const isAlive = await healthService.isAlive();
 
@@ -65,7 +69,7 @@ export class HealthController {
   }
 
   // Readiness probe (Kubernetes)
-  async getReadiness(_req: Request, res: Response): Promise<void> {
+  async getReadiness(req: Request, res: Response): Promise<void> {
     try {
       const isReady = await healthService.isReady();
 
@@ -92,7 +96,7 @@ export class HealthController {
   }
 
   // Metrics endpoint
-  getMetrics(_req: Request, res: Response): void {
+  getMetrics(req: Request, res: Response): void {
     try {
       const format = req.query.format as string;
 
@@ -132,7 +136,7 @@ export class HealthController {
   }
 
   // System information
-  getSystemInfo(_req: Request, res: Response): void {
+  getSystemInfo(req: Request, res: Response): void {
     try {
       const systemInfo = {
         service: 'auth-service',
@@ -170,7 +174,7 @@ export class HealthController {
   }
 
   // Performance metrics endpoint
-  getPerformanceMetrics(_req: Request, res: Response): void {
+  getPerformanceMetrics(req: Request, res: Response): void {
     try {
       const metrics = metricsService.getPerformanceMetrics();
 
@@ -197,7 +201,7 @@ export class HealthController {
   }
 
   // Database metrics endpoint
-  getDatabaseMetrics(_req: Request, res: Response): void {
+  getDatabaseMetrics(req: Request, res: Response): void {
     try {
       const metrics = metricsService.getDatabaseMetrics();
 
@@ -224,7 +228,7 @@ export class HealthController {
   }
 
   // Redis metrics endpoint
-  getRedisMetrics(_req: Request, res: Response): void {
+  getRedisMetrics(req: Request, res: Response): void {
     try {
       const metrics = metricsService.getRedisMetrics();
 
@@ -251,7 +255,7 @@ export class HealthController {
   }
 
   // Performance monitoring endpoint
-  async getPerformanceReport(_req: Request, res: Response): Promise<void> {
+  async getPerformanceReport(req: Request, res: Response): Promise<void> {
     try {
       const timeWindow = parseInt(req.query.timeWindow as string) || 3600000; // Default 1 hour
 
@@ -291,7 +295,7 @@ export class HealthController {
   }
 
   // Cache management endpoint
-  async getCacheManagement(_req: Request, res: Response): Promise<void> {
+  async getCacheManagement(req: Request, res: Response): Promise<void> {
     try {
       const action = req.query.action as string;
 
@@ -342,7 +346,7 @@ export class HealthController {
   }
 
   // Connection pool management endpoint
-  async getConnectionPoolStatus(_req: Request, res: Response): Promise<void> {
+  async getConnectionPoolStatus(req: Request, res: Response): Promise<void> {
     try {
       const [stats, healthCheck] = await Promise.all([
         connectionPoolService.getConnectionStats(),

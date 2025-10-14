@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { AuthController } from '../controllers/auth.controller';
+import { prisma } from '../lib/prisma';
 import { AccountLockoutMiddleware } from '../middleware/accountLockout.middleware';
 import { authenticateToken } from '../middleware/auth.middleware';
 import { requirePhoneNumber } from '../middleware/phoneVerification.middleware';
@@ -29,7 +30,7 @@ import {
 } from '../middleware/validation.middleware';
 
 const router: Router = Router();
-const authController = new AuthController();
+const authController = new AuthController(prisma);
 
 /**
  * @swagger
@@ -53,7 +54,7 @@ router.post(
   '/register',
   authRateLimit,
   validate(registerSchema),
-  authController.register.bind(authController)
+  AuthController.register
 );
 
 /**
@@ -79,7 +80,7 @@ router.post(
   authRateLimit,
   AccountLockoutMiddleware.checkAccountLockout,
   validate(loginSchema),
-  authController.login.bind(authController)
+  AuthController.login
 );
 
 /**
@@ -108,7 +109,7 @@ router.post(
   '/refresh',
   apiRateLimit,
   validate(refreshTokenSchema),
-  authController.refreshToken.bind(authController)
+  AuthController.refreshToken
 );
 
 /**
@@ -129,7 +130,7 @@ router.post(
  *       200:
  *         description: Logged out successfully
  */
-router.post('/logout', authController.logout.bind(authController));
+router.post('/logout', AuthController.logout);
 
 /**
  * @swagger
@@ -222,7 +223,7 @@ router.put(
   SessionManagementMiddleware.validateSession,
   TwoFactorAuthMiddleware.check2FARequirement,
   validate(changePasswordSchema),
-  authController.changePassword.bind(authController)
+  AuthController.changePassword
 );
 
 /**
@@ -278,7 +279,7 @@ router.post(
   '/send-email-verification',
   authRateLimit,
   authenticateToken,
-  authController.sendEmailVerification.bind(authController)
+  AuthController.sendEmailVerification
 );
 
 /**
@@ -308,7 +309,7 @@ router.post(
   '/verify-email',
   apiRateLimit,
   validate(verifyEmailSchema),
-  authController.verifyEmail.bind(authController)
+  AuthController.verifyEmail
 );
 
 /**
@@ -364,7 +365,7 @@ router.post(
   authenticateToken,
   requirePhoneNumber,
   validate(sendPhoneVerificationSchema),
-  authController.sendPhoneVerification.bind(authController)
+  AuthController.sendPhoneVerification
 );
 
 /**
@@ -398,7 +399,7 @@ router.post(
   apiRateLimit,
   authenticateToken,
   validate(verifyPhoneSchema),
-  authController.verifyPhone.bind(authController)
+  AuthController.verifyPhone
 );
 
 /**
@@ -459,7 +460,7 @@ router.post(
   '/request-password-reset',
   passwordRateLimit,
   validate(requestPasswordResetSchema),
-  authController.requestPasswordReset.bind(authController)
+  AuthController.requestPasswordReset
 );
 
 /**
@@ -523,7 +524,7 @@ router.post(
   '/reset-password',
   passwordRateLimit,
   validate(resetPasswordSchema),
-  authController.resetPassword.bind(authController)
+  AuthController.resetPassword
 );
 
 export { router as authRoutes };

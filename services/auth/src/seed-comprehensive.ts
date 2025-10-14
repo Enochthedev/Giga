@@ -162,7 +162,7 @@ async function createUsers() {
         if (role) {
           await prisma.userRole.create({
             data: {
-              _userId: user.id,
+              userId: user.id,
               roleId: role.id,
             },
           });
@@ -204,7 +204,7 @@ async function createProfilesForUser(userId: string, roles: RoleName[]) {
 async function createCustomerProfile(userId: string) {
   const profile = await prisma.customerProfile.create({
     data: {
-      _userId: userId,
+      userId: userId,
       preferences: {
         newsletter: true,
         notifications: true,
@@ -262,9 +262,10 @@ async function createVendorProfile(userId: string) {
 
   await prisma.vendorProfile.create({
     data: {
-      _userId: userId,
+      userId: userId,
       businessName:
         businessNames[Math.floor(Math.random() * businessNames.length)],
+      businessType: 'RETAIL',
       description:
         'A quality business providing excellent products and services to our customers.',
       website: 'https://example-business.com',
@@ -279,7 +280,7 @@ async function createDriverProfile(userId: string) {
 
   await prisma.driverProfile.create({
     data: {
-      _userId: userId,
+      userId: userId,
       licenseNumber: `DL${Math.floor(Math.random() * 1000000)
         .toString()
         .padStart(6, '0')}`,
@@ -307,7 +308,7 @@ async function createHostProfile(userId: string) {
 
   await prisma.hostProfile.create({
     data: {
-      _userId: userId,
+      userId: userId,
       businessName:
         businessNames[Math.floor(Math.random() * businessNames.length)],
       description:
@@ -336,7 +337,7 @@ async function createAdvertiserProfile(userId: string) {
 
   await prisma.advertiserProfile.create({
     data: {
-      _userId: userId,
+      userId: userId,
       companyName: companies[Math.floor(Math.random() * companies.length)],
       industry: industries[Math.floor(Math.random() * industries.length)],
       website: 'https://example-agency.com',
@@ -359,7 +360,7 @@ async function createSampleTokens() {
     await prisma.emailVerificationToken.create({
       data: {
         token: Math.random().toString(36).substring(2, 15),
-        _userId: user.id,
+        userId: user.id,
         expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
       },
     });
@@ -369,7 +370,7 @@ async function createSampleTokens() {
       await prisma.phoneVerificationCode.create({
         data: {
           code: Math.floor(100000 + Math.random() * 900000).toString(), // 6-digit code
-          _userId: user.id,
+          userId: user.id,
           expiresAt: new Date(Date.now() + 10 * 60 * 1000), // 10 minutes
         },
       });

@@ -52,7 +52,7 @@ class ConnectionPoolService {
   getClient(context = 'default'): Promise<PrismaClient> {
     return performanceProfiler.profileOperation(
       'connection_pool_acquire',
-      () => {
+      async () => {
         const startTime = Date.now();
 
         try {
@@ -102,7 +102,7 @@ class ConnectionPoolService {
   }
 
   // Release connection back to pool
-  releaseClient(context = 'default'): Promise<void> {
+  async releaseClient(context = 'default'): Promise<void> {
     try {
       this.connectionStats.totalReleased++;
       this.connectionStats.activeConnections = Math.max(
@@ -134,7 +134,7 @@ class ConnectionPoolService {
     issues: string[];
   }> {
     const issues: string[] = [];
-    const _stats = this.getConnectionStats();
+    const stats = this.getConnectionStats();
 
     try {
       // Test connection with a simple query
@@ -172,7 +172,7 @@ class ConnectionPoolService {
 
   // Optimize connection pool based on usage patterns
   async optimizePool(): Promise<void> {
-    const _stats = this.getConnectionStats();
+    const stats = this.getConnectionStats();
 
     try {
       // Close idle connections if we have too many
@@ -240,7 +240,7 @@ class ConnectionPoolService {
 
   private setupClientMonitoring(client: PrismaClient, context: string): void {
     // Monitor query events
-    client.$on('query', event => {
+    (client as any).$on('query', (event: any) => {
       metricsService.recordDatabaseQuery(
         event.duration,
         'query',
@@ -257,7 +257,7 @@ class ConnectionPoolService {
     });
 
     // Monitor error events
-    client.$on('error', event => {
+    (client as any).$on('error', (event: any) => {
       logger.error('Database error', new Error(event.message), {
         context,
         target: event.target,
@@ -266,7 +266,7 @@ class ConnectionPoolService {
     });
 
     // Monitor warning events
-    client.$on('warn', event => {
+    (client as any).$on('warn', (event: any) => {
       logger.warn('Database warning', {
         context,
         message: event.message,
@@ -322,7 +322,7 @@ class ConnectionPoolService {
     // Monitor connection pool every 30 seconds
     setInterval(async () => {
       try {
-        const _stats = this.getConnectionStats();
+        const stats = this.getConnectionStats();
 
         // Record metrics
         metricsService.recordMetric(

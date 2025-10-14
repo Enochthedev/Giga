@@ -29,7 +29,7 @@ class DatabaseOptimizationService {
   // Setup query performance monitoring
   private setupQueryLogging(): void {
     // Prisma middleware for query performance monitoring
-    this.prisma.$use((params, next) => {
+    this._prisma.$use(async (params, next) => {
       const startTime = Date.now();
 
       try {
@@ -79,12 +79,12 @@ class DatabaseOptimizationService {
   }
 
   // Optimized user queries with proper indexing hints
-  async findUserWithProfilesOptimized(_userId: string) {
+  async findUserWithProfilesOptimized(userId: string) {
     const startTime = Date.now();
 
     try {
       // Use select to only fetch needed fields and include related data efficiently
-      const user = await this.prisma.user.findUnique({
+      const user = await this._prisma.user.findUnique({
         where: { id: userId },
         select: {
           id: true,
@@ -250,7 +250,7 @@ class DatabaseOptimizationService {
 
       // Execute optimized queries in parallel
       const [users, totalCount] = await Promise.all([
-        this.prisma.user.findMany({
+        this._prisma.user.findMany({
           where,
           select: {
             id: true,
@@ -275,7 +275,7 @@ class DatabaseOptimizationService {
           skip,
           take: limit,
         }),
-        this.prisma.user.count({ where }),
+        this._prisma.user.count({ where }),
       ]);
 
       const duration = Date.now() - startTime;
@@ -309,7 +309,7 @@ class DatabaseOptimizationService {
     const startTime = Date.now();
 
     try {
-      const result = await this.prisma.user.updateMany({
+      const result = await this._prisma.user.updateMany({
         where: {
           id: {
             in: userIds,
@@ -414,12 +414,12 @@ class DatabaseOptimizationService {
     try {
       // Test connection
       const connectionStart = Date.now();
-      await this.prisma.$connect();
+      await this._prisma.$connect();
       connectionTime = Date.now() - connectionStart;
 
       // Test simple query
       const queryStart = Date.now();
-      await this.prisma.user.count();
+      await this._prisma.user.count();
       queryTime = Date.now() - queryStart;
 
       // Check for slow performance

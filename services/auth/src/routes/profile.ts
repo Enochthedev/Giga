@@ -108,7 +108,7 @@ router.post(
   apiRateLimit,
   authenticateToken,
   uploadService.getMulterConfig().single('avatar'),
-  (req, res) => {
+  async (req, res) => {
     try {
       if (!req.user) {
         return res.status(401).json({
@@ -140,7 +140,7 @@ router.post(
       }
 
       // Get current user to delete old avatar
-      const currentUser = await req.prisma.user.findUnique({
+      const currentUser = await req._prisma.user.findUnique({
         where: { id: req.user.sub },
         select: { avatar: true },
       });
@@ -161,7 +161,7 @@ router.post(
       }
 
       // Update user avatar in database
-      const updatedUser = await req.prisma.user.update({
+      const updatedUser = await req._prisma.user.update({
         where: { id: req.user.sub },
         data: { avatar: uploadResult.url },
         select: { avatar: true },
@@ -204,7 +204,7 @@ router.post(
  *       200:
  *         description: Avatar deleted successfully
  */
-router.delete('/avatar', apiRateLimit, authenticateToken, (req, res) => {
+router.delete('/avatar', apiRateLimit, authenticateToken, async (req, res) => {
   try {
     if (!req.user) {
       return res.status(401).json({
@@ -216,13 +216,13 @@ router.delete('/avatar', apiRateLimit, authenticateToken, (req, res) => {
     }
 
     // Get current user avatar
-    const currentUser = await req.prisma.user.findUnique({
+    const currentUser = await req._prisma.user.findUnique({
       where: { id: req.user.sub },
       select: { avatar: true },
     });
 
     // Remove avatar from database
-    await req.prisma.user.update({
+    await req._prisma.user.update({
       where: { id: req.user.sub },
       data: { avatar: null },
     });

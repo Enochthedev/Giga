@@ -17,6 +17,8 @@ model User {
   firstName       String
   lastName        String
   avatar          String?
+  dateOfBirth     DateTime?
+  gender          Gender?
   isEmailVerified Boolean   @default(false)
   isPhoneVerified Boolean   @default(false)
   isActive        Boolean   @default(true)
@@ -91,13 +93,17 @@ model UserRole {
 
 // Profile models for different roles
 model CustomerProfile {
-  id          String    @id @default(cuid())
-  userId      String    @unique
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  preferences Json?
-  addresses   Address[]
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id             String    @id @default(cuid())
+  userId         String    @unique
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  preferences    Json?
+  addresses      Address[]
+  loyaltyPoints  Int       @default(0)
+  membershipTier String    @default("BRONZE") // BRONZE, SILVER, GOLD, PLATINUM
+  totalOrders    Int       @default(0)
+  totalSpent     Float     @default(0)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
   @@map("customer_profiles")
 }
@@ -145,6 +151,7 @@ model HostProfile {
   userId           String   @unique
   user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   businessName     String?
+  hostType         HostType @default(INDIVIDUAL)
   description      String?
   rating           Float?
   totalBookings    Int      @default(0)
@@ -159,16 +166,18 @@ model HostProfile {
 }
 
 model AdvertiserProfile {
-  id          String   @id @default(cuid())
-  userId      String   @unique
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  companyName String
-  industry    String
-  website     String?
-  totalSpend  Float    @default(0)
-  isVerified  Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id               String           @id @default(cuid())
+  userId           String           @unique
+  user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  companyName      String
+  industry         String
+  website          String?
+  totalSpend       Float            @default(0)
+  totalCampaigns   Int              @default(0)
+  isVerified       Boolean          @default(false)
+  subscriptionTier SubscriptionTier @default(BASIC)
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
 
   @@map("advertiser_profiles")
 }
@@ -177,10 +186,15 @@ model Address {
   id                String          @id @default(cuid())
   customerProfileId String
   customerProfile   CustomerProfile @relation(fields: [customerProfileId], references: [id], onDelete: Cascade)
-  label             String
+  label             String // Home, Work, Other
+  name              String? // Recipient name
   address           String
+  address2          String? // Apartment, suite, etc.
   city              String
+  state             String?
+  zipCode           String?
   country           String
+  phone             String?
   isDefault         Boolean         @default(false)
   createdAt         DateTime        @default(now())
   updatedAt         DateTime        @updatedAt
@@ -381,4 +395,16 @@ enum DriverTier {
 enum HostTier {
   BASIC
   PRO
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+  PREFER_NOT_TO_SAY
+}
+
+enum HostType {
+  INDIVIDUAL
+  BUSINESS
 }

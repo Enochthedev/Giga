@@ -13,7 +13,7 @@ export class AccountLockoutMiddleware {
    * Check if account is locked before login attempt
    */
   static checkAccountLockout = async (
-    _req: Request,
+    req: Request,
     res: Response,
     next: NextFunction
   ) => {
@@ -156,7 +156,7 @@ export class AccountLockoutMiddleware {
   /**
    * Clear failed attempts on successful login
    */
-  static clearFailedAttempts = (email: string, clientIp: string) => {
+  static clearFailedAttempts = async (email: string, clientIp: string) => {
     try {
       const emailKey = `failed_attempts:email:${email.toLowerCase()}`;
       const ipKey = `failed_attempts:ip:${clientIp}`;
@@ -248,7 +248,7 @@ export class AccountLockoutMiddleware {
   /**
    * Get lockout status for monitoring
    */
-  static getLockoutStatus = (email: string, clientIp: string) => {
+  static getLockoutStatus = async (email: string, clientIp: string) => {
     try {
       const emailLockKey = `lockout:email:${email.toLowerCase()}`;
       const ipLockKey = `lockout:ip:${clientIp}`;
@@ -283,7 +283,7 @@ export class AccountLockoutMiddleware {
   /**
    * Manually unlock account (admin function)
    */
-  static unlockAccount = (email: string, adminUserId: string) => {
+  static unlockAccount = async (email: string, adminUserId: string) => {
     try {
       const emailLockKey = `lockout:email:${email.toLowerCase()}`;
       const emailAttemptsKey = `failed_attempts:email:${email.toLowerCase()}`;
@@ -309,7 +309,7 @@ export class AccountLockoutMiddleware {
   /**
    * Manually unlock IP (admin function)
    */
-  static unlockIP = (clientIp: string, adminUserId: string) => {
+  static unlockIP = async (clientIp: string, adminUserId: string) => {
     try {
       const ipLockKey = `lockout:ip:${clientIp}`;
       const ipAttemptsKey = `failed_attempts:ip:${clientIp}`;
