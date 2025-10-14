@@ -17,6 +17,7 @@
     "allowSyntheticDefaultImports": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
+    "downlevelIteration": true,
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
@@ -24,6 +25,6 @@
     }
   },
   "include": ["src/**/*"],
-  "exclude": ["src/index.ts", "node_modules", "dist"],
+  "exclude": ["src/index.ts", "node_modules", "dist", "src/__tests__/**/*", "src/seed*.ts"],
   "references": [{ "path": "../../shared/types" }]
 }

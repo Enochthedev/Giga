@@ -186,6 +186,7 @@ export class OrderService {
                   productId: item.productId,
                   quantity: item.quantity,
                   price: item.price,
+                  total: item.price * item.quantity,
                 },
                 include: {
                   product: true,

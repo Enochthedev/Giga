@@ -204,7 +204,7 @@ export function sanitizeInput(req: Request, res: Response, next: NextFunction) {
 
   // Sanitize query parameters
   if (req.query) {
-    req.query = sanitizeValue(req.query);
+    req.query = sanitizeValue(req.query) as any;
   }
 
   next();

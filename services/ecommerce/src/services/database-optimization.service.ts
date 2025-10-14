@@ -398,8 +398,13 @@ export class DatabaseOptimizationService {
       price: number;
     }>
   ): Promise<void> {
+    const itemsWithTotal = orderItems.map(item => ({
+      ...item,
+      total: item.price * item.quantity,
+    }));
+
     await this._prisma.orderItem.createMany({
-      data: orderItems,
+      data: itemsWithTotal,
     });
   }
 

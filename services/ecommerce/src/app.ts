@@ -18,8 +18,12 @@ import {
 } from './middleware/validation.middleware';
 import batchRoutes from './routes/batch';
 import { cartRoutes } from './routes/cart';
+import deliveryTrackingRoutes from './routes/delivery-tracking';
 import { orderRoutes } from './routes/orders';
+import productVariantRoutes from './routes/product-variants';
 import { productRoutes } from './routes/products';
+import promotionRoutes from './routes/promotions';
+import shippingRoutes from './routes/shipping';
 import { vendorRoutes } from './routes/vendor';
 import { redisService } from './services/redis.service';
 import { responseOptimizationService } from './services/response-optimization.service';
@@ -63,6 +67,11 @@ app.use((req, _res, next) => {
 
 // Swagger documentation
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(specs));
+
+// Swagger JSON endpoint for debugging
+app.get('/swagger.json', (req, res) => {
+  res.json(specs);
+});
 
 // Health check
 app.get('/health', async (req, res) => {
@@ -108,6 +117,10 @@ app.use('/api/v1/cart', cartRoutes);
 app.use('/api/v1/orders', orderRoutes);
 app.use('/api/v1/vendor', vendorRoutes);
 app.use('/api/v1/batch', batchRoutes);
+app.use('/api/v1/shipping', shippingRoutes);
+app.use('/api/v1/promotions', promotionRoutes);
+app.use('/api/v1/delivery', deliveryTrackingRoutes);
+app.use('/api/v1', productVariantRoutes);
 
 // 404 handler
 app.use('*', notFoundHandler);
