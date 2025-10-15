@@ -21,7 +21,8 @@
     "db:migrate": "prisma migrate dev",
     "db:seed": "tsx src/seed-simple.ts",
     "db:seed-original": "tsx src/seed.ts",
-    "db:seed-comprehensive": "tsx src/seed-comprehensive.ts"
+    "db:seed-comprehensive": "tsx src/seed-comprehensive.ts",
+    "db:setup": "pnpm run db:generate && pnpm run db:migrate && pnpm run db:seed && pnpm run db:seed-comprehensive"
   },
   "dependencies": {
     "@fastify/cors": "^8.4.0",
