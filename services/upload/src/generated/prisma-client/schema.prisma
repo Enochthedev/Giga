@@ -1,0 +1,376 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma-client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model FileMetadata {
+  id           String  @id @default(cuid())
+  originalName String
+  fileName     String
+  mimeType     String
+  size         Int
+  path         String  @unique
+  url          String
+  cdnUrl       String?
+
+  // Context information
+  uploadedBy String
+  entityType EntityType
+  entityId   String
+
+  // Processing information
+  status            FileStatus
+  processingResults Json?
+  thumbnails        Json?
+
+  // Security and access
+  accessLevel AccessLevel
+  permissions Json?
+
+  // Additional metadata
+  metadata Json?
+  tags     String[]
+
+  // Timestamps
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  expiresAt DateTime?
+
+  // Relationships
+  parentRelationships FileRelationship[]  @relation("ParentFile")
+  childRelationships  FileRelationship[]  @relation("ChildFile")
+  sessionFiles        UploadSessionFile[]
+
+  @@index([entityType, entityId])
+  @@index([uploadedBy])
+  @@index([status])
+  @@index([accessLevel])
+  @@index([createdAt])
+  @@map("file_metadata")
+}
+
+model FileRelationship {
+  id               String           @id @default(cuid())
+  parentId         String
+  childId          String
+  relationshipType RelationshipType
+  createdAt        DateTime         @default(now())
+
+  parent FileMetadata @relation("ParentFile", fields: [parentId], references: [id], onDelete: Cascade)
+  child  FileMetadata @relation("ChildFile", fields: [childId], references: [id], onDelete: Cascade)
+
+  @@unique([parentId, childId, relationshipType])
+  @@map("file_relationships")
+}
+
+model UploadSession {
+  id            String       @id @default(cuid())
+  sessionId     String       @unique
+  uploadedBy    String
+  status        UploadStatus
+  totalFiles    Int          @default(0)
+  uploadedFiles Int          @default(0)
+  failedFiles   Int          @default(0)
+  metadata      Json?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  expiresAt     DateTime
+
+  files UploadSessionFile[]
+
+  @@index([uploadedBy])
+  @@index([status])
+  @@map("upload_sessions")
+}
+
+model UploadSessionFile {
+  id              String     @id @default(cuid())
+  sessionId       String
+  fileId          String?
+  originalName    String
+  status          FileStatus
+  errorMessage    String?
+  processingOrder Int
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  session UploadSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  file    FileMetadata? @relation(fields: [fileId], references: [id])
+
+  @@index([sessionId])
+  @@index([status])
+  @@map("upload_session_files")
+}
+
+model ProcessingJob {
+  id           String            @id @default(cuid())
+  fileId       String
+  jobType      ProcessingJobType
+  status       JobStatus
+  priority     Int               @default(0)
+  attempts     Int               @default(0)
+  maxAttempts  Int               @default(3)
+  payload      Json
+  result       Json?
+  errorMessage String?
+  scheduledAt  DateTime          @default(now())
+  startedAt    DateTime?
+  completedAt  DateTime?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  @@index([status, priority])
+  @@index([fileId])
+  @@index([jobType])
+  @@map("processing_jobs")
+}
+
+model AccessLog {
+  id        String          @id @default(cuid())
+  fileId    String
+  operation AccessOperation
+  userId    String?
+  serviceId String?
+  ipAddress String?
+  userAgent String?
+  success   Boolean
+  errorCode String?
+  metadata  Json?
+  createdAt DateTime        @default(now())
+
+  @@index([fileId])
+  @@index([operation])
+  @@index([userId])
+  @@index([serviceId])
+  @@index([createdAt])
+  @@map("access_logs")
+}
+
+model StorageQuota {
+  id          String     @id @default(cuid())
+  entityType  EntityType
+  entityId    String
+  quotaBytes  BigInt
+  usedBytes   BigInt     @default(0)
+  fileCount   Int        @default(0)
+  lastUpdated DateTime   @updatedAt
+  createdAt   DateTime   @default(now())
+
+  @@unique([entityType, entityId])
+  @@map("storage_quotas")
+}
+
+model RetentionPolicy {
+  id                  String     @id @default(cuid())
+  name                String
+  entityType          EntityType
+  retentionPeriodDays Int
+  jurisdiction        String
+  isActive            Boolean    @default(true)
+  description         String?
+  legalBasis          String?
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
+
+  rules RetentionPolicyRule[]
+
+  @@unique([entityType, jurisdiction])
+  @@index([entityType])
+  @@index([isActive])
+  @@map("retention_policies")
+}
+
+model RetentionPolicyRule {
+  id        String   @id @default(cuid())
+  policyId  String
+  condition Json
+  action    Json
+  priority  Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  policy RetentionPolicy @relation(fields: [policyId], references: [id], onDelete: Cascade)
+
+  @@index([policyId])
+  @@index([priority])
+  @@map("retention_policy_rules")
+}
+
+model LegalHold {
+  id          String      @id @default(cuid())
+  name        String
+  description String
+  entityType  EntityType?
+  entityIds   String[]
+  fileIds     String[]
+  isActive    Boolean     @default(true)
+  createdBy   String
+  createdAt   DateTime    @default(now())
+  expiresAt   DateTime?
+
+  @@index([entityType])
+  @@index([isActive])
+  @@index([createdBy])
+  @@map("legal_holds")
+}
+
+model DataDeletionRequest {
+  id           String                  @id @default(cuid())
+  requestType  DataDeletionRequestType
+  entityType   EntityType
+  entityId     String
+  requestedBy  String
+  status       DeletionRequestStatus   @default(PENDING)
+  scheduledAt  DateTime
+  processedAt  DateTime?
+  filesDeleted Int                     @default(0)
+  errorMessage String?
+  metadata     Json?
+  createdAt    DateTime                @default(now())
+  updatedAt    DateTime                @updatedAt
+
+  @@index([entityType, entityId])
+  @@index([status])
+  @@index([requestedBy])
+  @@index([scheduledAt])
+  @@map("data_deletion_requests")
+}
+
+model RetentionAuditLog {
+  id          String               @id @default(cuid())
+  fileId      String?
+  entityType  EntityType?
+  entityId    String?
+  action      RetentionAuditAction
+  details     Json
+  performedBy String?
+  createdAt   DateTime             @default(now())
+
+  @@index([fileId])
+  @@index([entityType, entityId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("retention_audit_logs")
+}
+
+// Enums
+enum EntityType {
+  USER_PROFILE
+  PRODUCT
+  PROPERTY
+  VEHICLE
+  DOCUMENT
+  ADVERTISEMENT
+
+  @@map("entity_type")
+}
+
+enum FileStatus {
+  UPLOADING
+  PROCESSING
+  READY
+  FAILED
+  DELETED
+
+  @@map("file_status")
+}
+
+enum AccessLevel {
+  PUBLIC
+  PRIVATE
+  RESTRICTED
+
+  @@map("access_level")
+}
+
+enum RelationshipType {
+  THUMBNAIL
+  VARIANT
+  PROCESSED
+  BACKUP
+  RELATED
+
+  @@map("relationship_type")
+}
+
+enum UploadStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+  CANCELLED
+
+  @@map("upload_status")
+}
+
+enum ProcessingJobType {
+  IMAGE_RESIZE
+  THUMBNAIL_GENERATION
+  FORMAT_CONVERSION
+  METADATA_EXTRACTION
+  VIRUS_SCAN
+  CONTENT_ANALYSIS
+
+  @@map("processing_job_type")
+}
+
+enum JobStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+  CANCELLED
+
+  @@map("job_status")
+}
+
+enum AccessOperation {
+  READ
+  write
+  delete
+  share
+
+  @@map("access_operation")
+}
+
+enum DataDeletionRequestType {
+  USER_REQUEST
+  GDPR_REQUEST
+  POLICY_EXPIRATION
+  LEGAL_HOLD_RELEASE
+
+  @@map("data_deletion_request_type")
+}
+
+enum DeletionRequestStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+
+  @@map("deletion_request_status")
+}
+
+enum RetentionAuditAction {
+  POLICY_CREATED
+  POLICY_UPDATED
+  POLICY_DELETED
+  LEGAL_HOLD_CREATED
+  LEGAL_HOLD_RELEASED
+  FILE_EXPIRED
+  FILE_DELETED
+  FILE_ANONYMIZED
+  DELETION_REQUEST_CREATED
+  DELETION_REQUEST_PROCESSED
+
+  @@map("retention_audit_action")
+}

@@ -1,0 +1,56 @@
+[
+  {
+    "description": "Standard login",
+    "request": {
+      "email": "john.customer@example.com",
+      "password": "password123",
+      "rememberMe": false
+    },
+    "expectedResponse": {
+      "success": true,
+      "data": {
+        "user": {
+          "id": "clr123customer",
+          "email": "john.customer@example.com",
+          "firstName": "John",
+          "lastName": "Smith",
+          "roles": ["CUSTOMER"],
+          "activeRole": "CUSTOMER",
+          "avatar": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150"
+        },
+        "tokens": {
+          "accessToken": "eyJhbGciOiJIUzI1NiIs...",
+          "refreshToken": "abc123def456...",
+          "expiresIn": 900
+        }
+      }
+    }
+  },
+  {
+    "description": "Login with remember me",
+    "request": {
+      "email": "sarah.vendor@example.com",
+      "password": "vendorpass123",
+      "rememberMe": true
+    },
+    "expectedResponse": {
+      "success": true,
+      "data": {
+        "user": {
+          "id": "clr123vendor",
+          "email": "sarah.vendor@example.com",
+          "firstName": "Sarah",
+          "lastName": "Johnson",
+          "roles": ["CUSTOMER", "VENDOR"],
+          "activeRole": "VENDOR",
+          "avatar": "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150"
+        },
+        "tokens": {
+          "accessToken": "eyJhbGciOiJIUzI1NiIs...",
+          "refreshToken": "def456ghi789...",
+          "expiresIn": 900
+        }
+      }
+    }
+  }
+]

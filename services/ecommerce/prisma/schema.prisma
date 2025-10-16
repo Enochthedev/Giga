@@ -1,0 +1,583 @@
+// Ecommerce service database schema
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma-client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Vendor Management
+model Vendor {
+  id          String   @id @default(cuid())
+  name        String
+  email       String   @unique
+  phone       String?
+  address     Json?
+  description String?
+  isActive    Boolean  @default(true)
+  isVerified  Boolean  @default(false)
+  rating      Float?
+  reviewCount Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relationships
+  products    Product[]
+  analytics   VendorAnalytics[]
+
+  @@index([isActive])
+  @@index([isVerified])
+  @@index([rating])
+  @@index([createdAt])
+  @@map("vendors")
+}
+
+// Product Management
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  description String
+  price       Float
+  comparePrice Float?
+  sku         String?  @unique
+  category    String
+  subcategory String?
+  brand       String?
+  images      String[] // Array of image URLs
+  specifications Json?
+  vendorId    String
+  hasVariants Boolean  @default(false) // Whether product has variants
+  weight      Float?   // Weight in kg for shipping calculations
+  dimensions  Json?    // { "length": 10, "width": 5, "height": 2 } in cm
+  isActive    Boolean  @default(true)
+  rating      Float?
+  reviewCount Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relationships
+  vendor       Vendor               @relation(fields: [vendorId], references: [id])
+  variants     ProductVariant[]     // Product variants (size, color, etc.)
+  inventory    ProductInventory?
+  reservations InventoryReservation[]
+  orderItems   OrderItem[]
+  reviews      ProductReview[]
+  cartItems    CartItem[]
+  wishlistItems WishlistItem[]
+
+  // Strategic indexes for performance optimization
+  @@index([category])
+  @@index([vendorId])
+  @@index([isActive])
+  @@index([price])
+  @@index([rating])
+  @@index([createdAt])
+  @@index([updatedAt])
+  @@index([hasVariants])
+  // Composite indexes for common query patterns
+  @@index([isActive, category])
+  @@index([isActive, vendorId])
+  @@index([isActive, price])
+  @@index([isActive, rating])
+  @@index([category, subcategory])
+  @@index([category, brand])
+  @@index([vendorId, isActive, createdAt])
+  @@index([isActive, category, price])
+  @@index([isActive, rating, createdAt])
+  // Full-text search optimization (for PostgreSQL)
+  @@index([name])
+  @@index([brand])
+  @@map("products")
+}
+
+model ProductInventory {
+  id                String  @id @default(cuid())
+  productId         String  @unique
+  product           Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  quantity          Int     @default(0)
+  reservedQuantity  Int     @default(0)
+  lowStockThreshold Int     @default(10)
+  trackQuantity     Boolean @default(true)
+  updatedAt         DateTime @updatedAt
+
+  // Indexes for inventory management and low stock alerts
+  @@index([quantity])
+  @@index([lowStockThreshold])
+  @@index([trackQuantity])
+  @@index([updatedAt])
+  // Composite indexes for inventory monitoring
+  @@index([trackQuantity, quantity])
+  @@index([quantity, lowStockThreshold])
+  @@map("product_inventory")
+}
+
+model InventoryReservation {
+  id          String          @id @default(cuid())
+  productId   String
+  product     Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variantId   String?
+  variant     ProductVariant? @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  quantity    Int
+  customerId  String
+  orderId     String?
+  sessionId   String?
+  expiresAt   DateTime
+  createdAt   DateTime        @default(now())
+
+  @@index([productId])
+  @@index([variantId])
+  @@index([customerId])
+  @@index([sessionId])
+  @@index([expiresAt])
+  @@map("inventory_reservations")
+}
+
+model Category {
+  id          String     @id @default(cuid())
+  name        String     @unique
+  slug        String     @unique
+  description String?
+  parentId    String?
+  parent      Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryHierarchy")
+  isActive    Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@map("categories")
+}
+
+// Shopping Cart
+model ShoppingCart {
+  id         String     @id @default(cuid())
+  customerId String     @unique
+  items      CartItem[]
+  updatedAt  DateTime   @updatedAt
+
+  @@map("shopping_carts")
+}
+
+model CartItem {
+  id        String          @id @default(cuid())
+  cartId    String
+  cart      ShoppingCart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variantId String?
+  variant   ProductVariant? @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  quantity  Int
+  price     Float           // Price at time of adding to cart
+  addedAt   DateTime        @default(now())
+
+  @@unique([cartId, productId, variantId])
+  @@map("cart_items")
+}
+
+// Order Management
+model Order {
+  id              String            @id @default(cuid())
+  customerId      String
+  status          OrderStatus       @default(PENDING)
+  items           OrderItem[]
+  vendorOrders    VendorOrder[]
+  subtotal        Float
+  tax             Float
+  shipping        Float
+  discount        Float             @default(0) // Total discount applied
+  total           Float
+  shippingAddress Json
+  shippingMethodId String?
+  shippingMethod  ShippingMethod?   @relation(fields: [shippingMethodId], references: [id])
+  promotionId     String?
+  promotion       Promotion?        @relation(fields: [promotionId], references: [id])
+  paymentMethod   String
+  paymentStatus   PaymentStatus     @default(PENDING)
+  paymentIntentId String?
+  notes           String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  // Relationships
+  tracking        DeliveryTracking?
+
+  // Optimized indexes for order queries
+  @@index([customerId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([updatedAt])
+  @@index([paymentStatus])
+  @@index([shippingMethodId])
+  @@index([promotionId])
+  // Composite indexes for common query patterns
+  @@index([customerId, status])
+  @@index([customerId, createdAt])
+  @@index([status, createdAt])
+  @@index([customerId, status, createdAt])
+  @@index([paymentStatus, status])
+  @@map("orders")
+}
+
+model VendorOrder {
+  id                String      @id @default(cuid())
+  orderId           String
+  order             Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  vendorId          String
+  status            OrderStatus @default(PENDING)
+  items             OrderItem[]
+  subtotal          Float
+  shipping          Float
+  total             Float
+  trackingNumber    String?
+  estimatedDelivery DateTime?
+  notes             String?
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  // Optimized indexes for vendor order queries
+  @@index([vendorId])
+  @@index([status])
+  @@index([orderId])
+  @@index([createdAt])
+  @@index([updatedAt])
+  // Composite indexes for vendor analytics and filtering
+  @@index([vendorId, status])
+  @@index([vendorId, createdAt])
+  @@index([vendorId, status, createdAt])
+  @@index([status, createdAt])
+  @@index([orderId, vendorId])
+  @@map("vendor_orders")
+}
+
+model OrderItem {
+  id            String          @id @default(cuid())
+  orderId       String?
+  order         Order?          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  vendorOrderId String?
+  vendorOrder   VendorOrder?    @relation(fields: [vendorOrderId], references: [id], onDelete: Cascade)
+  productId     String
+  product       Product         @relation(fields: [productId], references: [id])
+  variantId     String?
+  variant       ProductVariant? @relation(fields: [variantId], references: [id])
+  quantity      Int
+  price         Float           // Price at time of order
+  discount      Float           @default(0) // Item-level discount
+  total         Float
+  createdAt     DateTime        @default(now())
+
+  // Indexes for order item queries and analytics
+  @@index([orderId])
+  @@index([vendorOrderId])
+  @@index([productId])
+  @@index([variantId])
+  @@index([createdAt])
+  // Composite indexes for analytics
+  @@index([productId, createdAt])
+  @@index([orderId, productId])
+  @@index([vendorOrderId, productId])
+  @@map("order_items")
+}
+
+// Reviews and Ratings
+model ProductReview {
+  id         String   @id @default(cuid())
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  customerId String
+  rating     Int      // 1-5 stars
+  title      String?
+  review     String?
+  isVerified Boolean  @default(false) // Verified purchase
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([productId, customerId])
+  @@index([productId])
+  @@index([rating])
+  @@map("product_reviews")
+}
+
+// Wishlist
+model Wishlist {
+  id         String         @id @default(cuid())
+  customerId String         @unique
+  items      WishlistItem[]
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  @@map("wishlists")
+}
+
+model WishlistItem {
+  id         String   @id @default(cuid())
+  wishlistId String
+  wishlist   Wishlist @relation(fields: [wishlistId], references: [id], onDelete: Cascade)
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  addedAt    DateTime @default(now())
+
+  @@unique([wishlistId, productId])
+  @@map("wishlist_items")
+}
+
+// Vendor Analytics
+model VendorAnalytics {
+  id           String   @id @default(cuid())
+  vendorId     String
+  vendor       Vendor   @relation(fields: [vendorId], references: [id])
+  period       String   // 'daily', 'weekly', 'monthly'
+  date         DateTime
+  totalOrders  Int      @default(0)
+  totalRevenue Float    @default(0)
+  totalViews   Int      @default(0)
+  conversionRate Float  @default(0)
+  createdAt    DateTime @default(now())
+
+  @@unique([vendorId, period, date])
+  // Optimized indexes for analytics queries
+  @@index([vendorId])
+  @@index([date])
+  @@index([period])
+  @@index([createdAt])
+  // Composite indexes for analytics reporting
+  @@index([vendorId, period])
+  @@index([vendorId, date])
+  @@index([vendorId, period, date])
+  @@index([period, date])
+  @@map("vendor_analytics")
+}
+
+// Product Variants
+model ProductVariant {
+  id          String   @id @default(cuid())
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  name        String   // e.g., "Blue T-Shirt Size M"
+  sku         String?  @unique
+  price       Float?   // Override product price if different
+  comparePrice Float?
+  attributes  Json     // { "color": "blue", "size": "M", "material": "cotton" }
+  images      String[] // Variant-specific images
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relationships
+  inventory    ProductVariantInventory?
+  cartItems    CartItem[]
+  orderItems   OrderItem[]
+  reservations InventoryReservation[]
+
+  @@index([productId])
+  @@index([isActive])
+  @@index([sku])
+  @@map("product_variants")
+}
+
+model ProductVariantInventory {
+  id                String         @id @default(cuid())
+  variantId         String         @unique
+  variant           ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  quantity          Int            @default(0)
+  reservedQuantity  Int            @default(0)
+  lowStockThreshold Int            @default(10)
+  trackQuantity     Boolean        @default(true)
+  updatedAt         DateTime       @updatedAt
+
+  @@index([quantity])
+  @@index([lowStockThreshold])
+  @@map("product_variant_inventory")
+}
+
+// Shipping Management
+model ShippingZone {
+  id          String          @id @default(cuid())
+  name        String
+  description String?
+  countries   String[]        // Array of country codes
+  states      String[]        // Array of state/province codes
+  isActive    Boolean         @default(true)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  // Relationships
+  methods     ShippingMethod[]
+
+  @@map("shipping_zones")
+}
+
+model ShippingMethod {
+  id              String       @id @default(cuid())
+  zoneId          String
+  zone            ShippingZone @relation(fields: [zoneId], references: [id], onDelete: Cascade)
+  name            String       // e.g., "Standard Shipping", "Express"
+  description     String?
+  type            ShippingType @default(FLAT_RATE)
+  baseRate        Float        // Base shipping cost
+  freeThreshold   Float?       // Free shipping above this amount
+  estimatedDays   Int?         // Estimated delivery days
+  maxWeight       Float?       // Maximum weight in kg
+  isActive        Boolean      @default(true)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  // Relationships
+  rates           ShippingRate[]
+  orders          Order[]
+
+  @@index([zoneId])
+  @@index([isActive])
+  @@map("shipping_methods")
+}
+
+model ShippingRate {
+  id         String         @id @default(cuid())
+  methodId   String
+  method     ShippingMethod @relation(fields: [methodId], references: [id], onDelete: Cascade)
+  minWeight  Float?         // Minimum weight in kg
+  maxWeight  Float?         // Maximum weight in kg
+  minValue   Float?         // Minimum order value
+  maxValue   Float?         // Maximum order value
+  rate       Float          // Shipping rate
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  @@index([methodId])
+  @@map("shipping_rates")
+}
+
+// Promotions & Discounts
+model Promotion {
+  id              String         @id @default(cuid())
+  name            String
+  description     String?
+  code            String?        @unique // Coupon code (optional)
+  type            PromotionType
+  discountType    DiscountType
+  discountValue   Float          // Percentage or fixed amount
+  minOrderValue   Float?         // Minimum order value to apply
+  maxDiscount     Float?         // Maximum discount amount (for percentage)
+  usageLimit      Int?           // Total usage limit
+  usageCount      Int            @default(0)
+  userUsageLimit  Int?           // Per-user usage limit
+  startDate       DateTime
+  endDate         DateTime
+  isActive        Boolean        @default(true)
+  applicableProducts String[]     // Product IDs (empty = all products)
+  applicableCategories String[]   // Category names (empty = all categories)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  // Relationships
+  usages          PromotionUsage[]
+  orders          Order[]
+
+  @@index([code])
+  @@index([isActive])
+  @@index([startDate, endDate])
+  @@map("promotions")
+}
+
+model PromotionUsage {
+  id          String    @id @default(cuid())
+  promotionId String
+  promotion   Promotion @relation(fields: [promotionId], references: [id], onDelete: Cascade)
+  customerId  String
+  orderId     String?
+  usedAt      DateTime  @default(now())
+
+  @@index([promotionId])
+  @@index([customerId])
+  @@map("promotion_usage")
+}
+
+// Delivery Tracking
+model DeliveryTracking {
+  id              String            @id @default(cuid())
+  orderId         String            @unique
+  order           Order             @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  trackingNumber  String            @unique
+  carrier         String            // e.g., "FedEx", "UPS", "DHL"
+  status          DeliveryStatus    @default(PENDING)
+  estimatedDelivery DateTime?
+  actualDelivery  DateTime?
+  trackingUrl     String?
+  notes           String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  // Relationships
+  events          TrackingEvent[]
+
+  @@index([trackingNumber])
+  @@index([status])
+  @@map("delivery_tracking")
+}
+
+model TrackingEvent {
+  id          String           @id @default(cuid())
+  trackingId  String
+  tracking    DeliveryTracking @relation(fields: [trackingId], references: [id], onDelete: Cascade)
+  status      DeliveryStatus
+  location    String?
+  description String
+  timestamp   DateTime
+  createdAt   DateTime         @default(now())
+
+  @@index([trackingId])
+  @@index([timestamp])
+  @@map("tracking_events")
+}
+
+// Enums
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum ShippingType {
+  FLAT_RATE
+  WEIGHT_BASED
+  VALUE_BASED
+  FREE
+}
+
+enum PromotionType {
+  COUPON_CODE
+  AUTOMATIC
+  BULK_DISCOUNT
+  FIRST_TIME_BUYER
+  LOYALTY_REWARD
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED_AMOUNT
+  FREE_SHIPPING
+  BUY_X_GET_Y
+}
+
+enum DeliveryStatus {
+  PENDING
+  PICKED_UP
+  IN_TRANSIT
+  OUT_FOR_DELIVERY
+  DELIVERED
+  FAILED_DELIVERY
+  RETURNED
+}

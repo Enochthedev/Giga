@@ -1,0 +1,598 @@
+// Improved Hotel Microservice Prisma Schema
+// Optimized for marketplace/middleman platform
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma-client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Property {
+  id          String @id @default(cuid())
+  slug        String @unique // For SEO-friendly URLs
+  name        String
+  description String @db.Text
+  category    String // hotel, resort, hostel, etc.
+
+  // Location information
+  address     Json // { street, city, state, country, postalCode }
+  coordinates Json // { lat, lng }
+  timezone    String
+
+  // Property details
+  starRating Int?
+  amenities  Json // Array of amenities
+  policies   Json // Property policies object
+
+  // Contact information
+  email       String?
+  phone       String?
+  website     String?
+  contactInfo Json // Additional contact details
+
+  // Check-in/out times
+  checkInTime  String // e.g., "15:00"
+  checkOutTime String // e.g., "11:00"
+
+  // Media
+  images      Json // Array of property images with URLs
+  virtualTour String?
+
+  // Business information
+  ownerId String // Hotel owner/manager ID
+  chainId String? // Optional: for hotel chains
+  brandId String? // Optional: for brands
+  taxId   String? // For invoicing/legal
+
+  // Default currency for this property
+  currency String @default("USD")
+
+  // Status and settings
+  status   String @default("active") // active, inactive, pending, suspended
+  settings Json // Property settings object
+
+  // Soft delete
+  deletedAt DateTime?
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  roomTypes            RoomType[]
+  bookings             Booking[]
+  inventory            InventoryRecord[]
+  rates                RateRecord[]
+  promotions           Promotion[]
+  reviews              Review[]
+  cancellationPolicies CancellationPolicy[]
+  propertyHours        PropertyHours[]
+  taxConfigurations    TaxConfiguration[]
+
+  @@index([status, ownerId])
+  @@index([category])
+  @@index([ownerId])
+  @@index([slug])
+  @@map("properties")
+}
+
+model RoomType {
+  id          String @id @default(cuid())
+  propertyId  String
+  name        String
+  description String @db.Text
+  category    String // standard, deluxe, suite, etc.
+
+  // Capacity and layout
+  maxOccupancy     Int
+  maxAdults        Int
+  maxChildren      Int
+  bedConfiguration Json // [{ type: "king", quantity: 1 }, { type: "single", quantity: 2 }]
+  roomSize         Float
+  roomSizeUnit     String // sqm, sqft
+
+  // Amenities and features
+  amenities Json // Array of room amenities
+  view      String? // ocean, city, garden, etc.
+  floor     String? // ground, 1-10, penthouse
+
+  // Inventory
+  totalRooms Int
+
+  // Pricing
+  baseRate Float
+  currency String
+
+  // Media
+  images Json // Array of room images
+
+  // Status
+  isActive Boolean @default(true)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  property    Property          @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  bookedRooms BookedRoom[]
+  inventory   InventoryRecord[]
+  rates       RateRecord[]
+
+  @@index([propertyId, isActive])
+  @@index([propertyId])
+  @@map("room_types")
+}
+
+model Booking {
+  id                 String @id @default(cuid())
+  confirmationNumber String @unique
+  propertyId         String
+
+  // Guest information - simplified and normalized
+  guestId        String // From Auth Service
+  guestProfileId String? // Link to GuestProfile if registered user
+
+  // Primary guest contact (denormalized for quick access)
+  guestName  String
+  guestEmail String
+  guestPhone String
+
+  // Additional guest details stored as JSON
+  additionalGuests Json // Array of additional guests
+
+  // Booking dates
+  checkInDate  DateTime
+  checkOutDate DateTime
+  nights       Int
+
+  // Actual check-in/out (filled when guest arrives/leaves)
+  actualCheckInTime  DateTime?
+  actualCheckOutTime DateTime?
+
+  // Pricing breakdown
+  subtotal       Float
+  taxAmount      Float
+  discountAmount Float  @default(0)
+  totalAmount    Float
+  currency       String
+  pricingDetails Json // Detailed breakdown
+
+  // Status and workflow
+  status        String @default("pending") // pending, confirmed, checked_in, checked_out, cancelled, no_show
+  bookingSource String // web, mobile, api, phone, walk_in
+
+  // Special requests and preferences
+  specialRequests String? @db.Text
+  preferences     Json // Guest preferences object
+
+  // Payment information
+  paymentStatus String  @default("pending") // pending, partial, paid, refunded
+  paymentMethod String?
+
+  // Policies
+  cancellationPolicyId String?
+  cancellationDeadline DateTime?
+  noShowPolicy         String
+
+  // Timestamps
+  bookedAt    DateTime  @default(now())
+  cancelledAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Metadata for extensions
+  metadata Json?
+
+  // Relations
+  property       Property         @relation(fields: [propertyId], references: [id])
+  guestProfile   GuestProfile?    @relation(fields: [guestProfileId], references: [id])
+  bookedRooms    BookedRoom[]
+  reviews        Review[]
+  bookingHistory BookingHistory[]
+
+  @@index([propertyId, checkInDate, status])
+  @@index([propertyId, status])
+  @@index([guestId])
+  @@index([guestProfileId])
+  @@index([status])
+  @@index([checkInDate])
+  @@index([checkOutDate])
+  @@index([confirmationNumber])
+  @@map("bookings")
+}
+
+model BookedRoom {
+  id         String  @id @default(cuid())
+  bookingId  String
+  roomTypeId String
+  roomNumber String? // Assigned room number (if available)
+  quantity   Int // Number of rooms of this type
+  guestCount Int // Total guests in these rooms
+
+  // Pricing per room type
+  ratePerNight Float
+  nights       Int
+  subtotal     Float
+  taxAmount    Float
+  totalPrice   Float
+
+  // Guest assignments
+  guests Json // Array of guest details for these rooms
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  booking  Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  roomType RoomType @relation(fields: [roomTypeId], references: [id])
+
+  @@index([bookingId])
+  @@index([roomTypeId])
+  @@map("booked_rooms")
+}
+
+model BookingHistory {
+  id          String   @id @default(cuid())
+  bookingId   String
+  action      String // created, modified, confirmed, cancelled, checked_in, checked_out
+  changedBy   String // User ID who made the change
+  changeType  String // status_change, modification, payment, etc.
+  oldValue    Json? // Previous state
+  newValue    Json? // New state
+  description String?
+  timestamp   DateTime @default(now())
+
+  // Relations
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([bookingId, timestamp])
+  @@map("booking_history")
+}
+
+model InventoryRecord {
+  id         String   @id @default(cuid())
+  propertyId String
+  roomTypeId String
+  date       DateTime @db.Date
+
+  // Inventory counts
+  totalRooms       Int
+  availableRooms   Int
+  reservedRooms    Int
+  blockedRooms     Int @default(0)
+  overbookingLimit Int @default(0)
+
+  // Restrictions
+  minimumStay       Int?
+  maximumStay       Int?
+  closedToArrival   Boolean @default(false)
+  closedToDeparture Boolean @default(false)
+  stopSell          Boolean @default(false)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  roomType RoomType @relation(fields: [roomTypeId], references: [id], onDelete: Cascade)
+
+  @@unique([propertyId, roomTypeId, date])
+  @@index([propertyId, roomTypeId, date])
+  @@index([date])
+  @@map("inventory_records")
+}
+
+model RateRecord {
+  id         String   @id @default(cuid())
+  propertyId String
+  roomTypeId String
+  date       DateTime @db.Date
+  rate       Float
+  currency   String
+  rateType   String   @default("base") // base, weekend, peak, special
+
+  // Restrictions
+  minimumStay        Int?
+  maximumStay        Int?
+  advanceBookingDays Int?
+  restrictions       Json? // Additional rate restrictions
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  roomType RoomType @relation(fields: [roomTypeId], references: [id], onDelete: Cascade)
+
+  @@unique([propertyId, roomTypeId, date, rateType])
+  @@index([propertyId, roomTypeId, date])
+  @@index([date])
+  @@map("rate_records")
+}
+
+model DynamicPricingRule {
+  id                  String   @id @default(cuid())
+  propertyId          String
+  name                String
+  description         String   @db.Text
+  type                String // occupancy_based, demand_based, competitor_based, event_based
+  isActive            Boolean  @default(true)
+  priority            Int      @default(0)
+  conditions          Json // Array of pricing conditions
+  adjustments         Json // Array of pricing adjustments
+  validFrom           DateTime
+  validTo             DateTime
+  applicableRoomTypes Json? // Array of room type IDs, null = all
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([propertyId, isActive])
+  @@map("dynamic_pricing_rules")
+}
+
+model SeasonalRate {
+  id            String   @id @default(cuid())
+  propertyId    String
+  name          String
+  description   String   @db.Text
+  startDate     DateTime @db.Date
+  endDate       DateTime @db.Date
+  roomTypeRates Json // [{ roomTypeId, adjustmentType, adjustmentValue }]
+  isActive      Boolean  @default(true)
+  priority      Int      @default(0)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([propertyId, isActive])
+  @@map("seasonal_rates")
+}
+
+model Promotion {
+  id            String   @id @default(cuid())
+  propertyId    String
+  code          String?  @unique // Promo code (null for automatic promotions)
+  name          String
+  description   String   @db.Text
+  type          String // early_bird, last_minute, package, loyalty
+  discountType  String // percentage, fixed, free_night
+  discountValue Float
+  maxDiscount   Float?
+  validFrom     DateTime
+  validTo       DateTime
+  conditions    Json // Array of promotion conditions
+  usageLimit    Int? // Max total uses
+  usageCount    Int      @default(0)
+  perUserLimit  Int? // Max uses per user
+  isActive      Boolean  @default(true)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@index([propertyId, isActive])
+  @@index([code])
+  @@map("promotions")
+}
+
+model GroupDiscount {
+  id                  String   @id @default(cuid())
+  propertyId          String
+  name                String
+  description         String   @db.Text
+  minimumRooms        Int
+  discountType        String // percentage, fixed
+  discountValue       Float
+  validFrom           DateTime
+  validTo             DateTime
+  applicableRoomTypes Json? // Array of room type IDs
+  isActive            Boolean  @default(true)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([propertyId, isActive])
+  @@map("group_discounts")
+}
+
+model CancellationPolicy {
+  id                 String  @id @default(cuid())
+  propertyId         String
+  name               String
+  description        String  @db.Text
+  refundPercentage   Float // 100 = full refund, 0 = no refund
+  hoursBeforeCheckIn Int // Deadline in hours before check-in
+  penaltyType        String // percentage, fixed, nights
+  penaltyValue       Float?
+  isActive           Boolean @default(true)
+  isDefault          Boolean @default(false)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@index([propertyId, isActive])
+  @@map("cancellation_policies")
+}
+
+model TaxConfiguration {
+  id                  String    @id @default(cuid())
+  propertyId          String
+  name                String
+  type                String // vat, sales_tax, tourism_tax, service_charge
+  rate                Float
+  isPercentage        Boolean   @default(true)
+  isInclusive         Boolean   @default(false) // Tax included in displayed price
+  applicableRoomTypes Json? // Array of room type IDs
+  validFrom           DateTime
+  validTo             DateTime?
+  isActive            Boolean   @default(true)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@index([propertyId, isActive])
+  @@map("tax_configurations")
+}
+
+model PropertyHours {
+  id         String  @id @default(cuid())
+  propertyId String
+  type       String // reception, restaurant, pool, gym, spa, bar
+  name       String? // Optional custom name
+  hours      Json // { monday: { open: "09:00", close: "22:00", closed: false }, ... }
+  isActive   Boolean @default(true)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@index([propertyId])
+  @@map("property_hours")
+}
+
+model GuestProfile {
+  id     String @id @default(cuid())
+  userId String @unique // Reference to Auth Service
+
+  // Personal information
+  firstName      String
+  lastName       String
+  dateOfBirth    DateTime?
+  nationality    String?
+  passportNumber String?
+
+  // Contact information
+  email          String
+  phone          String?
+  alternatePhone String?
+  address        Json? // Full address object
+
+  // Preferences
+  roomPreferences    Json // { bedType, floor, view, smoking }
+  amenityPreferences Json // Preferred amenities
+  languagePreference String @default("en")
+
+  // Loyalty information
+  loyaltyTier   String? // bronze, silver, gold, platinum
+  loyaltyPoints Int     @default(0)
+  totalSpent    Float   @default(0)
+  bookingCount  Int     @default(0)
+
+  // Special requirements
+  accessibility       Json? // Accessibility requirements
+  dietaryRestrictions Json? // Array of dietary restrictions
+  allergies           Json? // Array of allergies
+
+  // Communication preferences
+  emailNotifications Boolean @default(true)
+  smsNotifications   Boolean @default(false)
+  marketingEmails    Boolean @default(true)
+
+  // VIP status
+  isVip    Boolean @default(false)
+  vipNotes String? @db.Text
+
+  // Timestamps
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  lastBookingDate DateTime?
+
+  // Relations
+  bookings     Booking[]
+  reviews      Review[]
+  activityLogs GuestActivityLog[]
+
+  @@index([userId])
+  @@index([email])
+  @@map("guest_profiles")
+}
+
+model GuestActivityLog {
+  id           String   @id @default(cuid())
+  guestId      String
+  activityType String // search, view, booking, cancellation, review, profile_update
+  description  String
+  metadata     Json? // Additional activity data
+  ipAddress    String?
+  userAgent    String?
+  timestamp    DateTime @default(now())
+
+  // Relations
+  guestProfile GuestProfile @relation(fields: [guestId], references: [id], onDelete: Cascade)
+
+  @@index([guestId, timestamp])
+  @@index([activityType])
+  @@map("guest_activity_logs")
+}
+
+model Review {
+  id         String @id @default(cuid())
+  propertyId String
+  bookingId  String @unique
+  guestId    String
+
+  // Ratings (1-5 scale)
+  overallRating     Int
+  cleanlinessRating Int?
+  locationRating    Int?
+  serviceRating     Int?
+  valueRating       Int?
+  amenitiesRating   Int?
+
+  // Review content
+  title   String?
+  comment String? @db.Text
+  pros    Json? // Array of positive points
+  cons    Json? // Array of negative points
+
+  // Response from property
+  propertyResponse String?   @db.Text
+  respondedAt      DateTime?
+  respondedBy      String? // Staff user ID
+
+  // Metadata
+  isVerified   Boolean @default(true) // Verified stay
+  isPublished  Boolean @default(true)
+  helpfulCount Int     @default(0)
+  reportCount  Int     @default(0)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  property     Property     @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  booking      Booking      @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  guestProfile GuestProfile @relation(fields: [guestId], references: [id])
+
+  @@index([propertyId, isPublished])
+  @@index([guestId])
+  @@index([overallRating])
+  @@map("reviews")
+}

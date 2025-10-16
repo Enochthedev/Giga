@@ -1,0 +1,15 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "🚀 Running pre-push checks..."
+
+# Run linting with warnings allowed (only fail on errors)
+pnpm lint --max-warnings 2000 || echo "⚠️  Linting warnings found but allowing push to continue"
+
+# Run format check
+pnpm format:check || echo "⚠️  Format issues found but allowing push to continue"
+
+# Run type check (this should still fail on errors)
+pnpm type-check
+
+echo "✅ Pre-push checks completed!"

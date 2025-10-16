@@ -1,0 +1,49 @@
+{
+  "name": "@platform/monorepo",
+  "version": "1.0.0",
+  "description": "Microservices platform monorepo",
+  "private": true,
+  "workspaces": [
+    "services/*",
+    "shared/*"
+  ],
+  "scripts": {
+    "build": "pnpm -r run build",
+    "dev": "pnpm -r --parallel run dev",
+    "test": "pnpm -r run test",
+    "lint": "pnpm -r run lint",
+    "lint:fix": "pnpm -r run lint:fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "type-check": "pnpm -r run type-check",
+    "clean": "pnpm -r run clean && rm -rf node_modules",
+    "start:auth": "pnpm --filter @platform/auth-service run start",
+    "start:notification": "pnpm --filter @platform/notification-service run start",
+    "start:ecommerce": "pnpm --filter @platform/ecommerce-service run start",
+    "start:hotel": "pnpm --filter @platform/hotel-service run start",
+    "start:payment": "pnpm --filter @platform/payment-service run start",
+    "start:upload": "pnpm --filter @platform/upload-service run start",
+    "start:gateway": "pnpm --filter @platform/gateway-service run start",
+    "start:taxi": "pnpm --filter @platform/taxi-service run start",
+    "start:core": "pnpm --filter @platform/core-service run start",
+    "db:generate": "pnpm -r run db:generate",
+    "db:push": "pnpm -r run db:push",
+    "db:migrate": "pnpm -r run db:migrate",
+    "db:seed": "pnpm -r run db:seed"
+  },
+  "devDependencies": {
+    "@types/node": "^20.8.0",
+    "@typescript-eslint/eslint-plugin": "^6.7.4",
+    "@typescript-eslint/parser": "^6.7.4",
+    "eslint": "^8.50.0",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-prettier": "^5.0.0",
+    "prettier": "^3.0.3",
+    "typescript": "^5.2.2"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "packageManager": "pnpm@8.15.0"
+}

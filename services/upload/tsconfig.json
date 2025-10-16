@@ -1,0 +1,14 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "baseUrl": "./src",
+    "paths": {
+      "@/*": ["*"],
+      "@tests/*": ["__tests__/*"]
+    }
+  },
+  "include": ["src/**/*", "src/types/express.d.ts"],
+  "exclude": ["node_modules", "dist", "**/*.test.ts"]
+}

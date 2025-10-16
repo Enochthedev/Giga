@@ -1,0 +1,194 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma-client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Template {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  category    String // NotificationCategory enum
+  channels    String[] // NotificationChannel enum array
+
+  // Template content and versioning
+  versions      TemplateVersion[]
+  activeVersion String?
+
+  // Localization
+  languages       String[] @default(["en"])
+  defaultLanguage String   @default("en")
+
+  // Variables and validation
+  requiredVariables String[] @default([])
+  optionalVariables String[] @default([])
+  variableSchema    Json?
+
+  // Metadata
+  createdBy String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  isActive  Boolean  @default(true)
+
+  @@map("templates")
+}
+
+model TemplateVersion {
+  id         String   @id @default(cuid())
+  templateId String
+  version    String
+  content    Json // TemplateContent
+  changelog  String?
+  createdAt  DateTime @default(now())
+  isActive   Boolean  @default(false)
+
+  template Template @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@unique([templateId, version])
+  @@map("template_versions")
+}
+
+model CompiledTemplate {
+  id                String    @id @default(cuid())
+  templateId        String
+  version           String
+  language          String
+  channel           String // NotificationChannel enum
+  compiledContent   Json // Handlebars compiled template
+  requiredVariables String[]  @default([])
+  compiledAt        DateTime  @default(now())
+  expiresAt         DateTime? // For cache expiration
+
+  @@unique([templateId, version, language, channel])
+  @@map("compiled_templates")
+}
+
+model Notification {
+  id     String  @id @default(cuid())
+  userId String?
+  email  String?
+  phone  String?
+
+  // Template and content
+  templateId String?
+  channels   String[] // NotificationChannel enum array
+  priority   String // NotificationPriority enum
+  category   String // NotificationCategory enum
+
+  // Content
+  subject         String?
+  content         Json // NotificationContent
+  variables       Json? // TemplateVariables
+  renderedContent Json? // RenderedContent
+
+  // Delivery
+  status      String // NotificationStatus enum
+  scheduledAt DateTime?
+  sentAt      DateTime?
+  deliveredAt DateTime?
+
+  // Tracking
+  trackingEnabled Boolean @default(true)
+  trackingData    Json?
+
+  // Metadata
+  fromService String
+  fromUserId  String?
+  metadata    Json?
+  tags        String[] @default([])
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  deliveryTracking NotificationDeliveryTracking[]
+
+  @@map("notifications")
+}
+
+model NotificationDeliveryTracking {
+  id             String @id @default(cuid())
+  notificationId String
+  channel        String // NotificationChannel enum
+  provider       String
+
+  // Delivery status
+  status            String // NotificationStatus enum
+  providerMessageId String?
+
+  // Tracking events
+  sentAt       DateTime?
+  deliveredAt  DateTime?
+  openedAt     DateTime?
+  clickedAt    DateTime?
+  bouncedAt    DateTime?
+  complainedAt DateTime?
+
+  // Error information
+  errorCode    String?
+  errorMessage String?
+  retryCount   Int     @default(0)
+
+  // Provider response
+  providerResponse Json?
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  notification Notification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+
+  @@map("notification_delivery_tracking")
+}
+
+model UserNotificationPreferences {
+  id     String @id @default(cuid())
+  userId String @unique
+
+  // Channel preferences
+  emailEnabled Boolean @default(true)
+  smsEnabled   Boolean @default(true)
+  pushEnabled  Boolean @default(true)
+  inAppEnabled Boolean @default(true)
+
+  // Category preferences
+  categoryPreferences Json @default("{}")
+
+  // Global settings
+  globalOptOut           Boolean @default(false)
+  quietHours             Json?
+  maxDailyNotifications  Int?
+  maxWeeklyNotifications Int?
+
+  // Compliance
+  consentDate DateTime?
+  optOutDate  DateTime?
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("user_notification_preferences")
+}
+
+model NotificationSuppressionList {
+  id         String    @id @default(cuid())
+  identifier String // email, phone, etc.
+  channel    String // NotificationChannel enum
+  reason     String
+  addedBy    String?
+  addedAt    DateTime  @default(now())
+  expiresAt  DateTime?
+  isActive   Boolean   @default(true)
+
+  @@unique([identifier, channel])
+  @@map("notification_suppression_list")
+}
