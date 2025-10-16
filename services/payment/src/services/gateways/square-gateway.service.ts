@@ -179,6 +179,7 @@ export class SquareGateway extends PaymentGateway {
 
       const paymentMethod: PaymentMethod = {
         id: `square_pm_${Date.now()}`,
+<<<<<<< HEAD
         userId: data.userId || '',
         type: data.type || 'card',
         provider: 'square',
@@ -190,6 +191,12 @@ export class SquareGateway extends PaymentGateway {
           last4: '4242',
           ...data.metadata,
         },
+=======
+        type: data.type || 'card',
+        customerId: data.customerId,
+        isDefault: data.isDefault || false,
+        metadata: { ...data.metadata, provider: 'square' },
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -220,12 +227,18 @@ export class SquareGateway extends PaymentGateway {
 
       const paymentMethod: PaymentMethod = {
         id,
+<<<<<<< HEAD
         userId: data.userId || '',
         type: data.type || 'card',
         provider: 'square',
         token: `square_token_${id}`,
         isDefault: data.isDefault || false,
         isActive: true,
+=======
+        type: data.type || 'card',
+        customerId: data.customerId,
+        isDefault: data.isDefault || false,
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
         metadata: { ...data.metadata, provider: 'square' },
         createdAt: new Date(Date.now() - 86400000),
         updatedAt: new Date(),
@@ -281,6 +294,7 @@ export class SquareGateway extends PaymentGateway {
 
       const paymentMethod: PaymentMethod = {
         id,
+<<<<<<< HEAD
         userId: 'square_user_example',
         type: 'card',
         provider: 'square',
@@ -291,6 +305,12 @@ export class SquareGateway extends PaymentGateway {
           brand: 'visa',
           last4: '4242',
         },
+=======
+        type: 'card',
+        customerId: 'square_customer_example',
+        isDefault: false,
+        metadata: { provider: 'square' },
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
         createdAt: new Date(Date.now() - 86400000),
         updatedAt: new Date(),
       };

@@ -10,8 +10,13 @@ interface FailoverChain {
 interface CircuitBreakerState {
   isOpen: boolean;
   failureCount: number;
+<<<<<<< HEAD
   lastFailureTime?: Date | undefined;
   nextRetryTime?: Date | undefined;
+=======
+  lastFailureTime?: Date;
+  nextRetryTime?: Date;
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
 }
 
 export class GatewayFailoverManager implements IGatewayFailoverManager {

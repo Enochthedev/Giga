@@ -102,6 +102,7 @@ export type {
 } from './availability.types';
 
 // Pricing types
+<<<<<<< HEAD
 export {
   AdjustmentMethod,
   AdjustmentType,
@@ -120,10 +121,17 @@ export type {
   FeeItem,
   GroupDiscount,
   GroupDiscountRequest,
+=======
+export type {
+  AppliedPromotion,
+  DiscountItem,
+  FeeItem,
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
   NightlyRate,
   PriceBreakdown,
   PriceCalculation,
   PriceCalculationRequest,
+<<<<<<< HEAD
   PriceValidation,
   PriceValidationError,
   PriceValidationWarning,
@@ -143,6 +151,10 @@ export type {
   SeasonalRoomTypeRate,
   TaxCalculation,
   TaxConfiguration,
+=======
+  RateAdjustment,
+  RoomCharge,
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
   TaxItem,
 } from './pricing.types';
 
@@ -157,6 +169,7 @@ export type {
   VIPStatus,
 } from './guest.types';
 
+<<<<<<< HEAD
 // Error classes
 export {
   AvailabilityError,
@@ -181,6 +194,8 @@ export {
 // Redis type
 export type { RedisClientType } from 'redis';
 
+=======
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
 // Common types
 export interface ApiResponse<T = never> {
   success: boolean;
@@ -280,7 +295,11 @@ export interface AuditInfo {
   version?: number;
 }
 
+<<<<<<< HEAD
 export interface FieldValidationError {
+=======
+export interface ValidationError {
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
   field: string;
   message: string;
   code: string;
@@ -289,8 +308,13 @@ export interface FieldValidationError {
 
 export interface ValidationResult {
   isValid: boolean;
+<<<<<<< HEAD
   errors: FieldValidationError[];
   warnings?: FieldValidationError[];
+=======
+  errors: ValidationError[];
+  warnings?: ValidationError[];
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
 }
 
 // Service interfaces
@@ -355,7 +379,11 @@ export interface ReservationManager {
   validateBookingRequest(request: any): Promise<ValidationResult>;
   processPayment(booking: any, payment: any): Promise<any>;
   sendConfirmation(booking: any): Promise<any>;
+<<<<<<< HEAD
   handleNoShow(bookingId: string): Promise<unknown>;
+=======
+  handleNoShow(bookingId: string): Promise<any>;
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
 }
 
 // Configuration types
@@ -368,18 +396,24 @@ export interface HotelServiceConfig {
   jwtExpiresIn: string;
   corsOrigin: string;
   logLevel: string;
+<<<<<<< HEAD
   redis: RedisConfig;
+=======
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
   cacheConfig: CacheConfig;
   rateLimitConfig: RateLimitConfig;
   businessConfig: BusinessConfig;
 }
 
+<<<<<<< HEAD
 export interface RedisConfig {
   host: string;
   port: number;
   password?: string;
 }
 
+=======
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
 export interface CacheConfig {
   ttl: number;
   availabilityTtl: number;

@@ -50,6 +50,7 @@ export class PaymentMethodController {
     try {
       const { id } = req.params;
 
+<<<<<<< HEAD
       if (!id) {
         res.status(400).json({
           success: false,
@@ -58,6 +59,8 @@ export class PaymentMethodController {
         return;
       }
 
+=======
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
       logger.info('Getting payment method', { paymentMethodId: id });
 
       const paymentMethod = await this.paymentMethodService.getById(id);
@@ -86,6 +89,7 @@ export class PaymentMethodController {
     try {
       const { userId } = req.params;
 
+<<<<<<< HEAD
       if (!userId) {
         res.status(400).json({
           success: false,
@@ -94,6 +98,8 @@ export class PaymentMethodController {
         return;
       }
 
+=======
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
       logger.info('Getting user payment methods', { userId });
 
       const paymentMethods =
@@ -124,6 +130,7 @@ export class PaymentMethodController {
     try {
       const { id } = req.params;
 
+<<<<<<< HEAD
       if (!id) {
         res.status(400).json({
           success: false,
@@ -132,6 +139,8 @@ export class PaymentMethodController {
         return;
       }
 
+=======
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
       logger.info('Updating payment method', { paymentMethodId: id });
 
       // Validate billing address if provided
@@ -168,6 +177,7 @@ export class PaymentMethodController {
     try {
       const { id } = req.params;
 
+<<<<<<< HEAD
       if (!id) {
         res.status(400).json({
           success: false,
@@ -176,6 +186,8 @@ export class PaymentMethodController {
         return;
       }
 
+=======
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
       logger.info('Deleting payment method', { paymentMethodId: id });
 
       await this.paymentMethodService.delete(id);
@@ -205,6 +217,7 @@ export class PaymentMethodController {
       const { id } = req.params;
       const { userId } = req.body;
 
+<<<<<<< HEAD
       if (!id) {
         res.status(400).json({
           success: false,
@@ -221,6 +234,8 @@ export class PaymentMethodController {
         return;
       }
 
+=======
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
       logger.info('Setting default payment method', {
         paymentMethodId: id,
         userId,
@@ -290,6 +305,7 @@ export class PaymentMethodController {
     try {
       const { token } = req.params;
 
+<<<<<<< HEAD
       if (!token) {
         res.status(400).json({
           success: false,
@@ -298,6 +314,8 @@ export class PaymentMethodController {
         return;
       }
 
+=======
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
       logger.info('Validating payment method token', { token });
 
       const isValid = await this.paymentMethodService.validateToken(token);

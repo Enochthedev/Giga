@@ -89,12 +89,16 @@ export class GatewayManager implements IGatewayManager {
       // Sort by score (highest first)
       scoredGateways.sort((a, b) => b.score - a.score);
 
+<<<<<<< HEAD
       if (scoredGateways.length === 0) {
         throw new Error('No available gateways for selection');
       }
 
       const primaryGateway = scoredGateways[0]!;
       const primary = primaryGateway.gateway.getId();
+=======
+      const primary = scoredGateways[0].gateway.getId();
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
       const fallbacks = scoredGateways
         .slice(1, 4)
         .map(sg => sg.gateway.getId());
@@ -102,7 +106,11 @@ export class GatewayManager implements IGatewayManager {
       const selection: GatewaySelection = {
         primary,
         fallbacks,
+<<<<<<< HEAD
         reason: `Selected based on score: ${primaryGateway.score.toFixed(2)}`,
+=======
+        reason: `Selected based on score: ${scoredGateways[0].score.toFixed(2)}`,
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
         metadata: {
           scores: scoredGateways.map(sg => ({
             gatewayId: sg.gateway.getId(),
@@ -161,8 +169,12 @@ export class GatewayManager implements IGatewayManager {
     gatewayId: string,
     period?: { start: Date; end: Date }
   ): Promise<GatewayMetrics[]> {
+<<<<<<< HEAD
     const metrics = await this.metricsCollector.getMetrics(gatewayId, period);
     return [metrics];
+=======
+    return this.metricsCollector.getMetrics(gatewayId, period);
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
   }
 
   async handleGatewayFailure(
@@ -334,7 +346,11 @@ export class GatewayManager implements IGatewayManager {
     } catch (error) {
       logger.warn('Error calculating gateway score, using base score', {
         gatewayId: gateway.getId(),
+<<<<<<< HEAD
         error: error instanceof Error ? error.message : 'Unknown error',
+=======
+        error: error.message,
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
       });
       return 50; // Return a low but non-zero score on error
     }

@@ -19,10 +19,13 @@ interface MockPrismaClient {
   };
   gatewayConfig: {
     create(args: any): Promise<any>;
+<<<<<<< HEAD
     update(args: any): Promise<any>;
     findUnique(args: any): Promise<any>;
     findMany(args: any): Promise<any>;
     delete(args: any): Promise<any>;
+=======
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
     deleteMany(): Promise<any>;
   };
   paymentSplit: {
@@ -46,10 +49,14 @@ interface MockPrismaClient {
   blacklistEntry: { deleteMany(): Promise<any> };
   whitelistEntry: { deleteMany(): Promise<any> };
   webhookDelivery: { deleteMany(): Promise<any> };
+<<<<<<< HEAD
   webhookEvent: {
     create(args: any): Promise<any>;
     deleteMany(): Promise<any>;
   };
+=======
+  webhookEvent: { deleteMany(): Promise<any> };
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
   webhookEndpoint: { deleteMany(): Promise<any> };
 }
 
@@ -253,6 +260,7 @@ const mockPrisma: MockPrismaClient = {
       };
     },
 
+<<<<<<< HEAD
     async update(args: any) {
       return {
         id: args.where.id,
@@ -311,6 +319,8 @@ const mockPrisma: MockPrismaClient = {
       };
     },
 
+=======
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
     async deleteMany() {
       return { count: 0 };
     },
@@ -435,6 +445,7 @@ const mockPrisma: MockPrismaClient = {
     },
   },
   webhookEvent: {
+<<<<<<< HEAD
     async create(args: any) {
       return {
         id: 'mock-webhook-id',
@@ -451,6 +462,8 @@ const mockPrisma: MockPrismaClient = {
       };
     },
 
+=======
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
     async deleteMany() {
       return { count: 0 };
     },

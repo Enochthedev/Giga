@@ -1378,7 +1378,15 @@ export class UserController {
     }
   }
 
+<<<<<<< HEAD
   private async createRoleProfile(prisma: any, userId: string, role: RoleName) {
+=======
+  private async createRoleProfile(
+    prisma: unknown,
+    userId: string,
+    role: RoleName
+  ) {
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
     try {
       switch (role) {
         case 'VENDOR':

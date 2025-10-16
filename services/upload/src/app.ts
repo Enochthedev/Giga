@@ -157,7 +157,11 @@ export async function createApp(): Promise<express.Application> {
   app.use('/api/v1', createDeliveryRoutes(deliveryController));
   // Note: In a real implementation, these would be properly initialized
   // For now, we'll create placeholder instances that would be replaced with actual instances
+<<<<<<< HEAD
   const prismaClient = {} as any; // This would be the actual Prisma client instance
+=======
+  const prismaClient = {} as unknown; // This would be the actual Prisma client instance
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
   const loggerInstance = createLogger('RetentionRoutes'); // Actual logger instance
 
   app.use(

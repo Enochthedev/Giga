@@ -18,7 +18,11 @@ export class GatewayMetricsCollector implements IGatewayMetricsCollector {
   private aggregatedMetrics: Map<string, GatewayMetrics> = new Map();
   private readonly bufferSize = 1000; // Keep last 1000 metrics per gateway
   private readonly aggregationInterval = 60000; // Aggregate every minute
+<<<<<<< HEAD
   private aggregationTimer?: NodeJS.Timeout | undefined;
+=======
+  private aggregationTimer?: NodeJS.Timeout;
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
 
   constructor() {
     this.startAggregation();

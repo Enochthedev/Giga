@@ -36,7 +36,11 @@ inventory, reservations, dynamic pricing, and guest management.
 - Node.js 18+
 - PostgreSQL 14+
 - Redis 6+
+<<<<<<< HEAD
 - pnpm 8.0+
+=======
+- pnpm (recommended) or npm
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
 
 ### Installation
 

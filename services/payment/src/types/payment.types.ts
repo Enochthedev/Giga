@@ -91,7 +91,11 @@ export interface Transaction {
   fraudFlags?: string[];
 
   // Timestamps
+<<<<<<< HEAD
   processedAt?: Date | undefined;
+=======
+  processedAt?: Date;
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
   settledAt?: Date;
   createdAt: Date;
   updatedAt: Date;
@@ -124,7 +128,11 @@ export interface Refund {
   status: PaymentStatus;
   gatewayRefundId?: string;
   metadata?: Record<string, any>;
+<<<<<<< HEAD
   processedAt?: Date | undefined;
+=======
+  processedAt?: Date;
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
   createdAt: Date;
   updatedAt: Date;
 }
@@ -198,7 +206,12 @@ export interface PaymentResponse {
     type: PaymentMethodType;
     metadata: Record<string, any>;
   };
+<<<<<<< HEAD
   gatewayId?: string;
   metadata?: Record<string, any>;
   createdAt?: Date;
+=======
+  metadata?: Record<string, any>;
+  createdAt: Date;
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
 }

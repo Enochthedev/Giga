@@ -1,5 +1,10 @@
+<<<<<<< HEAD
 import { ValidationResult } from '@/types';
 import { z } from 'zod';
+=======
+import { z } from 'zod';
+import { ValidationError, ValidationResult } from '@/types';
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
 
 /**
  * Utility functions for data validation
@@ -17,7 +22,11 @@ export const validateSchema = <T>(
     };
   } catch (error) {
     if (error instanceof z.ZodError) {
+<<<<<<< HEAD
       const validationErrors = error.errors.map(err => ({
+=======
+      const validationErrors: ValidationError[] = error.errors.map(err => ({
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
         field: err.path.join('.'),
         message: err.message,
         code: err.code,

@@ -2,7 +2,11 @@ import { Router } from 'express';
 import { WebhookController } from '../controllers/webhook.controller';
 import { GatewayManager } from '../services/gateway-manager.service';
 
+<<<<<<< HEAD
 const router: Router = Router();
+=======
+const router = Router();
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
 
 // Initialize webhook controller
 const gatewayManager = new GatewayManager();

@@ -2,7 +2,11 @@ import { Router } from 'express';
 import { PaymentMethodController } from '../controllers/payment-method.controller';
 import { validateRequest } from '../middleware/validation.middleware';
 
+<<<<<<< HEAD
 const router: Router = Router();
+=======
+const router = Router();
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
 const paymentMethodController = new PaymentMethodController();
 
 /**

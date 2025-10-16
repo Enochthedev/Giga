@@ -760,7 +760,11 @@ export class PaymentService implements IPaymentService {
       try {
         // Retry with fallback gateway
         const fallbackStartTime = Date.now();
+<<<<<<< HEAD
         const result = await (fallbackGateway as any)[operation](...args);
+=======
+        const result = await fallbackGateway[operation](...args);
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
         const fallbackResponseTime = Date.now() - fallbackStartTime;
 
         // Record successful failover metrics

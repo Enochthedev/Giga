@@ -113,9 +113,13 @@ export class FraudDetectionService {
       signals.push(...deviceSignals);
 
       // Evaluate custom rules
+<<<<<<< HEAD
       const activeRules = Array.from(this.rules.values()).filter(
         rule => rule.isActive
       );
+=======
+      const activeRules = Array.from(this.rules.values()).filter(rule => rule.isActive);
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
       for (const rule of activeRules) {
         const evaluation = await this.evaluateRule(rule, transaction);
         ruleEvaluations.push(evaluation);
@@ -149,6 +153,7 @@ export class FraudDetectionService {
         assessedAt: new Date(),
       };
 
+<<<<<<< HEAD
       logger.info(
         `Fraud analysis completed for transaction ${transaction.id}`,
         {
@@ -171,6 +176,25 @@ export class FraudDetectionService {
           error: error instanceof Error ? error.message : 'Unknown error',
         }
       );
+=======
+      logger.info(`Fraud analysis completed for transaction ${transaction.id}`, {
+        transactionId: transaction.id,
+        assessmentId,
+        riskScore,
+        riskLevel,
+        recommendation,
+        signalCount: signals.length,
+      });
+
+      return assessment;
+
+    } catch (error) {
+      logger.error(`Error during fraud analysis for transaction ${transaction.id}`, {
+        transactionId: transaction.id,
+        assessmentId,
+        error: error.message,
+      });
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
 
       // Return medium risk assessment on error to be safe
       return this.createMediumRiskAssessment(
@@ -194,22 +218,34 @@ export class FraudDetectionService {
 
     // Check user blacklist
     const userBlacklist = this.blacklist.get('user') || [];
+<<<<<<< HEAD
     if (
       userBlacklist.some(
         entry => entry.isActive && entry.value === transaction.userId
       )
     ) {
+=======
+    if (userBlacklist.some(entry =>
+      entry.isActive && entry.value === transaction.userId
+    )) {
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
       matches.push('user');
     }
 
     // Check email blacklist
     if (transaction.metadata?.email) {
       const emailBlacklist = this.blacklist.get('email') || [];
+<<<<<<< HEAD
       if (
         emailBlacklist.some(
           entry => entry.isActive && entry.value === transaction.metadata.email
         )
       ) {
+=======
+      if (emailBlacklist.some(entry =>
+        entry.isActive && entry.value === transaction.metadata.email
+      )) {
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
         matches.push('email');
       }
     }
@@ -217,12 +253,18 @@ export class FraudDetectionService {
     // Check IP blacklist
     if (transaction.metadata?.ipAddress) {
       const ipBlacklist = this.blacklist.get('ip') || [];
+<<<<<<< HEAD
       if (
         ipBlacklist.some(
           entry =>
             entry.isActive && entry.value === transaction.metadata.ipAddress
         )
       ) {
+=======
+      if (ipBlacklist.some(entry =>
+        entry.isActive && entry.value === transaction.metadata.ipAddress
+      )) {
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
         matches.push('ip');
       }
     }
@@ -230,6 +272,7 @@ export class FraudDetectionService {
     // Check device blacklist
     if (transaction.metadata?.deviceFingerprint) {
       const deviceBlacklist = this.blacklist.get('device') || [];
+<<<<<<< HEAD
       if (
         deviceBlacklist.some(
           entry =>
@@ -237,6 +280,11 @@ export class FraudDetectionService {
             entry.value === transaction.metadata.deviceFingerprint
         )
       ) {
+=======
+      if (deviceBlacklist.some(entry =>
+        entry.isActive && entry.value === transaction.metadata.deviceFingerprint
+      )) {
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
         matches.push('device');
       }
     }
@@ -258,23 +306,35 @@ export class FraudDetectionService {
 
     // Check user whitelist
     const userWhitelist = this.whitelist.get('user') || [];
+<<<<<<< HEAD
     if (
       userWhitelist.some(
         entry => entry.isActive && entry.value === transaction.userId
       )
     ) {
+=======
+    if (userWhitelist.some(entry =>
+      entry.isActive && entry.value === transaction.userId
+    )) {
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
       matches.push('user');
     }
 
     // Check merchant whitelist
     if (transaction.metadata?.merchantId) {
       const merchantWhitelist = this.whitelist.get('merchant') || [];
+<<<<<<< HEAD
       if (
         merchantWhitelist.some(
           entry =>
             entry.isActive && entry.value === transaction.metadata.merchantId
         )
       ) {
+=======
+      if (merchantWhitelist.some(entry =>
+        entry.isActive && entry.value === transaction.metadata.merchantId
+      )) {
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
         matches.push('merchant');
       }
     }
@@ -288,6 +348,7 @@ export class FraudDetectionService {
   /**
    * Check transaction velocity limits
    */
+<<<<<<< HEAD
   private async checkVelocity(
     transaction: Transaction
   ): Promise<VelocityCheck> {
@@ -297,6 +358,15 @@ export class FraudDetectionService {
       ipAddress: transaction.metadata?.ipAddress || undefined,
       deviceFingerprint: transaction.metadata?.deviceFingerprint || undefined,
       paymentMethodId: transaction.paymentMethodId || undefined,
+=======
+  private async checkVelocity(transaction: Transaction): Promise<VelocityCheck> {
+    const timeWindows = [5, 15, 60, 1440]; // 5min, 15min, 1hr, 24hr
+    const velocityCheck: VelocityCheck = {
+      userId: transaction.userId,
+      ipAddress: transaction.metadata?.ipAddress,
+      deviceFingerprint: transaction.metadata?.deviceFingerprint,
+      paymentMethodId: transaction.paymentMethodId,
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
       timeWindows,
       transactionCountLimit: 10,
       amountLimit: 10000,
@@ -319,11 +389,16 @@ export class FraudDetectionService {
       velocityCheck.transactionCounts[window] = transactionCount;
       velocityCheck.amounts[window] = totalAmount;
 
+<<<<<<< HEAD
       if (
         transactionCount >
           (configLimit || velocityCheck.transactionCountLimit) ||
         totalAmount > (amountLimit || velocityCheck.amountLimit)
       ) {
+=======
+      if (transactionCount > (configLimit || velocityCheck.transactionCountLimit) ||
+        totalAmount > (amountLimit || velocityCheck.amountLimit)) {
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
         velocityCheck.isViolation = true;
         velocityCheck.violatedWindows.push(window);
       }
@@ -339,18 +414,30 @@ export class FraudDetectionService {
     const signals: FraudSignal[] = [];
 
     // High amount check
+<<<<<<< HEAD
     const amountNumber = Number(transaction.amount);
     if (amountNumber > 5000) {
       signals.push({
         type: 'high_amount',
         value: transaction.amount,
         riskContribution: Math.min(30, amountNumber / 1000),
+=======
+    if (transaction.amount > 5000) {
+      signals.push({
+        type: 'high_amount',
+        value: transaction.amount,
+        riskContribution: Math.min(30, transaction.amount / 1000),
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
         description: 'Transaction amount is unusually high',
       });
     }
 
     // Round amount check (potential testing)
+<<<<<<< HEAD
     if (amountNumber % 100 === 0 && amountNumber >= 1000) {
+=======
+    if (transaction.amount % 100 === 0 && transaction.amount >= 1000) {
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
       signals.push({
         type: 'round_amount',
         value: transaction.amount,
@@ -360,13 +447,21 @@ export class FraudDetectionService {
     }
 
     // Small amount check (potential card testing)
+<<<<<<< HEAD
     if (amountNumber < 1) {
+=======
+    if (transaction.amount < 1) {
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
       signals.push({
         type: 'micro_amount',
         value: transaction.amount,
         riskContribution: 25,
+<<<<<<< HEAD
         description:
           'Transaction amount is very small (potential card testing)',
+=======
+        description: 'Transaction amount is very small (potential card testing)',
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
       });
     }
 
@@ -376,9 +471,13 @@ export class FraudDetectionService {
   /**
    * Check geolocation for suspicious patterns
    */
+<<<<<<< HEAD
   private async checkGeolocation(
     transaction: Transaction
   ): Promise<FraudSignal[]> {
+=======
+  private async checkGeolocation(transaction: Transaction): Promise<FraudSignal[]> {
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
     const signals: FraudSignal[] = [];
     const geolocation = transaction.metadata?.geolocation as Geolocation;
 
@@ -407,11 +506,15 @@ export class FraudDetectionService {
     }
 
     // Country blacklist check
+<<<<<<< HEAD
     if (
       this.config.geolocationChecks.countryBlacklist.includes(
         geolocation.country
       )
     ) {
+=======
+    if (this.config.geolocationChecks.countryBlacklist.includes(geolocation.country)) {
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
       signals.push({
         type: 'blacklisted_country',
         value: geolocation.country,
@@ -426,9 +529,13 @@ export class FraudDetectionService {
   /**
    * Check device fingerprint for suspicious patterns
    */
+<<<<<<< HEAD
   private async checkDeviceFingerprint(
     transaction: Transaction
   ): Promise<FraudSignal[]> {
+=======
+  private async checkDeviceFingerprint(transaction: Transaction): Promise<FraudSignal[]> {
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
     const signals: FraudSignal[] = [];
     const deviceFingerprint = transaction.metadata?.deviceFingerprint;
 
@@ -452,10 +559,14 @@ export class FraudDetectionService {
   /**
    * Evaluate a specific fraud rule against a transaction
    */
+<<<<<<< HEAD
   private async evaluateRule(
     rule: FraudRule,
     transaction: Transaction
   ): Promise<FraudRuleEvaluation> {
+=======
+  private async evaluateRule(rule: FraudRule, transaction: Transaction): Promise<FraudRuleEvaluation> {
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
     let matched = true;
     const details: Record<string, any> = {};
 
@@ -525,6 +636,7 @@ export class FraudDetectionService {
       case 'contains':
         return String(fieldValue).includes(String(condition.value));
       case 'in':
+<<<<<<< HEAD
         return (
           Array.isArray(condition.value) && condition.value.includes(fieldValue)
         );
@@ -533,6 +645,11 @@ export class FraudDetectionService {
           Array.isArray(condition.value) &&
           !condition.value.includes(fieldValue)
         );
+=======
+        return Array.isArray(condition.value) && condition.value.includes(fieldValue);
+      case 'not_in':
+        return Array.isArray(condition.value) && !condition.value.includes(fieldValue);
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
       default:
         return false;
     }
@@ -541,10 +658,14 @@ export class FraudDetectionService {
   /**
    * Calculate composite risk score from signals and rule evaluations
    */
+<<<<<<< HEAD
   private calculateRiskScore(
     signals: FraudSignal[],
     ruleEvaluations: FraudRuleEvaluation[]
   ): number {
+=======
+  private calculateRiskScore(signals: FraudSignal[], ruleEvaluations: FraudRuleEvaluation[]): number {
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
     let totalScore = 0;
 
     // Add signal contributions
@@ -579,10 +700,14 @@ export class FraudDetectionService {
   /**
    * Get recommendation based on risk level and score
    */
+<<<<<<< HEAD
   private getRecommendation(
     riskLevel: RiskLevel,
     riskScore: number
   ): FraudAction {
+=======
+  private getRecommendation(riskLevel: RiskLevel, riskScore: number): FraudAction {
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
     switch (riskLevel) {
       case 'critical':
         return 'decline';
@@ -692,6 +817,7 @@ export class FraudDetectionService {
       riskLevel: 'low',
       recommendation: 'allow',
       ruleEvaluations,
+<<<<<<< HEAD
       signals: [
         ...signals,
         {
@@ -701,6 +827,14 @@ export class FraudDetectionService {
           description: reason,
         },
       ],
+=======
+      signals: [...signals, {
+        type: 'whitelist_match',
+        value: reason,
+        riskContribution: -100,
+        description: reason,
+      }],
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
       assessedAt: new Date(),
     };
   }
@@ -738,6 +872,7 @@ export class FraudDetectionService {
       riskLevel: 'medium',
       recommendation: 'review',
       ruleEvaluations,
+<<<<<<< HEAD
       signals: [
         ...signals,
         {
@@ -747,6 +882,14 @@ export class FraudDetectionService {
           description: reason,
         },
       ],
+=======
+      signals: [...signals, {
+        type: 'analysis_error',
+        value: reason,
+        riskContribution: 50,
+        description: reason,
+      }],
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
       assessedAt: new Date(),
     };
   }
@@ -754,4 +897,8 @@ export class FraudDetectionService {
   private generateAssessmentId(): string {
     return `fraud_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03

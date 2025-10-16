@@ -83,7 +83,11 @@ export interface GatewayHealthStatus {
   status: GatewayStatus;
   lastCheck: Date;
   responseTime?: number;
+<<<<<<< HEAD
   errorMessage?: string | undefined;
+=======
+  errorMessage?: string;
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
   consecutiveFailures: number;
 }
 
@@ -183,8 +187,15 @@ export interface GatewayResponse<T = any> {
   error?: {
     code: string;
     message: string;
+<<<<<<< HEAD
     details?: Record<string, any> | undefined;
   };
   gatewayResponse?: Record<string, any>;
   metadata?: Record<string, any> | undefined;
+=======
+    details?: Record<string, any>;
+  };
+  gatewayResponse?: Record<string, any>;
+  metadata?: Record<string, any>;
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
 }

@@ -42,15 +42,26 @@
     "libphonenumber-js": "^1.10.51",
     "multer": "^1.4.5-lts.1",
     "nodemailer": "^6.9.7",
+<<<<<<< HEAD
+=======
+    "sharp": "^0.33.1",
+    "uuid": "^9.0.1",
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
     "pino": "^8.16.2",
     "pino-pretty": "^10.2.3",
     "qrcode": "^1.5.4",
     "redis": "^4.6.12",
+<<<<<<< HEAD
     "sharp": "^0.33.1",
     "speakeasy": "^2.0.0",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.0",
     "uuid": "^9.0.1",
+=======
+    "speakeasy": "^2.0.0",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.0",
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
     "zod": "^3.22.4"
   },
   "devDependencies": {
@@ -61,16 +72,27 @@
     "@types/multer": "^1.4.11",
     "@types/node": "^20.10.0",
     "@types/nodemailer": "^6.4.14",
+<<<<<<< HEAD
+=======
+    "@types/uuid": "^9.0.7",
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
     "@types/redis": "^4.0.11",
     "@types/supertest": "^6.0.3",
     "@types/swagger-jsdoc": "^6.0.4",
     "@types/swagger-ui-express": "^4.1.6",
+<<<<<<< HEAD
     "@types/uuid": "^9.0.7",
+=======
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
     "eslint": "^8.55.0",
     "prisma": "^5.7.0",
     "supertest": "^6.3.4",
     "tsx": "^4.6.0",
+<<<<<<< HEAD
     "typescript": "^5.9.3",
+=======
+    "typescript": "^5.3.0",
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
     "vitest": "^1.0.0"
   }
 }

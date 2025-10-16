@@ -3,7 +3,11 @@
  */
 
 import dotenv from 'dotenv';
+<<<<<<< HEAD
 import { afterAll, afterEach, beforeAll, beforeEach, vi } from 'vitest';
+=======
+import { afterAll, afterEach, beforeAll, beforeEach } from 'vitest';
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
 
 // Load test environment variables
 dotenv.config({ path: '.env.test' });

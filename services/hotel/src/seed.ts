@@ -1,5 +1,14 @@
 import prisma from '@/lib/prisma';
+<<<<<<< HEAD
 import { PropertyCategory, PropertyStatus, RoomCategory } from '@/types';
+=======
+import {
+  BedType,
+  PropertyCategory,
+  PropertyStatus,
+  RoomCategory,
+} from '@/types';
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
 import logger from '@/utils/logger';
 
 const seedData = async () => {
@@ -10,16 +19,24 @@ const seedData = async () => {
     const property1 = await prisma.property.create({
       data: {
         name: 'Grand Plaza Hotel',
+<<<<<<< HEAD
         slug: 'grand-plaza-hotel',
         description:
           'A luxurious hotel in the heart of the city with world-class amenities and exceptional service.',
         category: PropertyCategory.HOTEL,
         address: {
+=======
+        description:
+          'A luxurious hotel in the heart of the city with world-class amenities and exceptional service.',
+        category: PropertyCategory.HOTEL,
+        address: JSON.stringify({
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
           street: '123 Main Street',
           city: 'New York',
           state: 'NY',
           country: 'US',
           postalCode: '10001',
+<<<<<<< HEAD
         },
         coordinates: {
           lat: 40.7128,
@@ -28,6 +45,16 @@ const seedData = async () => {
         timezone: 'America/New_York',
         starRating: 5,
         amenities: [
+=======
+        }),
+        coordinates: JSON.stringify({
+          latitude: 40.7128,
+          longitude: -74.006,
+        }),
+        timezone: 'America/New_York',
+        starRating: 5,
+        amenities: JSON.stringify([
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
           'wifi',
           'parking',
           'pool',
@@ -38,13 +65,21 @@ const seedData = async () => {
           'room_service',
           'concierge',
           'business_center',
+<<<<<<< HEAD
         ],
         policies: {
+=======
+        ]),
+        policies: JSON.stringify({
+          checkInTime: '15:00',
+          checkOutTime: '11:00',
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
           cancellationPolicy: 'moderate',
           childPolicy: 'children_welcome',
           petPolicy: 'no_pets',
           smokingPolicy: 'non_smoking',
           minimumAge: 18,
+<<<<<<< HEAD
         },
         email: 'info@grandplaza.com',
         phone: '+1-555-0123',
@@ -71,6 +106,36 @@ const seedData = async () => {
         currency: 'USD',
         status: PropertyStatus.ACTIVE,
         settings: {
+=======
+        }),
+        contactInfo: JSON.stringify({
+          phone: '+1-555-0123',
+          email: 'info@grandplaza.com',
+          website: 'https://grandplaza.com',
+        }),
+        images: JSON.stringify([
+          {
+            id: '1',
+            url: 'https://example.com/images/hotel-exterior.jpg',
+            alt: 'Hotel exterior view',
+            caption: 'Grand Plaza Hotel exterior',
+            order: 1,
+            type: 'exterior',
+          },
+          {
+            id: '2',
+            url: 'https://example.com/images/hotel-lobby.jpg',
+            alt: 'Hotel lobby',
+            caption: 'Elegant hotel lobby',
+            order: 2,
+            type: 'lobby',
+          },
+        ]),
+        ownerId: 'owner-1',
+        status: PropertyStatus.ACTIVE,
+        settings: JSON.stringify({
+          currency: 'USD',
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
           timezone: 'America/New_York',
           language: 'en',
           taxRate: 0.08,
@@ -78,23 +143,35 @@ const seedData = async () => {
           allowOnlineBooking: true,
           requireApproval: false,
           autoConfirmBookings: true,
+<<<<<<< HEAD
         },
+=======
+        }),
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
       },
     });
 
     const property2 = await prisma.property.create({
       data: {
         name: 'Seaside Resort & Spa',
+<<<<<<< HEAD
         slug: 'seaside-resort-spa',
         description:
           'A beautiful beachfront resort offering relaxation and luxury by the ocean.',
         category: PropertyCategory.RESORT,
         address: {
+=======
+        description:
+          'A beautiful beachfront resort offering relaxation and luxury by the ocean.',
+        category: PropertyCategory.RESORT,
+        address: JSON.stringify({
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
           street: '456 Ocean Drive',
           city: 'Miami Beach',
           state: 'FL',
           country: 'US',
           postalCode: '33139',
+<<<<<<< HEAD
         },
         coordinates: {
           lat: 25.7617,
@@ -103,6 +180,16 @@ const seedData = async () => {
         timezone: 'America/New_York',
         starRating: 4,
         amenities: [
+=======
+        }),
+        coordinates: JSON.stringify({
+          latitude: 25.7617,
+          longitude: -80.1918,
+        }),
+        timezone: 'America/New_York',
+        starRating: 4,
+        amenities: JSON.stringify([
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
           'wifi',
           'parking',
           'pool',
@@ -113,12 +200,20 @@ const seedData = async () => {
           'room_service',
           'kids_club',
           'beach_access',
+<<<<<<< HEAD
         ],
         policies: {
+=======
+        ]),
+        policies: JSON.stringify({
+          checkInTime: '16:00',
+          checkOutTime: '12:00',
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
           cancellationPolicy: 'moderate',
           childPolicy: 'children_welcome',
           petPolicy: 'pets_with_restrictions',
           smokingPolicy: 'designated_areas',
+<<<<<<< HEAD
         },
         email: 'reservations@seasideresort.com',
         phone: '+1-555-0456',
@@ -131,6 +226,19 @@ const seedData = async () => {
         currency: 'USD',
         status: PropertyStatus.ACTIVE,
         settings: {
+=======
+        }),
+        contactInfo: JSON.stringify({
+          phone: '+1-555-0456',
+          email: 'reservations@seasideresort.com',
+          website: 'https://seasideresort.com',
+        }),
+        images: JSON.stringify([]),
+        ownerId: 'owner-2',
+        status: PropertyStatus.ACTIVE,
+        settings: JSON.stringify({
+          currency: 'USD',
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
           timezone: 'America/New_York',
           language: 'en',
           taxRate: 0.07,
@@ -138,7 +246,11 @@ const seedData = async () => {
           allowOnlineBooking: true,
           requireApproval: false,
           autoConfirmBookings: true,
+<<<<<<< HEAD
         },
+=======
+        }),
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
       },
     });
 
@@ -150,12 +262,21 @@ const seedData = async () => {
         description: 'Comfortable and well-appointed room with city views.',
         category: RoomCategory.STANDARD,
         maxOccupancy: 2,
+<<<<<<< HEAD
         maxAdults: 2,
         maxChildren: 1,
         bedConfiguration: [{ type: 'queen', quantity: 1 }],
         roomSize: 25,
         roomSizeUnit: 'sqm',
         amenities: [
+=======
+        bedConfiguration: JSON.stringify([
+          { bedType: BedType.QUEEN, quantity: 1 },
+        ]),
+        roomSize: 25,
+        roomSizeUnit: 'sqm',
+        amenities: JSON.stringify([
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
           'wifi',
           'tv',
           'air_conditioning',
@@ -164,11 +285,19 @@ const seedData = async () => {
           'safe',
           'desk',
           'coffee_maker',
+<<<<<<< HEAD
         ],
         totalRooms: 50,
         baseRate: 199.99,
         currency: 'USD',
         images: [],
+=======
+        ]),
+        totalRooms: 50,
+        baseRate: 199.99,
+        currency: 'USD',
+        images: JSON.stringify([]),
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
         isActive: true,
       },
     });
@@ -181,6 +310,7 @@ const seedData = async () => {
           'Spacious room with premium amenities and stunning city views.',
         category: RoomCategory.DELUXE,
         maxOccupancy: 3,
+<<<<<<< HEAD
         maxAdults: 2,
         maxChildren: 2,
         bedConfiguration: [
@@ -190,6 +320,15 @@ const seedData = async () => {
         roomSize: 35,
         roomSizeUnit: 'sqm',
         amenities: [
+=======
+        bedConfiguration: JSON.stringify([
+          { bedType: BedType.KING, quantity: 1 },
+          { bedType: BedType.SOFA_BED, quantity: 1 },
+        ]),
+        roomSize: 35,
+        roomSizeUnit: 'sqm',
+        amenities: JSON.stringify([
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
           'wifi',
           'smart_tv',
           'air_conditioning',
@@ -201,12 +340,20 @@ const seedData = async () => {
           'coffee_maker',
           'balcony',
           'bathrobes',
+<<<<<<< HEAD
         ],
+=======
+        ]),
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
         view: 'city',
         totalRooms: 30,
         baseRate: 299.99,
         currency: 'USD',
+<<<<<<< HEAD
         images: [],
+=======
+        images: JSON.stringify([]),
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
         isActive: true,
       },
     });
@@ -219,6 +366,7 @@ const seedData = async () => {
           'Luxurious suite with separate living area and premium amenities.',
         category: RoomCategory.SUITE,
         maxOccupancy: 4,
+<<<<<<< HEAD
         maxAdults: 2,
         maxChildren: 2,
         bedConfiguration: [
@@ -228,6 +376,15 @@ const seedData = async () => {
         roomSize: 60,
         roomSizeUnit: 'sqm',
         amenities: [
+=======
+        bedConfiguration: JSON.stringify([
+          { bedType: BedType.KING, quantity: 1 },
+          { bedType: BedType.SOFA_BED, quantity: 1 },
+        ]),
+        roomSize: 60,
+        roomSizeUnit: 'sqm',
+        amenities: JSON.stringify([
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
           'wifi',
           'smart_tv',
           'air_conditioning',
@@ -242,12 +399,20 @@ const seedData = async () => {
           'kitchenette',
           'sofa',
           'dining_area',
+<<<<<<< HEAD
         ],
+=======
+        ]),
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
         view: 'city',
         totalRooms: 10,
         baseRate: 599.99,
         currency: 'USD',
+<<<<<<< HEAD
         images: [],
+=======
+        images: JSON.stringify([]),
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
         isActive: true,
       },
     });
@@ -260,12 +425,21 @@ const seedData = async () => {
         description: 'Beautiful room with direct ocean views and beach access.',
         category: RoomCategory.DELUXE,
         maxOccupancy: 2,
+<<<<<<< HEAD
         maxAdults: 2,
         maxChildren: 1,
         bedConfiguration: [{ type: 'king', quantity: 1 }],
         roomSize: 30,
         roomSizeUnit: 'sqm',
         amenities: [
+=======
+        bedConfiguration: JSON.stringify([
+          { bedType: BedType.KING, quantity: 1 },
+        ]),
+        roomSize: 30,
+        roomSizeUnit: 'sqm',
+        amenities: JSON.stringify([
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
           'wifi',
           'tv',
           'air_conditioning',
@@ -274,12 +448,20 @@ const seedData = async () => {
           'safe',
           'balcony',
           'ocean_view',
+<<<<<<< HEAD
         ],
+=======
+        ]),
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
         view: 'ocean',
         totalRooms: 40,
         baseRate: 349.99,
         currency: 'USD',
+<<<<<<< HEAD
         images: [],
+=======
+        images: JSON.stringify([]),
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
         isActive: true,
       },
     });
@@ -420,9 +602,18 @@ const seedData = async () => {
             description: 'Minimum 2 nights stay required',
           },
         ]),
+<<<<<<< HEAD
         usageLimit: 100,
         usageCount: 0,
         perUserLimit: 1,
+=======
+        usage: JSON.stringify({
+          maxTotalUsage: 100,
+          maxUsagePerGuest: 1,
+          currentUsage: 0,
+          usageHistory: [],
+        }),
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
         isActive: true,
       },
     });

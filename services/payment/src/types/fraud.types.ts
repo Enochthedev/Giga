@@ -123,10 +123,17 @@ export interface ExternalFraudScore {
 }
 
 export interface VelocityCheck {
+<<<<<<< HEAD
   userId?: string | undefined;
   ipAddress?: string | undefined;
   deviceFingerprint?: string | undefined;
   paymentMethodId?: string | undefined;
+=======
+  userId?: string;
+  ipAddress?: string;
+  deviceFingerprint?: string;
+  paymentMethodId?: string;
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
 
   // Time windows (in minutes)
   timeWindows: number[];

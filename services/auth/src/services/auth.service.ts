@@ -265,7 +265,11 @@ export class AuthService {
           email: user.email,
           firstName: user.firstName,
           lastName: user.lastName,
+<<<<<<< HEAD
           roles: user.roles.map((ur: any) => ur.role.name),
+=======
+          roles: user.roles.map((ur: unknown) => ur.role.name),
+>>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
           isEmailVerified: user.isEmailVerified,
           isPhoneVerified: user.isPhoneVerified,
         },
