@@ -1,7 +1,6 @@
 packages:
-  - 'services/*'
-  - 'shared/*'
-
+  - services/*
+  - shared/*
 onlyBuiltDependencies:
   - '@prisma/client'
   - '@prisma/engines'

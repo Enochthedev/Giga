@@ -1,20 +1,13 @@
 {
-<<<<<<< HEAD
   "name": "@platform/monorepo",
   "version": "1.0.0",
   "description": "Microservices platform monorepo",
-=======
-  "name": "multi-sided-platform",
-  "version": "1.0.0",
-  "description": "Modern multi-sided marketplace platform",
->>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
   "private": true,
   "workspaces": [
     "services/*",
     "shared/*"
   ],
   "scripts": {
-<<<<<<< HEAD
     "build": "pnpm -r run build",
     "dev": "pnpm -r --parallel run dev",
     "test": "pnpm -r run test",
@@ -53,51 +46,4 @@
     "pnpm": ">=8.0.0"
   },
   "packageManager": "pnpm@8.15.0"
-=======
-    "dev": "pnpm run --parallel dev",
-    "dev:interactive": "./scripts/dev-interactive.sh",
-    "dev:frontend": "./scripts/dev-frontend.sh",
-    "build": "pnpm run --recursive build",
-    "test": "pnpm run --recursive test",
-    "lint": "eslint . --ext .ts,.js --fix --max-warnings 2000",
-    "lint:check": "eslint . --ext .ts,.js --max-warnings 2000",
-    "lint:strict": "eslint . --ext .ts,.js --fix --max-warnings 0",
-    "format": "prettier --write .",
-    "format:check": "prettier --check .",
-    "type-check": "pnpm run --recursive type-check",
-    "quality": "pnpm run lint && pnpm run format && pnpm run type-check",
-    "quality:check": "pnpm run lint:check && pnpm run format:check && pnpm run type-check",
-    "docker:build": "docker-compose build",
-    "docker:up": "docker-compose up -d",
-    "docker:down": "docker-compose down",
-    "setup": "./scripts/setup.sh",
-    "quality:fix": "./scripts/quality-fix.sh",
-    "quality:full-check": "./scripts/quality-check.sh",
-    "prepare": "husky install"
-  },
-  "devDependencies": {
-    "@types/node": "^20.10.0",
-    "@typescript-eslint/eslint-plugin": "^6.21.0",
-    "@typescript-eslint/parser": "^6.21.0",
-    "eslint": "^8.55.0",
-    "eslint-config-prettier": "^9.1.0",
-    "eslint-plugin-import": "^2.29.0",
-    "eslint-plugin-security": "^1.7.1",
-    "husky": "^8.0.3",
-    "lint-staged": "^15.2.0",
-    "prettier": "^3.1.0",
-    "typescript": "^5.3.0",
-    "vitest": "^1.0.0"
-  },
-  "engines": {
-    "node": ">=20.0.0",
-    "pnpm": ">=8.0.0"
-  },
-  "dependencies": {
-    "@types/cookie-parser": "^1.4.9",
-    "@types/uuid": "^11.0.0",
-    "cookie-parser": "^1.4.7",
-    "uuid": "^13.0.0"
-  }
->>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
 }

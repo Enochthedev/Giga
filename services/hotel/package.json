@@ -3,15 +3,11 @@
   "version": "1.0.0",
   "description": "Hotel booking and management service",
   "main": "dist/index.js",
-<<<<<<< HEAD
   "packageManager": "pnpm@8.0.0",
-=======
->>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
   "scripts": {
     "build": "tsc",
     "dev": "tsx watch src/server.ts",
     "start": "node dist/server.js",
-<<<<<<< HEAD
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
@@ -19,15 +15,6 @@
     "lint:fix": "eslint src --ext .ts --fix",
     "format": "prettier --write \"src/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\"",
-=======
-    "test": "vitest --run",
-    "test:watch": "vitest",
-    "test:coverage": "vitest --coverage",
-    "lint": "eslint src --ext .ts",
-    "lint:fix": "eslint src --ext .ts --fix",
-    "format": "prettier --write src/**/*.ts",
-    "format:check": "prettier --check src/**/*.ts",
->>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
     "type-check": "tsc --noEmit",
     "seed": "tsx src/seed.ts",
     "prisma:generate": "prisma generate --schema=prisma/schema.prisma",
@@ -83,12 +70,8 @@
     "hospitality"
   ],
   "author": "Platform Team",
-<<<<<<< HEAD
   "license": "MIT",
   "engines": {
     "node": ">=18.0.0"
   }
-=======
-  "license": "MIT"
->>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
 }
