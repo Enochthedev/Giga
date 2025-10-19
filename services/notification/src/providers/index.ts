@@ -3,3 +3,4 @@
  */
 
 export * from './smtp-email.provider';
+export * from './twilio-sms.provider';

@@ -355,6 +355,170 @@ export function createBookingRoutes(prisma: PrismaClient): Router {
     bookingController.addSpecialRequests.bind(bookingController)
   );
 
+  /**
+   * @swagger
+   * /api/v1/bookings/{bookingId}/modify:
+   *   put:
+   *     summary: Modify booking with comprehensive validation
+   *     tags: [Bookings]
+   *     parameters:
+   *       - in: path
+   *         name: bookingId
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: Booking ID
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             $ref: '#/components/schemas/BookingModificationRequest'
+   *     responses:
+   *       200:
+   *         description: Booking modified successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 success:
+   *                   type: boolean
+   *                 data:
+   *                   $ref: '#/components/schemas/ModificationResult'
+   *       400:
+   *         description: Invalid modification request
+   *       404:
+   *         description: Booking not found
+   *       409:
+   *         description: Booking cannot be modified
+   */
+  router.put(
+    '/:bookingId/modify',
+    bookingValidation.modifyBooking,
+    bookingController.modifyBooking.bind(bookingController)
+  );
+
+  /**
+   * @swagger
+   * /api/v1/bookings/{bookingId}/validate-modification:
+   *   post:
+   *     summary: Validate booking modification before processing
+   *     tags: [Bookings]
+   *     parameters:
+   *       - in: path
+   *         name: bookingId
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: Booking ID
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             $ref: '#/components/schemas/BookingModificationRequest'
+   *     responses:
+   *       200:
+   *         description: Modification validation results
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 success:
+   *                   type: boolean
+   *                 data:
+   *                   $ref: '#/components/schemas/ModificationValidation'
+   */
+  router.post(
+    '/:bookingId/validate-modification',
+    bookingValidation.validateBookingModification,
+    bookingController.validateBookingModification.bind(bookingController)
+  );
+
+  /**
+   * @swagger
+   * /api/v1/bookings/{bookingId}/modification-options:
+   *   get:
+   *     summary: Get available modification options for a booking
+   *     tags: [Bookings]
+   *     parameters:
+   *       - in: path
+   *         name: bookingId
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: Booking ID
+   *     responses:
+   *       200:
+   *         description: Modification options retrieved successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 success:
+   *                   type: boolean
+   *                 data:
+   *                   type: object
+   *                   properties:
+   *                     canModifyDates:
+   *                       type: boolean
+   *                     canModifyRooms:
+   *                       type: boolean
+   *                     canModifyGuests:
+   *                       type: boolean
+   *                     restrictions:
+   *                       type: array
+   *                       items:
+   *                         type: string
+   */
+  router.get(
+    '/:bookingId/modification-options',
+    bookingValidation.getBookingModificationOptions,
+    bookingController.getBookingModificationOptions.bind(bookingController)
+  );
+
+  /**
+   * @swagger
+   * /api/v1/bookings/{bookingId}/cancellation-info:
+   *   get:
+   *     summary: Get cancellation policy and refund calculation
+   *     tags: [Bookings]
+   *     parameters:
+   *       - in: path
+   *         name: bookingId
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: Booking ID
+   *     responses:
+   *       200:
+   *         description: Cancellation information retrieved successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 success:
+   *                   type: boolean
+   *                 data:
+   *                   type: object
+   *                   properties:
+   *                     canCancel:
+   *                       type: boolean
+   *                     refundCalculation:
+   *                       $ref: '#/components/schemas/RefundCalculation'
+   *                     policy:
+   *                       $ref: '#/components/schemas/CancellationPolicyDetails'
+   */
+  router.get(
+    '/:bookingId/cancellation-info',
+    bookingValidation.getCancellationInfo,
+    bookingController.getCancellationInfo.bind(bookingController)
+  );
+
   return router;
 }
 

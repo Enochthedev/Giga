@@ -21,9 +21,5 @@
     "esModuleInterop": true
   },
   "include": ["src/**/*"],
-<<<<<<< HEAD
-  "exclude": ["node_modules", "dist", "src/__tests__/**/*"]
-=======
-  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"]
->>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
+  "exclude": ["node_modules", "dist", "src/__tests__/**/*", "**/*.test.ts", "**/*.spec.ts"]
 }

@@ -1,21 +1,117 @@
 import { Router } from 'express';
 import { UserController } from '../controllers/user.controller';
-import { authenticateToken, requireRole } from '../middleware/auth.middleware';
-import {
-  assignUserRoleSchema,
-  bulkUpdateUsersSchema,
-  removeUserRoleSchema,
-  validate,
-} from '../middleware/validation.middleware';
+import { authenticateToken } from '../middleware/auth.middleware';
+import { apiRateLimit } from '../middleware/rateLimit.middleware';
+import { requireRole } from '../middleware/role.middleware';
+import { SessionManagementMiddleware } from '../middleware/sessionManagement.middleware';
 
 const router: Router = Router();
 const userController = new UserController();
 
 /**
  * @swagger
- * /api/v1/users/{id}:
+ * components:
+ *   schemas:
+ *     EnhancedUserProfile:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *         email:
+ *           type: string
+ *         firstName:
+ *           type: string
+ *         lastName:
+ *           type: string
+ *         phone:
+ *           type: string
+ *         dateOfBirth:
+ *           type: string
+ *           format: date
+ *         gender:
+ *           type: string
+ *           enum: [MALE, FEMALE, OTHER, PREFER_NOT_TO_SAY]
+ *         maritalStatus:
+ *           type: string
+ *           enum: [SINGLE, MARRIED, DIVORCED, WIDOWED, SEPARATED, DOMESTIC_PARTNERSHIP, PREFER_NOT_TO_SAY]
+ *         bodyWeight:
+ *           type: number
+ *           description: Weight in kg
+ *         height:
+ *           type: number
+ *           description: Height in cm
+ *         ageGroup:
+ *           type: string
+ *           enum: [UNDER_18, AGE_18_24, AGE_25_34, AGE_35_44, AGE_45_54, AGE_55_64, AGE_65_PLUS, PREFER_NOT_TO_SAY]
+ *         areasOfInterest:
+ *           type: array
+ *           items:
+ *             type: string
+ *         profilePicture:
+ *           type: string
+ *           description: URL to profile picture
+ *         customerProfile:
+ *           type: object
+ *           properties:
+ *             occupation:
+ *               type: string
+ *             company:
+ *               type: string
+ *             emergencyContact:
+ *               type: object
+ *               properties:
+ *                 name:
+ *                   type: string
+ *                 phone:
+ *                   type: string
+ *                 relationship:
+ *                   type: string
+ *             addresses:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Address'
+ *
+ *     Address:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *         label:
+ *           type: string
+ *           description: Home, Work, Other
+ *         name:
+ *           type: string
+ *           description: Recipient name
+ *         buildingNumber:
+ *           type: string
+ *         street:
+ *           type: string
+ *         address2:
+ *           type: string
+ *           description: Apartment, suite, etc.
+ *         city:
+ *           type: string
+ *         state:
+ *           type: string
+ *         zipCode:
+ *           type: string
+ *         country:
+ *           type: string
+ *         phone:
+ *           type: string
+ *         isDefault:
+ *           type: boolean
+ *         latitude:
+ *           type: number
+ *         longitude:
+ *           type: number
+ */
+
+/**
+ * @swagger
+ * /api/v1/users/{id}/profile:
  *   get:
- *     summary: Get user by ID (admin only)
+ *     summary: Get enhanced user profile (Admin only)
  *     tags: [User Management]
  *     security:
  *       - bearerAuth: []
@@ -25,69 +121,41 @@ const userController = new UserController();
  *         required: true
  *         schema:
  *           type: string
+ *         description: User ID
  *     responses:
  *       200:
- *         description: User retrieved successfully
+ *         description: Enhanced user profile retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     user:
+ *                       $ref: '#/components/schemas/EnhancedUserProfile'
  *       404:
  *         description: User not found
  *       403:
  *         description: Insufficient permissions
  */
 router.get(
-  '/:id',
+  '/:id/profile',
+  apiRateLimit,
   authenticateToken,
+  SessionManagementMiddleware.validateSession,
   requireRole(['ADMIN']),
-  userController.getUserById.bind(userController)
+  userController.getEnhancedUserProfile.bind(userController)
 );
 
 /**
  * @swagger
- * /api/v1/users:
- *   get:
- *     summary: List users with pagination (admin only)
- *     tags: [User Management]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: query
- *         name: page
- *         schema:
- *           type: integer
- *           minimum: 1
- *           default: 1
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *           minimum: 1
- *           maximum: 100
- *           default: 10
- *       - in: query
- *         name: role
- *         schema:
- *           type: string
- *           enum: [CUSTOMER, VENDOR, DRIVER, HOST, ADVERTISER]
- *       - in: query
- *         name: status
- *         schema:
- *           type: string
- *           enum: [active, inactive]
- *     responses:
- *       200:
- *         description: Users retrieved successfully
- */
-router.get(
-  '/',
-  authenticateToken,
-  requireRole(['ADMIN']),
-  userController.listUsers.bind(userController)
-);
-
-/**
- * @swagger
- * /api/v1/users/{id}/status:
- *   patch:
- *     summary: Update user status (admin only)
+ * /api/v1/users/{id}/profile:
+ *   put:
+ *     summary: Update user profile (Admin only)
  *     tags: [User Management]
  *     security:
  *       - bearerAuth: []
@@ -97,72 +165,195 @@ router.get(
  *         required: true
  *         schema:
  *           type: string
+ *         description: User ID
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
- *             required: [isActive]
  *             properties:
- *               isActive:
- *                 type: boolean
- *     responses:
- *       200:
- *         description: User status updated successfully
- */
-router.patch(
-  '/:id/status',
-  authenticateToken,
-  requireRole(['ADMIN']),
-  userController.updateUserStatus.bind(userController)
-);
-
-/**
- * @swagger
- * /api/v1/users/bulk-update:
- *   post:
- *     summary: Bulk update users (admin only)
- *     tags: [User Management, Bulk Operations]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required: [userIds, action]
- *             properties:
- *               userIds:
+ *               firstName:
+ *                 type: string
+ *               lastName:
+ *                 type: string
+ *               dateOfBirth:
+ *                 type: string
+ *                 format: date
+ *               gender:
+ *                 type: string
+ *                 enum: [MALE, FEMALE, OTHER, PREFER_NOT_TO_SAY]
+ *               maritalStatus:
+ *                 type: string
+ *                 enum: [SINGLE, MARRIED, DIVORCED, WIDOWED, SEPARATED, DOMESTIC_PARTNERSHIP, PREFER_NOT_TO_SAY]
+ *               bodyWeight:
+ *                 type: number
+ *                 description: Weight in kg
+ *               height:
+ *                 type: number
+ *                 description: Height in cm
+ *               ageGroup:
+ *                 type: string
+ *                 enum: [UNDER_18, AGE_18_24, AGE_25_34, AGE_35_44, AGE_45_54, AGE_55_64, AGE_65_PLUS, PREFER_NOT_TO_SAY]
+ *               areasOfInterest:
  *                 type: array
  *                 items:
  *                   type: string
- *                 maxItems: 100
- *               action:
+ *               profilePicture:
  *                 type: string
- *                 enum: [activate, deactivate, verify_email, verify_phone, update_fields]
- *               data:
+ *               phone:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: User profile updated successfully
+ *       404:
+ *         description: User not found
+ *       403:
+ *         description: Insufficient permissions
+ */
+router.put(
+  '/:id/profile',
+  apiRateLimit,
+  authenticateToken,
+  SessionManagementMiddleware.validateSession,
+  requireRole(['ADMIN']),
+  userController.updateUserProfile.bind(userController)
+);
+
+/**
+ * @swagger
+ * /api/v1/users/{id}/customer-profile:
+ *   put:
+ *     summary: Update customer profile (Admin only)
+ *     tags: [User Management]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: User ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               occupation:
+ *                 type: string
+ *               company:
+ *                 type: string
+ *               emergencyContact:
  *                 type: object
- *                 description: Required for update_fields action
+ *                 properties:
+ *                   name:
+ *                     type: string
+ *                   phone:
+ *                     type: string
+ *                   relationship:
+ *                     type: string
+ *               medicalInfo:
+ *                 type: object
+ *                 properties:
+ *                   allergies:
+ *                     type: array
+ *                     items:
+ *                       type: string
+ *                   medications:
+ *                     type: array
+ *                     items:
+ *                       type: string
+ *                   conditions:
+ *                     type: array
+ *                     items:
+ *                       type: string
+ *                   bloodType:
+ *                     type: string
+ *                   doctorContact:
+ *                     type: string
+ *               socialMedia:
+ *                 type: object
+ *                 properties:
+ *                   facebook:
+ *                     type: string
+ *                   twitter:
+ *                     type: string
+ *                   instagram:
+ *                     type: string
+ *                   linkedin:
+ *                     type: string
  *     responses:
  *       200:
- *         description: Bulk update completed successfully
+ *         description: Customer profile updated successfully
+ *       404:
+ *         description: User not found
+ *       403:
+ *         description: Insufficient permissions
  */
-router.post(
-  '/bulk-update',
+router.put(
+  '/:id/customer-profile',
+  apiRateLimit,
   authenticateToken,
+  SessionManagementMiddleware.validateSession,
   requireRole(['ADMIN']),
-  validate(bulkUpdateUsersSchema),
-  userController.bulkUpdateUsers.bind(userController)
+  userController.updateCustomerProfile.bind(userController)
 );
 
 /**
  * @swagger
- * /api/v1/users/{id}/roles:
+ * /api/v1/users/{id}/addresses:
+ *   get:
+ *     summary: Get user addresses (Admin only)
+ *     tags: [User Management]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: User ID
+ *     responses:
+ *       200:
+ *         description: User addresses retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     addresses:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/Address'
+ *       404:
+ *         description: User not found
+ *       403:
+ *         description: Insufficient permissions
+ */
+router.get(
+  '/:id/addresses',
+  apiRateLimit,
+  authenticateToken,
+  SessionManagementMiddleware.validateSession,
+  requireRole(['ADMIN']),
+  userController.getUserAddresses.bind(userController)
+);
+
+/**
+ * @swagger
+ * /api/v1/users/{id}/addresses:
  *   post:
- *     summary: Assign role to user (admin only)
- *     tags: [User Management, Role Management]
+ *     summary: Add user address (Admin only)
+ *     tags: [User Management]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -171,35 +362,69 @@ router.post(
  *         required: true
  *         schema:
  *           type: string
+ *         description: User ID
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
- *             required: [role]
+ *             required:
+ *               - label
+ *               - street
+ *               - city
+ *               - country
  *             properties:
- *               role:
+ *               label:
  *                 type: string
- *                 enum: [CUSTOMER, VENDOR, DRIVER, HOST, ADVERTISER, ADMIN]
+ *                 description: Home, Work, Other
+ *               name:
+ *                 type: string
+ *               buildingNumber:
+ *                 type: string
+ *               street:
+ *                 type: string
+ *               address2:
+ *                 type: string
+ *               city:
+ *                 type: string
+ *               state:
+ *                 type: string
+ *               zipCode:
+ *                 type: string
+ *               country:
+ *                 type: string
+ *               phone:
+ *                 type: string
+ *               isDefault:
+ *                 type: boolean
+ *               latitude:
+ *                 type: number
+ *               longitude:
+ *                 type: number
  *     responses:
- *       200:
- *         description: Role assigned successfully
+ *       201:
+ *         description: Address added successfully
+ *       404:
+ *         description: User not found
+ *       403:
+ *         description: Insufficient permissions
  */
 router.post(
-  '/:id/roles',
+  '/:id/addresses',
+  apiRateLimit,
   authenticateToken,
+  SessionManagementMiddleware.validateSession,
   requireRole(['ADMIN']),
-  validate(assignUserRoleSchema),
-  userController.assignUserRole.bind(userController)
+  userController.addUserAddress.bind(userController)
 );
 
 /**
  * @swagger
- * /api/v1/users/{id}/roles:
- *   delete:
- *     summary: Remove role from user (admin only)
- *     tags: [User Management, Role Management]
+ * /api/v1/users/{id}/addresses/{addressId}:
+ *   put:
+ *     summary: Update user address (Admin only)
+ *     tags: [User Management]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -208,253 +433,99 @@ router.post(
  *         required: true
  *         schema:
  *           type: string
+ *         description: User ID
+ *       - in: path
+ *         name: addressId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Address ID
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
- *             required: [role]
  *             properties:
- *               role:
+ *               label:
  *                 type: string
- *                 enum: [VENDOR, DRIVER, HOST, ADVERTISER, ADMIN]
+ *               name:
+ *                 type: string
+ *               buildingNumber:
+ *                 type: string
+ *               street:
+ *                 type: string
+ *               address2:
+ *                 type: string
+ *               city:
+ *                 type: string
+ *               state:
+ *                 type: string
+ *               zipCode:
+ *                 type: string
+ *               country:
+ *                 type: string
+ *               phone:
+ *                 type: string
+ *               isDefault:
+ *                 type: boolean
+ *               latitude:
+ *                 type: number
+ *               longitude:
+ *                 type: number
  *     responses:
  *       200:
- *         description: Role removed successfully
+ *         description: Address updated successfully
+ *       404:
+ *         description: Address not found
+ *       403:
+ *         description: Insufficient permissions
+ */
+router.put(
+  '/:id/addresses/:addressId',
+  apiRateLimit,
+  authenticateToken,
+  SessionManagementMiddleware.validateSession,
+  requireRole(['ADMIN']),
+  userController.updateUserAddress.bind(userController)
+);
+
+/**
+ * @swagger
+ * /api/v1/users/{id}/addresses/{addressId}:
+ *   delete:
+ *     summary: Delete user address (Admin only)
+ *     tags: [User Management]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: User ID
+ *       - in: path
+ *         name: addressId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Address ID
+ *     responses:
+ *       200:
+ *         description: Address deleted successfully
+ *       404:
+ *         description: Address not found
+ *       403:
+ *         description: Insufficient permissions
  */
 router.delete(
-  '/:id/roles',
+  '/:id/addresses/:addressId',
+  apiRateLimit,
   authenticateToken,
+  SessionManagementMiddleware.validateSession,
   requireRole(['ADMIN']),
-  validate(removeUserRoleSchema),
-  userController.removeUserRole.bind(userController)
-);
-
-/**
- * @swagger
- * /api/v1/users/export:
- *   get:
- *     summary: Export users data (admin only)
- *     tags: [User Management, Data Export]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: query
- *         name: format
- *         schema:
- *           type: string
- *           enum: [json, csv]
- *           default: json
- *       - in: query
- *         name: filters
- *         schema:
- *           type: string
- *           description: JSON string of filters
- *     responses:
- *       200:
- *         description: Users data exported successfully
- */
-router.get(
-  '/export',
-  authenticateToken,
-  requireRole(['ADMIN']),
-  userController.exportUsers.bind(userController)
-);
-
-/**
- * @swagger
- * /api/v1/users/{id}/activity:
- *   get:
- *     summary: Get user activity log (admin only)
- *     tags: [User Management, Audit]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *       - in: query
- *         name: page
- *         schema:
- *           type: integer
- *           minimum: 1
- *           default: 1
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *           minimum: 1
- *           maximum: 100
- *           default: 20
- *       - in: query
- *         name: action
- *         schema:
- *           type: string
- *           description: Filter by action type
- *     responses:
- *       200:
- *         description: User activity retrieved successfully
- */
-router.get(
-  '/:id/activity',
-  authenticateToken,
-  requireRole(['ADMIN']),
-  userController.getUserActivity.bind(userController)
-);
-
-/**
- * @swagger
- * /api/v1/users/audit-logs:
- *   get:
- *     summary: Get system audit logs (admin only)
- *     tags: [User Management, Audit]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: query
- *         name: page
- *         schema:
- *           type: integer
- *           minimum: 1
- *           default: 1
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *           minimum: 1
- *           maximum: 100
- *           default: 20
- *       - in: query
- *         name: action
- *         schema:
- *           type: string
- *           description: Filter by action type
- *       - in: query
- *         name: adminUserId
- *         schema:
- *           type: string
- *           description: Filter by admin user ID
- *       - in: query
- *         name: targetUserId
- *         schema:
- *           type: string
- *           description: Filter by target user ID
- *       - in: query
- *         name: startDate
- *         schema:
- *           type: string
- *           format: date-time
- *           description: Filter from this date
- *       - in: query
- *         name: endDate
- *         schema:
- *           type: string
- *           format: date-time
- *           description: Filter to this date
- *       - in: query
- *         name: ipAddress
- *         schema:
- *           type: string
- *           description: Filter by IP address
- *     responses:
- *       200:
- *         description: Audit logs retrieved successfully
- */
-router.get(
-  '/audit-logs',
-  authenticateToken,
-  requireRole(['ADMIN']),
-  userController.getAuditLogs.bind(userController)
-);
-
-/**
- * @swagger
- * /api/v1/users/audit-report:
- *   get:
- *     summary: Generate audit report (admin only)
- *     tags: [User Management, Audit, Reports]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: query
- *         name: startDate
- *         required: true
- *         schema:
- *           type: string
- *           format: date-time
- *           description: Report start date
- *       - in: query
- *         name: endDate
- *         required: true
- *         schema:
- *           type: string
- *           format: date-time
- *           description: Report end date
- *       - in: query
- *         name: format
- *         schema:
- *           type: string
- *           enum: [json, csv]
- *           default: json
- *           description: Report format
- *       - in: query
- *         name: groupBy
- *         schema:
- *           type: string
- *           enum: [action, admin, date]
- *           default: action
- *           description: Group report data by
- *     responses:
- *       200:
- *         description: Audit report generated successfully
- */
-router.get(
-  '/audit-report',
-  authenticateToken,
-  requireRole(['ADMIN']),
-  userController.getAuditReport.bind(userController)
-);
-
-/**
- * @swagger
- * /api/v1/users/stats:
- *   get:
- *     summary: Get user statistics (admin only)
- *     tags: [User Management, Statistics]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: query
- *         name: startDate
- *         schema:
- *           type: string
- *           format: date-time
- *           description: Filter from this date
- *       - in: query
- *         name: endDate
- *         schema:
- *           type: string
- *           format: date-time
- *           description: Filter to this date
- *       - in: query
- *         name: groupBy
- *         schema:
- *           type: string
- *           enum: [role, date, status]
- *           default: role
- *           description: Group statistics by
- *     responses:
- *       200:
- *         description: User statistics retrieved successfully
- */
-router.get(
-  '/stats',
-  authenticateToken,
-  requireRole(['ADMIN']),
-  userController.getUserStats.bind(userController)
+  userController.deleteUserAddress.bind(userController)
 );
 
 export { router as userRoutes };

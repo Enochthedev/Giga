@@ -4,10 +4,14 @@
 
 import { PrismaClient } from '@/generated/prisma-client';
 import {
+  BookingModificationRequest,
   BookingResult,
   BookingSource,
   BookingStatus,
+  CancellationRequest,
+  CancellationResult,
   CreateBookingRequest,
+  ModificationResult,
   PaymentMethod,
   PaymentStatus,
   UpdateBookingRequest,
@@ -16,6 +20,8 @@ import { ConflictError, NotFoundError, ValidationError } from '@/utils/errors';
 import logger from '@/utils/logger';
 import { validateSchema } from '@/utils/validation';
 import { z } from 'zod';
+import { BookingModificationService } from './booking-modification.service';
+import { CancellationPolicyService } from './cancellation-policy.service';
 
 // Validation schemas
 const guestDetailsSchema = z.object({
@@ -80,7 +86,13 @@ export interface BookingFilters {
 }
 
 export class BookingService {
-  constructor(private prisma: PrismaClient) {}
+  private modificationService: BookingModificationService;
+  private cancellationPolicyService: CancellationPolicyService;
+
+  constructor(private prisma: PrismaClient) {
+    this.modificationService = new BookingModificationService(this.prisma);
+    this.cancellationPolicyService = new CancellationPolicyService(this.prisma);
+  }
 
   /**
    * Create a new booking with comprehensive validation and workflow
@@ -126,22 +138,22 @@ export class BookingService {
             additionalGuests: (request.additionalGuests || []) as any,
             checkInDate: request.checkInDate,
             checkOutDate: request.checkOutDate,
+            primaryGuest: request.primaryGuest as any,
             nights: this.calculateNights(
               request.checkInDate,
               request.checkOutDate
             ),
-            subtotal: pricingDetails.subtotal,
-            taxAmount: pricingDetails.taxAmount,
-            discountAmount: pricingDetails.discountAmount,
+            rooms: request.rooms as any,
+            pricing: pricingDetails as any,
             totalAmount: pricingDetails.totalAmount,
             currency: pricingDetails.currency,
-            pricingDetails: pricingDetails.breakdown,
             status: BookingStatus.PENDING,
             bookingSource: request.bookingSource,
             paymentStatus: PaymentStatus.PENDING,
             paymentMethod: request.paymentMethod,
             specialRequests: request.specialRequests,
             preferences: (request.preferences as any) || {},
+            cancellationPolicy: 'moderate',
             noShowPolicy: 'charge_first_night',
             metadata: (request.metadata as any) || {},
           },
@@ -160,10 +172,11 @@ export class BookingService {
               roomTypeId: room.roomTypeId,
               quantity: room.quantity,
               guestCount: room.guestCount,
+              rate: roomTotal.ratePerNight,
               ratePerNight: roomTotal.ratePerNight,
-              nights: newBooking.nights,
-              subtotal: roomTotal.subtotal,
-              taxAmount: roomTotal.taxAmount,
+              // nights: newBooking.nights, // Field not in schema
+              // subtotal: roomTotal.subtotal, // Field not in schema
+              // taxAmount: roomTotal.taxAmount, // Field not in schema
               totalPrice: roomTotal.totalPrice,
               guests: room.guests as any,
             },
@@ -278,64 +291,204 @@ export class BookingService {
   }
 
   /**
-   * Cancel booking
+   * Cancel booking with enhanced policy enforcement
    */
-  async cancelBooking(id: string, reason?: string) {
+  async cancelBooking(
+    id: string,
+    cancellationRequest: CancellationRequest
+  ): Promise<CancellationResult> {
     try {
-      logger.info('Cancelling booking', { bookingId: id, reason });
+      logger.info('Cancelling booking with policy enforcement', {
+        bookingId: id,
+        request: cancellationRequest,
+      });
 
       const existingBooking = await this.prisma.booking.findUnique({
         where: { id },
+        include: {
+          property: {
+            select: { id: true, name: true },
+          },
+        },
       });
 
       if (!existingBooking) {
         throw new NotFoundError('Booking', id);
       }
 
-      if (!this.canCancelBooking(existingBooking.status)) {
+      // Validate cancellation eligibility
+      const validation =
+        await this.cancellationPolicyService.validateCancellation(id);
+
+      if (!validation.canCancel) {
         throw new ConflictError(
-          `Cannot cancel booking with status: ${existingBooking.status}`
+          validation.reason || 'Booking cannot be cancelled'
         );
       }
 
-      // Calculate refund amount based on cancellation policy
-      const refundAmount = await this.calculateRefundAmount(existingBooking);
+      // Calculate refund based on policy
+      const refundCalculation =
+        await this.cancellationPolicyService.calculateRefund(id, {
+          reason: 'User cancellation',
+          requestedBy: 'user',
+        });
 
       const result = await this.prisma.$transaction(async tx => {
         // Update booking status
         const cancelledBooking = await tx.booking.update({
           where: { id },
           data: {
-            status: 'cancelled',
+            status: BookingStatus.CANCELLED,
             cancelledAt: new Date(),
+            // Store refund details in metadata
+            metadata: {
+              ...((existingBooking.metadata as object) || {}),
+              cancellation: {
+                reason: cancellationRequest.reason,
+                requestedBy: cancellationRequest.requestedBy,
+                refundCalculation: JSON.parse(
+                  JSON.stringify(refundCalculation)
+                ),
+                processedAt: new Date().toISOString(),
+              },
+            },
           },
         });
 
-        // Create history entry
+        // Create detailed history entry
         await tx.bookingHistory.create({
           data: {
             bookingId: id,
             action: 'cancelled',
-            changedBy: existingBooking.guestId,
-            changeType: 'status_change',
-            oldValue: { status: existingBooking.status },
-            newValue: { status: 'cancelled', reason },
-            description: reason || 'Booking cancelled',
+            changedBy: cancellationRequest.requestedBy,
+            changeType: 'cancellation',
+            oldValue: {
+              status: existingBooking.status,
+              totalAmount: existingBooking.totalAmount,
+            },
+            newValue: {
+              status: BookingStatus.CANCELLED,
+              reason: cancellationRequest.reason,
+              refundAmount: refundCalculation.refundableAmount,
+            },
+            description: `Booking cancelled: ${cancellationRequest.reason}. Refund: $${refundCalculation.refundableAmount}`,
           },
         });
 
+        // Release inventory (TODO: integrate with inventory service)
+        await this.releaseBookingInventory(tx, id);
+
         return {
           booking: cancelledBooking,
-          refundAmount,
-          refundEligible: refundAmount > 0,
+          refundAmount: refundCalculation.refundableAmount,
+          refundStatus:
+            refundCalculation.refundableAmount > 0
+              ? 'pending'
+              : 'not_applicable',
+          cancellationFee: refundCalculation.cancellationFee,
+          refundCalculation,
         };
       });
 
-      logger.info('Booking cancelled successfully', { bookingId: id });
+      // Process refund if applicable (integrate with payment service)
+      if (result.refundAmount > 0) {
+        await this.processRefund(result.booking, result.refundAmount);
+      }
 
-      return result;
+      // Send cancellation confirmation
+      await this.sendCancellationConfirmation(
+        result.booking,
+        refundCalculation
+      );
+
+      logger.info('Booking cancelled successfully with policy enforcement', {
+        bookingId: id,
+        refundAmount: result.refundAmount,
+      });
+
+      return {
+        booking: result.booking as any,
+        refundAmount: result.refundAmount,
+        refundStatus: result.refundStatus,
+        cancellationFee: result.cancellationFee,
+      };
     } catch (error) {
       logger.error('Error cancelling booking', { error, bookingId: id });
+      throw error;
+    }
+  }
+
+  /**
+   * Modify booking with comprehensive validation
+   */
+  async modifyBooking(
+    id: string,
+    modificationRequest: BookingModificationRequest
+  ): Promise<ModificationResult> {
+    try {
+      logger.info('Modifying booking', {
+        bookingId: id,
+        modification: modificationRequest,
+      });
+
+      return await this.modificationService.modifyBooking(
+        id,
+        modificationRequest
+      );
+    } catch (error) {
+      logger.error('Error modifying booking', { error, bookingId: id });
+      throw error;
+    }
+  }
+
+  /**
+   * Validate booking modification
+   */
+  async validateBookingModification(
+    id: string,
+    modificationRequest: BookingModificationRequest
+  ) {
+    return await this.modificationService.validateModification(
+      id,
+      modificationRequest
+    );
+  }
+
+  /**
+   * Get modification options for a booking
+   */
+  async getBookingModificationOptions(id: string) {
+    return await this.modificationService.getModificationOptions(id);
+  }
+
+  /**
+   * Get cancellation policy and refund calculation
+   */
+  async getCancellationInfo(id: string) {
+    try {
+      const validation =
+        await this.cancellationPolicyService.validateCancellation(id);
+
+      if (!validation.canCancel) {
+        return {
+          canCancel: false,
+          reason: validation.reason,
+        };
+      }
+
+      const refundCalculation =
+        await this.cancellationPolicyService.calculateRefund(id, {
+          reason: 'User cancellation',
+          requestedBy: 'user',
+        });
+
+      return {
+        canCancel: true,
+        refundCalculation,
+        policy: refundCalculation.policyApplied,
+      };
+    } catch (error) {
+      logger.error('Error getting cancellation info', { error, bookingId: id });
       throw error;
     }
   }
@@ -837,7 +990,7 @@ export class BookingService {
             slug: true,
             address: true,
             images: true,
-            checkInTime: true,
+            // checkInTime: true, // Field doesn't exist in schema
             checkOutTime: true,
             phone: true,
             email: true,
@@ -860,15 +1013,15 @@ export class BookingService {
             },
           },
         },
-        guestProfile: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-            phone: true,
-          },
-        },
+        // guestProfile: { // Relation doesn't exist
+        //   select: {
+        //     id: true,
+        //     firstName: true,
+        //     lastName: true,
+        //     email: true,
+        //     phone: true,
+        //   },
+        // },
         bookingHistory: {
           orderBy: { timestamp: 'desc' },
           take: 10,
@@ -990,20 +1143,60 @@ export class BookingService {
     return ['pending', 'confirmed'].includes(status);
   }
 
-  private async calculateRefundAmount(booking: any): Promise<number> {
-    // Simplified refund calculation
-    // TODO: Implement proper cancellation policy logic
-    const now = new Date();
-    const checkIn = new Date(booking.checkInDate);
-    const hoursUntilCheckIn =
-      (checkIn.getTime() - now.getTime()) / (1000 * 60 * 60);
+  private async releaseBookingInventory(
+    tx: any,
+    bookingId: string
+  ): Promise<void> {
+    // TODO: Integrate with inventory service to release reserved rooms
+    logger.info('Releasing inventory for cancelled booking', { bookingId });
 
-    if (hoursUntilCheckIn > 24) {
-      return booking.totalAmount; // Full refund
-    } else if (hoursUntilCheckIn > 2) {
-      return booking.totalAmount * 0.5; // 50% refund
-    } else {
-      return 0; // No refund
+    // This would typically:
+    // 1. Find all booked rooms for this booking
+    // 2. Update inventory records to make rooms available again
+    // 3. Remove any inventory locks or reservations
+  }
+
+  private async processRefund(
+    booking: any,
+    refundAmount: number
+  ): Promise<void> {
+    try {
+      // TODO: Integrate with payment service for actual refund processing
+      logger.info('Processing refund', {
+        bookingId: booking.id,
+        refundAmount,
+        originalAmount: booking.totalAmount,
+      });
+
+      // This would typically:
+      // 1. Call payment service to process refund
+      // 2. Update booking with refund transaction details
+      // 3. Send refund confirmation to guest
+    } catch (error) {
+      logger.error('Error processing refund', { error, bookingId: booking.id });
+      // Don't throw error here as cancellation should still succeed
+    }
+  }
+
+  private async sendCancellationConfirmation(
+    booking: any,
+    refundCalculation: any
+  ): Promise<void> {
+    try {
+      // TODO: Integrate with notification service
+      logger.info('Sending cancellation confirmation', {
+        bookingId: booking.id,
+        guestEmail: booking.guestEmail,
+        refundAmount: refundCalculation.refundableAmount,
+      });
+
+      // This would typically send an email with:
+      // 1. Cancellation confirmation
+      // 2. Refund details and timeline
+      // 3. Policy information
+      // 4. Contact information for questions
+    } catch (error) {
+      logger.error('Error sending cancellation confirmation', { error });
     }
   }
 }

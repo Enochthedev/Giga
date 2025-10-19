@@ -132,8 +132,8 @@ export class EmailProcessorService implements IEmailProcessor {
 
       // Map provider response to EmailResult
       return {
-        messageId: providerResponse.messageId,
-        status: providerResponse.status,
+        messageId: providerResponse.messageId || '',
+        status: this.mapStatusToNotificationStatus(providerResponse.status),
         provider: providerName,
         estimatedDelivery: this.calculateEstimatedDelivery(),
         error: providerResponse.error,
@@ -241,8 +241,8 @@ export class EmailProcessorService implements IEmailProcessor {
         // Map provider responses to EmailResults
         providerResponses.forEach(response => {
           results.push({
-            messageId: response.messageId,
-            status: response.status,
+            messageId: response.messageId || '',
+            status: this.mapStatusToNotificationStatus(response.status),
             provider: providerName,
             estimatedDelivery: this.calculateEstimatedDelivery(),
             error: response.error,
@@ -522,6 +522,23 @@ export class EmailProcessorService implements IEmailProcessor {
    */
   getProviders(): string[] {
     return Array.from(this.providers.keys());
+  }
+
+  /**
+   * Map provider status string to NotificationStatus enum
+   */
+  private mapStatusToNotificationStatus(status: string): NotificationStatus {
+    const statusMap: Record<string, NotificationStatus> = {
+      pending: NotificationStatus.PENDING,
+      queued: NotificationStatus.QUEUED,
+      processing: NotificationStatus.PROCESSING,
+      sent: NotificationStatus.SENT,
+      delivered: NotificationStatus.DELIVERED,
+      failed: NotificationStatus.FAILED,
+      cancelled: NotificationStatus.CANCELLED,
+    };
+
+    return statusMap[status.toLowerCase()] || NotificationStatus.PENDING;
   }
 
   /**

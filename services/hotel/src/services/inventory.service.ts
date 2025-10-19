@@ -2,7 +2,10 @@
 // TODO: Implement full inventory management with new schema
 
 import { PrismaClient } from '@/generated/prisma-client';
-import { NotFoundError, ValidationError } from '@/types';
+import {
+  NotFoundError,
+  ValidationErrorClass as ValidationError,
+} from '@/types';
 import logger from '@/utils/logger';
 
 export interface InventoryUpdateRequest {
@@ -326,7 +329,7 @@ export class InventoryService {
     });
 
     if (!property) {
-      throw new NotFoundError('Property', request.propertyId);
+      throw new NotFoundError(`Property not found: ${request.propertyId}`);
     }
 
     // Verify room type exists
@@ -335,7 +338,7 @@ export class InventoryService {
     });
 
     if (!roomType) {
-      throw new NotFoundError('Room type', request.roomTypeId);
+      throw new NotFoundError(`Room type not found: ${request.roomTypeId}`);
     }
   }
 

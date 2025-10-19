@@ -93,11 +93,7 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 // Start the server if this file is run directly
-<<<<<<< HEAD
 if (process.argv[1] && process.argv[1].endsWith('server.ts')) {
-=======
-if (import.meta.url === `file://${process.argv[1]}`) {
->>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
   start();
 }
 

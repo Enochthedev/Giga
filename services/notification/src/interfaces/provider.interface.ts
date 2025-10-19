@@ -73,7 +73,7 @@ export interface IProviderManager {
   ): Promise<boolean>;
 }
 
-export interface IEmailProvider {
+export interface IGenericEmailProvider {
   name: string;
   channel: NotificationChannel.EMAIL;
 

@@ -10,21 +10,27 @@ datasource db {
 }
 
 model User {
-  id              String    @id @default(cuid())
-  email           String    @unique
-  phone           String?   @unique
+  id              String         @id @default(cuid())
+  email           String         @unique
+  phone           String?        @unique
   passwordHash    String
   firstName       String
   lastName        String
   avatar          String?
   dateOfBirth     DateTime?
   gender          Gender?
-  isEmailVerified Boolean   @default(false)
-  isPhoneVerified Boolean   @default(false)
-  isActive        Boolean   @default(true)
+  maritalStatus   MaritalStatus?
+  bodyWeight      Float? // in kg
+  height          Float? // in cm
+  ageGroup        AgeGroup?
+  areasOfInterest String[] // Array of interest categories
+  profilePicture  String? // URL to profile picture
+  isEmailVerified Boolean        @default(false)
+  isPhoneVerified Boolean        @default(false)
+  isActive        Boolean        @default(true)
   lastLoginAt     DateTime?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
 
   // Multi-role relationships
   roles      UserRole[]
@@ -102,8 +108,16 @@ model CustomerProfile {
   membershipTier String    @default("BRONZE") // BRONZE, SILVER, GOLD, PLATINUM
   totalOrders    Int       @default(0)
   totalSpent     Float     @default(0)
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+
+  // Additional profile information
+  occupation       String?
+  company          String?
+  emergencyContact Json? // {name, phone, relationship}
+  medicalInfo      Json? // {allergies, medications, conditions}
+  socialMedia      Json? // {facebook, twitter, instagram, linkedin}
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@map("customer_profiles")
 }
@@ -188,7 +202,8 @@ model Address {
   customerProfile   CustomerProfile @relation(fields: [customerProfileId], references: [id], onDelete: Cascade)
   label             String // Home, Work, Other
   name              String? // Recipient name
-  address           String
+  buildingNumber    String? // Building/house number
+  street            String // Street name
   address2          String? // Apartment, suite, etc.
   city              String
   state             String?
@@ -196,6 +211,8 @@ model Address {
   country           String
   phone             String?
   isDefault         Boolean         @default(false)
+  latitude          Float? // GPS coordinates
+  longitude         Float?
   createdAt         DateTime        @default(now())
   updatedAt         DateTime        @updatedAt
 
@@ -401,6 +418,27 @@ enum Gender {
   MALE
   FEMALE
   OTHER
+  PREFER_NOT_TO_SAY
+}
+
+enum MaritalStatus {
+  SINGLE
+  MARRIED
+  DIVORCED
+  WIDOWED
+  SEPARATED
+  DOMESTIC_PARTNERSHIP
+  PREFER_NOT_TO_SAY
+}
+
+enum AgeGroup {
+  UNDER_18
+  AGE_18_24
+  AGE_25_34
+  AGE_35_44
+  AGE_45_54
+  AGE_55_64
+  AGE_65_PLUS
   PREFER_NOT_TO_SAY
 }
 

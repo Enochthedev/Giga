@@ -26,6 +26,368 @@ const options = {
     ],
     components: {
       schemas: {
+        // Payment Schemas
+        PaymentRequest: {
+          type: 'object',
+          required: ['bookingId', 'amount', 'currency', 'paymentMethod'],
+          properties: {
+            bookingId: {
+              type: 'string',
+              description: 'Booking ID for the payment',
+            },
+            amount: {
+              type: 'number',
+              minimum: 0.01,
+              description: 'Payment amount',
+            },
+            currency: {
+              type: 'string',
+              enum: ['USD', 'EUR', 'GBP', 'CAD'],
+              description: 'Payment currency',
+            },
+            paymentMethod: {
+              $ref: '#/components/schemas/PaymentMethodDetails',
+            },
+            description: {
+              type: 'string',
+              description: 'Payment description',
+            },
+            metadata: {
+              type: 'object',
+              description: 'Additional payment metadata',
+            },
+          },
+        },
+        PaymentMethodDetails: {
+          type: 'object',
+          required: ['type'],
+          properties: {
+            type: {
+              type: 'string',
+              enum: [
+                'credit_card',
+                'debit_card',
+                'bank_transfer',
+                'paypal',
+                'apple_pay',
+                'google_pay',
+              ],
+              description: 'Payment method type',
+            },
+            cardDetails: {
+              $ref: '#/components/schemas/CardDetails',
+            },
+          },
+        },
+        CardDetails: {
+          type: 'object',
+          required: [
+            'cardNumber',
+            'expiryMonth',
+            'expiryYear',
+            'cvv',
+            'cardholderName',
+          ],
+          properties: {
+            cardNumber: {
+              type: 'string',
+              pattern: '^[0-9]{13,19}$',
+              description: 'Credit card number',
+            },
+            expiryMonth: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 12,
+              description: 'Card expiry month',
+            },
+            expiryYear: {
+              type: 'integer',
+              minimum: 2024,
+              description: 'Card expiry year',
+            },
+            cvv: {
+              type: 'string',
+              pattern: '^[0-9]{3,4}$',
+              description: 'Card CVV',
+            },
+            cardholderName: {
+              type: 'string',
+              description: 'Cardholder name',
+            },
+          },
+        },
+        PaymentResult: {
+          type: 'object',
+          properties: {
+            id: {
+              type: 'string',
+              description: 'Payment transaction ID',
+            },
+            status: {
+              type: 'string',
+              enum: [
+                'pending',
+                'processing',
+                'authorized',
+                'captured',
+                'succeeded',
+                'failed',
+                'cancelled',
+              ],
+              description: 'Payment status',
+            },
+            amount: {
+              type: 'number',
+              description: 'Payment amount',
+            },
+            currency: {
+              type: 'string',
+              description: 'Payment currency',
+            },
+            transactionId: {
+              type: 'string',
+              description: 'Gateway transaction ID',
+            },
+            processedAt: {
+              type: 'string',
+              format: 'date-time',
+              description: 'Payment processing timestamp',
+            },
+            failureReason: {
+              type: 'string',
+              description: 'Failure reason if payment failed',
+            },
+          },
+        },
+        DepositRequest: {
+          type: 'object',
+          required: ['bookingId', 'depositType', 'paymentMethod'],
+          properties: {
+            bookingId: {
+              type: 'string',
+              description: 'Booking ID for the deposit',
+            },
+            depositType: {
+              type: 'string',
+              enum: [
+                'fixed_amount',
+                'percentage',
+                'first_night',
+                'full_amount',
+                'no_deposit',
+              ],
+              description: 'Type of deposit calculation',
+            },
+            amount: {
+              type: 'number',
+              minimum: 0,
+              description: 'Fixed deposit amount (for fixed_amount type)',
+            },
+            percentage: {
+              type: 'number',
+              minimum: 0,
+              maximum: 100,
+              description: 'Deposit percentage (for percentage type)',
+            },
+            paymentMethod: {
+              $ref: '#/components/schemas/PaymentMethodDetails',
+            },
+            description: {
+              type: 'string',
+              description: 'Deposit description',
+            },
+          },
+        },
+        DepositCalculation: {
+          type: 'object',
+          properties: {
+            amount: {
+              type: 'number',
+              description: 'Calculated deposit amount',
+            },
+            currency: {
+              type: 'string',
+              description: 'Deposit currency',
+            },
+            dueDate: {
+              type: 'string',
+              format: 'date-time',
+              description: 'Deposit due date',
+            },
+            type: {
+              type: 'string',
+              enum: [
+                'fixed_amount',
+                'percentage',
+                'first_night',
+                'full_amount',
+                'no_deposit',
+              ],
+              description: 'Deposit type used for calculation',
+            },
+            description: {
+              type: 'string',
+              description: 'Deposit description',
+            },
+          },
+        },
+        RefundRequest: {
+          type: 'object',
+          required: ['paymentId', 'bookingId', 'amount', 'reason'],
+          properties: {
+            paymentId: {
+              type: 'string',
+              description: 'Original payment ID to refund',
+            },
+            bookingId: {
+              type: 'string',
+              description: 'Booking ID for the refund',
+            },
+            amount: {
+              type: 'number',
+              minimum: 0.01,
+              description: 'Refund amount',
+            },
+            reason: {
+              type: 'string',
+              enum: [
+                'cancellation',
+                'modification',
+                'no_show_policy',
+                'overbooking',
+                'service_issue',
+              ],
+              description: 'Reason for refund',
+            },
+            description: {
+              type: 'string',
+              description: 'Refund description',
+            },
+          },
+        },
+        RefundResult: {
+          type: 'object',
+          properties: {
+            id: {
+              type: 'string',
+              description: 'Refund transaction ID',
+            },
+            paymentId: {
+              type: 'string',
+              description: 'Original payment ID',
+            },
+            amount: {
+              type: 'number',
+              description: 'Refund amount',
+            },
+            currency: {
+              type: 'string',
+              description: 'Refund currency',
+            },
+            status: {
+              type: 'string',
+              enum: [
+                'pending',
+                'processing',
+                'succeeded',
+                'failed',
+                'cancelled',
+              ],
+              description: 'Refund status',
+            },
+            reason: {
+              type: 'string',
+              description: 'Refund reason',
+            },
+            processedAt: {
+              type: 'string',
+              format: 'date-time',
+              description: 'Refund processing timestamp',
+            },
+            estimatedArrival: {
+              type: 'string',
+              format: 'date-time',
+              description: 'Estimated refund arrival date',
+            },
+          },
+        },
+        PaymentSchedule: {
+          type: 'object',
+          properties: {
+            id: {
+              type: 'string',
+              description: 'Payment schedule ID',
+            },
+            bookingId: {
+              type: 'string',
+              description: 'Associated booking ID',
+            },
+            totalAmount: {
+              type: 'number',
+              description: 'Total amount to be paid',
+            },
+            currency: {
+              type: 'string',
+              description: 'Payment currency',
+            },
+            status: {
+              type: 'string',
+              enum: ['active', 'completed', 'cancelled', 'overdue', 'failed'],
+              description: 'Payment schedule status',
+            },
+            payments: {
+              type: 'array',
+              items: {
+                $ref: '#/components/schemas/ScheduledPayment',
+              },
+            },
+          },
+        },
+        ScheduledPayment: {
+          type: 'object',
+          properties: {
+            id: {
+              type: 'string',
+              description: 'Scheduled payment ID',
+            },
+            amount: {
+              type: 'number',
+              description: 'Payment amount',
+            },
+            dueDate: {
+              type: 'string',
+              format: 'date-time',
+              description: 'Payment due date',
+            },
+            type: {
+              type: 'string',
+              enum: [
+                'deposit',
+                'balance',
+                'installment',
+                'penalty',
+                'fee',
+                'tax',
+              ],
+              description: 'Payment type',
+            },
+            status: {
+              type: 'string',
+              enum: [
+                'pending',
+                'processing',
+                'succeeded',
+                'failed',
+                'cancelled',
+              ],
+              description: 'Payment status',
+            },
+            description: {
+              type: 'string',
+              description: 'Payment description',
+            },
+          },
+        },
         // Pricing Schemas
         PriceCalculation: {
           type: 'object',

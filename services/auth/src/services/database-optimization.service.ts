@@ -127,7 +127,9 @@ class DatabaseOptimizationService {
                 select: {
                   id: true,
                   label: true,
-                  address: true,
+                  buildingNumber: true,
+                  street: true,
+                  address2: true,
                   city: true,
                   country: true,
                   isDefault: true,

@@ -58,7 +58,7 @@ export const isValidEmail = (email: string): boolean => {
  * Validate phone number format (E.164)
  */
 export const isValidPhoneNumber = (phone: string): boolean => {
-  const phoneRegex = /^\+[1-9]\d{1,14}$/;
+  const phoneRegex = /^\+[1-9]\d{6,14}$/; // Minimum 7 digits total (country code + number)
   return phoneRegex.test(phone);
 };
 

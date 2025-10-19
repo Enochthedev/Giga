@@ -1378,15 +1378,7 @@ export class UserController {
     }
   }
 
-<<<<<<< HEAD
   private async createRoleProfile(prisma: any, userId: string, role: RoleName) {
-=======
-  private async createRoleProfile(
-    prisma: unknown,
-    userId: string,
-    role: RoleName
-  ) {
->>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
     try {
       switch (role) {
         case 'VENDOR':
@@ -1444,6 +1436,603 @@ export class UserController {
     } catch (error) {
       console.error('Error creating role profile:', error);
       // Don't throw error, just log it
+    }
+  }
+
+  // Enhanced profile management methods
+  async updateUserProfile(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const updateData = req.body;
+
+      // Validate that user exists
+      const existingUser = await req._prisma.user.findUnique({
+        where: { id },
+        include: {
+          customerProfile: true,
+        },
+      });
+
+      if (!existingUser) {
+        return res.status(404).json({
+          success: false,
+          error: 'User not found',
+          timestamp: new Date().toISOString(),
+        });
+      }
+
+      // Prepare user update data
+      const userUpdateData: any = {};
+      const allowedUserFields = [
+        'firstName',
+        'lastName',
+        'dateOfBirth',
+        'gender',
+        'maritalStatus',
+        'bodyWeight',
+        'height',
+        'ageGroup',
+        'areasOfInterest',
+        'profilePicture',
+        'phone',
+      ];
+
+      for (const field of allowedUserFields) {
+        if (updateData[field] !== undefined) {
+          userUpdateData[field] = updateData[field];
+        }
+      }
+
+      // Update user record
+      const updatedUser = await req._prisma.user.update({
+        where: { id },
+        data: userUpdateData,
+        include: {
+          customerProfile: {
+            include: {
+              addresses: true,
+            },
+          },
+          roles: {
+            include: {
+              role: true,
+            },
+          },
+        },
+      });
+
+      // Log admin action
+      await this.logAdminAction(
+        req._prisma,
+        'UPDATE_USER_PROFILE',
+        req.user!.sub,
+        id,
+        {
+          updatedFields: Object.keys(userUpdateData),
+          userEmail: existingUser.email,
+        },
+        req.ip,
+        req.headers['user-agent']
+      );
+
+      res.json({
+        success: true,
+        data: {
+          user: {
+            id: updatedUser.id,
+            email: updatedUser.email,
+            firstName: updatedUser.firstName,
+            lastName: updatedUser.lastName,
+            phone: updatedUser.phone,
+            avatar: updatedUser.avatar,
+            dateOfBirth: updatedUser.dateOfBirth,
+            gender: updatedUser.gender,
+            maritalStatus: updatedUser.maritalStatus,
+            bodyWeight: updatedUser.bodyWeight,
+            height: updatedUser.height,
+            ageGroup: updatedUser.ageGroup,
+            areasOfInterest: updatedUser.areasOfInterest,
+            profilePicture: updatedUser.profilePicture,
+            isEmailVerified: updatedUser.isEmailVerified,
+            isPhoneVerified: updatedUser.isPhoneVerified,
+            isActive: updatedUser.isActive,
+            lastLoginAt: updatedUser.lastLoginAt,
+            createdAt: updatedUser.createdAt,
+            updatedAt: updatedUser.updatedAt,
+            customerProfile: updatedUser.customerProfile,
+          },
+        },
+        message: 'User profile updated successfully',
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error('Update user profile error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to update user profile',
+        timestamp: new Date().toISOString(),
+      });
+    }
+  }
+
+  async updateCustomerProfile(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const updateData = req.body;
+
+      // Validate that user exists
+      const existingUser = await req._prisma.user.findUnique({
+        where: { id },
+        include: {
+          customerProfile: true,
+        },
+      });
+
+      if (!existingUser) {
+        return res.status(404).json({
+          success: false,
+          error: 'User not found',
+          timestamp: new Date().toISOString(),
+        });
+      }
+
+      // Create customer profile if it doesn't exist
+      if (!existingUser.customerProfile) {
+        await req._prisma.customerProfile.create({
+          data: {
+            userId: id,
+          },
+        });
+      }
+
+      // Prepare customer profile update data
+      const profileUpdateData: any = {};
+      const allowedProfileFields = [
+        'occupation',
+        'company',
+        'emergencyContact',
+        'medicalInfo',
+        'socialMedia',
+        'preferences',
+      ];
+
+      for (const field of allowedProfileFields) {
+        if (updateData[field] !== undefined) {
+          profileUpdateData[field] = updateData[field];
+        }
+      }
+
+      // Update customer profile
+      const updatedProfile = await req._prisma.customerProfile.update({
+        where: { userId: id },
+        data: profileUpdateData,
+        include: {
+          addresses: true,
+          user: true,
+        },
+      });
+
+      // Log admin action
+      await this.logAdminAction(
+        req._prisma,
+        'UPDATE_CUSTOMER_PROFILE',
+        req.user!.sub,
+        id,
+        {
+          updatedFields: Object.keys(profileUpdateData),
+          userEmail: existingUser.email,
+        },
+        req.ip,
+        req.headers['user-agent']
+      );
+
+      res.json({
+        success: true,
+        data: {
+          customerProfile: updatedProfile,
+        },
+        message: 'Customer profile updated successfully',
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error('Update customer profile error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to update customer profile',
+        timestamp: new Date().toISOString(),
+      });
+    }
+  }
+
+  async addUserAddress(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const addressData = req.body;
+
+      // Validate that user exists and has customer profile
+      const existingUser = await req._prisma.user.findUnique({
+        where: { id },
+        include: {
+          customerProfile: true,
+        },
+      });
+
+      if (!existingUser) {
+        return res.status(404).json({
+          success: false,
+          error: 'User not found',
+          timestamp: new Date().toISOString(),
+        });
+      }
+
+      // Create customer profile if it doesn't exist
+      let customerProfile = existingUser.customerProfile;
+      if (!customerProfile) {
+        customerProfile = await req._prisma.customerProfile.create({
+          data: {
+            userId: id,
+          },
+        });
+      }
+
+      // If this is set as default, unset other default addresses
+      if (addressData.isDefault) {
+        await req._prisma.address.updateMany({
+          where: {
+            customerProfileId: customerProfile.id,
+          },
+          data: {
+            isDefault: false,
+          },
+        });
+      }
+
+      // Create new address
+      const newAddress = await req._prisma.address.create({
+        data: {
+          customerProfileId: customerProfile.id,
+          label: addressData.label,
+          name: addressData.name,
+          buildingNumber: addressData.buildingNumber,
+          street: addressData.street,
+          address2: addressData.address2,
+          city: addressData.city,
+          state: addressData.state,
+          zipCode: addressData.zipCode,
+          country: addressData.country,
+          phone: addressData.phone,
+          isDefault: addressData.isDefault || false,
+          latitude: addressData.latitude,
+          longitude: addressData.longitude,
+        },
+      });
+
+      // Log admin action
+      await this.logAdminAction(
+        req._prisma,
+        'ADD_USER_ADDRESS',
+        req.user!.sub,
+        id,
+        {
+          addressLabel: addressData.label,
+          userEmail: existingUser.email,
+        },
+        req.ip,
+        req.headers['user-agent']
+      );
+
+      res.status(201).json({
+        success: true,
+        data: {
+          address: newAddress,
+        },
+        message: 'Address added successfully',
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error('Add user address error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to add user address',
+        timestamp: new Date().toISOString(),
+      });
+    }
+  }
+
+  async updateUserAddress(req: Request, res: Response) {
+    try {
+      const { id, addressId } = req.params;
+      const updateData = req.body;
+
+      // Validate that address exists and belongs to user
+      const existingAddress = await req._prisma.address.findFirst({
+        where: {
+          id: addressId,
+          customerProfile: {
+            userId: id,
+          },
+        },
+        include: {
+          customerProfile: {
+            include: {
+              user: true,
+            },
+          },
+        },
+      });
+
+      if (!existingAddress) {
+        return res.status(404).json({
+          success: false,
+          error: 'Address not found',
+          timestamp: new Date().toISOString(),
+        });
+      }
+
+      // If this is set as default, unset other default addresses
+      if (updateData.isDefault) {
+        await req._prisma.address.updateMany({
+          where: {
+            customerProfileId: existingAddress.customerProfileId,
+            id: { not: addressId },
+          },
+          data: {
+            isDefault: false,
+          },
+        });
+      }
+
+      // Update address
+      const updatedAddress = await req._prisma.address.update({
+        where: { id: addressId },
+        data: updateData,
+      });
+
+      // Log admin action
+      await this.logAdminAction(
+        req._prisma,
+        'UPDATE_USER_ADDRESS',
+        req.user!.sub,
+        id,
+        {
+          addressId,
+          addressLabel: updatedAddress.label,
+          userEmail: existingAddress.customerProfile.user.email,
+        },
+        req.ip,
+        req.headers['user-agent']
+      );
+
+      res.json({
+        success: true,
+        data: {
+          address: updatedAddress,
+        },
+        message: 'Address updated successfully',
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error('Update user address error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to update user address',
+        timestamp: new Date().toISOString(),
+      });
+    }
+  }
+
+  async deleteUserAddress(req: Request, res: Response) {
+    try {
+      const { id, addressId } = req.params;
+
+      // Validate that address exists and belongs to user
+      const existingAddress = await req._prisma.address.findFirst({
+        where: {
+          id: addressId,
+          customerProfile: {
+            userId: id,
+          },
+        },
+        include: {
+          customerProfile: {
+            include: {
+              user: true,
+            },
+          },
+        },
+      });
+
+      if (!existingAddress) {
+        return res.status(404).json({
+          success: false,
+          error: 'Address not found',
+          timestamp: new Date().toISOString(),
+        });
+      }
+
+      // Delete address
+      await req._prisma.address.delete({
+        where: { id: addressId },
+      });
+
+      // Log admin action
+      await this.logAdminAction(
+        req._prisma,
+        'DELETE_USER_ADDRESS',
+        req.user!.sub,
+        id,
+        {
+          addressId,
+          addressLabel: existingAddress.label,
+          userEmail: existingAddress.customerProfile.user.email,
+        },
+        req.ip,
+        req.headers['user-agent']
+      );
+
+      res.json({
+        success: true,
+        message: 'Address deleted successfully',
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error('Delete user address error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to delete user address',
+        timestamp: new Date().toISOString(),
+      });
+    }
+  }
+
+  async getUserAddresses(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+
+      // Get user addresses
+      const user = await req._prisma.user.findUnique({
+        where: { id },
+        include: {
+          customerProfile: {
+            include: {
+              addresses: {
+                orderBy: [{ isDefault: 'desc' }, { createdAt: 'desc' }],
+              },
+            },
+          },
+        },
+      });
+
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          error: 'User not found',
+          timestamp: new Date().toISOString(),
+        });
+      }
+
+      const addresses = user.customerProfile?.addresses || [];
+
+      // Log admin action
+      await this.logAdminAction(
+        req._prisma,
+        'VIEW_USER_ADDRESSES',
+        req.user!.sub,
+        id,
+        {
+          addressCount: addresses.length,
+          userEmail: user.email,
+        },
+        req.ip,
+        req.headers['user-agent']
+      );
+
+      res.json({
+        success: true,
+        data: {
+          addresses,
+        },
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error('Get user addresses error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to get user addresses',
+        timestamp: new Date().toISOString(),
+      });
+    }
+  }
+
+  async getEnhancedUserProfile(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+
+      const user = await req._prisma.user.findUnique({
+        where: { id },
+        include: {
+          roles: {
+            include: {
+              role: true,
+            },
+          },
+          customerProfile: {
+            include: {
+              addresses: {
+                orderBy: [{ isDefault: 'desc' }, { createdAt: 'desc' }],
+              },
+            },
+          },
+          vendorProfile: true,
+          driverProfile: true,
+          hostProfile: true,
+          advertiserProfile: true,
+        },
+      });
+
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          error: 'User not found',
+          timestamp: new Date().toISOString(),
+        });
+      }
+
+      // Log admin action
+      await this.logAdminAction(
+        req._prisma,
+        'VIEW_ENHANCED_USER_PROFILE',
+        req.user!.sub,
+        id,
+        { userEmail: user.email },
+        req.ip,
+        req.headers['user-agent']
+      );
+
+      res.json({
+        success: true,
+        data: {
+          user: {
+            id: user.id,
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            phone: user.phone,
+            avatar: user.avatar,
+            dateOfBirth: user.dateOfBirth,
+            gender: user.gender,
+            maritalStatus: user.maritalStatus,
+            bodyWeight: user.bodyWeight,
+            height: user.height,
+            ageGroup: user.ageGroup,
+            areasOfInterest: user.areasOfInterest,
+            profilePicture: user.profilePicture,
+            roles: user.roles.map((ur: any) => ur.role.name),
+            activeRole: user.activeRole,
+            isActive: user.isActive,
+            isEmailVerified: user.isEmailVerified,
+            isPhoneVerified: user.isPhoneVerified,
+            lastLoginAt: user.lastLoginAt,
+            createdAt: user.createdAt,
+            updatedAt: user.updatedAt,
+            profiles: {
+              customer: user.customerProfile,
+              vendor: user.vendorProfile,
+              driver: user.driverProfile,
+              host: user.hostProfile,
+              advertiser: user.advertiserProfile,
+            },
+          },
+        },
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error('Get enhanced user profile error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to get enhanced user profile',
+        timestamp: new Date().toISOString(),
+      });
     }
   }
 }

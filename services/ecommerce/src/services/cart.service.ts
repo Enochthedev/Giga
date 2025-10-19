@@ -134,6 +134,118 @@ export class CartService {
   }
 
   /**
+   * Add multiple items to cart in bulk
+   */
+  async addBulkItems(
+    customerId: string,
+    items: Array<{ productId: string; quantity: number }>
+  ): Promise<Cart> {
+    // Get current cart
+    const cart = await this.getCart(customerId);
+
+    // Track results for logging
+    const results = {
+      processed: 0,
+      added: 0,
+      updated: 0,
+      skipped: 0,
+      errors: [] as string[],
+    };
+
+    // Process each item
+    for (const item of items) {
+      try {
+        results.processed++;
+
+        // Validate product exists and is available
+        const product = await this.getProductForCart(item.productId);
+        if (!product) {
+          results.errors.push(`Product ${item.productId} not found`);
+          results.skipped++;
+          continue;
+        }
+
+        if (!product.isActive) {
+          results.errors.push(`Product ${item.productId} is not available`);
+          results.skipped++;
+          continue;
+        }
+
+        // Check if item already exists in cart
+        const existingItemIndex = cart.items.findIndex(
+          cartItem => cartItem.productId === item.productId
+        );
+
+        if (existingItemIndex >= 0) {
+          // Update existing item quantity
+          const newQuantity =
+            cart.items[existingItemIndex].quantity + item.quantity;
+
+          // Validate inventory for new total quantity
+          try {
+            await this.validateInventoryAvailability(product, newQuantity);
+            cart.items[existingItemIndex].quantity = newQuantity;
+            cart.items[existingItemIndex].product = product; // Update product data
+            results.updated++;
+          } catch (inventoryError) {
+            results.errors.push(
+              `Insufficient stock for ${item.productId}: ${inventoryError instanceof Error ? inventoryError.message : 'Unknown error'}`
+            );
+            results.skipped++;
+          }
+        } else {
+          // Validate inventory for new item
+          try {
+            await this.validateInventoryAvailability(product, item.quantity);
+
+            // Add new item to cart
+            const cartItem: CartItem = {
+              id: uuidv4(),
+              productId: item.productId,
+              quantity: item.quantity,
+              price: product.price, // Store current price
+              product: product,
+            };
+            cart.items.push(cartItem);
+            results.added++;
+          } catch (inventoryError) {
+            results.errors.push(
+              `Insufficient stock for ${item.productId}: ${inventoryError instanceof Error ? inventoryError.message : 'Unknown error'}`
+            );
+            results.skipped++;
+          }
+        }
+      } catch (error) {
+        console.error(
+          `Error processing bulk cart item ${item.productId}:`,
+          error
+        );
+        results.errors.push(
+          `Error processing ${item.productId}: ${error instanceof Error ? error.message : 'Unknown error'}`
+        );
+        results.skipped++;
+      }
+    }
+
+    // Log bulk operation results
+    console.log('Bulk cart operation completed:', results);
+
+    // If all items failed, throw an error
+    if (results.skipped === results.processed) {
+      throw new Error(
+        `All items failed to be added: ${results.errors.join(', ')}`
+      );
+    }
+
+    // Recalculate totals and save
+    this.calculateCartTotals(cart);
+    cart.updatedAt = new Date().toISOString();
+
+    await this.saveCart(cart);
+    return cart;
+  }
+
+  /**
    * Update item quantity in cart
    */
   async updateItemQuantity(

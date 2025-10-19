@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import * as swaggerUi from 'swagger-ui-express';
 import { getConfig } from './config';
 import { DeliveryController } from './controllers/delivery.controller';
+import { PrismaClient } from './generated/prisma-client';
 import { createLogger, requestLogger } from './lib/logger';
 import { connectDatabase } from './lib/prisma';
 import { connectRedis } from './lib/redis';
@@ -157,11 +158,7 @@ export async function createApp(): Promise<express.Application> {
   app.use('/api/v1', createDeliveryRoutes(deliveryController));
   // Note: In a real implementation, these would be properly initialized
   // For now, we'll create placeholder instances that would be replaced with actual instances
-<<<<<<< HEAD
-  const prismaClient = {} as any; // This would be the actual Prisma client instance
-=======
-  const prismaClient = {} as unknown; // This would be the actual Prisma client instance
->>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
+  const prismaClient = {} as PrismaClient; // This would be the actual Prisma client instance
   const loggerInstance = createLogger('RetentionRoutes'); // Actual logger instance
 
   app.use(

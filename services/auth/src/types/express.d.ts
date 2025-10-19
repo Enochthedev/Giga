@@ -14,6 +14,7 @@ declare global {
         isEmailVerified?: boolean;
         isPhoneVerified?: boolean;
       };
+      userRoles?: string[];
       deviceInfo?: DeviceInfo;
       clientIp?: string;
       deviceFingerprint?: string;

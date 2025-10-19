@@ -219,7 +219,8 @@ async function createCustomerProfile(userId: string) {
     {
       label: 'Home',
       name: 'John Doe',
-      address: '123 Main Street',
+      buildingNumber: '123',
+      street: 'Main Street',
       address2: 'Apt 4B',
       city: 'New York',
       state: 'NY',
@@ -231,7 +232,8 @@ async function createCustomerProfile(userId: string) {
     {
       label: 'Work',
       name: 'John Doe',
-      address: '456 Business Ave',
+      buildingNumber: '456',
+      street: 'Business Ave',
       city: 'New York',
       state: 'NY',
       zipCode: '10002',

@@ -176,7 +176,7 @@ export class BookingController {
   }
 
   /**
-   * Cancel booking
+   * Cancel booking with policy enforcement
    * DELETE /api/bookings/{bookingId}
    */
   async cancelBooking(
@@ -191,14 +191,170 @@ export class BookingController {
       }
 
       const { bookingId } = req.params;
-      const { reason } = req.body;
+      const { reason, requestedBy, refundAmount, metadata } = req.body;
 
-      const result = await this.bookingService.cancelBooking(bookingId, reason);
+      const cancellationRequest = {
+        reason: reason || 'Guest requested cancellation',
+        requestedBy: requestedBy || 'guest',
+        refundAmount,
+        metadata,
+      };
+
+      const result = await this.bookingService.cancelBooking(
+        bookingId,
+        cancellationRequest
+      );
 
       res.json({
         success: true,
         data: result,
         message: 'Booking cancelled successfully',
+        timestamp: new Date(),
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * Modify booking
+   * PUT /api/bookings/{bookingId}/modify
+   */
+  async modifyBooking(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        throw new ValidationError('Validation failed', errors.array());
+      }
+
+      const { bookingId } = req.params;
+
+      // Convert date strings to Date objects if present
+      const modificationRequest = {
+        ...req.body,
+        ...(req.body.checkInDate && {
+          checkInDate: new Date(req.body.checkInDate),
+        }),
+        ...(req.body.checkOutDate && {
+          checkOutDate: new Date(req.body.checkOutDate),
+        }),
+      };
+
+      const result = await this.bookingService.modifyBooking(
+        bookingId,
+        modificationRequest
+      );
+
+      res.json({
+        success: true,
+        data: result,
+        message: 'Booking modified successfully',
+        timestamp: new Date(),
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * Validate booking modification
+   * POST /api/bookings/{bookingId}/validate-modification
+   */
+  async validateBookingModification(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        throw new ValidationError('Validation failed', errors.array());
+      }
+
+      const { bookingId } = req.params;
+
+      const modificationRequest = {
+        ...req.body,
+        ...(req.body.checkInDate && {
+          checkInDate: new Date(req.body.checkInDate),
+        }),
+        ...(req.body.checkOutDate && {
+          checkOutDate: new Date(req.body.checkOutDate),
+        }),
+      };
+
+      const validation = await this.bookingService.validateBookingModification(
+        bookingId,
+        modificationRequest
+      );
+
+      res.json({
+        success: true,
+        data: validation,
+        timestamp: new Date(),
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * Get booking modification options
+   * GET /api/bookings/{bookingId}/modification-options
+   */
+  async getBookingModificationOptions(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        throw new ValidationError('Validation failed', errors.array());
+      }
+
+      const { bookingId } = req.params;
+
+      const options =
+        await this.bookingService.getBookingModificationOptions(bookingId);
+
+      res.json({
+        success: true,
+        data: options,
+        timestamp: new Date(),
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * Get cancellation information and refund calculation
+   * GET /api/bookings/{bookingId}/cancellation-info
+   */
+  async getCancellationInfo(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        throw new ValidationError('Validation failed', errors.array());
+      }
+
+      const { bookingId } = req.params;
+
+      const cancellationInfo =
+        await this.bookingService.getCancellationInfo(bookingId);
+
+      res.json({
+        success: true,
+        data: cancellationInfo,
         timestamp: new Date(),
       });
     } catch (error) {
@@ -461,9 +617,103 @@ export const bookingValidation = {
       .notEmpty()
       .withMessage('Booking ID is required'),
     body('reason')
+      .isString()
+      .notEmpty()
+      .withMessage('Cancellation reason is required'),
+    body('requestedBy')
+      .isString()
+      .notEmpty()
+      .withMessage('Requested by is required'),
+    body('refundAmount')
+      .optional()
+      .isNumeric()
+      .withMessage('Refund amount must be a number'),
+    body('metadata')
+      .optional()
+      .isObject()
+      .withMessage('Metadata must be an object'),
+  ],
+
+  modifyBooking: [
+    param('bookingId')
+      .isString()
+      .notEmpty()
+      .withMessage('Booking ID is required'),
+    body('reason')
+      .isString()
+      .notEmpty()
+      .withMessage('Modification reason is required'),
+    body('requestedBy')
+      .isString()
+      .notEmpty()
+      .withMessage('Requested by is required'),
+    body('checkInDate')
+      .optional()
+      .isISO8601()
+      .withMessage('Valid check-in date is required'),
+    body('checkOutDate')
+      .optional()
+      .isISO8601()
+      .withMessage('Valid check-out date is required'),
+    body('rooms').optional().isArray().withMessage('Rooms must be an array'),
+    body('rooms.*.roomTypeId')
       .optional()
       .isString()
-      .withMessage('Cancellation reason must be a string'),
+      .notEmpty()
+      .withMessage('Room type ID is required'),
+    body('rooms.*.quantity')
+      .optional()
+      .isInt({ min: 1 })
+      .withMessage('Room quantity must be at least 1'),
+    body('rooms.*.guestCount')
+      .optional()
+      .isInt({ min: 1 })
+      .withMessage('Guest count must be at least 1'),
+    body('primaryGuest')
+      .optional()
+      .isObject()
+      .withMessage('Primary guest must be an object'),
+    body('additionalGuests')
+      .optional()
+      .isArray()
+      .withMessage('Additional guests must be an array'),
+    body('specialRequests')
+      .optional()
+      .isString()
+      .withMessage('Special requests must be a string'),
+    body('preferences')
+      .optional()
+      .isObject()
+      .withMessage('Preferences must be an object'),
+  ],
+
+  validateBookingModification: [
+    param('bookingId')
+      .isString()
+      .notEmpty()
+      .withMessage('Booking ID is required'),
+    body('reason')
+      .isString()
+      .notEmpty()
+      .withMessage('Modification reason is required'),
+    body('requestedBy')
+      .isString()
+      .notEmpty()
+      .withMessage('Requested by is required'),
+  ],
+
+  getBookingModificationOptions: [
+    param('bookingId')
+      .isString()
+      .notEmpty()
+      .withMessage('Booking ID is required'),
+  ],
+
+  getCancellationInfo: [
+    param('bookingId')
+      .isString()
+      .notEmpty()
+      .withMessage('Booking ID is required'),
   ],
 
   getUserBookings: [

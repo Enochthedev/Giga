@@ -67,9 +67,11 @@ export interface ProviderResponse {
   cost?: number;
   metadata?: Record<string, any>;
   error?: NotificationError;
+  provider?: string;
+  timestamp?: Date;
 }
 
-export interface EmailProviderConfig extends ProviderConfig {
+export interface EmailProviderConfiguration extends ProviderConfig {
   type: NotificationChannel.EMAIL;
   credentials: {
     apiKey?: string;
@@ -197,16 +199,5 @@ export interface ProviderQuota {
   resetAt: Date;
   isExceeded: boolean;
 }
-<<<<<<< HEAD
-=======
 
-export interface WebhookEvent {
-  provider: string;
-  eventType: string;
-  messageId: string;
-  timestamp: Date;
-  data: Record<string, unknown>;
-  signature?: string;
-  verified: boolean;
-}
->>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
+// WebhookEvent is now defined in webhook.types.ts to avoid duplication

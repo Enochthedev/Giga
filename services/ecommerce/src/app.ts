@@ -18,6 +18,7 @@ import {
 } from './middleware/validation.middleware';
 import batchRoutes from './routes/batch';
 import { cartRoutes } from './routes/cart';
+import { checkoutRoutes } from './routes/checkout';
 import deliveryTrackingRoutes from './routes/delivery-tracking';
 import { orderRoutes } from './routes/orders';
 import productVariantRoutes from './routes/product-variants';
@@ -114,6 +115,7 @@ app.get('/health', async (req, res) => {
 // Routes
 app.use('/api/v1/products', productRoutes);
 app.use('/api/v1/cart', cartRoutes);
+app.use('/api/v1/checkout', checkoutRoutes);
 app.use('/api/v1/orders', orderRoutes);
 app.use('/api/v1/vendor', vendorRoutes);
 app.use('/api/v1/batch', batchRoutes);

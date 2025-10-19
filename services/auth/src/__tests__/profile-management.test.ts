@@ -288,7 +288,8 @@ describe('Profile Management', () => {
     it('should add customer address', () => {
       const addressData = {
         label: 'Home',
-        address: '123 Main Street',
+        buildingNumber: '123',
+        street: 'Main Street',
         city: 'New York',
         country: 'United States',
         isDefault: true,
@@ -312,7 +313,8 @@ describe('Profile Management', () => {
         .set('Authorization', `Bearer ${accessToken}`)
         .send({
           label: 'Work',
-          address: '456 Business Ave',
+          buildingNumber: '456',
+          street: 'Business Ave',
           city: 'New York',
           country: 'United States',
         });
@@ -322,7 +324,8 @@ describe('Profile Management', () => {
       // Then update it
       const updateData = {
         label: 'Office',
-        address: '456 Business Avenue',
+        buildingNumber: '456',
+        street: 'Business Avenue',
         isDefault: true,
       };
 
@@ -344,7 +347,8 @@ describe('Profile Management', () => {
         .set('Authorization', `Bearer ${accessToken}`)
         .send({
           label: 'Temp',
-          address: '789 Temp Street',
+          buildingNumber: '789',
+          street: 'Temp Street',
           city: 'New York',
           country: 'United States',
         });

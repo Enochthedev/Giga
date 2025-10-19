@@ -865,13 +865,29 @@ For API support, please contact the development team or refer to the integration
               type: 'string',
               example: 'Home',
             },
-            address: {
+            buildingNumber: {
               type: 'string',
-              example: '123 Main Street',
+              example: '123',
+            },
+            street: {
+              type: 'string',
+              example: 'Main Street',
+            },
+            address2: {
+              type: 'string',
+              example: 'Apt 4B',
             },
             city: {
               type: 'string',
               example: 'New York',
+            },
+            state: {
+              type: 'string',
+              example: 'NY',
+            },
+            zipCode: {
+              type: 'string',
+              example: '10001',
             },
             country: {
               type: 'string',

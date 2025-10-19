@@ -128,6 +128,33 @@ export namespace $Enums {
 export type Gender = (typeof Gender)[keyof typeof Gender]
 
 
+export const MaritalStatus: {
+  SINGLE: 'SINGLE',
+  MARRIED: 'MARRIED',
+  DIVORCED: 'DIVORCED',
+  WIDOWED: 'WIDOWED',
+  SEPARATED: 'SEPARATED',
+  DOMESTIC_PARTNERSHIP: 'DOMESTIC_PARTNERSHIP',
+  PREFER_NOT_TO_SAY: 'PREFER_NOT_TO_SAY'
+};
+
+export type MaritalStatus = (typeof MaritalStatus)[keyof typeof MaritalStatus]
+
+
+export const AgeGroup: {
+  UNDER_18: 'UNDER_18',
+  AGE_18_24: 'AGE_18_24',
+  AGE_25_34: 'AGE_25_34',
+  AGE_35_44: 'AGE_35_44',
+  AGE_45_54: 'AGE_45_54',
+  AGE_55_64: 'AGE_55_64',
+  AGE_65_PLUS: 'AGE_65_PLUS',
+  PREFER_NOT_TO_SAY: 'PREFER_NOT_TO_SAY'
+};
+
+export type AgeGroup = (typeof AgeGroup)[keyof typeof AgeGroup]
+
+
 export const RoleName: {
   CUSTOMER: 'CUSTOMER',
   VENDOR: 'VENDOR',
@@ -177,6 +204,14 @@ export type HostTier = (typeof HostTier)[keyof typeof HostTier]
 export type Gender = $Enums.Gender
 
 export const Gender: typeof $Enums.Gender
+
+export type MaritalStatus = $Enums.MaritalStatus
+
+export const MaritalStatus: typeof $Enums.MaritalStatus
+
+export type AgeGroup = $Enums.AgeGroup
+
+export const AgeGroup: typeof $Enums.AgeGroup
 
 export type RoleName = $Enums.RoleName
 
@@ -2798,8 +2833,20 @@ export namespace Prisma {
 
   export type AggregateUser = {
     _count: UserCountAggregateOutputType | null
+    _avg: UserAvgAggregateOutputType | null
+    _sum: UserSumAggregateOutputType | null
     _min: UserMinAggregateOutputType | null
     _max: UserMaxAggregateOutputType | null
+  }
+
+  export type UserAvgAggregateOutputType = {
+    bodyWeight: number | null
+    height: number | null
+  }
+
+  export type UserSumAggregateOutputType = {
+    bodyWeight: number | null
+    height: number | null
   }
 
   export type UserMinAggregateOutputType = {
@@ -2812,6 +2859,11 @@ export namespace Prisma {
     avatar: string | null
     dateOfBirth: Date | null
     gender: $Enums.Gender | null
+    maritalStatus: $Enums.MaritalStatus | null
+    bodyWeight: number | null
+    height: number | null
+    ageGroup: $Enums.AgeGroup | null
+    profilePicture: string | null
     isEmailVerified: boolean | null
     isPhoneVerified: boolean | null
     isActive: boolean | null
@@ -2831,6 +2883,11 @@ export namespace Prisma {
     avatar: string | null
     dateOfBirth: Date | null
     gender: $Enums.Gender | null
+    maritalStatus: $Enums.MaritalStatus | null
+    bodyWeight: number | null
+    height: number | null
+    ageGroup: $Enums.AgeGroup | null
+    profilePicture: string | null
     isEmailVerified: boolean | null
     isPhoneVerified: boolean | null
     isActive: boolean | null
@@ -2850,6 +2907,12 @@ export namespace Prisma {
     avatar: number
     dateOfBirth: number
     gender: number
+    maritalStatus: number
+    bodyWeight: number
+    height: number
+    ageGroup: number
+    areasOfInterest: number
+    profilePicture: number
     isEmailVerified: number
     isPhoneVerified: number
     isActive: number
@@ -2861,6 +2924,16 @@ export namespace Prisma {
   }
 
 
+  export type UserAvgAggregateInputType = {
+    bodyWeight?: true
+    height?: true
+  }
+
+  export type UserSumAggregateInputType = {
+    bodyWeight?: true
+    height?: true
+  }
+
   export type UserMinAggregateInputType = {
     id?: true
     email?: true
@@ -2871,6 +2944,11 @@ export namespace Prisma {
     avatar?: true
     dateOfBirth?: true
     gender?: true
+    maritalStatus?: true
+    bodyWeight?: true
+    height?: true
+    ageGroup?: true
+    profilePicture?: true
     isEmailVerified?: true
     isPhoneVerified?: true
     isActive?: true
@@ -2890,6 +2968,11 @@ export namespace Prisma {
     avatar?: true
     dateOfBirth?: true
     gender?: true
+    maritalStatus?: true
+    bodyWeight?: true
+    height?: true
+    ageGroup?: true
+    profilePicture?: true
     isEmailVerified?: true
     isPhoneVerified?: true
     isActive?: true
@@ -2909,6 +2992,12 @@ export namespace Prisma {
     avatar?: true
     dateOfBirth?: true
     gender?: true
+    maritalStatus?: true
+    bodyWeight?: true
+    height?: true
+    ageGroup?: true
+    areasOfInterest?: true
+    profilePicture?: true
     isEmailVerified?: true
     isPhoneVerified?: true
     isActive?: true
@@ -2957,6 +3046,18 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
+     * Select which fields to average
+    **/
+    _avg?: UserAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: UserSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
      * Select which fields to find the minimum value
     **/
     _min?: UserMinAggregateInputType
@@ -2987,6 +3088,8 @@ export namespace Prisma {
     take?: number
     skip?: number
     _count?: UserCountAggregateInputType | true
+    _avg?: UserAvgAggregateInputType
+    _sum?: UserSumAggregateInputType
     _min?: UserMinAggregateInputType
     _max?: UserMaxAggregateInputType
   }
@@ -3001,6 +3104,12 @@ export namespace Prisma {
     avatar: string | null
     dateOfBirth: Date | null
     gender: $Enums.Gender | null
+    maritalStatus: $Enums.MaritalStatus | null
+    bodyWeight: number | null
+    height: number | null
+    ageGroup: $Enums.AgeGroup | null
+    areasOfInterest: string[]
+    profilePicture: string | null
     isEmailVerified: boolean
     isPhoneVerified: boolean
     isActive: boolean
@@ -3009,6 +3118,8 @@ export namespace Prisma {
     updatedAt: Date
     activeRole: $Enums.RoleName
     _count: UserCountAggregateOutputType | null
+    _avg: UserAvgAggregateOutputType | null
+    _sum: UserSumAggregateOutputType | null
     _min: UserMinAggregateOutputType | null
     _max: UserMaxAggregateOutputType | null
   }
@@ -3037,6 +3148,12 @@ export namespace Prisma {
     avatar?: boolean
     dateOfBirth?: boolean
     gender?: boolean
+    maritalStatus?: boolean
+    bodyWeight?: boolean
+    height?: boolean
+    ageGroup?: boolean
+    areasOfInterest?: boolean
+    profilePicture?: boolean
     isEmailVerified?: boolean
     isPhoneVerified?: boolean
     isActive?: boolean
@@ -3074,6 +3191,12 @@ export namespace Prisma {
     avatar?: boolean
     dateOfBirth?: boolean
     gender?: boolean
+    maritalStatus?: boolean
+    bodyWeight?: boolean
+    height?: boolean
+    ageGroup?: boolean
+    areasOfInterest?: boolean
+    profilePicture?: boolean
     isEmailVerified?: boolean
     isPhoneVerified?: boolean
     isActive?: boolean
@@ -3093,6 +3216,12 @@ export namespace Prisma {
     avatar?: boolean
     dateOfBirth?: boolean
     gender?: boolean
+    maritalStatus?: boolean
+    bodyWeight?: boolean
+    height?: boolean
+    ageGroup?: boolean
+    areasOfInterest?: boolean
+    profilePicture?: boolean
     isEmailVerified?: boolean
     isPhoneVerified?: boolean
     isActive?: boolean
@@ -3155,6 +3284,12 @@ export namespace Prisma {
       avatar: string | null
       dateOfBirth: Date | null
       gender: $Enums.Gender | null
+      maritalStatus: $Enums.MaritalStatus | null
+      bodyWeight: number | null
+      height: number | null
+      ageGroup: $Enums.AgeGroup | null
+      areasOfInterest: string[]
+      profilePicture: string | null
       isEmailVerified: boolean
       isPhoneVerified: boolean
       isActive: boolean
@@ -3581,6 +3716,12 @@ export namespace Prisma {
     readonly avatar: FieldRef<"User", 'String'>
     readonly dateOfBirth: FieldRef<"User", 'DateTime'>
     readonly gender: FieldRef<"User", 'Gender'>
+    readonly maritalStatus: FieldRef<"User", 'MaritalStatus'>
+    readonly bodyWeight: FieldRef<"User", 'Float'>
+    readonly height: FieldRef<"User", 'Float'>
+    readonly ageGroup: FieldRef<"User", 'AgeGroup'>
+    readonly areasOfInterest: FieldRef<"User", 'String[]'>
+    readonly profilePicture: FieldRef<"User", 'String'>
     readonly isEmailVerified: FieldRef<"User", 'Boolean'>
     readonly isPhoneVerified: FieldRef<"User", 'Boolean'>
     readonly isActive: FieldRef<"User", 'Boolean'>
@@ -7085,6 +7226,8 @@ export namespace Prisma {
     membershipTier: string | null
     totalOrders: number | null
     totalSpent: number | null
+    occupation: string | null
+    company: string | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -7096,6 +7239,8 @@ export namespace Prisma {
     membershipTier: string | null
     totalOrders: number | null
     totalSpent: number | null
+    occupation: string | null
+    company: string | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -7108,6 +7253,11 @@ export namespace Prisma {
     membershipTier: number
     totalOrders: number
     totalSpent: number
+    occupation: number
+    company: number
+    emergencyContact: number
+    medicalInfo: number
+    socialMedia: number
     createdAt: number
     updatedAt: number
     _all: number
@@ -7133,6 +7283,8 @@ export namespace Prisma {
     membershipTier?: true
     totalOrders?: true
     totalSpent?: true
+    occupation?: true
+    company?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -7144,6 +7296,8 @@ export namespace Prisma {
     membershipTier?: true
     totalOrders?: true
     totalSpent?: true
+    occupation?: true
+    company?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -7156,6 +7310,11 @@ export namespace Prisma {
     membershipTier?: true
     totalOrders?: true
     totalSpent?: true
+    occupation?: true
+    company?: true
+    emergencyContact?: true
+    medicalInfo?: true
+    socialMedia?: true
     createdAt?: true
     updatedAt?: true
     _all?: true
@@ -7255,6 +7414,11 @@ export namespace Prisma {
     membershipTier: string
     totalOrders: number
     totalSpent: number
+    occupation: string | null
+    company: string | null
+    emergencyContact: JsonValue | null
+    medicalInfo: JsonValue | null
+    socialMedia: JsonValue | null
     createdAt: Date
     updatedAt: Date
     _count: CustomerProfileCountAggregateOutputType | null
@@ -7286,6 +7450,11 @@ export namespace Prisma {
     membershipTier?: boolean
     totalOrders?: boolean
     totalSpent?: boolean
+    occupation?: boolean
+    company?: boolean
+    emergencyContact?: boolean
+    medicalInfo?: boolean
+    socialMedia?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     user?: boolean | UserDefaultArgs<ExtArgs>
@@ -7301,6 +7470,11 @@ export namespace Prisma {
     membershipTier?: boolean
     totalOrders?: boolean
     totalSpent?: boolean
+    occupation?: boolean
+    company?: boolean
+    emergencyContact?: boolean
+    medicalInfo?: boolean
+    socialMedia?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     user?: boolean | UserDefaultArgs<ExtArgs>
@@ -7314,6 +7488,11 @@ export namespace Prisma {
     membershipTier?: boolean
     totalOrders?: boolean
     totalSpent?: boolean
+    occupation?: boolean
+    company?: boolean
+    emergencyContact?: boolean
+    medicalInfo?: boolean
+    socialMedia?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
@@ -7341,6 +7520,11 @@ export namespace Prisma {
       membershipTier: string
       totalOrders: number
       totalSpent: number
+      occupation: string | null
+      company: string | null
+      emergencyContact: Prisma.JsonValue | null
+      medicalInfo: Prisma.JsonValue | null
+      socialMedia: Prisma.JsonValue | null
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["customerProfile"]>
@@ -7745,6 +7929,11 @@ export namespace Prisma {
     readonly membershipTier: FieldRef<"CustomerProfile", 'String'>
     readonly totalOrders: FieldRef<"CustomerProfile", 'Int'>
     readonly totalSpent: FieldRef<"CustomerProfile", 'Float'>
+    readonly occupation: FieldRef<"CustomerProfile", 'String'>
+    readonly company: FieldRef<"CustomerProfile", 'String'>
+    readonly emergencyContact: FieldRef<"CustomerProfile", 'Json'>
+    readonly medicalInfo: FieldRef<"CustomerProfile", 'Json'>
+    readonly socialMedia: FieldRef<"CustomerProfile", 'Json'>
     readonly createdAt: FieldRef<"CustomerProfile", 'DateTime'>
     readonly updatedAt: FieldRef<"CustomerProfile", 'DateTime'>
   }
@@ -12353,8 +12542,20 @@ export namespace Prisma {
 
   export type AggregateAddress = {
     _count: AddressCountAggregateOutputType | null
+    _avg: AddressAvgAggregateOutputType | null
+    _sum: AddressSumAggregateOutputType | null
     _min: AddressMinAggregateOutputType | null
     _max: AddressMaxAggregateOutputType | null
+  }
+
+  export type AddressAvgAggregateOutputType = {
+    latitude: number | null
+    longitude: number | null
+  }
+
+  export type AddressSumAggregateOutputType = {
+    latitude: number | null
+    longitude: number | null
   }
 
   export type AddressMinAggregateOutputType = {
@@ -12362,7 +12563,8 @@ export namespace Prisma {
     customerProfileId: string | null
     label: string | null
     name: string | null
-    address: string | null
+    buildingNumber: string | null
+    street: string | null
     address2: string | null
     city: string | null
     state: string | null
@@ -12370,6 +12572,8 @@ export namespace Prisma {
     country: string | null
     phone: string | null
     isDefault: boolean | null
+    latitude: number | null
+    longitude: number | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -12379,7 +12583,8 @@ export namespace Prisma {
     customerProfileId: string | null
     label: string | null
     name: string | null
-    address: string | null
+    buildingNumber: string | null
+    street: string | null
     address2: string | null
     city: string | null
     state: string | null
@@ -12387,6 +12592,8 @@ export namespace Prisma {
     country: string | null
     phone: string | null
     isDefault: boolean | null
+    latitude: number | null
+    longitude: number | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -12396,7 +12603,8 @@ export namespace Prisma {
     customerProfileId: number
     label: number
     name: number
-    address: number
+    buildingNumber: number
+    street: number
     address2: number
     city: number
     state: number
@@ -12404,18 +12612,31 @@ export namespace Prisma {
     country: number
     phone: number
     isDefault: number
+    latitude: number
+    longitude: number
     createdAt: number
     updatedAt: number
     _all: number
   }
 
 
+  export type AddressAvgAggregateInputType = {
+    latitude?: true
+    longitude?: true
+  }
+
+  export type AddressSumAggregateInputType = {
+    latitude?: true
+    longitude?: true
+  }
+
   export type AddressMinAggregateInputType = {
     id?: true
     customerProfileId?: true
     label?: true
     name?: true
-    address?: true
+    buildingNumber?: true
+    street?: true
     address2?: true
     city?: true
     state?: true
@@ -12423,6 +12644,8 @@ export namespace Prisma {
     country?: true
     phone?: true
     isDefault?: true
+    latitude?: true
+    longitude?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -12432,7 +12655,8 @@ export namespace Prisma {
     customerProfileId?: true
     label?: true
     name?: true
-    address?: true
+    buildingNumber?: true
+    street?: true
     address2?: true
     city?: true
     state?: true
@@ -12440,6 +12664,8 @@ export namespace Prisma {
     country?: true
     phone?: true
     isDefault?: true
+    latitude?: true
+    longitude?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -12449,7 +12675,8 @@ export namespace Prisma {
     customerProfileId?: true
     label?: true
     name?: true
-    address?: true
+    buildingNumber?: true
+    street?: true
     address2?: true
     city?: true
     state?: true
@@ -12457,6 +12684,8 @@ export namespace Prisma {
     country?: true
     phone?: true
     isDefault?: true
+    latitude?: true
+    longitude?: true
     createdAt?: true
     updatedAt?: true
     _all?: true
@@ -12500,6 +12729,18 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
+     * Select which fields to average
+    **/
+    _avg?: AddressAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: AddressSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
      * Select which fields to find the minimum value
     **/
     _min?: AddressMinAggregateInputType
@@ -12530,6 +12771,8 @@ export namespace Prisma {
     take?: number
     skip?: number
     _count?: AddressCountAggregateInputType | true
+    _avg?: AddressAvgAggregateInputType
+    _sum?: AddressSumAggregateInputType
     _min?: AddressMinAggregateInputType
     _max?: AddressMaxAggregateInputType
   }
@@ -12539,7 +12782,8 @@ export namespace Prisma {
     customerProfileId: string
     label: string
     name: string | null
-    address: string
+    buildingNumber: string | null
+    street: string
     address2: string | null
     city: string
     state: string | null
@@ -12547,9 +12791,13 @@ export namespace Prisma {
     country: string
     phone: string | null
     isDefault: boolean
+    latitude: number | null
+    longitude: number | null
     createdAt: Date
     updatedAt: Date
     _count: AddressCountAggregateOutputType | null
+    _avg: AddressAvgAggregateOutputType | null
+    _sum: AddressSumAggregateOutputType | null
     _min: AddressMinAggregateOutputType | null
     _max: AddressMaxAggregateOutputType | null
   }
@@ -12573,7 +12821,8 @@ export namespace Prisma {
     customerProfileId?: boolean
     label?: boolean
     name?: boolean
-    address?: boolean
+    buildingNumber?: boolean
+    street?: boolean
     address2?: boolean
     city?: boolean
     state?: boolean
@@ -12581,6 +12830,8 @@ export namespace Prisma {
     country?: boolean
     phone?: boolean
     isDefault?: boolean
+    latitude?: boolean
+    longitude?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     customerProfile?: boolean | CustomerProfileDefaultArgs<ExtArgs>
@@ -12591,7 +12842,8 @@ export namespace Prisma {
     customerProfileId?: boolean
     label?: boolean
     name?: boolean
-    address?: boolean
+    buildingNumber?: boolean
+    street?: boolean
     address2?: boolean
     city?: boolean
     state?: boolean
@@ -12599,6 +12851,8 @@ export namespace Prisma {
     country?: boolean
     phone?: boolean
     isDefault?: boolean
+    latitude?: boolean
+    longitude?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     customerProfile?: boolean | CustomerProfileDefaultArgs<ExtArgs>
@@ -12609,7 +12863,8 @@ export namespace Prisma {
     customerProfileId?: boolean
     label?: boolean
     name?: boolean
-    address?: boolean
+    buildingNumber?: boolean
+    street?: boolean
     address2?: boolean
     city?: boolean
     state?: boolean
@@ -12617,6 +12872,8 @@ export namespace Prisma {
     country?: boolean
     phone?: boolean
     isDefault?: boolean
+    latitude?: boolean
+    longitude?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
@@ -12638,7 +12895,8 @@ export namespace Prisma {
       customerProfileId: string
       label: string
       name: string | null
-      address: string
+      buildingNumber: string | null
+      street: string
       address2: string | null
       city: string
       state: string | null
@@ -12646,6 +12904,8 @@ export namespace Prisma {
       country: string
       phone: string | null
       isDefault: boolean
+      latitude: number | null
+      longitude: number | null
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["address"]>
@@ -13046,7 +13306,8 @@ export namespace Prisma {
     readonly customerProfileId: FieldRef<"Address", 'String'>
     readonly label: FieldRef<"Address", 'String'>
     readonly name: FieldRef<"Address", 'String'>
-    readonly address: FieldRef<"Address", 'String'>
+    readonly buildingNumber: FieldRef<"Address", 'String'>
+    readonly street: FieldRef<"Address", 'String'>
     readonly address2: FieldRef<"Address", 'String'>
     readonly city: FieldRef<"Address", 'String'>
     readonly state: FieldRef<"Address", 'String'>
@@ -13054,6 +13315,8 @@ export namespace Prisma {
     readonly country: FieldRef<"Address", 'String'>
     readonly phone: FieldRef<"Address", 'String'>
     readonly isDefault: FieldRef<"Address", 'Boolean'>
+    readonly latitude: FieldRef<"Address", 'Float'>
+    readonly longitude: FieldRef<"Address", 'Float'>
     readonly createdAt: FieldRef<"Address", 'DateTime'>
     readonly updatedAt: FieldRef<"Address", 'DateTime'>
   }
@@ -23114,6 +23377,12 @@ export namespace Prisma {
     avatar: 'avatar',
     dateOfBirth: 'dateOfBirth',
     gender: 'gender',
+    maritalStatus: 'maritalStatus',
+    bodyWeight: 'bodyWeight',
+    height: 'height',
+    ageGroup: 'ageGroup',
+    areasOfInterest: 'areasOfInterest',
+    profilePicture: 'profilePicture',
     isEmailVerified: 'isEmailVerified',
     isPhoneVerified: 'isPhoneVerified',
     isActive: 'isActive',
@@ -23164,6 +23433,11 @@ export namespace Prisma {
     membershipTier: 'membershipTier',
     totalOrders: 'totalOrders',
     totalSpent: 'totalSpent',
+    occupation: 'occupation',
+    company: 'company',
+    emergencyContact: 'emergencyContact',
+    medicalInfo: 'medicalInfo',
+    socialMedia: 'socialMedia',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
   };
@@ -23250,7 +23524,8 @@ export namespace Prisma {
     customerProfileId: 'customerProfileId',
     label: 'label',
     name: 'name',
-    address: 'address',
+    buildingNumber: 'buildingNumber',
+    street: 'street',
     address2: 'address2',
     city: 'city',
     state: 'state',
@@ -23258,6 +23533,8 @@ export namespace Prisma {
     country: 'country',
     phone: 'phone',
     isDefault: 'isDefault',
+    latitude: 'latitude',
+    longitude: 'longitude',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
   };
@@ -23495,6 +23772,48 @@ export namespace Prisma {
 
 
   /**
+   * Reference to a field of type 'MaritalStatus'
+   */
+  export type EnumMaritalStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'MaritalStatus'>
+    
+
+
+  /**
+   * Reference to a field of type 'MaritalStatus[]'
+   */
+  export type ListEnumMaritalStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'MaritalStatus[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'Float'
+   */
+  export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
+    
+
+
+  /**
+   * Reference to a field of type 'Float[]'
+   */
+  export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'AgeGroup'
+   */
+  export type EnumAgeGroupFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AgeGroup'>
+    
+
+
+  /**
+   * Reference to a field of type 'AgeGroup[]'
+   */
+  export type ListEnumAgeGroupFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AgeGroup[]'>
+    
+
+
+  /**
    * Reference to a field of type 'Boolean'
    */
   export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
@@ -23533,20 +23852,6 @@ export namespace Prisma {
    * Reference to a field of type 'Int[]'
    */
   export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
-    
-
-
-  /**
-   * Reference to a field of type 'Float'
-   */
-  export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
-    
-
-
-  /**
-   * Reference to a field of type 'Float[]'
-   */
-  export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float[]'>
     
 
 
@@ -23622,6 +23927,12 @@ export namespace Prisma {
     avatar?: StringNullableFilter<"User"> | string | null
     dateOfBirth?: DateTimeNullableFilter<"User"> | Date | string | null
     gender?: EnumGenderNullableFilter<"User"> | $Enums.Gender | null
+    maritalStatus?: EnumMaritalStatusNullableFilter<"User"> | $Enums.MaritalStatus | null
+    bodyWeight?: FloatNullableFilter<"User"> | number | null
+    height?: FloatNullableFilter<"User"> | number | null
+    ageGroup?: EnumAgeGroupNullableFilter<"User"> | $Enums.AgeGroup | null
+    areasOfInterest?: StringNullableListFilter<"User">
+    profilePicture?: StringNullableFilter<"User"> | string | null
     isEmailVerified?: BoolFilter<"User"> | boolean
     isPhoneVerified?: BoolFilter<"User"> | boolean
     isActive?: BoolFilter<"User"> | boolean
@@ -23658,6 +23969,12 @@ export namespace Prisma {
     avatar?: SortOrderInput | SortOrder
     dateOfBirth?: SortOrderInput | SortOrder
     gender?: SortOrderInput | SortOrder
+    maritalStatus?: SortOrderInput | SortOrder
+    bodyWeight?: SortOrderInput | SortOrder
+    height?: SortOrderInput | SortOrder
+    ageGroup?: SortOrderInput | SortOrder
+    areasOfInterest?: SortOrder
+    profilePicture?: SortOrderInput | SortOrder
     isEmailVerified?: SortOrder
     isPhoneVerified?: SortOrder
     isActive?: SortOrder
@@ -23697,6 +24014,12 @@ export namespace Prisma {
     avatar?: StringNullableFilter<"User"> | string | null
     dateOfBirth?: DateTimeNullableFilter<"User"> | Date | string | null
     gender?: EnumGenderNullableFilter<"User"> | $Enums.Gender | null
+    maritalStatus?: EnumMaritalStatusNullableFilter<"User"> | $Enums.MaritalStatus | null
+    bodyWeight?: FloatNullableFilter<"User"> | number | null
+    height?: FloatNullableFilter<"User"> | number | null
+    ageGroup?: EnumAgeGroupNullableFilter<"User"> | $Enums.AgeGroup | null
+    areasOfInterest?: StringNullableListFilter<"User">
+    profilePicture?: StringNullableFilter<"User"> | string | null
     isEmailVerified?: BoolFilter<"User"> | boolean
     isPhoneVerified?: BoolFilter<"User"> | boolean
     isActive?: BoolFilter<"User"> | boolean
@@ -23733,6 +24056,12 @@ export namespace Prisma {
     avatar?: SortOrderInput | SortOrder
     dateOfBirth?: SortOrderInput | SortOrder
     gender?: SortOrderInput | SortOrder
+    maritalStatus?: SortOrderInput | SortOrder
+    bodyWeight?: SortOrderInput | SortOrder
+    height?: SortOrderInput | SortOrder
+    ageGroup?: SortOrderInput | SortOrder
+    areasOfInterest?: SortOrder
+    profilePicture?: SortOrderInput | SortOrder
     isEmailVerified?: SortOrder
     isPhoneVerified?: SortOrder
     isActive?: SortOrder
@@ -23741,8 +24070,10 @@ export namespace Prisma {
     updatedAt?: SortOrder
     activeRole?: SortOrder
     _count?: UserCountOrderByAggregateInput
+    _avg?: UserAvgOrderByAggregateInput
     _max?: UserMaxOrderByAggregateInput
     _min?: UserMinOrderByAggregateInput
+    _sum?: UserSumOrderByAggregateInput
   }
 
   export type UserScalarWhereWithAggregatesInput = {
@@ -23758,6 +24089,12 @@ export namespace Prisma {
     avatar?: StringNullableWithAggregatesFilter<"User"> | string | null
     dateOfBirth?: DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
     gender?: EnumGenderNullableWithAggregatesFilter<"User"> | $Enums.Gender | null
+    maritalStatus?: EnumMaritalStatusNullableWithAggregatesFilter<"User"> | $Enums.MaritalStatus | null
+    bodyWeight?: FloatNullableWithAggregatesFilter<"User"> | number | null
+    height?: FloatNullableWithAggregatesFilter<"User"> | number | null
+    ageGroup?: EnumAgeGroupNullableWithAggregatesFilter<"User"> | $Enums.AgeGroup | null
+    areasOfInterest?: StringNullableListFilter<"User">
+    profilePicture?: StringNullableWithAggregatesFilter<"User"> | string | null
     isEmailVerified?: BoolWithAggregatesFilter<"User"> | boolean
     isPhoneVerified?: BoolWithAggregatesFilter<"User"> | boolean
     isActive?: BoolWithAggregatesFilter<"User"> | boolean
@@ -23935,6 +24272,11 @@ export namespace Prisma {
     membershipTier?: StringFilter<"CustomerProfile"> | string
     totalOrders?: IntFilter<"CustomerProfile"> | number
     totalSpent?: FloatFilter<"CustomerProfile"> | number
+    occupation?: StringNullableFilter<"CustomerProfile"> | string | null
+    company?: StringNullableFilter<"CustomerProfile"> | string | null
+    emergencyContact?: JsonNullableFilter<"CustomerProfile">
+    medicalInfo?: JsonNullableFilter<"CustomerProfile">
+    socialMedia?: JsonNullableFilter<"CustomerProfile">
     createdAt?: DateTimeFilter<"CustomerProfile"> | Date | string
     updatedAt?: DateTimeFilter<"CustomerProfile"> | Date | string
     user?: XOR<UserRelationFilter, UserWhereInput>
@@ -23949,6 +24291,11 @@ export namespace Prisma {
     membershipTier?: SortOrder
     totalOrders?: SortOrder
     totalSpent?: SortOrder
+    occupation?: SortOrderInput | SortOrder
+    company?: SortOrderInput | SortOrder
+    emergencyContact?: SortOrderInput | SortOrder
+    medicalInfo?: SortOrderInput | SortOrder
+    socialMedia?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     user?: UserOrderByWithRelationInput
@@ -23966,6 +24313,11 @@ export namespace Prisma {
     membershipTier?: StringFilter<"CustomerProfile"> | string
     totalOrders?: IntFilter<"CustomerProfile"> | number
     totalSpent?: FloatFilter<"CustomerProfile"> | number
+    occupation?: StringNullableFilter<"CustomerProfile"> | string | null
+    company?: StringNullableFilter<"CustomerProfile"> | string | null
+    emergencyContact?: JsonNullableFilter<"CustomerProfile">
+    medicalInfo?: JsonNullableFilter<"CustomerProfile">
+    socialMedia?: JsonNullableFilter<"CustomerProfile">
     createdAt?: DateTimeFilter<"CustomerProfile"> | Date | string
     updatedAt?: DateTimeFilter<"CustomerProfile"> | Date | string
     user?: XOR<UserRelationFilter, UserWhereInput>
@@ -23980,6 +24332,11 @@ export namespace Prisma {
     membershipTier?: SortOrder
     totalOrders?: SortOrder
     totalSpent?: SortOrder
+    occupation?: SortOrderInput | SortOrder
+    company?: SortOrderInput | SortOrder
+    emergencyContact?: SortOrderInput | SortOrder
+    medicalInfo?: SortOrderInput | SortOrder
+    socialMedia?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: CustomerProfileCountOrderByAggregateInput
@@ -24000,6 +24357,11 @@ export namespace Prisma {
     membershipTier?: StringWithAggregatesFilter<"CustomerProfile"> | string
     totalOrders?: IntWithAggregatesFilter<"CustomerProfile"> | number
     totalSpent?: FloatWithAggregatesFilter<"CustomerProfile"> | number
+    occupation?: StringNullableWithAggregatesFilter<"CustomerProfile"> | string | null
+    company?: StringNullableWithAggregatesFilter<"CustomerProfile"> | string | null
+    emergencyContact?: JsonNullableWithAggregatesFilter<"CustomerProfile">
+    medicalInfo?: JsonNullableWithAggregatesFilter<"CustomerProfile">
+    socialMedia?: JsonNullableWithAggregatesFilter<"CustomerProfile">
     createdAt?: DateTimeWithAggregatesFilter<"CustomerProfile"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"CustomerProfile"> | Date | string
   }
@@ -24390,7 +24752,8 @@ export namespace Prisma {
     customerProfileId?: StringFilter<"Address"> | string
     label?: StringFilter<"Address"> | string
     name?: StringNullableFilter<"Address"> | string | null
-    address?: StringFilter<"Address"> | string
+    buildingNumber?: StringNullableFilter<"Address"> | string | null
+    street?: StringFilter<"Address"> | string
     address2?: StringNullableFilter<"Address"> | string | null
     city?: StringFilter<"Address"> | string
     state?: StringNullableFilter<"Address"> | string | null
@@ -24398,6 +24761,8 @@ export namespace Prisma {
     country?: StringFilter<"Address"> | string
     phone?: StringNullableFilter<"Address"> | string | null
     isDefault?: BoolFilter<"Address"> | boolean
+    latitude?: FloatNullableFilter<"Address"> | number | null
+    longitude?: FloatNullableFilter<"Address"> | number | null
     createdAt?: DateTimeFilter<"Address"> | Date | string
     updatedAt?: DateTimeFilter<"Address"> | Date | string
     customerProfile?: XOR<CustomerProfileRelationFilter, CustomerProfileWhereInput>
@@ -24408,7 +24773,8 @@ export namespace Prisma {
     customerProfileId?: SortOrder
     label?: SortOrder
     name?: SortOrderInput | SortOrder
-    address?: SortOrder
+    buildingNumber?: SortOrderInput | SortOrder
+    street?: SortOrder
     address2?: SortOrderInput | SortOrder
     city?: SortOrder
     state?: SortOrderInput | SortOrder
@@ -24416,6 +24782,8 @@ export namespace Prisma {
     country?: SortOrder
     phone?: SortOrderInput | SortOrder
     isDefault?: SortOrder
+    latitude?: SortOrderInput | SortOrder
+    longitude?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     customerProfile?: CustomerProfileOrderByWithRelationInput
@@ -24429,7 +24797,8 @@ export namespace Prisma {
     customerProfileId?: StringFilter<"Address"> | string
     label?: StringFilter<"Address"> | string
     name?: StringNullableFilter<"Address"> | string | null
-    address?: StringFilter<"Address"> | string
+    buildingNumber?: StringNullableFilter<"Address"> | string | null
+    street?: StringFilter<"Address"> | string
     address2?: StringNullableFilter<"Address"> | string | null
     city?: StringFilter<"Address"> | string
     state?: StringNullableFilter<"Address"> | string | null
@@ -24437,6 +24806,8 @@ export namespace Prisma {
     country?: StringFilter<"Address"> | string
     phone?: StringNullableFilter<"Address"> | string | null
     isDefault?: BoolFilter<"Address"> | boolean
+    latitude?: FloatNullableFilter<"Address"> | number | null
+    longitude?: FloatNullableFilter<"Address"> | number | null
     createdAt?: DateTimeFilter<"Address"> | Date | string
     updatedAt?: DateTimeFilter<"Address"> | Date | string
     customerProfile?: XOR<CustomerProfileRelationFilter, CustomerProfileWhereInput>
@@ -24447,7 +24818,8 @@ export namespace Prisma {
     customerProfileId?: SortOrder
     label?: SortOrder
     name?: SortOrderInput | SortOrder
-    address?: SortOrder
+    buildingNumber?: SortOrderInput | SortOrder
+    street?: SortOrder
     address2?: SortOrderInput | SortOrder
     city?: SortOrder
     state?: SortOrderInput | SortOrder
@@ -24455,11 +24827,15 @@ export namespace Prisma {
     country?: SortOrder
     phone?: SortOrderInput | SortOrder
     isDefault?: SortOrder
+    latitude?: SortOrderInput | SortOrder
+    longitude?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: AddressCountOrderByAggregateInput
+    _avg?: AddressAvgOrderByAggregateInput
     _max?: AddressMaxOrderByAggregateInput
     _min?: AddressMinOrderByAggregateInput
+    _sum?: AddressSumOrderByAggregateInput
   }
 
   export type AddressScalarWhereWithAggregatesInput = {
@@ -24470,7 +24846,8 @@ export namespace Prisma {
     customerProfileId?: StringWithAggregatesFilter<"Address"> | string
     label?: StringWithAggregatesFilter<"Address"> | string
     name?: StringNullableWithAggregatesFilter<"Address"> | string | null
-    address?: StringWithAggregatesFilter<"Address"> | string
+    buildingNumber?: StringNullableWithAggregatesFilter<"Address"> | string | null
+    street?: StringWithAggregatesFilter<"Address"> | string
     address2?: StringNullableWithAggregatesFilter<"Address"> | string | null
     city?: StringWithAggregatesFilter<"Address"> | string
     state?: StringNullableWithAggregatesFilter<"Address"> | string | null
@@ -24478,6 +24855,8 @@ export namespace Prisma {
     country?: StringWithAggregatesFilter<"Address"> | string
     phone?: StringNullableWithAggregatesFilter<"Address"> | string | null
     isDefault?: BoolWithAggregatesFilter<"Address"> | boolean
+    latitude?: FloatNullableWithAggregatesFilter<"Address"> | number | null
+    longitude?: FloatNullableWithAggregatesFilter<"Address"> | number | null
     createdAt?: DateTimeWithAggregatesFilter<"Address"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"Address"> | Date | string
   }
@@ -25169,6 +25548,12 @@ export namespace Prisma {
     avatar?: string | null
     dateOfBirth?: Date | string | null
     gender?: $Enums.Gender | null
+    maritalStatus?: $Enums.MaritalStatus | null
+    bodyWeight?: number | null
+    height?: number | null
+    ageGroup?: $Enums.AgeGroup | null
+    areasOfInterest?: UserCreateareasOfInterestInput | string[]
+    profilePicture?: string | null
     isEmailVerified?: boolean
     isPhoneVerified?: boolean
     isActive?: boolean
@@ -25205,6 +25590,12 @@ export namespace Prisma {
     avatar?: string | null
     dateOfBirth?: Date | string | null
     gender?: $Enums.Gender | null
+    maritalStatus?: $Enums.MaritalStatus | null
+    bodyWeight?: number | null
+    height?: number | null
+    ageGroup?: $Enums.AgeGroup | null
+    areasOfInterest?: UserCreateareasOfInterestInput | string[]
+    profilePicture?: string | null
     isEmailVerified?: boolean
     isPhoneVerified?: boolean
     isActive?: boolean
@@ -25241,6 +25632,12 @@ export namespace Prisma {
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     gender?: NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
+    maritalStatus?: NullableEnumMaritalStatusFieldUpdateOperationsInput | $Enums.MaritalStatus | null
+    bodyWeight?: NullableFloatFieldUpdateOperationsInput | number | null
+    height?: NullableFloatFieldUpdateOperationsInput | number | null
+    ageGroup?: NullableEnumAgeGroupFieldUpdateOperationsInput | $Enums.AgeGroup | null
+    areasOfInterest?: UserUpdateareasOfInterestInput | string[]
+    profilePicture?: NullableStringFieldUpdateOperationsInput | string | null
     isEmailVerified?: BoolFieldUpdateOperationsInput | boolean
     isPhoneVerified?: BoolFieldUpdateOperationsInput | boolean
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -25277,6 +25674,12 @@ export namespace Prisma {
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     gender?: NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
+    maritalStatus?: NullableEnumMaritalStatusFieldUpdateOperationsInput | $Enums.MaritalStatus | null
+    bodyWeight?: NullableFloatFieldUpdateOperationsInput | number | null
+    height?: NullableFloatFieldUpdateOperationsInput | number | null
+    ageGroup?: NullableEnumAgeGroupFieldUpdateOperationsInput | $Enums.AgeGroup | null
+    areasOfInterest?: UserUpdateareasOfInterestInput | string[]
+    profilePicture?: NullableStringFieldUpdateOperationsInput | string | null
     isEmailVerified?: BoolFieldUpdateOperationsInput | boolean
     isPhoneVerified?: BoolFieldUpdateOperationsInput | boolean
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -25313,6 +25716,12 @@ export namespace Prisma {
     avatar?: string | null
     dateOfBirth?: Date | string | null
     gender?: $Enums.Gender | null
+    maritalStatus?: $Enums.MaritalStatus | null
+    bodyWeight?: number | null
+    height?: number | null
+    ageGroup?: $Enums.AgeGroup | null
+    areasOfInterest?: UserCreateareasOfInterestInput | string[]
+    profilePicture?: string | null
     isEmailVerified?: boolean
     isPhoneVerified?: boolean
     isActive?: boolean
@@ -25332,6 +25741,12 @@ export namespace Prisma {
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     gender?: NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
+    maritalStatus?: NullableEnumMaritalStatusFieldUpdateOperationsInput | $Enums.MaritalStatus | null
+    bodyWeight?: NullableFloatFieldUpdateOperationsInput | number | null
+    height?: NullableFloatFieldUpdateOperationsInput | number | null
+    ageGroup?: NullableEnumAgeGroupFieldUpdateOperationsInput | $Enums.AgeGroup | null
+    areasOfInterest?: UserUpdateareasOfInterestInput | string[]
+    profilePicture?: NullableStringFieldUpdateOperationsInput | string | null
     isEmailVerified?: BoolFieldUpdateOperationsInput | boolean
     isPhoneVerified?: BoolFieldUpdateOperationsInput | boolean
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -25351,6 +25766,12 @@ export namespace Prisma {
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     gender?: NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
+    maritalStatus?: NullableEnumMaritalStatusFieldUpdateOperationsInput | $Enums.MaritalStatus | null
+    bodyWeight?: NullableFloatFieldUpdateOperationsInput | number | null
+    height?: NullableFloatFieldUpdateOperationsInput | number | null
+    ageGroup?: NullableEnumAgeGroupFieldUpdateOperationsInput | $Enums.AgeGroup | null
+    areasOfInterest?: UserUpdateareasOfInterestInput | string[]
+    profilePicture?: NullableStringFieldUpdateOperationsInput | string | null
     isEmailVerified?: BoolFieldUpdateOperationsInput | boolean
     isPhoneVerified?: BoolFieldUpdateOperationsInput | boolean
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -25524,6 +25945,11 @@ export namespace Prisma {
     membershipTier?: string
     totalOrders?: number
     totalSpent?: number
+    occupation?: string | null
+    company?: string | null
+    emergencyContact?: NullableJsonNullValueInput | InputJsonValue
+    medicalInfo?: NullableJsonNullValueInput | InputJsonValue
+    socialMedia?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
     user: UserCreateNestedOneWithoutCustomerProfileInput
@@ -25538,6 +25964,11 @@ export namespace Prisma {
     membershipTier?: string
     totalOrders?: number
     totalSpent?: number
+    occupation?: string | null
+    company?: string | null
+    emergencyContact?: NullableJsonNullValueInput | InputJsonValue
+    medicalInfo?: NullableJsonNullValueInput | InputJsonValue
+    socialMedia?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
     addresses?: AddressUncheckedCreateNestedManyWithoutCustomerProfileInput
@@ -25550,6 +25981,11 @@ export namespace Prisma {
     membershipTier?: StringFieldUpdateOperationsInput | string
     totalOrders?: IntFieldUpdateOperationsInput | number
     totalSpent?: FloatFieldUpdateOperationsInput | number
+    occupation?: NullableStringFieldUpdateOperationsInput | string | null
+    company?: NullableStringFieldUpdateOperationsInput | string | null
+    emergencyContact?: NullableJsonNullValueInput | InputJsonValue
+    medicalInfo?: NullableJsonNullValueInput | InputJsonValue
+    socialMedia?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     user?: UserUpdateOneRequiredWithoutCustomerProfileNestedInput
@@ -25564,6 +26000,11 @@ export namespace Prisma {
     membershipTier?: StringFieldUpdateOperationsInput | string
     totalOrders?: IntFieldUpdateOperationsInput | number
     totalSpent?: FloatFieldUpdateOperationsInput | number
+    occupation?: NullableStringFieldUpdateOperationsInput | string | null
+    company?: NullableStringFieldUpdateOperationsInput | string | null
+    emergencyContact?: NullableJsonNullValueInput | InputJsonValue
+    medicalInfo?: NullableJsonNullValueInput | InputJsonValue
+    socialMedia?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     addresses?: AddressUncheckedUpdateManyWithoutCustomerProfileNestedInput
@@ -25577,6 +26018,11 @@ export namespace Prisma {
     membershipTier?: string
     totalOrders?: number
     totalSpent?: number
+    occupation?: string | null
+    company?: string | null
+    emergencyContact?: NullableJsonNullValueInput | InputJsonValue
+    medicalInfo?: NullableJsonNullValueInput | InputJsonValue
+    socialMedia?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -25588,6 +26034,11 @@ export namespace Prisma {
     membershipTier?: StringFieldUpdateOperationsInput | string
     totalOrders?: IntFieldUpdateOperationsInput | number
     totalSpent?: FloatFieldUpdateOperationsInput | number
+    occupation?: NullableStringFieldUpdateOperationsInput | string | null
+    company?: NullableStringFieldUpdateOperationsInput | string | null
+    emergencyContact?: NullableJsonNullValueInput | InputJsonValue
+    medicalInfo?: NullableJsonNullValueInput | InputJsonValue
+    socialMedia?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -25600,6 +26051,11 @@ export namespace Prisma {
     membershipTier?: StringFieldUpdateOperationsInput | string
     totalOrders?: IntFieldUpdateOperationsInput | number
     totalSpent?: FloatFieldUpdateOperationsInput | number
+    occupation?: NullableStringFieldUpdateOperationsInput | string | null
+    company?: NullableStringFieldUpdateOperationsInput | string | null
+    emergencyContact?: NullableJsonNullValueInput | InputJsonValue
+    medicalInfo?: NullableJsonNullValueInput | InputJsonValue
+    socialMedia?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -26038,7 +26494,8 @@ export namespace Prisma {
     id?: string
     label: string
     name?: string | null
-    address: string
+    buildingNumber?: string | null
+    street: string
     address2?: string | null
     city: string
     state?: string | null
@@ -26046,6 +26503,8 @@ export namespace Prisma {
     country: string
     phone?: string | null
     isDefault?: boolean
+    latitude?: number | null
+    longitude?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
     customerProfile: CustomerProfileCreateNestedOneWithoutAddressesInput
@@ -26056,7 +26515,8 @@ export namespace Prisma {
     customerProfileId: string
     label: string
     name?: string | null
-    address: string
+    buildingNumber?: string | null
+    street: string
     address2?: string | null
     city: string
     state?: string | null
@@ -26064,6 +26524,8 @@ export namespace Prisma {
     country: string
     phone?: string | null
     isDefault?: boolean
+    latitude?: number | null
+    longitude?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -26072,7 +26534,8 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     label?: StringFieldUpdateOperationsInput | string
     name?: NullableStringFieldUpdateOperationsInput | string | null
-    address?: StringFieldUpdateOperationsInput | string
+    buildingNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    street?: StringFieldUpdateOperationsInput | string
     address2?: NullableStringFieldUpdateOperationsInput | string | null
     city?: StringFieldUpdateOperationsInput | string
     state?: NullableStringFieldUpdateOperationsInput | string | null
@@ -26080,6 +26543,8 @@ export namespace Prisma {
     country?: StringFieldUpdateOperationsInput | string
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     isDefault?: BoolFieldUpdateOperationsInput | boolean
+    latitude?: NullableFloatFieldUpdateOperationsInput | number | null
+    longitude?: NullableFloatFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     customerProfile?: CustomerProfileUpdateOneRequiredWithoutAddressesNestedInput
@@ -26090,7 +26555,8 @@ export namespace Prisma {
     customerProfileId?: StringFieldUpdateOperationsInput | string
     label?: StringFieldUpdateOperationsInput | string
     name?: NullableStringFieldUpdateOperationsInput | string | null
-    address?: StringFieldUpdateOperationsInput | string
+    buildingNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    street?: StringFieldUpdateOperationsInput | string
     address2?: NullableStringFieldUpdateOperationsInput | string | null
     city?: StringFieldUpdateOperationsInput | string
     state?: NullableStringFieldUpdateOperationsInput | string | null
@@ -26098,6 +26564,8 @@ export namespace Prisma {
     country?: StringFieldUpdateOperationsInput | string
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     isDefault?: BoolFieldUpdateOperationsInput | boolean
+    latitude?: NullableFloatFieldUpdateOperationsInput | number | null
+    longitude?: NullableFloatFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -26107,7 +26575,8 @@ export namespace Prisma {
     customerProfileId: string
     label: string
     name?: string | null
-    address: string
+    buildingNumber?: string | null
+    street: string
     address2?: string | null
     city: string
     state?: string | null
@@ -26115,6 +26584,8 @@ export namespace Prisma {
     country: string
     phone?: string | null
     isDefault?: boolean
+    latitude?: number | null
+    longitude?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -26123,7 +26594,8 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     label?: StringFieldUpdateOperationsInput | string
     name?: NullableStringFieldUpdateOperationsInput | string | null
-    address?: StringFieldUpdateOperationsInput | string
+    buildingNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    street?: StringFieldUpdateOperationsInput | string
     address2?: NullableStringFieldUpdateOperationsInput | string | null
     city?: StringFieldUpdateOperationsInput | string
     state?: NullableStringFieldUpdateOperationsInput | string | null
@@ -26131,6 +26603,8 @@ export namespace Prisma {
     country?: StringFieldUpdateOperationsInput | string
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     isDefault?: BoolFieldUpdateOperationsInput | boolean
+    latitude?: NullableFloatFieldUpdateOperationsInput | number | null
+    longitude?: NullableFloatFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -26140,7 +26614,8 @@ export namespace Prisma {
     customerProfileId?: StringFieldUpdateOperationsInput | string
     label?: StringFieldUpdateOperationsInput | string
     name?: NullableStringFieldUpdateOperationsInput | string | null
-    address?: StringFieldUpdateOperationsInput | string
+    buildingNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    street?: StringFieldUpdateOperationsInput | string
     address2?: NullableStringFieldUpdateOperationsInput | string | null
     city?: StringFieldUpdateOperationsInput | string
     state?: NullableStringFieldUpdateOperationsInput | string | null
@@ -26148,6 +26623,8 @@ export namespace Prisma {
     country?: StringFieldUpdateOperationsInput | string
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     isDefault?: BoolFieldUpdateOperationsInput | boolean
+    latitude?: NullableFloatFieldUpdateOperationsInput | number | null
+    longitude?: NullableFloatFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -26917,6 +27394,39 @@ export namespace Prisma {
     not?: NestedEnumGenderNullableFilter<$PrismaModel> | $Enums.Gender | null
   }
 
+  export type EnumMaritalStatusNullableFilter<$PrismaModel = never> = {
+    equals?: $Enums.MaritalStatus | EnumMaritalStatusFieldRefInput<$PrismaModel> | null
+    in?: $Enums.MaritalStatus[] | ListEnumMaritalStatusFieldRefInput<$PrismaModel> | null
+    notIn?: $Enums.MaritalStatus[] | ListEnumMaritalStatusFieldRefInput<$PrismaModel> | null
+    not?: NestedEnumMaritalStatusNullableFilter<$PrismaModel> | $Enums.MaritalStatus | null
+  }
+
+  export type FloatNullableFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatNullableFilter<$PrismaModel> | number | null
+  }
+
+  export type EnumAgeGroupNullableFilter<$PrismaModel = never> = {
+    equals?: $Enums.AgeGroup | EnumAgeGroupFieldRefInput<$PrismaModel> | null
+    in?: $Enums.AgeGroup[] | ListEnumAgeGroupFieldRefInput<$PrismaModel> | null
+    notIn?: $Enums.AgeGroup[] | ListEnumAgeGroupFieldRefInput<$PrismaModel> | null
+    not?: NestedEnumAgeGroupNullableFilter<$PrismaModel> | $Enums.AgeGroup | null
+  }
+
+  export type StringNullableListFilter<$PrismaModel = never> = {
+    equals?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    has?: string | StringFieldRefInput<$PrismaModel> | null
+    hasEvery?: string[] | ListStringFieldRefInput<$PrismaModel>
+    hasSome?: string[] | ListStringFieldRefInput<$PrismaModel>
+    isEmpty?: boolean
+  }
+
   export type BoolFilter<$PrismaModel = never> = {
     equals?: boolean | BooleanFieldRefInput<$PrismaModel>
     not?: NestedBoolFilter<$PrismaModel> | boolean
@@ -27090,6 +27600,12 @@ export namespace Prisma {
     avatar?: SortOrder
     dateOfBirth?: SortOrder
     gender?: SortOrder
+    maritalStatus?: SortOrder
+    bodyWeight?: SortOrder
+    height?: SortOrder
+    ageGroup?: SortOrder
+    areasOfInterest?: SortOrder
+    profilePicture?: SortOrder
     isEmailVerified?: SortOrder
     isPhoneVerified?: SortOrder
     isActive?: SortOrder
@@ -27097,6 +27613,11 @@ export namespace Prisma {
     createdAt?: SortOrder
     updatedAt?: SortOrder
     activeRole?: SortOrder
+  }
+
+  export type UserAvgOrderByAggregateInput = {
+    bodyWeight?: SortOrder
+    height?: SortOrder
   }
 
   export type UserMaxOrderByAggregateInput = {
@@ -27109,6 +27630,11 @@ export namespace Prisma {
     avatar?: SortOrder
     dateOfBirth?: SortOrder
     gender?: SortOrder
+    maritalStatus?: SortOrder
+    bodyWeight?: SortOrder
+    height?: SortOrder
+    ageGroup?: SortOrder
+    profilePicture?: SortOrder
     isEmailVerified?: SortOrder
     isPhoneVerified?: SortOrder
     isActive?: SortOrder
@@ -27128,6 +27654,11 @@ export namespace Prisma {
     avatar?: SortOrder
     dateOfBirth?: SortOrder
     gender?: SortOrder
+    maritalStatus?: SortOrder
+    bodyWeight?: SortOrder
+    height?: SortOrder
+    ageGroup?: SortOrder
+    profilePicture?: SortOrder
     isEmailVerified?: SortOrder
     isPhoneVerified?: SortOrder
     isActive?: SortOrder
@@ -27135,6 +27666,11 @@ export namespace Prisma {
     createdAt?: SortOrder
     updatedAt?: SortOrder
     activeRole?: SortOrder
+  }
+
+  export type UserSumOrderByAggregateInput = {
+    bodyWeight?: SortOrder
+    height?: SortOrder
   }
 
   export type StringWithAggregatesFilter<$PrismaModel = never> = {
@@ -27195,6 +27731,42 @@ export namespace Prisma {
     _count?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedEnumGenderNullableFilter<$PrismaModel>
     _max?: NestedEnumGenderNullableFilter<$PrismaModel>
+  }
+
+  export type EnumMaritalStatusNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.MaritalStatus | EnumMaritalStatusFieldRefInput<$PrismaModel> | null
+    in?: $Enums.MaritalStatus[] | ListEnumMaritalStatusFieldRefInput<$PrismaModel> | null
+    notIn?: $Enums.MaritalStatus[] | ListEnumMaritalStatusFieldRefInput<$PrismaModel> | null
+    not?: NestedEnumMaritalStatusNullableWithAggregatesFilter<$PrismaModel> | $Enums.MaritalStatus | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedEnumMaritalStatusNullableFilter<$PrismaModel>
+    _max?: NestedEnumMaritalStatusNullableFilter<$PrismaModel>
+  }
+
+  export type FloatNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatNullableWithAggregatesFilter<$PrismaModel> | number | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _avg?: NestedFloatNullableFilter<$PrismaModel>
+    _sum?: NestedFloatNullableFilter<$PrismaModel>
+    _min?: NestedFloatNullableFilter<$PrismaModel>
+    _max?: NestedFloatNullableFilter<$PrismaModel>
+  }
+
+  export type EnumAgeGroupNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.AgeGroup | EnumAgeGroupFieldRefInput<$PrismaModel> | null
+    in?: $Enums.AgeGroup[] | ListEnumAgeGroupFieldRefInput<$PrismaModel> | null
+    notIn?: $Enums.AgeGroup[] | ListEnumAgeGroupFieldRefInput<$PrismaModel> | null
+    not?: NestedEnumAgeGroupNullableWithAggregatesFilter<$PrismaModel> | $Enums.AgeGroup | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedEnumAgeGroupNullableFilter<$PrismaModel>
+    _max?: NestedEnumAgeGroupNullableFilter<$PrismaModel>
   }
 
   export type BoolWithAggregatesFilter<$PrismaModel = never> = {
@@ -27389,6 +27961,11 @@ export namespace Prisma {
     membershipTier?: SortOrder
     totalOrders?: SortOrder
     totalSpent?: SortOrder
+    occupation?: SortOrder
+    company?: SortOrder
+    emergencyContact?: SortOrder
+    medicalInfo?: SortOrder
+    socialMedia?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -27406,6 +27983,8 @@ export namespace Prisma {
     membershipTier?: SortOrder
     totalOrders?: SortOrder
     totalSpent?: SortOrder
+    occupation?: SortOrder
+    company?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -27417,6 +27996,8 @@ export namespace Prisma {
     membershipTier?: SortOrder
     totalOrders?: SortOrder
     totalSpent?: SortOrder
+    occupation?: SortOrder
+    company?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -27491,17 +28072,6 @@ export namespace Prisma {
     not?: NestedEnumSubscriptionTierFilter<$PrismaModel> | $Enums.SubscriptionTier
   }
 
-  export type FloatNullableFilter<$PrismaModel = never> = {
-    equals?: number | FloatFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
-    lt?: number | FloatFieldRefInput<$PrismaModel>
-    lte?: number | FloatFieldRefInput<$PrismaModel>
-    gt?: number | FloatFieldRefInput<$PrismaModel>
-    gte?: number | FloatFieldRefInput<$PrismaModel>
-    not?: NestedFloatNullableFilter<$PrismaModel> | number | null
-  }
-
   export type VendorProfileCountOrderByAggregateInput = {
     id?: SortOrder
     userId?: SortOrder
@@ -27573,22 +28143,6 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumSubscriptionTierFilter<$PrismaModel>
     _max?: NestedEnumSubscriptionTierFilter<$PrismaModel>
-  }
-
-  export type FloatNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: number | FloatFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
-    lt?: number | FloatFieldRefInput<$PrismaModel>
-    lte?: number | FloatFieldRefInput<$PrismaModel>
-    gt?: number | FloatFieldRefInput<$PrismaModel>
-    gte?: number | FloatFieldRefInput<$PrismaModel>
-    not?: NestedFloatNullableWithAggregatesFilter<$PrismaModel> | number | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _avg?: NestedFloatNullableFilter<$PrismaModel>
-    _sum?: NestedFloatNullableFilter<$PrismaModel>
-    _min?: NestedFloatNullableFilter<$PrismaModel>
-    _max?: NestedFloatNullableFilter<$PrismaModel>
   }
   export type JsonFilter<$PrismaModel = never> = 
     | PatchUndefined<
@@ -27891,7 +28445,8 @@ export namespace Prisma {
     customerProfileId?: SortOrder
     label?: SortOrder
     name?: SortOrder
-    address?: SortOrder
+    buildingNumber?: SortOrder
+    street?: SortOrder
     address2?: SortOrder
     city?: SortOrder
     state?: SortOrder
@@ -27899,8 +28454,15 @@ export namespace Prisma {
     country?: SortOrder
     phone?: SortOrder
     isDefault?: SortOrder
+    latitude?: SortOrder
+    longitude?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+  }
+
+  export type AddressAvgOrderByAggregateInput = {
+    latitude?: SortOrder
+    longitude?: SortOrder
   }
 
   export type AddressMaxOrderByAggregateInput = {
@@ -27908,7 +28470,8 @@ export namespace Prisma {
     customerProfileId?: SortOrder
     label?: SortOrder
     name?: SortOrder
-    address?: SortOrder
+    buildingNumber?: SortOrder
+    street?: SortOrder
     address2?: SortOrder
     city?: SortOrder
     state?: SortOrder
@@ -27916,6 +28479,8 @@ export namespace Prisma {
     country?: SortOrder
     phone?: SortOrder
     isDefault?: SortOrder
+    latitude?: SortOrder
+    longitude?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -27925,7 +28490,8 @@ export namespace Prisma {
     customerProfileId?: SortOrder
     label?: SortOrder
     name?: SortOrder
-    address?: SortOrder
+    buildingNumber?: SortOrder
+    street?: SortOrder
     address2?: SortOrder
     city?: SortOrder
     state?: SortOrder
@@ -27933,8 +28499,15 @@ export namespace Prisma {
     country?: SortOrder
     phone?: SortOrder
     isDefault?: SortOrder
+    latitude?: SortOrder
+    longitude?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+  }
+
+  export type AddressSumOrderByAggregateInput = {
+    latitude?: SortOrder
+    longitude?: SortOrder
   }
 
   export type RefreshTokenCountOrderByAggregateInput = {
@@ -28218,14 +28791,6 @@ export namespace Prisma {
     createdAt?: SortOrder
   }
 
-  export type StringNullableListFilter<$PrismaModel = never> = {
-    equals?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    has?: string | StringFieldRefInput<$PrismaModel> | null
-    hasEvery?: string[] | ListStringFieldRefInput<$PrismaModel>
-    hasSome?: string[] | ListStringFieldRefInput<$PrismaModel>
-    isEmpty?: boolean
-  }
-
   export type SecurityEventCountOrderByAggregateInput = {
     id?: SortOrder
     userId?: SortOrder
@@ -28270,6 +28835,10 @@ export namespace Prisma {
 
   export type SecurityEventSumOrderByAggregateInput = {
     riskScore?: SortOrder
+  }
+
+  export type UserCreateareasOfInterestInput = {
+    set: string[]
   }
 
   export type UserRoleCreateNestedManyWithoutUserInput = {
@@ -28514,6 +29083,27 @@ export namespace Prisma {
 
   export type NullableEnumGenderFieldUpdateOperationsInput = {
     set?: $Enums.Gender | null
+  }
+
+  export type NullableEnumMaritalStatusFieldUpdateOperationsInput = {
+    set?: $Enums.MaritalStatus | null
+  }
+
+  export type NullableFloatFieldUpdateOperationsInput = {
+    set?: number | null
+    increment?: number
+    decrement?: number
+    multiply?: number
+    divide?: number
+  }
+
+  export type NullableEnumAgeGroupFieldUpdateOperationsInput = {
+    set?: $Enums.AgeGroup | null
+  }
+
+  export type UserUpdateareasOfInterestInput = {
+    set?: string[]
+    push?: string | string[]
   }
 
   export type BoolFieldUpdateOperationsInput = {
@@ -29192,14 +29782,6 @@ export namespace Prisma {
     set?: $Enums.SubscriptionTier
   }
 
-  export type NullableFloatFieldUpdateOperationsInput = {
-    set?: number | null
-    increment?: number
-    decrement?: number
-    multiply?: number
-    divide?: number
-  }
-
   export type UserUpdateOneRequiredWithoutVendorProfileNestedInput = {
     create?: XOR<UserCreateWithoutVendorProfileInput, UserUncheckedCreateWithoutVendorProfileInput>
     connectOrCreate?: UserCreateOrConnectWithoutVendorProfileInput
@@ -29501,6 +30083,31 @@ export namespace Prisma {
     not?: NestedEnumGenderNullableFilter<$PrismaModel> | $Enums.Gender | null
   }
 
+  export type NestedEnumMaritalStatusNullableFilter<$PrismaModel = never> = {
+    equals?: $Enums.MaritalStatus | EnumMaritalStatusFieldRefInput<$PrismaModel> | null
+    in?: $Enums.MaritalStatus[] | ListEnumMaritalStatusFieldRefInput<$PrismaModel> | null
+    notIn?: $Enums.MaritalStatus[] | ListEnumMaritalStatusFieldRefInput<$PrismaModel> | null
+    not?: NestedEnumMaritalStatusNullableFilter<$PrismaModel> | $Enums.MaritalStatus | null
+  }
+
+  export type NestedFloatNullableFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatNullableFilter<$PrismaModel> | number | null
+  }
+
+  export type NestedEnumAgeGroupNullableFilter<$PrismaModel = never> = {
+    equals?: $Enums.AgeGroup | EnumAgeGroupFieldRefInput<$PrismaModel> | null
+    in?: $Enums.AgeGroup[] | ListEnumAgeGroupFieldRefInput<$PrismaModel> | null
+    notIn?: $Enums.AgeGroup[] | ListEnumAgeGroupFieldRefInput<$PrismaModel> | null
+    not?: NestedEnumAgeGroupNullableFilter<$PrismaModel> | $Enums.AgeGroup | null
+  }
+
   export type NestedBoolFilter<$PrismaModel = never> = {
     equals?: boolean | BooleanFieldRefInput<$PrismaModel>
     not?: NestedBoolFilter<$PrismaModel> | boolean
@@ -29602,6 +30209,42 @@ export namespace Prisma {
     _count?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedEnumGenderNullableFilter<$PrismaModel>
     _max?: NestedEnumGenderNullableFilter<$PrismaModel>
+  }
+
+  export type NestedEnumMaritalStatusNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.MaritalStatus | EnumMaritalStatusFieldRefInput<$PrismaModel> | null
+    in?: $Enums.MaritalStatus[] | ListEnumMaritalStatusFieldRefInput<$PrismaModel> | null
+    notIn?: $Enums.MaritalStatus[] | ListEnumMaritalStatusFieldRefInput<$PrismaModel> | null
+    not?: NestedEnumMaritalStatusNullableWithAggregatesFilter<$PrismaModel> | $Enums.MaritalStatus | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedEnumMaritalStatusNullableFilter<$PrismaModel>
+    _max?: NestedEnumMaritalStatusNullableFilter<$PrismaModel>
+  }
+
+  export type NestedFloatNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatNullableWithAggregatesFilter<$PrismaModel> | number | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _avg?: NestedFloatNullableFilter<$PrismaModel>
+    _sum?: NestedFloatNullableFilter<$PrismaModel>
+    _min?: NestedFloatNullableFilter<$PrismaModel>
+    _max?: NestedFloatNullableFilter<$PrismaModel>
+  }
+
+  export type NestedEnumAgeGroupNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.AgeGroup | EnumAgeGroupFieldRefInput<$PrismaModel> | null
+    in?: $Enums.AgeGroup[] | ListEnumAgeGroupFieldRefInput<$PrismaModel> | null
+    notIn?: $Enums.AgeGroup[] | ListEnumAgeGroupFieldRefInput<$PrismaModel> | null
+    not?: NestedEnumAgeGroupNullableWithAggregatesFilter<$PrismaModel> | $Enums.AgeGroup | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedEnumAgeGroupNullableFilter<$PrismaModel>
+    _max?: NestedEnumAgeGroupNullableFilter<$PrismaModel>
   }
 
   export type NestedBoolWithAggregatesFilter<$PrismaModel = never> = {
@@ -29708,17 +30351,6 @@ export namespace Prisma {
     not?: NestedEnumSubscriptionTierFilter<$PrismaModel> | $Enums.SubscriptionTier
   }
 
-  export type NestedFloatNullableFilter<$PrismaModel = never> = {
-    equals?: number | FloatFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
-    lt?: number | FloatFieldRefInput<$PrismaModel>
-    lte?: number | FloatFieldRefInput<$PrismaModel>
-    gt?: number | FloatFieldRefInput<$PrismaModel>
-    gte?: number | FloatFieldRefInput<$PrismaModel>
-    not?: NestedFloatNullableFilter<$PrismaModel> | number | null
-  }
-
   export type NestedEnumSubscriptionTierWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.SubscriptionTier | EnumSubscriptionTierFieldRefInput<$PrismaModel>
     in?: $Enums.SubscriptionTier[] | ListEnumSubscriptionTierFieldRefInput<$PrismaModel>
@@ -29727,22 +30359,6 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumSubscriptionTierFilter<$PrismaModel>
     _max?: NestedEnumSubscriptionTierFilter<$PrismaModel>
-  }
-
-  export type NestedFloatNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: number | FloatFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
-    lt?: number | FloatFieldRefInput<$PrismaModel>
-    lte?: number | FloatFieldRefInput<$PrismaModel>
-    gt?: number | FloatFieldRefInput<$PrismaModel>
-    gte?: number | FloatFieldRefInput<$PrismaModel>
-    not?: NestedFloatNullableWithAggregatesFilter<$PrismaModel> | number | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _avg?: NestedFloatNullableFilter<$PrismaModel>
-    _sum?: NestedFloatNullableFilter<$PrismaModel>
-    _min?: NestedFloatNullableFilter<$PrismaModel>
-    _max?: NestedFloatNullableFilter<$PrismaModel>
   }
 
   export type NestedEnumDriverTierFilter<$PrismaModel = never> = {
@@ -29863,6 +30479,11 @@ export namespace Prisma {
     membershipTier?: string
     totalOrders?: number
     totalSpent?: number
+    occupation?: string | null
+    company?: string | null
+    emergencyContact?: NullableJsonNullValueInput | InputJsonValue
+    medicalInfo?: NullableJsonNullValueInput | InputJsonValue
+    socialMedia?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
     addresses?: AddressCreateNestedManyWithoutCustomerProfileInput
@@ -29875,6 +30496,11 @@ export namespace Prisma {
     membershipTier?: string
     totalOrders?: number
     totalSpent?: number
+    occupation?: string | null
+    company?: string | null
+    emergencyContact?: NullableJsonNullValueInput | InputJsonValue
+    medicalInfo?: NullableJsonNullValueInput | InputJsonValue
+    socialMedia?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
     addresses?: AddressUncheckedCreateNestedManyWithoutCustomerProfileInput
@@ -30383,6 +31009,11 @@ export namespace Prisma {
     membershipTier?: StringFieldUpdateOperationsInput | string
     totalOrders?: IntFieldUpdateOperationsInput | number
     totalSpent?: FloatFieldUpdateOperationsInput | number
+    occupation?: NullableStringFieldUpdateOperationsInput | string | null
+    company?: NullableStringFieldUpdateOperationsInput | string | null
+    emergencyContact?: NullableJsonNullValueInput | InputJsonValue
+    medicalInfo?: NullableJsonNullValueInput | InputJsonValue
+    socialMedia?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     addresses?: AddressUpdateManyWithoutCustomerProfileNestedInput
@@ -30395,6 +31026,11 @@ export namespace Prisma {
     membershipTier?: StringFieldUpdateOperationsInput | string
     totalOrders?: IntFieldUpdateOperationsInput | number
     totalSpent?: FloatFieldUpdateOperationsInput | number
+    occupation?: NullableStringFieldUpdateOperationsInput | string | null
+    company?: NullableStringFieldUpdateOperationsInput | string | null
+    emergencyContact?: NullableJsonNullValueInput | InputJsonValue
+    medicalInfo?: NullableJsonNullValueInput | InputJsonValue
+    socialMedia?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     addresses?: AddressUncheckedUpdateManyWithoutCustomerProfileNestedInput
@@ -31010,6 +31646,12 @@ export namespace Prisma {
     avatar?: string | null
     dateOfBirth?: Date | string | null
     gender?: $Enums.Gender | null
+    maritalStatus?: $Enums.MaritalStatus | null
+    bodyWeight?: number | null
+    height?: number | null
+    ageGroup?: $Enums.AgeGroup | null
+    areasOfInterest?: UserCreateareasOfInterestInput | string[]
+    profilePicture?: string | null
     isEmailVerified?: boolean
     isPhoneVerified?: boolean
     isActive?: boolean
@@ -31045,6 +31687,12 @@ export namespace Prisma {
     avatar?: string | null
     dateOfBirth?: Date | string | null
     gender?: $Enums.Gender | null
+    maritalStatus?: $Enums.MaritalStatus | null
+    bodyWeight?: number | null
+    height?: number | null
+    ageGroup?: $Enums.AgeGroup | null
+    areasOfInterest?: UserCreateareasOfInterestInput | string[]
+    profilePicture?: string | null
     isEmailVerified?: boolean
     isPhoneVerified?: boolean
     isActive?: boolean
@@ -31117,6 +31765,12 @@ export namespace Prisma {
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     gender?: NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
+    maritalStatus?: NullableEnumMaritalStatusFieldUpdateOperationsInput | $Enums.MaritalStatus | null
+    bodyWeight?: NullableFloatFieldUpdateOperationsInput | number | null
+    height?: NullableFloatFieldUpdateOperationsInput | number | null
+    ageGroup?: NullableEnumAgeGroupFieldUpdateOperationsInput | $Enums.AgeGroup | null
+    areasOfInterest?: UserUpdateareasOfInterestInput | string[]
+    profilePicture?: NullableStringFieldUpdateOperationsInput | string | null
     isEmailVerified?: BoolFieldUpdateOperationsInput | boolean
     isPhoneVerified?: BoolFieldUpdateOperationsInput | boolean
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -31152,6 +31806,12 @@ export namespace Prisma {
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     gender?: NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
+    maritalStatus?: NullableEnumMaritalStatusFieldUpdateOperationsInput | $Enums.MaritalStatus | null
+    bodyWeight?: NullableFloatFieldUpdateOperationsInput | number | null
+    height?: NullableFloatFieldUpdateOperationsInput | number | null
+    ageGroup?: NullableEnumAgeGroupFieldUpdateOperationsInput | $Enums.AgeGroup | null
+    areasOfInterest?: UserUpdateareasOfInterestInput | string[]
+    profilePicture?: NullableStringFieldUpdateOperationsInput | string | null
     isEmailVerified?: BoolFieldUpdateOperationsInput | boolean
     isPhoneVerified?: BoolFieldUpdateOperationsInput | boolean
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -31214,6 +31874,12 @@ export namespace Prisma {
     avatar?: string | null
     dateOfBirth?: Date | string | null
     gender?: $Enums.Gender | null
+    maritalStatus?: $Enums.MaritalStatus | null
+    bodyWeight?: number | null
+    height?: number | null
+    ageGroup?: $Enums.AgeGroup | null
+    areasOfInterest?: UserCreateareasOfInterestInput | string[]
+    profilePicture?: string | null
     isEmailVerified?: boolean
     isPhoneVerified?: boolean
     isActive?: boolean
@@ -31249,6 +31915,12 @@ export namespace Prisma {
     avatar?: string | null
     dateOfBirth?: Date | string | null
     gender?: $Enums.Gender | null
+    maritalStatus?: $Enums.MaritalStatus | null
+    bodyWeight?: number | null
+    height?: number | null
+    ageGroup?: $Enums.AgeGroup | null
+    areasOfInterest?: UserCreateareasOfInterestInput | string[]
+    profilePicture?: string | null
     isEmailVerified?: boolean
     isPhoneVerified?: boolean
     isActive?: boolean
@@ -31283,7 +31955,8 @@ export namespace Prisma {
     id?: string
     label: string
     name?: string | null
-    address: string
+    buildingNumber?: string | null
+    street: string
     address2?: string | null
     city: string
     state?: string | null
@@ -31291,6 +31964,8 @@ export namespace Prisma {
     country: string
     phone?: string | null
     isDefault?: boolean
+    latitude?: number | null
+    longitude?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -31299,7 +31974,8 @@ export namespace Prisma {
     id?: string
     label: string
     name?: string | null
-    address: string
+    buildingNumber?: string | null
+    street: string
     address2?: string | null
     city: string
     state?: string | null
@@ -31307,6 +31983,8 @@ export namespace Prisma {
     country: string
     phone?: string | null
     isDefault?: boolean
+    latitude?: number | null
+    longitude?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -31342,6 +32020,12 @@ export namespace Prisma {
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     gender?: NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
+    maritalStatus?: NullableEnumMaritalStatusFieldUpdateOperationsInput | $Enums.MaritalStatus | null
+    bodyWeight?: NullableFloatFieldUpdateOperationsInput | number | null
+    height?: NullableFloatFieldUpdateOperationsInput | number | null
+    ageGroup?: NullableEnumAgeGroupFieldUpdateOperationsInput | $Enums.AgeGroup | null
+    areasOfInterest?: UserUpdateareasOfInterestInput | string[]
+    profilePicture?: NullableStringFieldUpdateOperationsInput | string | null
     isEmailVerified?: BoolFieldUpdateOperationsInput | boolean
     isPhoneVerified?: BoolFieldUpdateOperationsInput | boolean
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -31377,6 +32061,12 @@ export namespace Prisma {
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     gender?: NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
+    maritalStatus?: NullableEnumMaritalStatusFieldUpdateOperationsInput | $Enums.MaritalStatus | null
+    bodyWeight?: NullableFloatFieldUpdateOperationsInput | number | null
+    height?: NullableFloatFieldUpdateOperationsInput | number | null
+    ageGroup?: NullableEnumAgeGroupFieldUpdateOperationsInput | $Enums.AgeGroup | null
+    areasOfInterest?: UserUpdateareasOfInterestInput | string[]
+    profilePicture?: NullableStringFieldUpdateOperationsInput | string | null
     isEmailVerified?: BoolFieldUpdateOperationsInput | boolean
     isPhoneVerified?: BoolFieldUpdateOperationsInput | boolean
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -31426,7 +32116,8 @@ export namespace Prisma {
     customerProfileId?: StringFilter<"Address"> | string
     label?: StringFilter<"Address"> | string
     name?: StringNullableFilter<"Address"> | string | null
-    address?: StringFilter<"Address"> | string
+    buildingNumber?: StringNullableFilter<"Address"> | string | null
+    street?: StringFilter<"Address"> | string
     address2?: StringNullableFilter<"Address"> | string | null
     city?: StringFilter<"Address"> | string
     state?: StringNullableFilter<"Address"> | string | null
@@ -31434,6 +32125,8 @@ export namespace Prisma {
     country?: StringFilter<"Address"> | string
     phone?: StringNullableFilter<"Address"> | string | null
     isDefault?: BoolFilter<"Address"> | boolean
+    latitude?: FloatNullableFilter<"Address"> | number | null
+    longitude?: FloatNullableFilter<"Address"> | number | null
     createdAt?: DateTimeFilter<"Address"> | Date | string
     updatedAt?: DateTimeFilter<"Address"> | Date | string
   }
@@ -31448,6 +32141,12 @@ export namespace Prisma {
     avatar?: string | null
     dateOfBirth?: Date | string | null
     gender?: $Enums.Gender | null
+    maritalStatus?: $Enums.MaritalStatus | null
+    bodyWeight?: number | null
+    height?: number | null
+    ageGroup?: $Enums.AgeGroup | null
+    areasOfInterest?: UserCreateareasOfInterestInput | string[]
+    profilePicture?: string | null
     isEmailVerified?: boolean
     isPhoneVerified?: boolean
     isActive?: boolean
@@ -31483,6 +32182,12 @@ export namespace Prisma {
     avatar?: string | null
     dateOfBirth?: Date | string | null
     gender?: $Enums.Gender | null
+    maritalStatus?: $Enums.MaritalStatus | null
+    bodyWeight?: number | null
+    height?: number | null
+    ageGroup?: $Enums.AgeGroup | null
+    areasOfInterest?: UserCreateareasOfInterestInput | string[]
+    profilePicture?: string | null
     isEmailVerified?: boolean
     isPhoneVerified?: boolean
     isActive?: boolean
@@ -31534,6 +32239,12 @@ export namespace Prisma {
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     gender?: NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
+    maritalStatus?: NullableEnumMaritalStatusFieldUpdateOperationsInput | $Enums.MaritalStatus | null
+    bodyWeight?: NullableFloatFieldUpdateOperationsInput | number | null
+    height?: NullableFloatFieldUpdateOperationsInput | number | null
+    ageGroup?: NullableEnumAgeGroupFieldUpdateOperationsInput | $Enums.AgeGroup | null
+    areasOfInterest?: UserUpdateareasOfInterestInput | string[]
+    profilePicture?: NullableStringFieldUpdateOperationsInput | string | null
     isEmailVerified?: BoolFieldUpdateOperationsInput | boolean
     isPhoneVerified?: BoolFieldUpdateOperationsInput | boolean
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -31569,6 +32280,12 @@ export namespace Prisma {
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     gender?: NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
+    maritalStatus?: NullableEnumMaritalStatusFieldUpdateOperationsInput | $Enums.MaritalStatus | null
+    bodyWeight?: NullableFloatFieldUpdateOperationsInput | number | null
+    height?: NullableFloatFieldUpdateOperationsInput | number | null
+    ageGroup?: NullableEnumAgeGroupFieldUpdateOperationsInput | $Enums.AgeGroup | null
+    areasOfInterest?: UserUpdateareasOfInterestInput | string[]
+    profilePicture?: NullableStringFieldUpdateOperationsInput | string | null
     isEmailVerified?: BoolFieldUpdateOperationsInput | boolean
     isPhoneVerified?: BoolFieldUpdateOperationsInput | boolean
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -31604,6 +32321,12 @@ export namespace Prisma {
     avatar?: string | null
     dateOfBirth?: Date | string | null
     gender?: $Enums.Gender | null
+    maritalStatus?: $Enums.MaritalStatus | null
+    bodyWeight?: number | null
+    height?: number | null
+    ageGroup?: $Enums.AgeGroup | null
+    areasOfInterest?: UserCreateareasOfInterestInput | string[]
+    profilePicture?: string | null
     isEmailVerified?: boolean
     isPhoneVerified?: boolean
     isActive?: boolean
@@ -31639,6 +32362,12 @@ export namespace Prisma {
     avatar?: string | null
     dateOfBirth?: Date | string | null
     gender?: $Enums.Gender | null
+    maritalStatus?: $Enums.MaritalStatus | null
+    bodyWeight?: number | null
+    height?: number | null
+    ageGroup?: $Enums.AgeGroup | null
+    areasOfInterest?: UserCreateareasOfInterestInput | string[]
+    profilePicture?: string | null
     isEmailVerified?: boolean
     isPhoneVerified?: boolean
     isActive?: boolean
@@ -31690,6 +32419,12 @@ export namespace Prisma {
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     gender?: NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
+    maritalStatus?: NullableEnumMaritalStatusFieldUpdateOperationsInput | $Enums.MaritalStatus | null
+    bodyWeight?: NullableFloatFieldUpdateOperationsInput | number | null
+    height?: NullableFloatFieldUpdateOperationsInput | number | null
+    ageGroup?: NullableEnumAgeGroupFieldUpdateOperationsInput | $Enums.AgeGroup | null
+    areasOfInterest?: UserUpdateareasOfInterestInput | string[]
+    profilePicture?: NullableStringFieldUpdateOperationsInput | string | null
     isEmailVerified?: BoolFieldUpdateOperationsInput | boolean
     isPhoneVerified?: BoolFieldUpdateOperationsInput | boolean
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -31725,6 +32460,12 @@ export namespace Prisma {
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     gender?: NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
+    maritalStatus?: NullableEnumMaritalStatusFieldUpdateOperationsInput | $Enums.MaritalStatus | null
+    bodyWeight?: NullableFloatFieldUpdateOperationsInput | number | null
+    height?: NullableFloatFieldUpdateOperationsInput | number | null
+    ageGroup?: NullableEnumAgeGroupFieldUpdateOperationsInput | $Enums.AgeGroup | null
+    areasOfInterest?: UserUpdateareasOfInterestInput | string[]
+    profilePicture?: NullableStringFieldUpdateOperationsInput | string | null
     isEmailVerified?: BoolFieldUpdateOperationsInput | boolean
     isPhoneVerified?: BoolFieldUpdateOperationsInput | boolean
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -31760,6 +32501,12 @@ export namespace Prisma {
     avatar?: string | null
     dateOfBirth?: Date | string | null
     gender?: $Enums.Gender | null
+    maritalStatus?: $Enums.MaritalStatus | null
+    bodyWeight?: number | null
+    height?: number | null
+    ageGroup?: $Enums.AgeGroup | null
+    areasOfInterest?: UserCreateareasOfInterestInput | string[]
+    profilePicture?: string | null
     isEmailVerified?: boolean
     isPhoneVerified?: boolean
     isActive?: boolean
@@ -31795,6 +32542,12 @@ export namespace Prisma {
     avatar?: string | null
     dateOfBirth?: Date | string | null
     gender?: $Enums.Gender | null
+    maritalStatus?: $Enums.MaritalStatus | null
+    bodyWeight?: number | null
+    height?: number | null
+    ageGroup?: $Enums.AgeGroup | null
+    areasOfInterest?: UserCreateareasOfInterestInput | string[]
+    profilePicture?: string | null
     isEmailVerified?: boolean
     isPhoneVerified?: boolean
     isActive?: boolean
@@ -31846,6 +32599,12 @@ export namespace Prisma {
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     gender?: NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
+    maritalStatus?: NullableEnumMaritalStatusFieldUpdateOperationsInput | $Enums.MaritalStatus | null
+    bodyWeight?: NullableFloatFieldUpdateOperationsInput | number | null
+    height?: NullableFloatFieldUpdateOperationsInput | number | null
+    ageGroup?: NullableEnumAgeGroupFieldUpdateOperationsInput | $Enums.AgeGroup | null
+    areasOfInterest?: UserUpdateareasOfInterestInput | string[]
+    profilePicture?: NullableStringFieldUpdateOperationsInput | string | null
     isEmailVerified?: BoolFieldUpdateOperationsInput | boolean
     isPhoneVerified?: BoolFieldUpdateOperationsInput | boolean
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -31881,6 +32640,12 @@ export namespace Prisma {
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     gender?: NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
+    maritalStatus?: NullableEnumMaritalStatusFieldUpdateOperationsInput | $Enums.MaritalStatus | null
+    bodyWeight?: NullableFloatFieldUpdateOperationsInput | number | null
+    height?: NullableFloatFieldUpdateOperationsInput | number | null
+    ageGroup?: NullableEnumAgeGroupFieldUpdateOperationsInput | $Enums.AgeGroup | null
+    areasOfInterest?: UserUpdateareasOfInterestInput | string[]
+    profilePicture?: NullableStringFieldUpdateOperationsInput | string | null
     isEmailVerified?: BoolFieldUpdateOperationsInput | boolean
     isPhoneVerified?: BoolFieldUpdateOperationsInput | boolean
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -31916,6 +32681,12 @@ export namespace Prisma {
     avatar?: string | null
     dateOfBirth?: Date | string | null
     gender?: $Enums.Gender | null
+    maritalStatus?: $Enums.MaritalStatus | null
+    bodyWeight?: number | null
+    height?: number | null
+    ageGroup?: $Enums.AgeGroup | null
+    areasOfInterest?: UserCreateareasOfInterestInput | string[]
+    profilePicture?: string | null
     isEmailVerified?: boolean
     isPhoneVerified?: boolean
     isActive?: boolean
@@ -31951,6 +32722,12 @@ export namespace Prisma {
     avatar?: string | null
     dateOfBirth?: Date | string | null
     gender?: $Enums.Gender | null
+    maritalStatus?: $Enums.MaritalStatus | null
+    bodyWeight?: number | null
+    height?: number | null
+    ageGroup?: $Enums.AgeGroup | null
+    areasOfInterest?: UserCreateareasOfInterestInput | string[]
+    profilePicture?: string | null
     isEmailVerified?: boolean
     isPhoneVerified?: boolean
     isActive?: boolean
@@ -32002,6 +32779,12 @@ export namespace Prisma {
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     gender?: NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
+    maritalStatus?: NullableEnumMaritalStatusFieldUpdateOperationsInput | $Enums.MaritalStatus | null
+    bodyWeight?: NullableFloatFieldUpdateOperationsInput | number | null
+    height?: NullableFloatFieldUpdateOperationsInput | number | null
+    ageGroup?: NullableEnumAgeGroupFieldUpdateOperationsInput | $Enums.AgeGroup | null
+    areasOfInterest?: UserUpdateareasOfInterestInput | string[]
+    profilePicture?: NullableStringFieldUpdateOperationsInput | string | null
     isEmailVerified?: BoolFieldUpdateOperationsInput | boolean
     isPhoneVerified?: BoolFieldUpdateOperationsInput | boolean
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -32037,6 +32820,12 @@ export namespace Prisma {
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     gender?: NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
+    maritalStatus?: NullableEnumMaritalStatusFieldUpdateOperationsInput | $Enums.MaritalStatus | null
+    bodyWeight?: NullableFloatFieldUpdateOperationsInput | number | null
+    height?: NullableFloatFieldUpdateOperationsInput | number | null
+    ageGroup?: NullableEnumAgeGroupFieldUpdateOperationsInput | $Enums.AgeGroup | null
+    areasOfInterest?: UserUpdateareasOfInterestInput | string[]
+    profilePicture?: NullableStringFieldUpdateOperationsInput | string | null
     isEmailVerified?: BoolFieldUpdateOperationsInput | boolean
     isPhoneVerified?: BoolFieldUpdateOperationsInput | boolean
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -32069,6 +32858,11 @@ export namespace Prisma {
     membershipTier?: string
     totalOrders?: number
     totalSpent?: number
+    occupation?: string | null
+    company?: string | null
+    emergencyContact?: NullableJsonNullValueInput | InputJsonValue
+    medicalInfo?: NullableJsonNullValueInput | InputJsonValue
+    socialMedia?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
     user: UserCreateNestedOneWithoutCustomerProfileInput
@@ -32082,6 +32876,11 @@ export namespace Prisma {
     membershipTier?: string
     totalOrders?: number
     totalSpent?: number
+    occupation?: string | null
+    company?: string | null
+    emergencyContact?: NullableJsonNullValueInput | InputJsonValue
+    medicalInfo?: NullableJsonNullValueInput | InputJsonValue
+    socialMedia?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -32109,6 +32908,11 @@ export namespace Prisma {
     membershipTier?: StringFieldUpdateOperationsInput | string
     totalOrders?: IntFieldUpdateOperationsInput | number
     totalSpent?: FloatFieldUpdateOperationsInput | number
+    occupation?: NullableStringFieldUpdateOperationsInput | string | null
+    company?: NullableStringFieldUpdateOperationsInput | string | null
+    emergencyContact?: NullableJsonNullValueInput | InputJsonValue
+    medicalInfo?: NullableJsonNullValueInput | InputJsonValue
+    socialMedia?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     user?: UserUpdateOneRequiredWithoutCustomerProfileNestedInput
@@ -32122,6 +32926,11 @@ export namespace Prisma {
     membershipTier?: StringFieldUpdateOperationsInput | string
     totalOrders?: IntFieldUpdateOperationsInput | number
     totalSpent?: FloatFieldUpdateOperationsInput | number
+    occupation?: NullableStringFieldUpdateOperationsInput | string | null
+    company?: NullableStringFieldUpdateOperationsInput | string | null
+    emergencyContact?: NullableJsonNullValueInput | InputJsonValue
+    medicalInfo?: NullableJsonNullValueInput | InputJsonValue
+    socialMedia?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -32136,6 +32945,12 @@ export namespace Prisma {
     avatar?: string | null
     dateOfBirth?: Date | string | null
     gender?: $Enums.Gender | null
+    maritalStatus?: $Enums.MaritalStatus | null
+    bodyWeight?: number | null
+    height?: number | null
+    ageGroup?: $Enums.AgeGroup | null
+    areasOfInterest?: UserCreateareasOfInterestInput | string[]
+    profilePicture?: string | null
     isEmailVerified?: boolean
     isPhoneVerified?: boolean
     isActive?: boolean
@@ -32171,6 +32986,12 @@ export namespace Prisma {
     avatar?: string | null
     dateOfBirth?: Date | string | null
     gender?: $Enums.Gender | null
+    maritalStatus?: $Enums.MaritalStatus | null
+    bodyWeight?: number | null
+    height?: number | null
+    ageGroup?: $Enums.AgeGroup | null
+    areasOfInterest?: UserCreateareasOfInterestInput | string[]
+    profilePicture?: string | null
     isEmailVerified?: boolean
     isPhoneVerified?: boolean
     isActive?: boolean
@@ -32222,6 +33043,12 @@ export namespace Prisma {
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     gender?: NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
+    maritalStatus?: NullableEnumMaritalStatusFieldUpdateOperationsInput | $Enums.MaritalStatus | null
+    bodyWeight?: NullableFloatFieldUpdateOperationsInput | number | null
+    height?: NullableFloatFieldUpdateOperationsInput | number | null
+    ageGroup?: NullableEnumAgeGroupFieldUpdateOperationsInput | $Enums.AgeGroup | null
+    areasOfInterest?: UserUpdateareasOfInterestInput | string[]
+    profilePicture?: NullableStringFieldUpdateOperationsInput | string | null
     isEmailVerified?: BoolFieldUpdateOperationsInput | boolean
     isPhoneVerified?: BoolFieldUpdateOperationsInput | boolean
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -32257,6 +33084,12 @@ export namespace Prisma {
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     gender?: NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
+    maritalStatus?: NullableEnumMaritalStatusFieldUpdateOperationsInput | $Enums.MaritalStatus | null
+    bodyWeight?: NullableFloatFieldUpdateOperationsInput | number | null
+    height?: NullableFloatFieldUpdateOperationsInput | number | null
+    ageGroup?: NullableEnumAgeGroupFieldUpdateOperationsInput | $Enums.AgeGroup | null
+    areasOfInterest?: UserUpdateareasOfInterestInput | string[]
+    profilePicture?: NullableStringFieldUpdateOperationsInput | string | null
     isEmailVerified?: BoolFieldUpdateOperationsInput | boolean
     isPhoneVerified?: BoolFieldUpdateOperationsInput | boolean
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -32292,6 +33125,12 @@ export namespace Prisma {
     avatar?: string | null
     dateOfBirth?: Date | string | null
     gender?: $Enums.Gender | null
+    maritalStatus?: $Enums.MaritalStatus | null
+    bodyWeight?: number | null
+    height?: number | null
+    ageGroup?: $Enums.AgeGroup | null
+    areasOfInterest?: UserCreateareasOfInterestInput | string[]
+    profilePicture?: string | null
     isEmailVerified?: boolean
     isPhoneVerified?: boolean
     isActive?: boolean
@@ -32327,6 +33166,12 @@ export namespace Prisma {
     avatar?: string | null
     dateOfBirth?: Date | string | null
     gender?: $Enums.Gender | null
+    maritalStatus?: $Enums.MaritalStatus | null
+    bodyWeight?: number | null
+    height?: number | null
+    ageGroup?: $Enums.AgeGroup | null
+    areasOfInterest?: UserCreateareasOfInterestInput | string[]
+    profilePicture?: string | null
     isEmailVerified?: boolean
     isPhoneVerified?: boolean
     isActive?: boolean
@@ -32378,6 +33223,12 @@ export namespace Prisma {
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     gender?: NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
+    maritalStatus?: NullableEnumMaritalStatusFieldUpdateOperationsInput | $Enums.MaritalStatus | null
+    bodyWeight?: NullableFloatFieldUpdateOperationsInput | number | null
+    height?: NullableFloatFieldUpdateOperationsInput | number | null
+    ageGroup?: NullableEnumAgeGroupFieldUpdateOperationsInput | $Enums.AgeGroup | null
+    areasOfInterest?: UserUpdateareasOfInterestInput | string[]
+    profilePicture?: NullableStringFieldUpdateOperationsInput | string | null
     isEmailVerified?: BoolFieldUpdateOperationsInput | boolean
     isPhoneVerified?: BoolFieldUpdateOperationsInput | boolean
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -32413,6 +33264,12 @@ export namespace Prisma {
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     gender?: NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
+    maritalStatus?: NullableEnumMaritalStatusFieldUpdateOperationsInput | $Enums.MaritalStatus | null
+    bodyWeight?: NullableFloatFieldUpdateOperationsInput | number | null
+    height?: NullableFloatFieldUpdateOperationsInput | number | null
+    ageGroup?: NullableEnumAgeGroupFieldUpdateOperationsInput | $Enums.AgeGroup | null
+    areasOfInterest?: UserUpdateareasOfInterestInput | string[]
+    profilePicture?: NullableStringFieldUpdateOperationsInput | string | null
     isEmailVerified?: BoolFieldUpdateOperationsInput | boolean
     isPhoneVerified?: BoolFieldUpdateOperationsInput | boolean
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -32448,6 +33305,12 @@ export namespace Prisma {
     avatar?: string | null
     dateOfBirth?: Date | string | null
     gender?: $Enums.Gender | null
+    maritalStatus?: $Enums.MaritalStatus | null
+    bodyWeight?: number | null
+    height?: number | null
+    ageGroup?: $Enums.AgeGroup | null
+    areasOfInterest?: UserCreateareasOfInterestInput | string[]
+    profilePicture?: string | null
     isEmailVerified?: boolean
     isPhoneVerified?: boolean
     isActive?: boolean
@@ -32483,6 +33346,12 @@ export namespace Prisma {
     avatar?: string | null
     dateOfBirth?: Date | string | null
     gender?: $Enums.Gender | null
+    maritalStatus?: $Enums.MaritalStatus | null
+    bodyWeight?: number | null
+    height?: number | null
+    ageGroup?: $Enums.AgeGroup | null
+    areasOfInterest?: UserCreateareasOfInterestInput | string[]
+    profilePicture?: string | null
     isEmailVerified?: boolean
     isPhoneVerified?: boolean
     isActive?: boolean
@@ -32534,6 +33403,12 @@ export namespace Prisma {
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     gender?: NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
+    maritalStatus?: NullableEnumMaritalStatusFieldUpdateOperationsInput | $Enums.MaritalStatus | null
+    bodyWeight?: NullableFloatFieldUpdateOperationsInput | number | null
+    height?: NullableFloatFieldUpdateOperationsInput | number | null
+    ageGroup?: NullableEnumAgeGroupFieldUpdateOperationsInput | $Enums.AgeGroup | null
+    areasOfInterest?: UserUpdateareasOfInterestInput | string[]
+    profilePicture?: NullableStringFieldUpdateOperationsInput | string | null
     isEmailVerified?: BoolFieldUpdateOperationsInput | boolean
     isPhoneVerified?: BoolFieldUpdateOperationsInput | boolean
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -32569,6 +33444,12 @@ export namespace Prisma {
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     gender?: NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
+    maritalStatus?: NullableEnumMaritalStatusFieldUpdateOperationsInput | $Enums.MaritalStatus | null
+    bodyWeight?: NullableFloatFieldUpdateOperationsInput | number | null
+    height?: NullableFloatFieldUpdateOperationsInput | number | null
+    ageGroup?: NullableEnumAgeGroupFieldUpdateOperationsInput | $Enums.AgeGroup | null
+    areasOfInterest?: UserUpdateareasOfInterestInput | string[]
+    profilePicture?: NullableStringFieldUpdateOperationsInput | string | null
     isEmailVerified?: BoolFieldUpdateOperationsInput | boolean
     isPhoneVerified?: BoolFieldUpdateOperationsInput | boolean
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -32604,6 +33485,12 @@ export namespace Prisma {
     avatar?: string | null
     dateOfBirth?: Date | string | null
     gender?: $Enums.Gender | null
+    maritalStatus?: $Enums.MaritalStatus | null
+    bodyWeight?: number | null
+    height?: number | null
+    ageGroup?: $Enums.AgeGroup | null
+    areasOfInterest?: UserCreateareasOfInterestInput | string[]
+    profilePicture?: string | null
     isEmailVerified?: boolean
     isPhoneVerified?: boolean
     isActive?: boolean
@@ -32639,6 +33526,12 @@ export namespace Prisma {
     avatar?: string | null
     dateOfBirth?: Date | string | null
     gender?: $Enums.Gender | null
+    maritalStatus?: $Enums.MaritalStatus | null
+    bodyWeight?: number | null
+    height?: number | null
+    ageGroup?: $Enums.AgeGroup | null
+    areasOfInterest?: UserCreateareasOfInterestInput | string[]
+    profilePicture?: string | null
     isEmailVerified?: boolean
     isPhoneVerified?: boolean
     isActive?: boolean
@@ -32690,6 +33583,12 @@ export namespace Prisma {
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     gender?: NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
+    maritalStatus?: NullableEnumMaritalStatusFieldUpdateOperationsInput | $Enums.MaritalStatus | null
+    bodyWeight?: NullableFloatFieldUpdateOperationsInput | number | null
+    height?: NullableFloatFieldUpdateOperationsInput | number | null
+    ageGroup?: NullableEnumAgeGroupFieldUpdateOperationsInput | $Enums.AgeGroup | null
+    areasOfInterest?: UserUpdateareasOfInterestInput | string[]
+    profilePicture?: NullableStringFieldUpdateOperationsInput | string | null
     isEmailVerified?: BoolFieldUpdateOperationsInput | boolean
     isPhoneVerified?: BoolFieldUpdateOperationsInput | boolean
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -32725,6 +33624,12 @@ export namespace Prisma {
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     gender?: NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
+    maritalStatus?: NullableEnumMaritalStatusFieldUpdateOperationsInput | $Enums.MaritalStatus | null
+    bodyWeight?: NullableFloatFieldUpdateOperationsInput | number | null
+    height?: NullableFloatFieldUpdateOperationsInput | number | null
+    ageGroup?: NullableEnumAgeGroupFieldUpdateOperationsInput | $Enums.AgeGroup | null
+    areasOfInterest?: UserUpdateareasOfInterestInput | string[]
+    profilePicture?: NullableStringFieldUpdateOperationsInput | string | null
     isEmailVerified?: BoolFieldUpdateOperationsInput | boolean
     isPhoneVerified?: BoolFieldUpdateOperationsInput | boolean
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -32760,6 +33665,12 @@ export namespace Prisma {
     avatar?: string | null
     dateOfBirth?: Date | string | null
     gender?: $Enums.Gender | null
+    maritalStatus?: $Enums.MaritalStatus | null
+    bodyWeight?: number | null
+    height?: number | null
+    ageGroup?: $Enums.AgeGroup | null
+    areasOfInterest?: UserCreateareasOfInterestInput | string[]
+    profilePicture?: string | null
     isEmailVerified?: boolean
     isPhoneVerified?: boolean
     isActive?: boolean
@@ -32795,6 +33706,12 @@ export namespace Prisma {
     avatar?: string | null
     dateOfBirth?: Date | string | null
     gender?: $Enums.Gender | null
+    maritalStatus?: $Enums.MaritalStatus | null
+    bodyWeight?: number | null
+    height?: number | null
+    ageGroup?: $Enums.AgeGroup | null
+    areasOfInterest?: UserCreateareasOfInterestInput | string[]
+    profilePicture?: string | null
     isEmailVerified?: boolean
     isPhoneVerified?: boolean
     isActive?: boolean
@@ -32846,6 +33763,12 @@ export namespace Prisma {
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     gender?: NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
+    maritalStatus?: NullableEnumMaritalStatusFieldUpdateOperationsInput | $Enums.MaritalStatus | null
+    bodyWeight?: NullableFloatFieldUpdateOperationsInput | number | null
+    height?: NullableFloatFieldUpdateOperationsInput | number | null
+    ageGroup?: NullableEnumAgeGroupFieldUpdateOperationsInput | $Enums.AgeGroup | null
+    areasOfInterest?: UserUpdateareasOfInterestInput | string[]
+    profilePicture?: NullableStringFieldUpdateOperationsInput | string | null
     isEmailVerified?: BoolFieldUpdateOperationsInput | boolean
     isPhoneVerified?: BoolFieldUpdateOperationsInput | boolean
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -32881,6 +33804,12 @@ export namespace Prisma {
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     gender?: NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
+    maritalStatus?: NullableEnumMaritalStatusFieldUpdateOperationsInput | $Enums.MaritalStatus | null
+    bodyWeight?: NullableFloatFieldUpdateOperationsInput | number | null
+    height?: NullableFloatFieldUpdateOperationsInput | number | null
+    ageGroup?: NullableEnumAgeGroupFieldUpdateOperationsInput | $Enums.AgeGroup | null
+    areasOfInterest?: UserUpdateareasOfInterestInput | string[]
+    profilePicture?: NullableStringFieldUpdateOperationsInput | string | null
     isEmailVerified?: BoolFieldUpdateOperationsInput | boolean
     isPhoneVerified?: BoolFieldUpdateOperationsInput | boolean
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -32916,6 +33845,12 @@ export namespace Prisma {
     avatar?: string | null
     dateOfBirth?: Date | string | null
     gender?: $Enums.Gender | null
+    maritalStatus?: $Enums.MaritalStatus | null
+    bodyWeight?: number | null
+    height?: number | null
+    ageGroup?: $Enums.AgeGroup | null
+    areasOfInterest?: UserCreateareasOfInterestInput | string[]
+    profilePicture?: string | null
     isEmailVerified?: boolean
     isPhoneVerified?: boolean
     isActive?: boolean
@@ -32951,6 +33886,12 @@ export namespace Prisma {
     avatar?: string | null
     dateOfBirth?: Date | string | null
     gender?: $Enums.Gender | null
+    maritalStatus?: $Enums.MaritalStatus | null
+    bodyWeight?: number | null
+    height?: number | null
+    ageGroup?: $Enums.AgeGroup | null
+    areasOfInterest?: UserCreateareasOfInterestInput | string[]
+    profilePicture?: string | null
     isEmailVerified?: boolean
     isPhoneVerified?: boolean
     isActive?: boolean
@@ -32991,6 +33932,12 @@ export namespace Prisma {
     avatar?: string | null
     dateOfBirth?: Date | string | null
     gender?: $Enums.Gender | null
+    maritalStatus?: $Enums.MaritalStatus | null
+    bodyWeight?: number | null
+    height?: number | null
+    ageGroup?: $Enums.AgeGroup | null
+    areasOfInterest?: UserCreateareasOfInterestInput | string[]
+    profilePicture?: string | null
     isEmailVerified?: boolean
     isPhoneVerified?: boolean
     isActive?: boolean
@@ -33026,6 +33973,12 @@ export namespace Prisma {
     avatar?: string | null
     dateOfBirth?: Date | string | null
     gender?: $Enums.Gender | null
+    maritalStatus?: $Enums.MaritalStatus | null
+    bodyWeight?: number | null
+    height?: number | null
+    ageGroup?: $Enums.AgeGroup | null
+    areasOfInterest?: UserCreateareasOfInterestInput | string[]
+    profilePicture?: string | null
     isEmailVerified?: boolean
     isPhoneVerified?: boolean
     isActive?: boolean
@@ -33077,6 +34030,12 @@ export namespace Prisma {
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     gender?: NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
+    maritalStatus?: NullableEnumMaritalStatusFieldUpdateOperationsInput | $Enums.MaritalStatus | null
+    bodyWeight?: NullableFloatFieldUpdateOperationsInput | number | null
+    height?: NullableFloatFieldUpdateOperationsInput | number | null
+    ageGroup?: NullableEnumAgeGroupFieldUpdateOperationsInput | $Enums.AgeGroup | null
+    areasOfInterest?: UserUpdateareasOfInterestInput | string[]
+    profilePicture?: NullableStringFieldUpdateOperationsInput | string | null
     isEmailVerified?: BoolFieldUpdateOperationsInput | boolean
     isPhoneVerified?: BoolFieldUpdateOperationsInput | boolean
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -33112,6 +34071,12 @@ export namespace Prisma {
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     gender?: NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
+    maritalStatus?: NullableEnumMaritalStatusFieldUpdateOperationsInput | $Enums.MaritalStatus | null
+    bodyWeight?: NullableFloatFieldUpdateOperationsInput | number | null
+    height?: NullableFloatFieldUpdateOperationsInput | number | null
+    ageGroup?: NullableEnumAgeGroupFieldUpdateOperationsInput | $Enums.AgeGroup | null
+    areasOfInterest?: UserUpdateareasOfInterestInput | string[]
+    profilePicture?: NullableStringFieldUpdateOperationsInput | string | null
     isEmailVerified?: BoolFieldUpdateOperationsInput | boolean
     isPhoneVerified?: BoolFieldUpdateOperationsInput | boolean
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -33158,6 +34123,12 @@ export namespace Prisma {
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     gender?: NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
+    maritalStatus?: NullableEnumMaritalStatusFieldUpdateOperationsInput | $Enums.MaritalStatus | null
+    bodyWeight?: NullableFloatFieldUpdateOperationsInput | number | null
+    height?: NullableFloatFieldUpdateOperationsInput | number | null
+    ageGroup?: NullableEnumAgeGroupFieldUpdateOperationsInput | $Enums.AgeGroup | null
+    areasOfInterest?: UserUpdateareasOfInterestInput | string[]
+    profilePicture?: NullableStringFieldUpdateOperationsInput | string | null
     isEmailVerified?: BoolFieldUpdateOperationsInput | boolean
     isPhoneVerified?: BoolFieldUpdateOperationsInput | boolean
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -33193,6 +34164,12 @@ export namespace Prisma {
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     gender?: NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
+    maritalStatus?: NullableEnumMaritalStatusFieldUpdateOperationsInput | $Enums.MaritalStatus | null
+    bodyWeight?: NullableFloatFieldUpdateOperationsInput | number | null
+    height?: NullableFloatFieldUpdateOperationsInput | number | null
+    ageGroup?: NullableEnumAgeGroupFieldUpdateOperationsInput | $Enums.AgeGroup | null
+    areasOfInterest?: UserUpdateareasOfInterestInput | string[]
+    profilePicture?: NullableStringFieldUpdateOperationsInput | string | null
     isEmailVerified?: BoolFieldUpdateOperationsInput | boolean
     isPhoneVerified?: BoolFieldUpdateOperationsInput | boolean
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -33228,6 +34205,12 @@ export namespace Prisma {
     avatar?: string | null
     dateOfBirth?: Date | string | null
     gender?: $Enums.Gender | null
+    maritalStatus?: $Enums.MaritalStatus | null
+    bodyWeight?: number | null
+    height?: number | null
+    ageGroup?: $Enums.AgeGroup | null
+    areasOfInterest?: UserCreateareasOfInterestInput | string[]
+    profilePicture?: string | null
     isEmailVerified?: boolean
     isPhoneVerified?: boolean
     isActive?: boolean
@@ -33263,6 +34246,12 @@ export namespace Prisma {
     avatar?: string | null
     dateOfBirth?: Date | string | null
     gender?: $Enums.Gender | null
+    maritalStatus?: $Enums.MaritalStatus | null
+    bodyWeight?: number | null
+    height?: number | null
+    ageGroup?: $Enums.AgeGroup | null
+    areasOfInterest?: UserCreateareasOfInterestInput | string[]
+    profilePicture?: string | null
     isEmailVerified?: boolean
     isPhoneVerified?: boolean
     isActive?: boolean
@@ -33314,6 +34303,12 @@ export namespace Prisma {
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     gender?: NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
+    maritalStatus?: NullableEnumMaritalStatusFieldUpdateOperationsInput | $Enums.MaritalStatus | null
+    bodyWeight?: NullableFloatFieldUpdateOperationsInput | number | null
+    height?: NullableFloatFieldUpdateOperationsInput | number | null
+    ageGroup?: NullableEnumAgeGroupFieldUpdateOperationsInput | $Enums.AgeGroup | null
+    areasOfInterest?: UserUpdateareasOfInterestInput | string[]
+    profilePicture?: NullableStringFieldUpdateOperationsInput | string | null
     isEmailVerified?: BoolFieldUpdateOperationsInput | boolean
     isPhoneVerified?: BoolFieldUpdateOperationsInput | boolean
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -33349,6 +34344,12 @@ export namespace Prisma {
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     gender?: NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
+    maritalStatus?: NullableEnumMaritalStatusFieldUpdateOperationsInput | $Enums.MaritalStatus | null
+    bodyWeight?: NullableFloatFieldUpdateOperationsInput | number | null
+    height?: NullableFloatFieldUpdateOperationsInput | number | null
+    ageGroup?: NullableEnumAgeGroupFieldUpdateOperationsInput | $Enums.AgeGroup | null
+    areasOfInterest?: UserUpdateareasOfInterestInput | string[]
+    profilePicture?: NullableStringFieldUpdateOperationsInput | string | null
     isEmailVerified?: BoolFieldUpdateOperationsInput | boolean
     isPhoneVerified?: BoolFieldUpdateOperationsInput | boolean
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -33384,6 +34385,12 @@ export namespace Prisma {
     avatar?: string | null
     dateOfBirth?: Date | string | null
     gender?: $Enums.Gender | null
+    maritalStatus?: $Enums.MaritalStatus | null
+    bodyWeight?: number | null
+    height?: number | null
+    ageGroup?: $Enums.AgeGroup | null
+    areasOfInterest?: UserCreateareasOfInterestInput | string[]
+    profilePicture?: string | null
     isEmailVerified?: boolean
     isPhoneVerified?: boolean
     isActive?: boolean
@@ -33419,6 +34426,12 @@ export namespace Prisma {
     avatar?: string | null
     dateOfBirth?: Date | string | null
     gender?: $Enums.Gender | null
+    maritalStatus?: $Enums.MaritalStatus | null
+    bodyWeight?: number | null
+    height?: number | null
+    ageGroup?: $Enums.AgeGroup | null
+    areasOfInterest?: UserCreateareasOfInterestInput | string[]
+    profilePicture?: string | null
     isEmailVerified?: boolean
     isPhoneVerified?: boolean
     isActive?: boolean
@@ -33470,6 +34483,12 @@ export namespace Prisma {
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     gender?: NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
+    maritalStatus?: NullableEnumMaritalStatusFieldUpdateOperationsInput | $Enums.MaritalStatus | null
+    bodyWeight?: NullableFloatFieldUpdateOperationsInput | number | null
+    height?: NullableFloatFieldUpdateOperationsInput | number | null
+    ageGroup?: NullableEnumAgeGroupFieldUpdateOperationsInput | $Enums.AgeGroup | null
+    areasOfInterest?: UserUpdateareasOfInterestInput | string[]
+    profilePicture?: NullableStringFieldUpdateOperationsInput | string | null
     isEmailVerified?: BoolFieldUpdateOperationsInput | boolean
     isPhoneVerified?: BoolFieldUpdateOperationsInput | boolean
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -33505,6 +34524,12 @@ export namespace Prisma {
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     gender?: NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
+    maritalStatus?: NullableEnumMaritalStatusFieldUpdateOperationsInput | $Enums.MaritalStatus | null
+    bodyWeight?: NullableFloatFieldUpdateOperationsInput | number | null
+    height?: NullableFloatFieldUpdateOperationsInput | number | null
+    ageGroup?: NullableEnumAgeGroupFieldUpdateOperationsInput | $Enums.AgeGroup | null
+    areasOfInterest?: UserUpdateareasOfInterestInput | string[]
+    profilePicture?: NullableStringFieldUpdateOperationsInput | string | null
     isEmailVerified?: BoolFieldUpdateOperationsInput | boolean
     isPhoneVerified?: BoolFieldUpdateOperationsInput | boolean
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -33540,6 +34565,12 @@ export namespace Prisma {
     avatar?: string | null
     dateOfBirth?: Date | string | null
     gender?: $Enums.Gender | null
+    maritalStatus?: $Enums.MaritalStatus | null
+    bodyWeight?: number | null
+    height?: number | null
+    ageGroup?: $Enums.AgeGroup | null
+    areasOfInterest?: UserCreateareasOfInterestInput | string[]
+    profilePicture?: string | null
     isEmailVerified?: boolean
     isPhoneVerified?: boolean
     isActive?: boolean
@@ -33575,6 +34606,12 @@ export namespace Prisma {
     avatar?: string | null
     dateOfBirth?: Date | string | null
     gender?: $Enums.Gender | null
+    maritalStatus?: $Enums.MaritalStatus | null
+    bodyWeight?: number | null
+    height?: number | null
+    ageGroup?: $Enums.AgeGroup | null
+    areasOfInterest?: UserCreateareasOfInterestInput | string[]
+    profilePicture?: string | null
     isEmailVerified?: boolean
     isPhoneVerified?: boolean
     isActive?: boolean
@@ -33626,6 +34663,12 @@ export namespace Prisma {
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     gender?: NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
+    maritalStatus?: NullableEnumMaritalStatusFieldUpdateOperationsInput | $Enums.MaritalStatus | null
+    bodyWeight?: NullableFloatFieldUpdateOperationsInput | number | null
+    height?: NullableFloatFieldUpdateOperationsInput | number | null
+    ageGroup?: NullableEnumAgeGroupFieldUpdateOperationsInput | $Enums.AgeGroup | null
+    areasOfInterest?: UserUpdateareasOfInterestInput | string[]
+    profilePicture?: NullableStringFieldUpdateOperationsInput | string | null
     isEmailVerified?: BoolFieldUpdateOperationsInput | boolean
     isPhoneVerified?: BoolFieldUpdateOperationsInput | boolean
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -33661,6 +34704,12 @@ export namespace Prisma {
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     gender?: NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
+    maritalStatus?: NullableEnumMaritalStatusFieldUpdateOperationsInput | $Enums.MaritalStatus | null
+    bodyWeight?: NullableFloatFieldUpdateOperationsInput | number | null
+    height?: NullableFloatFieldUpdateOperationsInput | number | null
+    ageGroup?: NullableEnumAgeGroupFieldUpdateOperationsInput | $Enums.AgeGroup | null
+    areasOfInterest?: UserUpdateareasOfInterestInput | string[]
+    profilePicture?: NullableStringFieldUpdateOperationsInput | string | null
     isEmailVerified?: BoolFieldUpdateOperationsInput | boolean
     isPhoneVerified?: BoolFieldUpdateOperationsInput | boolean
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -33696,6 +34745,12 @@ export namespace Prisma {
     avatar?: string | null
     dateOfBirth?: Date | string | null
     gender?: $Enums.Gender | null
+    maritalStatus?: $Enums.MaritalStatus | null
+    bodyWeight?: number | null
+    height?: number | null
+    ageGroup?: $Enums.AgeGroup | null
+    areasOfInterest?: UserCreateareasOfInterestInput | string[]
+    profilePicture?: string | null
     isEmailVerified?: boolean
     isPhoneVerified?: boolean
     isActive?: boolean
@@ -33731,6 +34786,12 @@ export namespace Prisma {
     avatar?: string | null
     dateOfBirth?: Date | string | null
     gender?: $Enums.Gender | null
+    maritalStatus?: $Enums.MaritalStatus | null
+    bodyWeight?: number | null
+    height?: number | null
+    ageGroup?: $Enums.AgeGroup | null
+    areasOfInterest?: UserCreateareasOfInterestInput | string[]
+    profilePicture?: string | null
     isEmailVerified?: boolean
     isPhoneVerified?: boolean
     isActive?: boolean
@@ -33782,6 +34843,12 @@ export namespace Prisma {
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     gender?: NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
+    maritalStatus?: NullableEnumMaritalStatusFieldUpdateOperationsInput | $Enums.MaritalStatus | null
+    bodyWeight?: NullableFloatFieldUpdateOperationsInput | number | null
+    height?: NullableFloatFieldUpdateOperationsInput | number | null
+    ageGroup?: NullableEnumAgeGroupFieldUpdateOperationsInput | $Enums.AgeGroup | null
+    areasOfInterest?: UserUpdateareasOfInterestInput | string[]
+    profilePicture?: NullableStringFieldUpdateOperationsInput | string | null
     isEmailVerified?: BoolFieldUpdateOperationsInput | boolean
     isPhoneVerified?: BoolFieldUpdateOperationsInput | boolean
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -33817,6 +34884,12 @@ export namespace Prisma {
     avatar?: NullableStringFieldUpdateOperationsInput | string | null
     dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     gender?: NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
+    maritalStatus?: NullableEnumMaritalStatusFieldUpdateOperationsInput | $Enums.MaritalStatus | null
+    bodyWeight?: NullableFloatFieldUpdateOperationsInput | number | null
+    height?: NullableFloatFieldUpdateOperationsInput | number | null
+    ageGroup?: NullableEnumAgeGroupFieldUpdateOperationsInput | $Enums.AgeGroup | null
+    areasOfInterest?: UserUpdateareasOfInterestInput | string[]
+    profilePicture?: NullableStringFieldUpdateOperationsInput | string | null
     isEmailVerified?: BoolFieldUpdateOperationsInput | boolean
     isPhoneVerified?: BoolFieldUpdateOperationsInput | boolean
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -34354,7 +35427,8 @@ export namespace Prisma {
     id?: string
     label: string
     name?: string | null
-    address: string
+    buildingNumber?: string | null
+    street: string
     address2?: string | null
     city: string
     state?: string | null
@@ -34362,6 +35436,8 @@ export namespace Prisma {
     country: string
     phone?: string | null
     isDefault?: boolean
+    latitude?: number | null
+    longitude?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -34370,7 +35446,8 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     label?: StringFieldUpdateOperationsInput | string
     name?: NullableStringFieldUpdateOperationsInput | string | null
-    address?: StringFieldUpdateOperationsInput | string
+    buildingNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    street?: StringFieldUpdateOperationsInput | string
     address2?: NullableStringFieldUpdateOperationsInput | string | null
     city?: StringFieldUpdateOperationsInput | string
     state?: NullableStringFieldUpdateOperationsInput | string | null
@@ -34378,6 +35455,8 @@ export namespace Prisma {
     country?: StringFieldUpdateOperationsInput | string
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     isDefault?: BoolFieldUpdateOperationsInput | boolean
+    latitude?: NullableFloatFieldUpdateOperationsInput | number | null
+    longitude?: NullableFloatFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -34386,7 +35465,8 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     label?: StringFieldUpdateOperationsInput | string
     name?: NullableStringFieldUpdateOperationsInput | string | null
-    address?: StringFieldUpdateOperationsInput | string
+    buildingNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    street?: StringFieldUpdateOperationsInput | string
     address2?: NullableStringFieldUpdateOperationsInput | string | null
     city?: StringFieldUpdateOperationsInput | string
     state?: NullableStringFieldUpdateOperationsInput | string | null
@@ -34394,6 +35474,8 @@ export namespace Prisma {
     country?: StringFieldUpdateOperationsInput | string
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     isDefault?: BoolFieldUpdateOperationsInput | boolean
+    latitude?: NullableFloatFieldUpdateOperationsInput | number | null
+    longitude?: NullableFloatFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -34402,7 +35484,8 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     label?: StringFieldUpdateOperationsInput | string
     name?: NullableStringFieldUpdateOperationsInput | string | null
-    address?: StringFieldUpdateOperationsInput | string
+    buildingNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    street?: StringFieldUpdateOperationsInput | string
     address2?: NullableStringFieldUpdateOperationsInput | string | null
     city?: StringFieldUpdateOperationsInput | string
     state?: NullableStringFieldUpdateOperationsInput | string | null
@@ -34410,6 +35493,8 @@ export namespace Prisma {
     country?: StringFieldUpdateOperationsInput | string
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     isDefault?: BoolFieldUpdateOperationsInput | boolean
+    latitude?: NullableFloatFieldUpdateOperationsInput | number | null
+    longitude?: NullableFloatFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }

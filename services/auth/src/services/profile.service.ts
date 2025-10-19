@@ -59,17 +59,27 @@ export class InsufficientRoleError extends Error {
 
 interface AddressCreateData {
   label: string;
-  address: string;
+  buildingNumber?: string;
+  street: string;
+  address2?: string;
   city: string;
+  state?: string;
+  zipCode?: string;
   country: string;
+  phone?: string;
   isDefault?: boolean;
 }
 
 interface AddressUpdateData {
   label?: string;
-  address?: string;
+  buildingNumber?: string;
+  street?: string;
+  address2?: string;
   city?: string;
+  state?: string;
+  zipCode?: string;
   country?: string;
+  phone?: string;
   isDefault?: boolean;
 }
 
@@ -673,9 +683,14 @@ export class ProfileService {
       data: {
         customerProfileId: customerProfile.id,
         label: addressData.label,
-        address: addressData.address,
+        buildingNumber: addressData.buildingNumber,
+        street: addressData.street,
+        address2: addressData.address2,
         city: addressData.city,
+        state: addressData.state,
+        zipCode: addressData.zipCode,
         country: addressData.country,
+        phone: addressData.phone,
         isDefault: addressData.isDefault ?? false,
       },
     });
@@ -721,9 +736,14 @@ export class ProfileService {
       where: { id: addressId },
       data: {
         label: addressData.label,
-        address: addressData.address,
+        buildingNumber: addressData.buildingNumber,
+        street: addressData.street,
+        address2: addressData.address2,
         city: addressData.city,
+        state: addressData.state,
+        zipCode: addressData.zipCode,
         country: addressData.country,
+        phone: addressData.phone,
         isDefault: addressData.isDefault,
       },
     });

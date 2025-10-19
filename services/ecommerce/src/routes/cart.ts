@@ -8,7 +8,6 @@ import {
 import { cartRateLimit, validate } from '../middleware/validation.middleware';
 import {
   CartItemParamsSchema,
-  SanitizedAddToCartSchema,
   UpdateCartItemSchema,
 } from '../schemas/validation.schemas';
 import { CartService } from '../services/cart.service';
@@ -59,7 +58,8 @@ router.get('/', (req, res) => cartController.getCart(req, res));
  * @swagger
  * /api/v1/cart/add:
  *   post:
- *     summary: Add item to shopping cart with inventory validation
+ *     summary: Add item(s) to shopping cart with inventory validation
+ *     description: Unified endpoint that supports both single item and bulk operations
  *     tags: [Shopping Cart]
  *     security:
  *       - bearerAuth: []
@@ -68,29 +68,67 @@ router.get('/', (req, res) => cartController.getCart(req, res));
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             required:
- *               - productId
- *               - quantity
- *             properties:
- *               productId:
- *                 type: string
- *                 example: clr123product1
- *               quantity:
- *                 type: integer
- *                 minimum: 1
- *                 example: 2
+ *             oneOf:
+ *               - type: object
+ *                 title: Single Item
+ *                 required:
+ *                   - productId
+ *                   - quantity
+ *                 properties:
+ *                   productId:
+ *                     type: string
+ *                     example: clr123product1
+ *                   quantity:
+ *                     type: integer
+ *                     minimum: 1
+ *                     example: 2
+ *               - type: object
+ *                 title: Multiple Items
+ *                 required:
+ *                   - items
+ *                 properties:
+ *                   items:
+ *                     type: array
+ *                     minItems: 1
+ *                     maxItems: 50
+ *                     items:
+ *                       type: object
+ *                       required:
+ *                         - productId
+ *                         - quantity
+ *                       properties:
+ *                         productId:
+ *                           type: string
+ *                           example: clr123product1
+ *                         quantity:
+ *                           type: integer
+ *                           minimum: 1
+ *                           example: 2
+ *           examples:
+ *             singleItem:
+ *               summary: Add single item
+ *               value:
+ *                 productId: "cmgrnxxab0017seeuiqtbj7we"
+ *                 quantity: 3
+ *             multipleItems:
+ *               summary: Add multiple items
+ *               value:
+ *                 items:
+ *                   - productId: "cmgrnxxab0017seeuiqtbj7we"
+ *                     quantity: 3
+ *                   - productId: "cmgrnxxa80014seeuww1kxorh"
+ *                     quantity: 4
+ *                   - productId: "cmgrnxxa50011seeuap1ht0om"
+ *                     quantity: 3
  *     responses:
  *       200:
- *         description: Item added to cart successfully
+ *         description: Item(s) added to cart successfully
  *       400:
  *         description: Invalid request or insufficient stock
  *       404:
- *         description: Product not found
+ *         description: Product(s) not found
  */
-router.post('/add', validate({ body: SanitizedAddToCartSchema }), (req, res) =>
-  cartController.addItem(req, res)
-);
+router.post('/add', (req, res) => cartController.addItems(req, res));
 
 /**
  * @swagger

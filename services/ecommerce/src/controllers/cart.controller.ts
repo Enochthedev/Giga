@@ -1,4 +1,3 @@
-import { AddToCartSchema } from '@platform/types';
 import { Request, Response } from 'express';
 import { z } from 'zod';
 import { CartService } from '../services/cart.service';
@@ -52,12 +51,33 @@ export class CartController {
   }
 
   /**
-   * POST /api/v1/cart/add - Add item to shopping cart with inventory validation
+   * POST /api/v1/cart/add - Add item(s) to shopping cart with inventory validation
+   * Supports both single item and bulk operations in one endpoint
    */
-  async addItem(req: SessionRequest, res: Response): Promise<void> {
+  async addItems(req: SessionRequest, res: Response): Promise<void> {
     try {
-      // Validate request body
-      const validationResult = AddToCartSchema.safeParse(req.body);
+      // Unified schema that accepts both single item and array of items
+      const UnifiedAddToCartSchema = z.union([
+        // Single item format: { productId, quantity }
+        z.object({
+          productId: z.string().min(1),
+          quantity: z.number().positive().int(),
+        }),
+        // Bulk format: { items: [{ productId, quantity }] }
+        z.object({
+          items: z
+            .array(
+              z.object({
+                productId: z.string().min(1),
+                quantity: z.number().positive().int(),
+              })
+            )
+            .min(1)
+            .max(50), // Limit to 50 items per bulk request
+        }),
+      ]);
+
+      const validationResult = UnifiedAddToCartSchema.safeParse(req.body);
       if (!validationResult.success) {
         res.status(400).json({
           success: false,
@@ -68,21 +88,32 @@ export class CartController {
         return;
       }
 
-      const { productId, quantity } = validationResult.data;
-      // Get customerId from session (supports both authenticated and anonymous users)
+      const data = validationResult.data;
       const customerId =
         req.session?.customerId || req.user?.id || 'clr123customer';
 
-      const cart = await this.cartService.addItem(
-        customerId,
-        productId,
-        quantity
-      );
+      let cart;
+      let message;
+
+      // Check if it's single item or bulk operation
+      if ('items' in data) {
+        // Bulk operation
+        cart = await this.cartService.addBulkItems(customerId, data.items);
+        message = `${data.items.length} items added to cart successfully`;
+      } else {
+        // Single item operation
+        cart = await this.cartService.addItem(
+          customerId,
+          data.productId,
+          data.quantity
+        );
+        message = 'Item added to cart successfully';
+      }
 
       res.json({
         success: true,
         data: { cart },
-        message: 'Item added to cart successfully',
+        message,
         timestamp: new Date().toISOString(),
       });
     } catch (error) {
@@ -115,7 +146,7 @@ export class CartController {
 
       res.status(500).json({
         success: false,
-        error: 'Failed to add item to cart',
+        error: 'Failed to add item(s) to cart',
         timestamp: new Date().toISOString(),
       });
     }

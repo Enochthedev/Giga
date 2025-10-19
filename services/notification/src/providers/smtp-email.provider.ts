@@ -37,7 +37,7 @@ export class SMTPEmailProvider implements IEmailProvider {
       this.config = config;
 
       // Create nodemailer transporter
-      this.transporter = nodemailer.createTransporter({
+      this.transporter = nodemailer.createTransport({
         host: config.smtp.host,
         port: config.smtp.port,
         secure: config.smtp.secure,
@@ -56,7 +56,9 @@ export class SMTPEmailProvider implements IEmailProvider {
       });
 
       // Verify connection
-      await this.transporter.verify();
+      if (this.transporter) {
+        await this.transporter.verify();
+      }
       this.isConfigured = true;
 
       logger.info(`SMTP provider ${this.name} configured successfully`, {
@@ -81,6 +83,7 @@ export class SMTPEmailProvider implements IEmailProvider {
    * Send a single email
    */
   async sendEmail(request: EmailRequest): Promise<ProviderResponse> {
+    const startTime = Date.now();
     try {
       if (!this.isConfigured || !this.transporter) {
         throw new Error(`SMTP provider ${this.name} is not configured`);
@@ -131,8 +134,8 @@ export class SMTPEmailProvider implements IEmailProvider {
         if (!mailOptions.headers) {
           mailOptions.headers = {};
         }
-        mailOptions.headers['X-Track-Opens'] = 'true';
-        mailOptions.headers['X-Track-Clicks'] = 'true';
+        (mailOptions.headers as any)['X-Track-Opens'] = 'true';
+        (mailOptions.headers as any)['X-Track-Clicks'] = 'true';
       }
 
       // Add priority headers
@@ -146,9 +149,9 @@ export class SMTPEmailProvider implements IEmailProvider {
         if (!mailOptions.headers) {
           mailOptions.headers = {};
         }
-        mailOptions.headers['X-Priority'] =
+        (mailOptions.headers as any)['X-Priority'] =
           priorityMap[request.priority] || '3';
-        mailOptions.headers['X-MSMail-Priority'] =
+        (mailOptions.headers as any)['X-MSMail-Priority'] =
           request.priority === 'urgent' ? 'High' : 'Normal';
       }
 
@@ -158,7 +161,7 @@ export class SMTPEmailProvider implements IEmailProvider {
           mailOptions.headers = {};
         }
         Object.entries(request.metadata).forEach(([key, value]) => {
-          mailOptions.headers![`X-Metadata-${key}`] = String(value);
+          (mailOptions.headers as any)[`X-Metadata-${key}`] = String(value);
         });
       }
 
@@ -175,6 +178,7 @@ export class SMTPEmailProvider implements IEmailProvider {
       });
 
       return {
+        success: true,
         messageId: result.messageId,
         status: NotificationStatus.SENT,
         provider: this.name,
@@ -195,10 +199,12 @@ export class SMTPEmailProvider implements IEmailProvider {
       });
 
       return {
+        success: false,
         messageId: '',
         status: NotificationStatus.FAILED,
         provider: this.name,
         timestamp: new Date(),
+        responseTime: Date.now() - startTime,
         error: {
           code: this.mapErrorToCode(error),
           message: error instanceof Error ? error.message : 'Unknown error',
@@ -232,10 +238,12 @@ export class SMTPEmailProvider implements IEmailProvider {
             results.push(result.value);
           } else {
             results.push({
+              success: false,
               messageId: '',
               status: NotificationStatus.FAILED,
               provider: this.name,
               timestamp: new Date(),
+              responseTime: 0,
               error: {
                 code: NotificationErrorCode.PROVIDER_ERROR,
                 message:
@@ -254,10 +262,12 @@ export class SMTPEmailProvider implements IEmailProvider {
         // Handle batch-level errors
         batch.forEach((_, index) => {
           results.push({
+            success: false,
             messageId: '',
             status: NotificationStatus.FAILED,
             provider: this.name,
             timestamp: new Date(),
+            responseTime: 0,
             error: {
               code: NotificationErrorCode.PROVIDER_ERROR,
               message:

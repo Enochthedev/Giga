@@ -2,6 +2,7 @@ import express from 'express';
 import { config } from './config';
 import { logger } from './lib/logger';
 import { errorHandler, notFoundHandler } from './middleware/error.middleware';
+import { dummyPaymentRoutes } from './routes/dummy-payment.routes';
 import paymentMethodsRouter from './routes/payment-methods';
 import paymentsRouter from './routes/payments';
 import webhooksRouter from './routes/webhooks';
@@ -44,6 +45,9 @@ app.get('/health', (req, res) => {
 app.use('/api/v1/payments', paymentsRouter);
 app.use('/api/v1/payment-methods', paymentMethodsRouter);
 app.use('/api/v1/webhooks', webhooksRouter);
+
+// Dummy payment routes for frontend integration and testing
+app.use('/api/v1', dummyPaymentRoutes);
 
 // 404 handler
 app.use(notFoundHandler);

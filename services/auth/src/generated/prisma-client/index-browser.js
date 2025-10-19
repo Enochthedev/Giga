@@ -132,6 +132,12 @@ exports.Prisma.UserScalarFieldEnum = {
   avatar: 'avatar',
   dateOfBirth: 'dateOfBirth',
   gender: 'gender',
+  maritalStatus: 'maritalStatus',
+  bodyWeight: 'bodyWeight',
+  height: 'height',
+  ageGroup: 'ageGroup',
+  areasOfInterest: 'areasOfInterest',
+  profilePicture: 'profilePicture',
   isEmailVerified: 'isEmailVerified',
   isPhoneVerified: 'isPhoneVerified',
   isActive: 'isActive',
@@ -170,6 +176,11 @@ exports.Prisma.CustomerProfileScalarFieldEnum = {
   membershipTier: 'membershipTier',
   totalOrders: 'totalOrders',
   totalSpent: 'totalSpent',
+  occupation: 'occupation',
+  company: 'company',
+  emergencyContact: 'emergencyContact',
+  medicalInfo: 'medicalInfo',
+  socialMedia: 'socialMedia',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -241,7 +252,8 @@ exports.Prisma.AddressScalarFieldEnum = {
   customerProfileId: 'customerProfileId',
   label: 'label',
   name: 'name',
-  address: 'address',
+  buildingNumber: 'buildingNumber',
+  street: 'street',
   address2: 'address2',
   city: 'city',
   state: 'state',
@@ -249,6 +261,8 @@ exports.Prisma.AddressScalarFieldEnum = {
   country: 'country',
   phone: 'phone',
   isDefault: 'isDefault',
+  latitude: 'latitude',
+  longitude: 'longitude',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -390,6 +404,27 @@ exports.Gender = exports.$Enums.Gender = {
   MALE: 'MALE',
   FEMALE: 'FEMALE',
   OTHER: 'OTHER',
+  PREFER_NOT_TO_SAY: 'PREFER_NOT_TO_SAY'
+};
+
+exports.MaritalStatus = exports.$Enums.MaritalStatus = {
+  SINGLE: 'SINGLE',
+  MARRIED: 'MARRIED',
+  DIVORCED: 'DIVORCED',
+  WIDOWED: 'WIDOWED',
+  SEPARATED: 'SEPARATED',
+  DOMESTIC_PARTNERSHIP: 'DOMESTIC_PARTNERSHIP',
+  PREFER_NOT_TO_SAY: 'PREFER_NOT_TO_SAY'
+};
+
+exports.AgeGroup = exports.$Enums.AgeGroup = {
+  UNDER_18: 'UNDER_18',
+  AGE_18_24: 'AGE_18_24',
+  AGE_25_34: 'AGE_25_34',
+  AGE_35_44: 'AGE_35_44',
+  AGE_45_54: 'AGE_45_54',
+  AGE_55_64: 'AGE_55_64',
+  AGE_65_PLUS: 'AGE_65_PLUS',
   PREFER_NOT_TO_SAY: 'PREFER_NOT_TO_SAY'
 };
 

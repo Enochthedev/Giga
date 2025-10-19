@@ -1,10 +1,5 @@
-<<<<<<< HEAD
 import { HotelServiceConfig } from '@/types';
 import dotenv from 'dotenv';
-=======
-import dotenv from 'dotenv';
-import { HotelServiceConfig } from '@/types';
->>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
 
 // Load environment variables
 dotenv.config();
@@ -22,15 +17,6 @@ const config: HotelServiceConfig = {
   corsOrigin: process.env.CORS_ORIGIN || 'http://localhost:3000',
   logLevel: process.env.LOG_LEVEL || 'info',
 
-<<<<<<< HEAD
-  redis: {
-    host: process.env.REDIS_HOST || 'localhost',
-    port: parseInt(process.env.REDIS_PORT || '6379', 10),
-    password: process.env.REDIS_PASSWORD || undefined,
-  },
-
-=======
->>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
   cacheConfig: {
     ttl: parseInt(process.env.CACHE_TTL || '3600', 10),
     availabilityTtl: parseInt(process.env.AVAILABILITY_CACHE_TTL || '300', 10),

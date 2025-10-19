@@ -351,3 +351,95 @@ export interface PricingImpact {
   refundAmount: number;
   fees: FeeBreakdown[];
 }
+
+// Enhanced modification and cancellation types
+export interface BookingModificationRequest {
+  checkInDate?: Date;
+  checkOutDate?: Date;
+  rooms?: BookingRoomRequest[];
+  primaryGuest?: Partial<GuestDetails>;
+  additionalGuests?: GuestDetails[];
+  specialRequests?: string;
+  preferences?: Partial<GuestPreferences>;
+  reason: string;
+  requestedBy: string;
+  metadata?: Record<string, any>;
+}
+
+export interface CancellationPolicyDetails {
+  id: string;
+  name: string;
+  description: string;
+  refundPercentage: number;
+  hoursBeforeCheckIn: number;
+  penaltyType: CancellationPenaltyType;
+  penaltyValue?: number;
+  isActive: boolean;
+  isDefault: boolean;
+}
+
+export enum CancellationPenaltyType {
+  PERCENTAGE = 'percentage',
+  FIXED_AMOUNT = 'fixed_amount',
+  NIGHTS = 'nights',
+  NO_PENALTY = 'no_penalty',
+}
+
+export interface RefundCalculation {
+  originalAmount: number;
+  refundableAmount: number;
+  cancellationFee: number;
+  penaltyAmount: number;
+  refundPercentage: number;
+  hoursUntilCheckIn: number;
+  policyApplied: CancellationPolicyDetails;
+  breakdown: RefundBreakdown[];
+}
+
+export interface RefundBreakdown {
+  description: string;
+  amount: number;
+  type: 'refund' | 'fee' | 'penalty';
+}
+
+export interface ModificationValidation {
+  isValid: boolean;
+  canModify: boolean;
+  errors: import('../index').ValidationError[];
+  warnings: import('../index').ValidationError[];
+  pricingImpact?: PricingImpact;
+  availabilityImpact?: AvailabilityImpact;
+}
+
+export interface AvailabilityImpact {
+  originalRooms: BookedRoom[];
+  newRooms: BookingRoomRequest[];
+  roomsToRelease: BookedRoom[];
+  roomsToReserve: BookingRoomRequest[];
+  availabilityStatus: 'available' | 'partially_available' | 'unavailable';
+}
+
+export interface BookingHistoryEntry {
+  id: string;
+  bookingId: string;
+  action: BookingHistoryAction;
+  changedBy: string;
+  changeType: string;
+  oldValue?: any;
+  newValue?: any;
+  description?: string;
+  timestamp: Date;
+}
+
+export enum BookingHistoryAction {
+  CREATED = 'created',
+  MODIFIED = 'modified',
+  CONFIRMED = 'confirmed',
+  CANCELLED = 'cancelled',
+  CHECKED_IN = 'checked_in',
+  CHECKED_OUT = 'checked_out',
+  NO_SHOW = 'no_show',
+  STATUS_CHANGED = 'status_changed',
+  PAYMENT_PROCESSED = 'payment_processed',
+  REFUND_PROCESSED = 'refund_processed',
+}

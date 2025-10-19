@@ -1,10 +1,4 @@
-<<<<<<< HEAD
-// Improved Hotel Microservice Prisma Schema
-// Optimized for marketplace/middleman platform
-=======
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
->>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
+// Hotel Service Prisma Schema
 
 generator client {
   provider = "prisma-client-js"
@@ -17,52 +11,45 @@ datasource db {
 }
 
 model Property {
-<<<<<<< HEAD
   id          String @id @default(cuid())
-  slug        String @unique // For SEO-friendly URLs
   name        String
-  description String @db.Text
-  category    String // hotel, resort, hostel, etc.
+  description String
+  category    String
+  slug        String @unique
 
-  // Location information
-  address     Json // { street, city, state, country, postalCode }
-  coordinates Json // { lat, lng }
+  // Location information (stored as JSON)
+  address     Json
+  coordinates Json
   timezone    String
 
   // Property details
-  starRating Int?
-  amenities  Json // Array of amenities
-  policies   Json // Property policies object
+  starRating  Int?
+  amenities   Json // Array of amenities
+  policies    Json // Property policies object
+  contactInfo Json // Contact information object
 
-  // Contact information
-  email       String?
-  phone       String?
-  website     String?
-  contactInfo Json // Additional contact details
+  // Contact details
+  email   String?
+  phone   String?
+  website String?
 
-  // Check-in/out times
-  checkInTime  String // e.g., "15:00"
-  checkOutTime String // e.g., "11:00"
+  // Business settings
+  currency     String @default("USD")
+  checkInTime  String @default("15:00")
+  checkOutTime String @default("11:00")
 
   // Media
-  images      Json // Array of property images with URLs
+  images      Json // Array of property images
   virtualTour String?
 
   // Business information
-  ownerId String // Hotel owner/manager ID
-  chainId String? // Optional: for hotel chains
-  brandId String? // Optional: for brands
-  taxId   String? // For invoicing/legal
-
-  // Default currency for this property
-  currency String @default("USD")
+  ownerId String
+  chainId String?
+  brandId String?
 
   // Status and settings
-  status   String @default("active") // active, inactive, pending, suspended
+  status   String @default("active")
   settings Json // Property settings object
-
-  // Soft delete
-  deletedAt DateTime?
 
   // Timestamps
   createdAt DateTime @default(now())
@@ -74,83 +61,33 @@ model Property {
   inventory            InventoryRecord[]
   rates                RateRecord[]
   promotions           Promotion[]
-  reviews              Review[]
   cancellationPolicies CancellationPolicy[]
-  propertyHours        PropertyHours[]
-  taxConfigurations    TaxConfiguration[]
 
-  @@index([status, ownerId])
-  @@index([category])
-  @@index([ownerId])
-  @@index([slug])
-=======
-  id          String   @id @default(cuid())
-  name        String
-  description String
-  category    String
-  
-  // Location information (stored as JSON)
-  address     Json
-  coordinates Json
-  timezone    String
-  
-  // Property details
-  starRating  Int?
-  amenities   Json     // Array of amenities
-  policies    Json     // Property policies object
-  contactInfo Json     // Contact information object
-  
-  // Media
-  images      Json     // Array of property images
-  virtualTour String?
-  
-  // Business information
-  ownerId     String
-  chainId     String?
-  brandId     String?
-  
-  // Status and settings
-  status      String   @default("active")
-  settings    Json     // Property settings object
-  
-  // Timestamps
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  // Relations
-  roomTypes   RoomType[]
-  bookings    Booking[]
-  inventory   InventoryRecord[]
-  rates       RateRecord[]
-  promotions  Promotion[]
-  
   @@index([status])
   @@index([category])
   @@index([ownerId])
->>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
   @@map("properties")
 }
 
 model RoomType {
-<<<<<<< HEAD
   id          String @id @default(cuid())
   propertyId  String
   name        String
-  description String @db.Text
-  category    String // standard, deluxe, suite, etc.
+  description String
+  category    String
 
   // Capacity and layout
   maxOccupancy     Int
   maxAdults        Int
   maxChildren      Int
-  bedConfiguration Json // [{ type: "king", quantity: 1 }, { type: "single", quantity: 2 }]
+  bedConfiguration Json // Array of bed configurations
   roomSize         Float
-  roomSizeUnit     String // sqm, sqft
+  roomSizeUnit     String
 
   // Amenities and features
   amenities Json // Array of room amenities
-  view      String? // ocean, city, garden, etc.
-  floor     String? // ground, 1-10, penthouse
+  view      String?
+  floor     String?
 
   // Inventory
   totalRooms Int
@@ -170,184 +107,74 @@ model RoomType {
   updatedAt DateTime @updatedAt
 
   // Relations
-  property    Property          @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-  bookedRooms BookedRoom[]
-  inventory   InventoryRecord[]
-  rates       RateRecord[]
+  property  Property          @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  bookings  BookedRoom[]
+  inventory InventoryRecord[]
+  rates     RateRecord[]
 
-  @@index([propertyId, isActive])
-  @@index([propertyId])
-=======
-  id          String   @id @default(cuid())
-  propertyId  String
-  name        String
-  description String
-  category    String
-  
-  // Capacity and layout
-  maxOccupancy      Int
-  bedConfiguration  Json     // Array of bed configurations
-  roomSize          Float
-  roomSizeUnit      String
-  
-  // Amenities and features
-  amenities   Json     // Array of room amenities
-  view        String?
-  floor       String?
-  
-  // Inventory
-  totalRooms  Int
-  
-  // Pricing
-  baseRate    Float
-  currency    String
-  
-  // Media
-  images      Json     // Array of room images
-  
-  // Status
-  isActive    Boolean  @default(true)
-  
-  // Timestamps
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  // Relations
-  property    Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-  bookings    BookedRoom[]
-  inventory   InventoryRecord[]
-  rates       RateRecord[]
-  
   @@index([propertyId])
   @@index([isActive])
->>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
   @@map("room_types")
 }
 
 model Booking {
-<<<<<<< HEAD
   id                 String @id @default(cuid())
   confirmationNumber String @unique
   propertyId         String
 
-  // Guest information - simplified and normalized
-  guestId        String // From Auth Service
-  guestProfileId String? // Link to GuestProfile if registered user
-
-  // Primary guest contact (denormalized for quick access)
-  guestName  String
-  guestEmail String
-  guestPhone String
-
-  // Additional guest details stored as JSON
+  // Guest information
+  guestId          String
+  guestName        String
+  guestEmail       String
+  guestPhone       String?
+  primaryGuest     Json // Guest details object
   additionalGuests Json // Array of additional guests
 
-  // Booking dates
+  // Booking details
   checkInDate  DateTime
   checkOutDate DateTime
   nights       Int
+  rooms        Json // Array of booked rooms (stored as JSON for flexibility)
 
-  // Actual check-in/out (filled when guest arrives/leaves)
-  actualCheckInTime  DateTime?
-  actualCheckOutTime DateTime?
-
-  // Pricing breakdown
-  subtotal       Float
-  taxAmount      Float
-  discountAmount Float  @default(0)
-  totalAmount    Float
-  currency       String
-  pricingDetails Json // Detailed breakdown
+  // Pricing
+  pricing     Json // Pricing breakdown object
+  totalAmount Float
+  currency    String
 
   // Status and workflow
-  status        String @default("pending") // pending, confirmed, checked_in, checked_out, cancelled, no_show
-  bookingSource String // web, mobile, api, phone, walk_in
+  status        String @default("pending")
+  bookingSource String
 
   // Special requests and preferences
-  specialRequests String? @db.Text
+  specialRequests String?
   preferences     Json // Guest preferences object
 
   // Payment information
-  paymentStatus String  @default("pending") // pending, partial, paid, refunded
+  paymentStatus String  @default("pending")
   paymentMethod String?
 
-  // Policies
-  cancellationPolicyId String?
-  cancellationDeadline DateTime?
-  noShowPolicy         String
+  // Policies applied
+  cancellationPolicy String
+  noShowPolicy       String
+
+  // Cancellation info
+  cancelledAt DateTime?
 
   // Timestamps
-  bookedAt    DateTime  @default(now())
-  cancelledAt DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  bookedAt  DateTime @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  // Metadata for extensions
+  // Metadata
   metadata Json?
 
   // Relations
   property       Property         @relation(fields: [propertyId], references: [id])
-  guestProfile   GuestProfile?    @relation(fields: [guestProfileId], references: [id])
   bookedRooms    BookedRoom[]
-  reviews        Review[]
   bookingHistory BookingHistory[]
 
-  @@index([propertyId, checkInDate, status])
-  @@index([propertyId, status])
-  @@index([guestId])
-  @@index([guestProfileId])
-=======
-  id                 String   @id @default(cuid())
-  confirmationNumber String   @unique
-  propertyId         String
-  
-  // Guest information
-  guestId            String
-  primaryGuest       Json     // Guest details object
-  additionalGuests   Json     // Array of additional guests
-  
-  // Booking details
-  checkInDate        DateTime
-  checkOutDate       DateTime
-  nights             Int
-  rooms              Json     // Array of booked rooms (stored as JSON for flexibility)
-  
-  // Pricing
-  pricing            Json     // Pricing breakdown object
-  totalAmount        Float
-  currency           String
-  
-  // Status and workflow
-  status             String   @default("pending")
-  bookingSource      String
-  
-  // Special requests and preferences
-  specialRequests    String?
-  preferences        Json     // Guest preferences object
-  
-  // Payment information
-  paymentStatus      String   @default("pending")
-  paymentMethod      String?
-  
-  // Policies applied
-  cancellationPolicy String
-  noShowPolicy       String
-  
-  // Timestamps
-  bookedAt           DateTime @default(now())
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
-  
-  // Metadata
-  metadata           Json?
-  
-  // Relations
-  property           Property @relation(fields: [propertyId], references: [id])
-  bookedRooms        BookedRoom[]
-  
   @@index([propertyId])
   @@index([guestId])
->>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
   @@index([status])
   @@index([checkInDate])
   @@index([checkOutDate])
@@ -356,67 +183,34 @@ model Booking {
 }
 
 model BookedRoom {
-<<<<<<< HEAD
-  id         String  @id @default(cuid())
-  bookingId  String
-  roomTypeId String
-  roomNumber String? // Assigned room number (if available)
-  quantity   Int // Number of rooms of this type
-  guestCount Int // Total guests in these rooms
-
-  // Pricing per room type
+  id           String  @id @default(cuid())
+  bookingId    String
+  roomTypeId   String
+  roomNumber   String?
+  quantity     Int
+  guestCount   Int
+  rate         Float
   ratePerNight Float
-  nights       Int
-  subtotal     Float
-  taxAmount    Float
   totalPrice   Float
-
-  // Guest assignments
-  guests Json // Array of guest details for these rooms
-
-  // Timestamps
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  guests       Json // Array of guest details
 
   // Relations
   booking  Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
   roomType RoomType @relation(fields: [roomTypeId], references: [id])
 
-  @@index([bookingId])
-  @@index([roomTypeId])
   @@map("booked_rooms")
 }
 
-model BookingHistory {
-  id          String   @id @default(cuid())
-  bookingId   String
-  action      String // created, modified, confirmed, cancelled, checked_in, checked_out
-  changedBy   String // User ID who made the change
-  changeType  String // status_change, modification, payment, etc.
-  oldValue    Json? // Previous state
-  newValue    Json? // New state
-  description String?
-  timestamp   DateTime @default(now())
-
-  // Relations
-  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-
-  @@index([bookingId, timestamp])
-  @@map("booking_history")
-}
-
 model InventoryRecord {
-  id         String   @id @default(cuid())
-  propertyId String
-  roomTypeId String
-  date       DateTime @db.Date
-
-  // Inventory counts
+  id               String   @id @default(cuid())
+  propertyId       String
+  roomTypeId       String
+  date             DateTime
   totalRooms       Int
   availableRooms   Int
   reservedRooms    Int
-  blockedRooms     Int @default(0)
-  overbookingLimit Int @default(0)
+  blockedRooms     Int      @default(0)
+  overbookingLimit Int      @default(0)
 
   // Restrictions
   minimumStay       Int?
@@ -434,85 +228,11 @@ model InventoryRecord {
   roomType RoomType @relation(fields: [roomTypeId], references: [id], onDelete: Cascade)
 
   @@unique([propertyId, roomTypeId, date])
-  @@index([propertyId, roomTypeId, date])
-=======
-  id         String   @id @default(cuid())
-  bookingId  String
-  roomTypeId String
-  roomNumber String?
-  quantity   Int
-  guestCount Int
-  rate       Float
-  totalPrice Float
-  guests     Json     // Array of guest details
-  
-  // Relations
-  booking    Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-  roomType   RoomType @relation(fields: [roomTypeId], references: [id])
-  
-  @@map("booked_rooms")
-}
-
-model InventoryRecord {
-  id               String   @id @default(cuid())
-  propertyId       String
-  roomTypeId       String
-  date             DateTime
-  totalRooms       Int
-  availableRooms   Int
-  reservedRooms    Int
-  blockedRooms     Int      @default(0)
-  overbookingLimit Int      @default(0)
-  
-  // Restrictions
-  minimumStay      Int?
-  maximumStay      Int?
-  closedToArrival  Boolean  @default(false)
-  closedToDeparture Boolean @default(false)
-  stopSell         Boolean  @default(false)
-  
-  // Timestamps
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-  
-  // Relations
-  property         Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-  roomType         RoomType @relation(fields: [roomTypeId], references: [id], onDelete: Cascade)
-  
-  @@unique([propertyId, roomTypeId, date])
   @@index([propertyId, roomTypeId])
->>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
   @@index([date])
   @@map("inventory_records")
 }
 
-<<<<<<< HEAD
-model RateRecord {
-  id         String   @id @default(cuid())
-  propertyId String
-  roomTypeId String
-  date       DateTime @db.Date
-  rate       Float
-  currency   String
-  rateType   String   @default("base") // base, weekend, peak, special
-
-  // Restrictions
-  minimumStay        Int?
-  maximumStay        Int?
-  advanceBookingDays Int?
-  restrictions       Json? // Additional rate restrictions
-
-  // Timestamps
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-  roomType RoomType @relation(fields: [roomTypeId], references: [id], onDelete: Cascade)
-
-  @@unique([propertyId, roomTypeId, date, rateType])
-  @@index([propertyId, roomTypeId, date])
-=======
 model InventoryReservation {
   id           String   @id @default(cuid())
   propertyId   String
@@ -523,10 +243,10 @@ model InventoryReservation {
   status       String   @default("pending")
   expiresAt    DateTime
   bookingId    String?
-  
+
   // Timestamps
-  createdAt    DateTime @default(now())
-  
+  createdAt DateTime @default(now())
+
   @@map("inventory_reservations")
 }
 
@@ -539,94 +259,71 @@ model InventoryLock {
   quantity     Int
   lockedBy     String
   expiresAt    DateTime
-  
+
   // Timestamps
-  createdAt    DateTime @default(now())
-  
+  createdAt DateTime @default(now())
+
   @@map("inventory_locks")
 }
 
 model RateRecord {
-  id                   String   @id @default(cuid())
-  propertyId           String
-  roomTypeId           String
-  date                 DateTime
-  rate                 Float
-  currency             String
-  rateType             String   @default("base")
-  
+  id         String   @id @default(cuid())
+  propertyId String
+  roomTypeId String
+  date       DateTime
+  rate       Float
+  currency   String
+  rateType   String   @default("base")
+
   // Restrictions
-  minimumStay          Int?
-  maximumStay          Int?
-  advanceBookingDays   Int?
-  restrictions         Json?    // Array of rate restrictions
-  
+  minimumStay        Int?
+  maximumStay        Int?
+  advanceBookingDays Int?
+  restrictions       Json? // Array of rate restrictions
+
   // Timestamps
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
-  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   // Relations
-  property             Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-  roomType             RoomType @relation(fields: [roomTypeId], references: [id], onDelete: Cascade)
-  
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  roomType RoomType @relation(fields: [roomTypeId], references: [id], onDelete: Cascade)
+
   @@unique([propertyId, roomTypeId, date, rateType])
   @@index([propertyId, roomTypeId])
->>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
   @@index([date])
   @@map("rate_records")
 }
 
 model DynamicPricingRule {
-<<<<<<< HEAD
   id                  String   @id @default(cuid())
   propertyId          String
   name                String
-  description         String   @db.Text
-  type                String // occupancy_based, demand_based, competitor_based, event_based
+  description         String
+  type                String
   isActive            Boolean  @default(true)
   priority            Int      @default(0)
   conditions          Json // Array of pricing conditions
   adjustments         Json // Array of pricing adjustments
   validFrom           DateTime
   validTo             DateTime
-  applicableRoomTypes Json? // Array of room type IDs, null = all
+  applicableRoomTypes Json? // Array of room type IDs
 
   // Timestamps
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([propertyId, isActive])
-=======
-  id                   String   @id @default(cuid())
-  propertyId           String
-  name                 String
-  description          String
-  type                 String
-  isActive             Boolean  @default(true)
-  priority             Int      @default(0)
-  conditions           Json     // Array of pricing conditions
-  adjustments          Json     // Array of pricing adjustments
-  validFrom            DateTime
-  validTo              DateTime
-  applicableRoomTypes  Json?    // Array of room type IDs
-  
-  // Timestamps
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
-  
->>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
   @@map("dynamic_pricing_rules")
 }
 
 model SeasonalRate {
-<<<<<<< HEAD
   id            String   @id @default(cuid())
   propertyId    String
   name          String
-  description   String   @db.Text
-  startDate     DateTime @db.Date
-  endDate       DateTime @db.Date
-  roomTypeRates Json // [{ roomTypeId, adjustmentType, adjustmentValue }]
+  description   String
+  startDate     DateTime
+  endDate       DateTime
+  roomTypeRates Json // Array of room type rate adjustments
   isActive      Boolean  @default(true)
   priority      Int      @default(0)
 
@@ -634,43 +331,23 @@ model SeasonalRate {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([propertyId, isActive])
-=======
-  id              String   @id @default(cuid())
-  propertyId      String
-  name            String
-  description     String
-  startDate       DateTime
-  endDate         DateTime
-  roomTypeRates   Json     // Array of room type rate adjustments
-  isActive        Boolean  @default(true)
-  priority        Int      @default(0)
-  
-  // Timestamps
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  
->>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
   @@map("seasonal_rates")
 }
 
 model Promotion {
-<<<<<<< HEAD
   id            String   @id @default(cuid())
   propertyId    String
-  code          String?  @unique // Promo code (null for automatic promotions)
+  code          String?  @unique
   name          String
-  description   String   @db.Text
-  type          String // early_bird, last_minute, package, loyalty
-  discountType  String // percentage, fixed, free_night
+  description   String
+  type          String
+  discountType  String
   discountValue Float
   maxDiscount   Float?
   validFrom     DateTime
   validTo       DateTime
   conditions    Json // Array of promotion conditions
-  usageLimit    Int? // Max total uses
-  usageCount    Int      @default(0)
-  perUserLimit  Int? // Max uses per user
+  usage         Json // Promotion usage tracking
   isActive      Boolean  @default(true)
 
   // Timestamps
@@ -680,43 +357,16 @@ model Promotion {
   // Relations
   property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
 
-  @@index([propertyId, isActive])
-  @@index([code])
-=======
-  id              String   @id @default(cuid())
-  propertyId      String
-  code            String?  @unique
-  name            String
-  description     String
-  type            String
-  discountType    String
-  discountValue   Float
-  maxDiscount     Float?
-  validFrom       DateTime
-  validTo         DateTime
-  conditions      Json     // Array of promotion conditions
-  usage           Json     // Promotion usage tracking
-  isActive        Boolean  @default(true)
-  
-  // Timestamps
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  
-  // Relations
-  property        Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-  
->>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
   @@map("promotions")
 }
 
 model GroupDiscount {
-<<<<<<< HEAD
   id                  String   @id @default(cuid())
   propertyId          String
   name                String
-  description         String   @db.Text
+  description         String
   minimumRooms        Int
-  discountType        String // percentage, fixed
+  discountType        String
   discountValue       Float
   validFrom           DateTime
   validTo             DateTime
@@ -727,7 +377,6 @@ model GroupDiscount {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([propertyId, isActive])
   @@map("group_discounts")
 }
 
@@ -735,10 +384,10 @@ model CancellationPolicy {
   id                 String  @id @default(cuid())
   propertyId         String
   name               String
-  description        String  @db.Text
-  refundPercentage   Float // 100 = full refund, 0 = no refund
-  hoursBeforeCheckIn Int // Deadline in hours before check-in
-  penaltyType        String // percentage, fixed, nights
+  description        String
+  refundPercentage   Float
+  hoursBeforeCheckIn Int
+  penaltyType        String
   penaltyValue       Float?
   isActive           Boolean @default(true)
   isDefault          Boolean @default(false)
@@ -758,10 +407,10 @@ model TaxConfiguration {
   id                  String    @id @default(cuid())
   propertyId          String
   name                String
-  type                String // vat, sales_tax, tourism_tax, service_charge
+  type                String
   rate                Float
   isPercentage        Boolean   @default(true)
-  isInclusive         Boolean   @default(false) // Tax included in displayed price
+  isInclusive         Boolean   @default(false)
   applicableRoomTypes Json? // Array of room type IDs
   validFrom           DateTime
   validTo             DateTime?
@@ -771,30 +420,7 @@ model TaxConfiguration {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // Relations
-  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-
-  @@index([propertyId, isActive])
   @@map("tax_configurations")
-}
-
-model PropertyHours {
-  id         String  @id @default(cuid())
-  propertyId String
-  type       String // reception, restaurant, pool, gym, spa, bar
-  name       String? // Optional custom name
-  hours      Json // { monday: { open: "09:00", close: "22:00", closed: false }, ... }
-  isActive   Boolean @default(true)
-
-  // Timestamps
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-
-  @@index([propertyId])
-  @@map("property_hours")
 }
 
 model GuestProfile {
@@ -802,206 +428,175 @@ model GuestProfile {
   userId String @unique // Reference to Auth Service
 
   // Personal information
-  firstName      String
-  lastName       String
-  dateOfBirth    DateTime?
-  nationality    String?
-  passportNumber String?
-
-  // Contact information
-  email          String
-  phone          String?
-  alternatePhone String?
-  address        Json? // Full address object
+  personalInfo Json // Personal information object
+  contactInfo  Json // Contact information object
 
   // Preferences
-  roomPreferences    Json // { bedType, floor, view, smoking }
-  amenityPreferences Json // Preferred amenities
-  languagePreference String @default("en")
+  preferences Json // Guest preferences object
+
+  // Booking history (computed/cached)
+  bookingHistory Json // Array of booking history summaries
 
   // Loyalty information
-  loyaltyTier   String? // bronze, silver, gold, platinum
-  loyaltyPoints Int     @default(0)
-  totalSpent    Float   @default(0)
-  bookingCount  Int     @default(0)
+  loyaltyStatus Json? // Loyalty status object
+  loyaltyPoints Int?  @default(0)
 
   // Special requirements
-  accessibility       Json? // Accessibility requirements
+  accessibility       Json? // Accessibility requirements object
   dietaryRestrictions Json? // Array of dietary restrictions
-  allergies           Json? // Array of allergies
 
   // Communication preferences
-  emailNotifications Boolean @default(true)
-  smsNotifications   Boolean @default(false)
-  marketingEmails    Boolean @default(true)
+  communicationPreferences Json // Communication preferences object
 
   // VIP status
-  isVip    Boolean @default(false)
-  vipNotes String? @db.Text
+  vipStatus Json? // VIP status object
 
   // Timestamps
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
   lastBookingDate DateTime?
-
-  // Relations
-  bookings     Booking[]
-  reviews      Review[]
-  activityLogs GuestActivityLog[]
+  lastLoginDate   DateTime?
 
   @@index([userId])
-  @@index([email])
-=======
-  id                   String   @id @default(cuid())
-  propertyId           String
-  name                 String
-  description          String
-  minimumRooms         Int
-  discountType         String
-  discountValue        Float
-  validFrom            DateTime
-  validTo              DateTime
-  applicableRoomTypes  Json?    // Array of room type IDs
-  isActive             Boolean  @default(true)
-  
-  // Timestamps
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
-  
-  @@map("group_discounts")
-}
-
-model TaxConfiguration {
-  id                   String   @id @default(cuid())
-  propertyId           String
-  name                 String
-  type                 String
-  rate                 Float
-  isPercentage         Boolean  @default(true)
-  isInclusive          Boolean  @default(false)
-  applicableRoomTypes  Json?    // Array of room type IDs
-  validFrom            DateTime
-  validTo              DateTime?
-  isActive             Boolean  @default(true)
-  
-  // Timestamps
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
-  
-  @@map("tax_configurations")
-}
-
-model GuestProfile {
-  id                        String   @id @default(cuid())
-  userId                    String   @unique // Reference to Auth Service
-  
-  // Personal information
-  personalInfo              Json     // Personal information object
-  contactInfo               Json     // Contact information object
-  
-  // Preferences
-  preferences               Json     // Guest preferences object
-  
-  // Booking history (computed/cached)
-  bookingHistory            Json     // Array of booking history summaries
-  
-  // Loyalty information
-  loyaltyStatus             Json?    // Loyalty status object
-  loyaltyPoints             Int?     @default(0)
-  
-  // Special requirements
-  accessibility             Json?    // Accessibility requirements object
-  dietaryRestrictions       Json?    // Array of dietary restrictions
-  
-  // Communication preferences
-  communicationPreferences  Json     // Communication preferences object
-  
-  // VIP status
-  vipStatus                 Json?    // VIP status object
-  
-  // Timestamps
-  createdAt                 DateTime @default(now())
-  updatedAt                 DateTime @updatedAt
-  lastBookingDate           DateTime?
-  lastLoginDate             DateTime?
-  
-  @@index([userId])
->>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
   @@map("guest_profiles")
 }
 
 model GuestActivityLog {
   id           String   @id @default(cuid())
   guestId      String
-<<<<<<< HEAD
-  activityType String // search, view, booking, cancellation, review, profile_update
+  activityType String
   description  String
-  metadata     Json? // Additional activity data
-  ipAddress    String?
-  userAgent    String?
+  metadata     Json?
   timestamp    DateTime @default(now())
 
-  // Relations
-  guestProfile GuestProfile @relation(fields: [guestId], references: [id], onDelete: Cascade)
-
-  @@index([guestId, timestamp])
-  @@index([activityType])
+  @@index([guestId])
+  @@index([timestamp])
   @@map("guest_activity_logs")
 }
 
-model Review {
-  id         String @id @default(cuid())
-  propertyId String
-  bookingId  String @unique
-  guestId    String
+model PaymentTransaction {
+  id            String  @id @default(cuid())
+  bookingId     String
+  type          String // payment, refund, authorization, capture, void
+  amount        Float
+  currency      String
+  status        String // pending, processing, succeeded, failed, cancelled
+  paymentMethod String
+  gatewayId     String
+  transactionId String?
+  description   String?
+  metadata      Json?
 
-  // Ratings (1-5 scale)
-  overallRating     Int
-  cleanlinessRating Int?
-  locationRating    Int?
-  serviceRating     Int?
-  valueRating       Int?
-  amenitiesRating   Int?
+  // Timestamps
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  processedAt DateTime?
 
-  // Review content
-  title   String?
-  comment String? @db.Text
-  pros    Json? // Array of positive points
-  cons    Json? // Array of negative points
+  @@index([bookingId])
+  @@index([status])
+  @@index([transactionId])
+  @@index([createdAt])
+  @@map("payment_transactions")
+}
 
-  // Response from property
-  propertyResponse String?   @db.Text
-  respondedAt      DateTime?
-  respondedBy      String? // Staff user ID
-
-  // Metadata
-  isVerified   Boolean @default(true) // Verified stay
-  isPublished  Boolean @default(true)
-  helpfulCount Int     @default(0)
-  reportCount  Int     @default(0)
+model PaymentSchedule {
+  id          String @id @default(cuid())
+  bookingId   String
+  totalAmount Float
+  currency    String
+  status      String @default("active") // active, completed, cancelled, overdue, failed
 
   // Timestamps
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   // Relations
-  property     Property     @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-  booking      Booking      @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-  guestProfile GuestProfile @relation(fields: [guestId], references: [id])
+  payments ScheduledPayment[]
 
-  @@index([propertyId, isPublished])
-  @@index([guestId])
-  @@index([overallRating])
-  @@map("reviews")
+  @@index([bookingId])
+  @@index([status])
+  @@map("payment_schedules")
 }
-=======
-  activityType String
-  description  String
-  metadata     Json?
-  timestamp    DateTime @default(now())
-  
-  @@index([guestId])
-  @@index([timestamp])
-  @@map("guest_activity_logs")
+
+model ScheduledPayment {
+  id          String   @id @default(cuid())
+  scheduleId  String
+  amount      Float
+  dueDate     DateTime
+  type        String // deposit, balance, installment, penalty, fee, tax
+  status      String   @default("pending") // pending, processing, succeeded, failed, cancelled
+  description String?
+
+  // Payment result (stored as JSON for flexibility)
+  paymentResult Json?
+
+  // Timestamps
+  createdAt   DateTime  @default(now())
+  processedAt DateTime?
+
+  // Relations
+  schedule PaymentSchedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+
+  @@index([scheduleId])
+  @@index([dueDate])
+  @@index([status])
+  @@map("scheduled_payments")
 }
->>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
+
+model PaymentWebhook {
+  id            String  @id @default(cuid())
+  gatewayId     String
+  eventType     String
+  paymentId     String?
+  transactionId String?
+  status        String  @default("pending") // pending, processed, failed, ignored
+  payload       Json
+  retryCount    Int     @default(0)
+
+  // Timestamps
+  createdAt   DateTime  @default(now())
+  processedAt DateTime?
+  lastRetryAt DateTime?
+
+  @@index([gatewayId])
+  @@index([eventType])
+  @@index([status])
+  @@index([createdAt])
+  @@map("payment_webhooks")
+}
+
+model PaymentGatewayConfig {
+  id                  String  @id @default(cuid())
+  name                String
+  type                String // stripe, paypal, square, etc.
+  isActive            Boolean @default(true)
+  supportedMethods    Json // Array of supported payment methods
+  supportedCurrencies Json // Array of supported currencies
+  configuration       Json // Gateway-specific configuration (encrypted)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([type])
+  @@index([isActive])
+  @@map("payment_gateway_configs")
+}
+
+model BookingHistory {
+  id          String   @id @default(cuid())
+  bookingId   String
+  action      String
+  changedBy   String
+  changeType  String
+  oldValue    Json?
+  newValue    Json?
+  description String?
+  timestamp   DateTime @default(now())
+
+  // Relations
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([bookingId, timestamp])
+  @@map("booking_history")
+}

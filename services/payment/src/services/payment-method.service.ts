@@ -1,9 +1,3 @@
-<<<<<<< HEAD
-// TODO: Install and configure actual Prisma client
-// import { PrismaClient } from '@prisma/client';
-=======
-import { PrismaClient } from '@prisma/client';
->>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
 import { IPaymentMethodService } from '../interfaces/payment.interface';
 import { encryptionService } from '../lib/encryption';
 import { logger } from '../lib/logger';
@@ -67,12 +61,7 @@ export interface TokenizedPaymentMethod {
 }
 
 export class PaymentMethodService implements IPaymentMethodService {
-<<<<<<< HEAD
-  // TODO: Replace with actual PrismaClient when available
-  private prisma: any;
-=======
   private prisma: PrismaClient;
->>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
 
   constructor() {
     this.prisma = prisma;
@@ -183,11 +172,7 @@ export class PaymentMethodService implements IPaymentMethodService {
         orderBy: [{ isDefault: 'desc' }, { createdAt: 'desc' }],
       });
 
-<<<<<<< HEAD
-      return paymentMethods.map((pm: any) => this.mapToPaymentMethod(pm));
-=======
       return paymentMethods.map(pm => this.mapToPaymentMethod(pm));
->>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
     } catch (error) {
       logger.error('Failed to get user payment methods', { error, userId });
       throw error;

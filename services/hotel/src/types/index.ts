@@ -57,6 +57,7 @@ export {
   BookingSortBy,
   BookingSource,
   BookingStatus,
+  CancellationPenaltyType,
   DiscountType,
   FeeType,
   FloorPreference,
@@ -69,12 +70,17 @@ export {
 } from './booking.types';
 export type {
   AccessibilityRequirements,
+  AvailabilityImpact,
   BookedRoom,
   Booking,
+  BookingHistoryAction,
+  BookingHistoryEntry,
+  BookingModificationRequest,
   BookingPricing,
   BookingResult,
   BookingSearchCriteria,
   BookingSearchResult,
+  CancellationPolicyDetails,
   CancellationRequest,
   CancellationResult,
   CreateBookingRequest,
@@ -83,7 +89,10 @@ export type {
   GuestDetails,
   GuestPreferences,
   ModificationResult,
+  ModificationValidation,
   PricingImpact,
+  RefundBreakdown,
+  RefundCalculation,
   RoomPreferences,
   ServicePreferences,
   TaxBreakdown,
@@ -102,61 +111,63 @@ export type {
 } from './availability.types';
 
 // Pricing types
-<<<<<<< HEAD
-export {
-  AdjustmentMethod,
-  AdjustmentType,
-  ConditionOperator,
-  ConditionType,
-  DynamicPricingType,
-  PromotionConditionType,
-  PromotionType,
-  RateType,
-  RestrictionType,
-} from './pricing.types';
-export type {
-  AppliedPromotion,
-  DiscountItem,
-  DynamicPricingRule,
-  FeeItem,
-  GroupDiscount,
-  GroupDiscountRequest,
-=======
 export type {
   AppliedPromotion,
   DiscountItem,
   FeeItem,
->>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
   NightlyRate,
   PriceBreakdown,
   PriceCalculation,
   PriceCalculationRequest,
-<<<<<<< HEAD
-  PriceValidation,
-  PriceValidationError,
-  PriceValidationWarning,
-  PricingAdjustment,
-  PricingCondition,
-  DateRange as PricingDateRange,
-  Promotion,
-  PromotionCondition,
-  PromotionUsage,
-  PromotionUsageRecord,
-  RateAdjustment,
-  RateRecord,
-  RateRestriction,
-  RateUpdate,
-  RoomCharge,
-  SeasonalRate,
-  SeasonalRoomTypeRate,
-  TaxCalculation,
-  TaxConfiguration,
-=======
   RateAdjustment,
   RoomCharge,
->>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
   TaxItem,
 } from './pricing.types';
+
+// Payment types
+export {
+  DepositType,
+  DigitalWalletType,
+  PaymentGatewayType,
+  PaymentMethodType,
+  PaymentScheduleStatus,
+  PaymentType,
+  RefundReason,
+  RefundStatus,
+  TransactionType,
+  WebhookStatus,
+} from './payment.types';
+export type {
+  BankTransferDetails,
+  BillingAddress,
+  CardDetails,
+  CorporateAccountDetails,
+  DepositBreakdown,
+  DepositCalculation,
+  DepositManager,
+  DepositRequest,
+  DepositSettings,
+  DigitalWalletDetails,
+  GatewayResponse,
+  PaymentGateway,
+  PaymentGatewayConfig,
+  PaymentMethodDetails,
+  PaymentProcessor,
+  PaymentRequest,
+  PaymentResult,
+  PaymentSchedule,
+  PaymentSecuritySettings,
+  PaymentServiceConfig,
+  PaymentTransaction,
+  PaymentWebhook,
+  RefundFee,
+  RefundProcessor,
+  RefundRequest,
+  RefundResult,
+  RefundSettings,
+  RefundValidation,
+  ScheduledPayment,
+} from './payment.types';
 
 // Guest types
 export type {
@@ -169,35 +180,8 @@ export type {
   VIPStatus,
 } from './guest.types';
 
-<<<<<<< HEAD
-// Error classes
-export {
-  AvailabilityError,
-  BookingError,
-  CancellationError,
-  ConflictError,
-  ExternalServiceError,
-  ForbiddenError,
-  GuestError,
-  HotelServiceError,
-  InventoryError,
-  NotFoundError,
-  PaymentError,
-  PricingError,
-  PropertyError,
-  RateLimitError,
-  RoomTypeError,
-  UnauthorizedError,
-  ValidationError,
-} from '@/utils/errors';
-
-// Redis type
-export type { RedisClientType } from 'redis';
-
-=======
->>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
 // Common types
-export interface ApiResponse<T = never> {
+export interface ApiResponse<T = any> {
   success: boolean;
   data?: T;
   error?: ApiError;
@@ -295,26 +279,39 @@ export interface AuditInfo {
   version?: number;
 }
 
-<<<<<<< HEAD
-export interface FieldValidationError {
-=======
 export interface ValidationError {
->>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
   field: string;
   message: string;
   code: string;
   value?: any;
 }
 
+export class ValidationErrorClass extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'ValidationError';
+  }
+}
+
 export interface ValidationResult {
   isValid: boolean;
-<<<<<<< HEAD
-  errors: FieldValidationError[];
-  warnings?: FieldValidationError[];
-=======
   errors: ValidationError[];
   warnings?: ValidationError[];
->>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
+}
+
+// Error classes
+export class NotFoundError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'NotFoundError';
+  }
+}
+
+export class ConflictError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'ConflictError';
+  }
 }
 
 // Service interfaces
@@ -379,11 +376,7 @@ export interface ReservationManager {
   validateBookingRequest(request: any): Promise<ValidationResult>;
   processPayment(booking: any, payment: any): Promise<any>;
   sendConfirmation(booking: any): Promise<any>;
-<<<<<<< HEAD
-  handleNoShow(bookingId: string): Promise<unknown>;
-=======
   handleNoShow(bookingId: string): Promise<any>;
->>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
 }
 
 // Configuration types
@@ -396,24 +389,11 @@ export interface HotelServiceConfig {
   jwtExpiresIn: string;
   corsOrigin: string;
   logLevel: string;
-<<<<<<< HEAD
-  redis: RedisConfig;
-=======
->>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
   cacheConfig: CacheConfig;
   rateLimitConfig: RateLimitConfig;
   businessConfig: BusinessConfig;
 }
 
-<<<<<<< HEAD
-export interface RedisConfig {
-  host: string;
-  port: number;
-  password?: string;
-}
-
-=======
->>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
 export interface CacheConfig {
   ttl: number;
   availabilityTtl: number;

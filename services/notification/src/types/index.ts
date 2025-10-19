@@ -20,12 +20,9 @@ export * from './provider.types';
 // Analytics and tracking types
 export * from './analytics.types';
 
-<<<<<<< HEAD
 // Webhook and event integration types
 export * from './webhook.types';
 
-=======
->>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
 // Common utility types
 export interface ApiResponse<T = any> {
   success: boolean;
