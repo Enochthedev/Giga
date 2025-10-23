@@ -36,7 +36,7 @@ These services are now handled by Supabase and should be deleted:
 
 ```bash
 # ⚠️ BACKUP FIRST!
-git checkout -b backup-before-cleanup
+we 
 
 # Remove obsolete services
 rm -rf services/auth/

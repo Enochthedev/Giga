@@ -10,6 +10,70 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Chain {
+  id          String  @id @default(cuid())
+  name        String
+  description String?
+  code        String  @unique // Chain code (e.g., "MAR" for Marriott)
+
+  // Contact information
+  contactInfo Json // Contact information object
+
+  // Business settings
+  defaultCurrency String @default("USD")
+  defaultTimezone String @default("UTC")
+
+  // Policies that apply to all properties in the chain
+  chainPolicies Json? // Chain-wide policies
+
+  // Status
+  isActive Boolean @default(true)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  brands     Brand[]
+  properties Property[]
+
+  @@index([code])
+  @@index([isActive])
+  @@map("chains")
+}
+
+model Brand {
+  id          String  @id @default(cuid())
+  chainId     String
+  name        String
+  description String?
+  code        String // Brand code (e.g., "AC" for AC Hotels)
+
+  // Brand standards and requirements
+  brandStandards      Json? // Brand-specific standards
+  amenityRequirements Json? // Required amenities for this brand
+
+  // Brand identity
+  logo        String? // Logo URL
+  colorScheme Json? // Brand colors
+
+  // Status
+  isActive Boolean @default(true)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  chain      Chain      @relation(fields: [chainId], references: [id], onDelete: Cascade)
+  properties Property[]
+
+  @@unique([chainId, code])
+  @@index([chainId])
+  @@index([isActive])
+  @@map("brands")
+}
+
 model Property {
   id          String @id @default(cuid())
   name        String
@@ -47,6 +111,10 @@ model Property {
   chainId String?
   brandId String?
 
+  // Multi-property management
+  propertyCode      String? // Property-specific code
+  managementCompany String? // Management company name
+
   // Status and settings
   status   String @default("active")
   settings Json // Property settings object
@@ -56,6 +124,8 @@ model Property {
   updatedAt DateTime @updatedAt
 
   // Relations
+  chain                Chain?               @relation(fields: [chainId], references: [id])
+  brand                Brand?               @relation(fields: [brandId], references: [id])
   roomTypes            RoomType[]
   bookings             Booking[]
   inventory            InventoryRecord[]
@@ -66,6 +136,8 @@ model Property {
   @@index([status])
   @@index([category])
   @@index([ownerId])
+  @@index([chainId])
+  @@index([brandId])
   @@map("properties")
 }
 
@@ -169,9 +241,11 @@ model Booking {
   metadata Json?
 
   // Relations
-  property       Property         @relation(fields: [propertyId], references: [id])
-  bookedRooms    BookedRoom[]
-  bookingHistory BookingHistory[]
+  property              Property               @relation(fields: [propertyId], references: [id])
+  bookedRooms           BookedRoom[]
+  bookingHistory        BookingHistory[]
+  notificationLogs      NotificationLog[]
+  notificationSchedules NotificationSchedule[]
 
   @@index([propertyId])
   @@index([guestId])
@@ -424,8 +498,9 @@ model TaxConfiguration {
 }
 
 model GuestProfile {
-  id     String @id @default(cuid())
-  userId String @unique // Reference to Auth Service
+  id      String  @id @default(cuid())
+  guestId String  @unique // Reference to guest ID
+  userId  String? // Reference to Auth Service
 
   // Personal information
   personalInfo Json // Personal information object
@@ -433,6 +508,9 @@ model GuestProfile {
 
   // Preferences
   preferences Json // Guest preferences object
+
+  // Notification preferences
+  notificationPreferences Json? // Notification preferences object
 
   // Booking history (computed/cached)
   bookingHistory Json // Array of booking history summaries
@@ -457,6 +535,7 @@ model GuestProfile {
   lastBookingDate DateTime?
   lastLoginDate   DateTime?
 
+  @@index([guestId])
   @@index([userId])
   @@map("guest_profiles")
 }
@@ -599,4 +678,220 @@ model BookingHistory {
 
   @@index([bookingId, timestamp])
   @@map("booking_history")
+}
+
+model NotificationLog {
+  id             String    @id @default(cuid())
+  bookingId      String
+  type           String // booking_confirmation, booking_reminder, booking_update, etc.
+  notificationId String // ID from notification service
+  status         String    @default("sent") // sent, delivered, failed, bounced
+  channel        String? // email, sms, push, in_app
+  recipient      String? // email address or phone number
+  sentAt         DateTime  @default(now())
+  deliveredAt    DateTime?
+  failedAt       DateTime?
+  errorMessage   String?
+  metadata       Json?
+
+  // Relations
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([bookingId])
+  @@index([type])
+  @@index([status])
+  @@index([sentAt])
+  @@map("notification_logs")
+}
+
+model NotificationSchedule {
+  id             String    @id @default(cuid())
+  bookingId      String
+  type           String // check_in_reminder, check_out_reminder, payment_reminder, feedback_request
+  scheduledAt    DateTime
+  daysUntilEvent Int // Days until the event (positive for before, negative for after)
+  status         String    @default("pending") // pending, sent, failed, cancelled
+  notificationId String? // ID from notification service when sent
+  sentAt         DateTime?
+  failedAt       DateTime?
+  errorMessage   String?
+  retryCount     Int       @default(0)
+  metadata       Json?
+
+  // Relations
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([bookingId])
+  @@index([scheduledAt])
+  @@index([status])
+  @@index([type])
+  @@map("notification_schedules")
+}
+
+model NotificationTemplate {
+  id          String  @id @default(cuid())
+  name        String  @unique
+  type        String // booking_confirmation, booking_reminder, booking_update, etc.
+  channel     String // email, sms, push, in_app
+  language    String  @default("en")
+  subject     String?
+  htmlBody    String?
+  textBody    String?
+  variables   Json? // Array of template variables
+  isActive    Boolean @default(true)
+  isDefault   Boolean @default(false)
+  description String?
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([type, channel])
+  @@index([isActive])
+  @@map("notification_templates")
+}
+
+model NotificationPreference {
+  id               String  @id @default(cuid())
+  guestId          String  @unique
+  emailEnabled     Boolean @default(true)
+  smsEnabled       Boolean @default(false)
+  pushEnabled      Boolean @default(false)
+  reminderDays     Json    @default("[7, 3, 1]") // Array of reminder days
+  language         String  @default("en")
+  timezone         String  @default("UTC")
+  marketingEnabled Boolean @default(false)
+  feedbackEnabled  Boolean @default(true)
+  unsubscribeToken String? @unique
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([guestId])
+  @@map("notification_preferences")
+}
+
+model PropertyGroup {
+  id          String  @id @default(cuid())
+  name        String
+  description String?
+  type        String // "chain", "brand", "region", "custom"
+
+  // Group configuration
+  properties Json // Array of property IDs
+  settings   Json? // Group-specific settings
+
+  // Access control
+  ownerId String
+
+  // Status
+  isActive Boolean @default(true)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ownerId])
+  @@index([type])
+  @@index([isActive])
+  @@map("property_groups")
+}
+
+model MultiPropertyReport {
+  id          String  @id @default(cuid())
+  name        String
+  description String?
+  reportType  String // "occupancy", "revenue", "performance", "custom"
+
+  // Report configuration
+  properties Json // Array of property IDs
+  dateRange  Json // Date range configuration
+  metrics    Json // Metrics to include
+  filters    Json? // Additional filters
+
+  // Report data (cached)
+  reportData Json? // Generated report data
+
+  // Scheduling
+  isScheduled Boolean @default(false)
+  schedule    Json? // Cron-like schedule configuration
+
+  // Access control
+  createdBy  String
+  sharedWith Json? // Array of user IDs with access
+
+  // Status
+  status        String    @default("draft") // "draft", "active", "archived"
+  lastGenerated DateTime?
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([createdBy])
+  @@index([reportType])
+  @@index([status])
+  @@index([lastGenerated])
+  @@map("multi_property_reports")
+}
+
+model CrossPropertyTransfer {
+  id             String @id @default(cuid())
+  fromPropertyId String
+  toPropertyId   String
+
+  // Transfer details
+  transferType String // "inventory", "booking", "guest"
+  entityId     String // ID of the transferred entity
+  entityType   String // Type of entity being transferred
+
+  // Transfer reason and notes
+  reason String
+  notes  String?
+
+  // Status tracking
+  status      String    @default("pending") // "pending", "approved", "completed", "cancelled"
+  approvedBy  String?
+  approvedAt  DateTime?
+  completedAt DateTime?
+
+  // Transfer data
+  transferData Json // Details of what's being transferred
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([fromPropertyId])
+  @@index([toPropertyId])
+  @@index([status])
+  @@index([transferType])
+  @@map("cross_property_transfers")
+}
+
+model ChainLoyaltyProgram {
+  id          String  @id @default(cuid())
+  chainId     String
+  name        String
+  description String?
+
+  // Program configuration
+  tierStructure   Json // Loyalty tier definitions
+  pointsStructure Json // Points earning/redemption rules
+  benefits        Json // Benefits by tier
+
+  // Program rules
+  rules Json // Program rules and conditions
+
+  // Status
+  isActive Boolean @default(true)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([chainId])
+  @@index([isActive])
+  @@map("chain_loyalty_programs")
 }

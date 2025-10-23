@@ -380,10 +380,12 @@ exports.Prisma.TaxConfigurationScalarFieldEnum = {
 
 exports.Prisma.GuestProfileScalarFieldEnum = {
   id: 'id',
+  guestId: 'guestId',
   userId: 'userId',
   personalInfo: 'personalInfo',
   contactInfo: 'contactInfo',
   preferences: 'preferences',
+  notificationPreferences: 'notificationPreferences',
   bookingHistory: 'bookingHistory',
   loyaltyStatus: 'loyaltyStatus',
   loyaltyPoints: 'loyaltyPoints',
@@ -484,6 +486,69 @@ exports.Prisma.BookingHistoryScalarFieldEnum = {
   timestamp: 'timestamp'
 };
 
+exports.Prisma.NotificationLogScalarFieldEnum = {
+  id: 'id',
+  bookingId: 'bookingId',
+  type: 'type',
+  notificationId: 'notificationId',
+  status: 'status',
+  channel: 'channel',
+  recipient: 'recipient',
+  sentAt: 'sentAt',
+  deliveredAt: 'deliveredAt',
+  failedAt: 'failedAt',
+  errorMessage: 'errorMessage',
+  metadata: 'metadata'
+};
+
+exports.Prisma.NotificationScheduleScalarFieldEnum = {
+  id: 'id',
+  bookingId: 'bookingId',
+  type: 'type',
+  scheduledAt: 'scheduledAt',
+  daysUntilEvent: 'daysUntilEvent',
+  status: 'status',
+  notificationId: 'notificationId',
+  sentAt: 'sentAt',
+  failedAt: 'failedAt',
+  errorMessage: 'errorMessage',
+  retryCount: 'retryCount',
+  metadata: 'metadata'
+};
+
+exports.Prisma.NotificationTemplateScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  type: 'type',
+  channel: 'channel',
+  language: 'language',
+  subject: 'subject',
+  htmlBody: 'htmlBody',
+  textBody: 'textBody',
+  variables: 'variables',
+  isActive: 'isActive',
+  isDefault: 'isDefault',
+  description: 'description',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.NotificationPreferenceScalarFieldEnum = {
+  id: 'id',
+  guestId: 'guestId',
+  emailEnabled: 'emailEnabled',
+  smsEnabled: 'smsEnabled',
+  pushEnabled: 'pushEnabled',
+  reminderDays: 'reminderDays',
+  language: 'language',
+  timezone: 'timezone',
+  marketingEnabled: 'marketingEnabled',
+  feedbackEnabled: 'feedbackEnabled',
+  unsubscribeToken: 'unsubscribeToken',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -537,7 +602,11 @@ exports.Prisma.ModelName = {
   ScheduledPayment: 'ScheduledPayment',
   PaymentWebhook: 'PaymentWebhook',
   PaymentGatewayConfig: 'PaymentGatewayConfig',
-  BookingHistory: 'BookingHistory'
+  BookingHistory: 'BookingHistory',
+  NotificationLog: 'NotificationLog',
+  NotificationSchedule: 'NotificationSchedule',
+  NotificationTemplate: 'NotificationTemplate',
+  NotificationPreference: 'NotificationPreference'
 };
 
 /**

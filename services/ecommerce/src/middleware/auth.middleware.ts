@@ -1,190 +1,127 @@
-import { NextFunction, Request, Response } from 'express';
-import { HttpAuthServiceClient } from '../clients/auth.client';
+import { Request, Response, NextFunction } from 'express'
+import { AuthClient } from '@giga/auth-sdk'
 
-// Extend Request interface for user properties
-interface AuthenticatedRequest extends Request {
-  user?: {
-    id: string;
-    sub: string;
-    email: string;
-    roles: string[];
-    activeRole: string;
-    vendorId?: string;
-  };
+const authClient = new AuthClient({
+  supabaseUrl: process.env.SUPABASE_URL!,
+  supabaseKey: process.env.SUPABASE_ANON_KEY!,
+})
+
+/**
+ * Middleware to authenticate requests using Supabase Auth
+ */
+export async function authenticate(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const token = req.headers.authorization?.replace('Bearer ', '')
+    
+    if (!token) {
+      res.status(401).json({
+        success: false,
+        error: 'No authentication token provided',
+      })
+      return
+    }
+
+    authClient.setTokens(token)
+    const user = await authClient.getCurrentUser()
+    
+    // Attach user to request
+    ;(req as any).user = user
+    
+    next()
+  } catch (error) {
+    res.status(401).json({
+      success: false,
+      error: 'Invalid or expired authentication token',
+    })
+  }
 }
 
-// Initialize auth service client
-const authServiceClient = new HttpAuthServiceClient(
-  process.env.AUTH_SERVICE_URL || 'http://localhost:3001'
-);
-
 /**
- * Authentication middleware that validates JWT tokens
+ * Middleware to require specific roles
+ * @param roles - Array of role names that are allowed
  */
-export const authMiddleware = async (
-  req: AuthenticatedRequest,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  try {
-    const authHeader = req.headers.authorization;
+export function requireRole(...roles: string[]) {
+  return (req: Request, res: Response, next: NextFunction): void => {
+    const user = (req as any).user
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      res.status(401).json({
-        success: false,
-        error: 'Authentication token required',
-        timestamp: new Date().toISOString(),
-      });
-      return;
-    }
-
-    const token = authHeader.substring(7); // Remove 'Bearer ' prefix
-
-    try {
-      // Validate token with auth service
-      const userInfo = await authServiceClient.validateToken(token);
-
-      // Add user info to request
-      req.user = {
-        id: userInfo.id,
-        sub: userInfo.id,
-        email: userInfo.email,
-        roles: [userInfo.role],
-        activeRole: userInfo.role,
-        vendorId: userInfo.vendorId,
-      };
-
-      next();
-    } catch (authError) {
-      console.error('Token validation failed:', authError);
-      res.status(401).json({
-        success: false,
-        error: 'Invalid or expired token',
-        timestamp: new Date().toISOString(),
-      });
-      return;
-    }
-  } catch (error) {
-    console.error('Auth middleware error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Authentication service error',
-      timestamp: new Date().toISOString(),
-    });
-    return;
-  }
-};
-
-/**
- * Optional authentication middleware that doesn't fail if no token is provided
- */
-export const optionalAuthMiddleware = async (
-  req: AuthenticatedRequest,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  try {
-    const authHeader = req.headers.authorization;
-
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      // No token provided, continue without user info
-      next();
-      return;
-    }
-
-    const token = authHeader.substring(7);
-
-    try {
-      const userInfo = await authServiceClient.validateToken(token);
-
-      req.user = {
-        id: userInfo.id,
-        sub: userInfo.id,
-        email: userInfo.email,
-        roles: [userInfo.role],
-        activeRole: userInfo.role,
-        vendorId: userInfo.vendorId,
-      };
-    } catch (authError) {
-      // Token validation failed, but continue without user info
-      console.warn('Optional auth failed:', authError);
-    }
-
-    next();
-  } catch (error) {
-    console.error('Optional auth middleware error:', error);
-    // Continue without user info on error
-    next();
-  }
-};
-
-/**
- * Role-based authorization middleware
- */
-export const requireRole = (allowedRoles: string[]) => {
-  return (
-    req: AuthenticatedRequest,
-    res: Response,
-    next: NextFunction
-  ): void => {
-    if (!req.user) {
+    if (!user) {
       res.status(401).json({
         success: false,
         error: 'Authentication required',
-        timestamp: new Date().toISOString(),
-      });
-      return;
+      })
+      return
     }
 
-    const userRole = req.user.activeRole;
-    if (!allowedRoles.includes(userRole)) {
+    const hasRole = user.roles.some((role: string) => roles.includes(role))
+
+    if (!hasRole) {
       res.status(403).json({
         success: false,
-        error: `Access denied. Required roles: ${allowedRoles.join(', ')}`,
-        timestamp: new Date().toISOString(),
-      });
-      return;
+        error: 'Insufficient permissions',
+        required_roles: roles,
+        user_roles: user.roles,
+      })
+      return
     }
 
-    next();
-  };
-};
+    next()
+  }
+}
 
 /**
- * Vendor authorization middleware
+ * Middleware to require a specific active role
+ * @param role - The role name that must be active
  */
-export const requireVendor = (
-  req: AuthenticatedRequest,
+export function requireActiveRole(role: string) {
+  return (req: Request, res: Response, next: NextFunction): void => {
+    const user = (req as any).user
+
+    if (!user) {
+      res.status(401).json({
+        success: false,
+        error: 'Authentication required',
+      })
+      return
+    }
+
+    if (user.active_role !== role) {
+      res.status(403).json({
+        success: false,
+        error: `Must be in ${role} mode`,
+        current_role: user.active_role,
+        required_role: role,
+      })
+      return
+    }
+
+    next()
+  }
+}
+
+/**
+ * Optional authentication - attaches user if token is present but doesn't fail if missing
+ */
+export async function optionalAuth(
+  req: Request,
   res: Response,
   next: NextFunction
-): void => {
-  if (!req.user) {
-    res.status(401).json({
-      success: false,
-      error: 'Authentication required',
-      timestamp: new Date().toISOString(),
-    });
-    return;
+): Promise<void> {
+  try {
+    const token = req.headers.authorization?.replace('Bearer ', '')
+    
+    if (token) {
+      authClient.setTokens(token)
+      const user = await authClient.getCurrentUser()
+      ;(req as any).user = user
+    }
+    
+    next()
+  } catch (error) {
+    // Silently fail for optional auth
+    next()
   }
-
-  if (!req.user.vendorId) {
-    res.status(403).json({
-      success: false,
-      error: 'Vendor access required',
-      timestamp: new Date().toISOString(),
-    });
-    return;
-  }
-
-  next();
-};
-
-/**
- * Admin authorization middleware
- */
-export const requireAdmin = requireRole(['ADMIN']);
-
-/**
- * Customer authorization middleware
- */
-export const requireCustomer = requireRole(['CUSTOMER', 'VENDOR', 'ADMIN']);
+}
