@@ -942,19 +942,12 @@ export class BookingService {
       confirmationNumber: booking.confirmationNumber,
     });
 
-    try {
-      const { HotelNotificationService } = await import(
-        './notification.service'
-      );
-      const notificationService = new HotelNotificationService(this.prisma);
-      await notificationService.sendBookingConfirmation(booking.id);
-    } catch (error) {
-      logger.error('Failed to send booking confirmation notification', {
-        error,
-        bookingId: booking.id,
-      });
-      // Don't throw error as booking creation should still succeed
-    }
+    // TODO: Integrate with notification service
+    // await notificationService.sendBookingConfirmation({
+    //   to: booking.guestEmail,
+    //   bookingDetails: booking,
+    //   confirmationNumber: booking.confirmationNumber
+    // });
   }
 
   private isValidStatusTransition(
@@ -1190,25 +1183,20 @@ export class BookingService {
     refundCalculation: any
   ): Promise<void> {
     try {
+      // TODO: Integrate with notification service
       logger.info('Sending cancellation confirmation', {
         bookingId: booking.id,
         guestEmail: booking.guestEmail,
         refundAmount: refundCalculation.refundableAmount,
       });
 
-      const { HotelNotificationService } = await import(
-        './notification.service'
-      );
-      const notificationService = new HotelNotificationService(this.prisma);
-      await notificationService.sendBookingUpdate(
-        booking.id,
-        'cancellation',
-        { reason: 'Booking cancelled' },
-        refundCalculation.refundableAmount
-      );
+      // This would typically send an email with:
+      // 1. Cancellation confirmation
+      // 2. Refund details and timeline
+      // 3. Policy information
+      // 4. Contact information for questions
     } catch (error) {
       logger.error('Error sending cancellation confirmation', { error });
-      // Don't throw error as cancellation should still succeed
     }
   }
 }

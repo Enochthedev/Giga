@@ -1,6 +1,7 @@
 packages:
   - 'services/*'
   - 'shared/*'
+  - 'shared/sdk/*'
   - 'supabase/functions/*'
 
 onlyBuiltDependencies:
