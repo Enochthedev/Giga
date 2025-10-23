@@ -1,0 +1,13 @@
+{
+  "name": "@giga/file-storage-sdk",
+  "version": "1.0.0",
+  "description": "File storage SDK for Giga services",
+  "main": "index.ts",
+  "types": "index.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": ["file-storage", "supabase", "sdk"],
+  "author": "Giga",
+  "license": "MIT"
+}
