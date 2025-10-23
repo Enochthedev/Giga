@@ -1,0 +1,13 @@
+{
+  "name": "@giga/notifications-sdk",
+  "version": "1.0.0",
+  "description": "Notifications SDK for Giga services",
+  "main": "index.ts",
+  "types": "index.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": ["notifications", "supabase", "sdk"],
+  "author": "Giga",
+  "license": "MIT"
+}

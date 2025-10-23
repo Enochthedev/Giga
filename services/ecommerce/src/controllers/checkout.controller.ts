@@ -1,3 +1,4 @@
+import { UserProfile } from '@platform/supabase-client';
 import { Request, Response } from 'express';
 import { z } from 'zod';
 import { HttpPaymentServiceClient } from '../clients/payment.client';
@@ -7,13 +8,7 @@ import { SessionData } from '../services/session.service';
 
 // Extend Request interface for user and session properties
 interface SessionRequest extends Request {
-  user?: {
-    id: string;
-    sub: string;
-    email: string;
-    roles: string[];
-    activeRole: string;
-  };
+  user?: UserProfile;
   session?: SessionData;
   sessionId?: string;
 }

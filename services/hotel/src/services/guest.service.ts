@@ -35,7 +35,7 @@ export class GuestService {
 
       // Check if guest profile already exists
       const existingProfile = await this.prisma.guestProfile.findUnique({
-        where: { userId: request._userId },
+        where: { guestId: request._userId },
       });
 
       if (existingProfile) {
@@ -62,6 +62,7 @@ export class GuestService {
       // Create guest profile
       const guestProfile = await this.prisma.guestProfile.create({
         data: {
+          guestId: request._userId,
           userId: request._userId,
           personalInfo: request.personalInfo as any,
           contactInfo: request.contactInfo as any,
@@ -105,7 +106,7 @@ export class GuestService {
    */
   async getGuestProfileByUserId(userId: string): Promise<GuestProfile> {
     const guestProfile = await this.prisma.guestProfile.findUnique({
-      where: { userId },
+      where: { guestId: userId },
     });
 
     if (!guestProfile) {

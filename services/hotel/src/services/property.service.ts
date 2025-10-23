@@ -9,7 +9,6 @@ import {
   NotFoundError,
   PropertyCategory,
   PropertyStatus,
-  ValidationError,
 } from '@/types';
 import logger from '@/utils/logger';
 
@@ -529,6 +528,8 @@ export class PropertyService {
         status: PropertyStatus.ACTIVE,
       },
       include: {
+        chain: true,
+        brand: true,
         _count: {
           select: {
             roomTypes: true,
@@ -540,6 +541,124 @@ export class PropertyService {
         name: 'asc',
       },
     });
+  }
+
+  /**
+   * Get properties by chain
+   */
+  async getPropertiesByChain(chainId: string) {
+    return this.prisma.property.findMany({
+      where: {
+        chainId,
+        status: PropertyStatus.ACTIVE,
+      },
+      include: {
+        chain: true,
+        brand: true,
+        _count: {
+          select: {
+            roomTypes: true,
+            bookings: true,
+          },
+        },
+      },
+      orderBy: {
+        name: 'asc',
+      },
+    });
+  }
+
+  /**
+   * Get properties by brand
+   */
+  async getPropertiesByBrand(brandId: string) {
+    return this.prisma.property.findMany({
+      where: {
+        brandId,
+        status: PropertyStatus.ACTIVE,
+      },
+      include: {
+        chain: true,
+        brand: true,
+        _count: {
+          select: {
+            roomTypes: true,
+            bookings: true,
+          },
+        },
+      },
+      orderBy: {
+        name: 'asc',
+      },
+    });
+  }
+
+  /**
+   * Get multi-property summary for chain/brand management
+   */
+  async getMultiPropertySummary(filters: {
+    chainId?: string;
+    brandId?: string;
+    ownerId?: string;
+  }) {
+    const where: Record<string, unknown> = {
+      status: PropertyStatus.ACTIVE,
+    };
+
+    if (filters.chainId) where.chainId = filters.chainId;
+    if (filters.brandId) where.brandId = filters.brandId;
+    if (filters.ownerId) where.ownerId = filters.ownerId;
+
+    const properties = await this.prisma.property.findMany({
+      where,
+      include: {
+        chain: true,
+        brand: true,
+        roomTypes: {
+          where: { isActive: true },
+        },
+        _count: {
+          select: {
+            roomTypes: true,
+            bookings: true,
+          },
+        },
+      },
+    });
+
+    // Calculate summary statistics
+    const totalProperties = properties.length;
+    const totalRooms = properties.reduce((sum, property) => {
+      return (
+        sum +
+        property.roomTypes.reduce((roomSum, roomType) => {
+          return roomSum + roomType.totalRooms;
+        }, 0)
+      );
+    }, 0);
+
+    const chains = [...new Set(properties.map(p => p.chainId).filter(Boolean))];
+    const brands = [...new Set(properties.map(p => p.brandId).filter(Boolean))];
+
+    return {
+      summary: {
+        totalProperties,
+        totalRooms,
+        totalChains: chains.length,
+        totalBrands: brands.length,
+      },
+      properties: properties.map(property => ({
+        id: property.id,
+        name: property.name,
+        chainName: property.chain?.name,
+        brandName: property.brand?.name,
+        roomCount: property.roomTypes.reduce(
+          (sum, rt) => sum + rt.totalRooms,
+          0
+        ),
+        bookingCount: property._count.bookings,
+      })),
+    };
   }
 
   /**

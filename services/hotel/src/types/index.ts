@@ -180,6 +180,63 @@ export type {
   VIPStatus,
 } from './guest.types';
 
+// Multi-property types
+export {
+  AggregationType,
+  MetricType,
+  PerkType,
+  PropertyGroupType,
+  RedemptionType,
+  ReportStatus,
+  ReportType,
+  ScheduleFrequency,
+  TransferStatus,
+  TransferType,
+} from './multi-property.types';
+export type {
+  BonusCategory,
+  Brand,
+  BrandColorScheme,
+  BrandSearchCriteria,
+  BrandStandards,
+  Chain,
+  ChainLoyaltyProgram,
+  ChainPolicies,
+  ChainSearchCriteria,
+  ComparisonData,
+  CreateBrandRequest,
+  CreateChainRequest,
+  CreatePropertyGroupRequest,
+  CreateTransferRequest,
+  CrossPropertyTransfer,
+  DesignStandard,
+  EmergencyContact,
+  LoyaltyBenefits,
+  LoyaltyPerk,
+  LoyaltyRules,
+  LoyaltyTier,
+  MultiPropertyReport,
+  MultiPropertySearchCriteria,
+  OperationalStandard,
+  PartnerBenefit,
+  PointsStructure,
+  PropertyGroup,
+  PropertyGroupSettings,
+  PropertyReportData,
+  RedemptionRate,
+  ReportData,
+  ReportFilters,
+  ReportMetric,
+  ReportSchedule,
+  ReportSummary,
+  ServiceStandard,
+  TransferData,
+  TrendData,
+  UpdateBrandRequest,
+  UpdateChainRequest,
+  UpdatePropertyGroupRequest,
+} from './multi-property.types';
+
 // Common types
 export interface ApiResponse<T = any> {
   success: boolean;
@@ -392,6 +449,7 @@ export interface HotelServiceConfig {
   cacheConfig: CacheConfig;
   rateLimitConfig: RateLimitConfig;
   businessConfig: BusinessConfig;
+  services?: ServicesConfig;
 }
 
 export interface CacheConfig {
@@ -414,6 +472,21 @@ export interface BusinessConfig {
   maxAdvanceBookingDays: number;
   minAdvanceBookingHours: number;
   defaultCancellationPolicy: string;
+}
+
+export interface ServicesConfig {
+  notification?: {
+    url: string;
+    timeout: number;
+  };
+  auth?: {
+    url: string;
+    timeout: number;
+  };
+  payment?: {
+    url: string;
+    timeout: number;
+  };
 }
 
 // Event types for integration

@@ -1,3 +1,4 @@
+import { UserProfile } from '@platform/supabase-client';
 import { Request, Response } from 'express';
 import { z } from 'zod';
 import { CartService } from '../services/cart.service';
@@ -5,13 +6,7 @@ import { SessionData } from '../services/session.service';
 
 // Extend Request interface for user and session properties
 interface SessionRequest extends Request {
-  user?: {
-    id: string;
-    sub: string;
-    email: string;
-    roles: string[];
-    activeRole: string;
-  };
+  user?: UserProfile;
   session?: SessionData;
   sessionId?: string;
 }
@@ -34,6 +29,17 @@ export class CartController {
         req.session?.customerId || req.user?.id || 'clr123customer';
 
       const cart = await this.cartService.getCart(customerId);
+
+      // Log user action for analytics
+      if (req.user?.id) {
+        await supabaseService.logUserAction(
+          req.user.id,
+          'view_cart',
+          'cart',
+          customerId,
+          { items_count: cart.items.length }
+        );
+      }
 
       res.json({
         success: true,

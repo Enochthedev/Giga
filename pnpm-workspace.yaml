@@ -1,6 +1,7 @@
 packages:
   - 'services/*'
   - 'shared/*'
+  - 'supabase/functions/*'
 
 onlyBuiltDependencies:
   - '@prisma/client'

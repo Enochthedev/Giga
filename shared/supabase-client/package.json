@@ -1,0 +1,23 @@
+{
+  "name": "@platform/supabase-client",
+  "version": "1.0.0",
+  "description": "Shared Supabase client for Giga Platform services",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.38.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.2.2",
+    "@types/node": "^20.8.0"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

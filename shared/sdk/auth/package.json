@@ -1,0 +1,13 @@
+{
+  "name": "@giga/auth-sdk",
+  "version": "1.0.0",
+  "description": "Authentication SDK for Giga services",
+  "main": "index.ts",
+  "types": "index.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": ["auth", "supabase", "sdk"],
+  "author": "Giga",
+  "license": "MIT"
+}

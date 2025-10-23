@@ -9,9 +9,11 @@ import {
 import guestRoutes from '@/routes/guest.routes';
 import { createHotelRoutes } from '@/routes/hotel.routes';
 import { createInventoryRoutes } from '@/routes/inventory.routes';
+import createNotificationRoutes from '@/routes/notification.routes';
 import { createPricingRoutes } from '@/routes/pricing.routes';
 import { createPropertyRoutes } from '@/routes/property.routes';
 import { createRoomTypeRoutes } from '@/routes/room-type.routes';
+import createSearchRoutes from '@/routes/search.routes';
 import { setupSwagger } from '@/swagger';
 import { createErrorHandler } from '@/utils/errors';
 import logger from '@/utils/logger';
@@ -84,6 +86,9 @@ app.get('/health', (_req: Request, res: Response) => {
 setupSwagger(app);
 
 // API routes
+// Search API
+app.use('/api/v1/search', createSearchRoutes(prisma, redisClient));
+
 // Public hotel discovery API
 app.use('/api/v1/hotels', createHotelRoutes(prisma));
 
@@ -103,14 +108,32 @@ app.use('/api/v1/pricing', createPricingRoutes(prisma, redisClient));
 // Guest management API
 app.use('/api/v1/guests', guestRoutes);
 
+// Notification API
+app.use('/api/v1/notifications', createNotificationRoutes(prisma));
+
 // Payment processing API
 app.use('/api/v1', paymentRoutes);
+
+// Multi-property management APIs
+import brandRoutes from '@/routes/brand.routes';
+import chainRoutes from '@/routes/chain.routes';
+import crossPropertyTransferRoutes from '@/routes/cross-property-transfer.routes';
+import multiPropertyReportRoutes from '@/routes/multi-property-report.routes';
+
+app.use('/api/v1/chains', chainRoutes);
+app.use('/api/v1/brands', brandRoutes);
+app.use('/api/v1/reports', multiPropertyReportRoutes);
+app.use('/api/v1/transfers', crossPropertyTransferRoutes);
+
 app.get('/api/v1', (_req: Request, res: Response) => {
   res.json({
     success: true,
     message: 'Hotel Service API v1',
     timestamp: new Date(),
     endpoints: {
+      // Search APIs
+      search: '/api/v1/search',
+
       // Public APIs
       hotels: '/api/v1/hotels',
       bookings: '/api/v1/bookings',
@@ -122,6 +145,7 @@ app.get('/api/v1', (_req: Request, res: Response) => {
       inventory: '/api/v1/inventory',
       pricing: '/api/v1/pricing',
       guests: '/api/v1/guests',
+      notifications: '/api/v1/notifications',
       payments: '/api/v1/payments',
 
       // Documentation

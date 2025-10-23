@@ -48,6 +48,24 @@ const config: HotelServiceConfig = {
     defaultCancellationPolicy:
       process.env.DEFAULT_CANCELLATION_POLICY || 'moderate',
   },
+
+  services: {
+    notification: {
+      url: process.env.NOTIFICATION_SERVICE_URL || 'http://localhost:3004',
+      timeout: parseInt(
+        process.env.NOTIFICATION_SERVICE_TIMEOUT || '10000',
+        10
+      ),
+    },
+    auth: {
+      url: process.env.AUTH_SERVICE_URL || 'http://localhost:3001',
+      timeout: parseInt(process.env.AUTH_SERVICE_TIMEOUT || '10000', 10),
+    },
+    payment: {
+      url: process.env.PAYMENT_SERVICE_URL || 'http://localhost:3005',
+      timeout: parseInt(process.env.PAYMENT_SERVICE_TIMEOUT || '10000', 10),
+    },
+  },
 };
 
 // Validation

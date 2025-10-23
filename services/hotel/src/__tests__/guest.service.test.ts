@@ -61,7 +61,7 @@ describe('GuestService', () => {
 
   describe('createGuestProfile', () => {
     const validCreateRequest: CreateGuestProfileRequest = {
-      _userId: 'user-123',
+      _guestId: 'user-123',
       personalInfo: {
         firstName: 'John',
         lastName: 'Doe',
@@ -112,7 +112,7 @@ describe('GuestService', () => {
 
       const mockCreatedProfile = {
         id: 'guest-123',
-        userId: 'user-123',
+        guestId: 'user-123',
         personalInfo: validCreateRequest.personalInfo,
         contactInfo: validCreateRequest.contactInfo,
         preferences: validCreateRequest.preferences,
@@ -140,7 +140,7 @@ describe('GuestService', () => {
       const result = await guestService.createGuestProfile(validCreateRequest);
 
       expect(mockPrisma.guestProfile.findUnique).toHaveBeenCalledWith({
-        where: { userId: 'user-123' },
+        where: { guestId: 'user-123' },
       });
       expect(mockAuthClient.getUserInfo).toHaveBeenCalledWith('user-123');
       expect(mockPrisma.guestProfile.create).toHaveBeenCalled();
@@ -159,7 +159,7 @@ describe('GuestService', () => {
     it('should throw ConflictError if guest profile already exists', async () => {
       const existingProfile = {
         id: 'existing-guest-123',
-        userId: 'user-123',
+        guestId: 'user-123',
       };
 
       mockPrisma.guestProfile.findUnique.mockResolvedValue(existingProfile);
@@ -169,7 +169,7 @@ describe('GuestService', () => {
       ).rejects.toThrow(ConflictError);
 
       expect(mockPrisma.guestProfile.findUnique).toHaveBeenCalledWith({
-        where: { userId: 'user-123' },
+        where: { guestId: 'user-123' },
       });
       expect(mockAuthClient.getUserInfo).not.toHaveBeenCalled();
     });
@@ -218,7 +218,7 @@ describe('GuestService', () => {
     it('should return guest profile by ID', async () => {
       const mockProfile = {
         id: 'guest-123',
-        userId: 'user-123',
+        guestId: 'user-123',
         personalInfo: { firstName: 'John', lastName: 'Doe' },
         contactInfo: { email: 'john@example.com', phone: '+1234567890' },
         preferences: {},
@@ -252,7 +252,7 @@ describe('GuestService', () => {
     it('should return guest profile by user ID', async () => {
       const mockProfile = {
         id: 'guest-123',
-        userId: 'user-123',
+        guestId: 'user-123',
         personalInfo: { firstName: 'John', lastName: 'Doe' },
         contactInfo: { email: 'john@example.com', phone: '+1234567890' },
         preferences: {},
@@ -267,7 +267,7 @@ describe('GuestService', () => {
       const result = await guestService.getGuestProfileByUserId('user-123');
 
       expect(mockPrisma.guestProfile.findUnique).toHaveBeenCalledWith({
-        where: { userId: 'user-123' },
+        where: { guestId: 'user-123' },
       });
       expect(result.id).toBe('guest-123');
       expect(result._userId).toBe('user-123');
@@ -300,7 +300,7 @@ describe('GuestService', () => {
     it('should update guest profile successfully', async () => {
       const existingProfile = {
         id: 'guest-123',
-        userId: 'user-123',
+        guestId: 'user-123',
         personalInfo: { firstName: 'John', lastName: 'Doe' },
         contactInfo: { email: 'john@example.com', phone: '+1234567890' },
         preferences: { roomPreferences: { quietRoom: true } },
@@ -399,7 +399,7 @@ describe('GuestService', () => {
 
       const existingProfile = {
         id: 'guest-123',
-        userId: 'user-123',
+        guestId: 'user-123',
         bookingHistory: [],
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -449,7 +449,7 @@ describe('GuestService', () => {
     it('should update guest loyalty points', async () => {
       const existingProfile = {
         id: 'guest-123',
-        userId: 'user-123',
+        guestId: 'user-123',
         loyaltyPoints: 100,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -481,7 +481,7 @@ describe('GuestService', () => {
     it('should not allow negative loyalty points', async () => {
       const existingProfile = {
         id: 'guest-123',
-        userId: 'user-123',
+        guestId: 'user-123',
         loyaltyPoints: 50,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -541,7 +541,7 @@ describe('GuestService', () => {
     it('should delete guest profile and activity logs', async () => {
       const existingProfile = {
         id: 'guest-123',
-        userId: 'user-123',
+        guestId: 'user-123',
         createdAt: new Date(),
         updatedAt: new Date(),
       };
