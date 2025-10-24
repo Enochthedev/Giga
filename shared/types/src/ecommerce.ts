@@ -96,6 +96,7 @@ export const VendorOrderSchema = z.object({
 
 export const OrderSchema = z.object({
   id: z.string(),
+  orderNumber: z.string(), // Format: ORD-YYYYMMDD-XXXX
   customerId: z.string(),
   items: z.array(OrderItemSchema),
   vendorOrders: z.array(VendorOrderSchema),

@@ -1,6 +1,10 @@
 import { Cart, CartItem } from '@platform/types';
 import { v4 as uuidv4 } from 'uuid';
 import { PrismaClient } from '../generated/prisma-client';
+import {
+  generateAnonymousCartId,
+  isAnonymousCartId,
+} from '../utils/cart-id.utils';
 import { InventoryStatus, inventoryService } from './inventory.service';
 import { redisService } from './redis.service';
 
@@ -74,6 +78,66 @@ export class CartService {
       // Return empty cart on error
       return this.createEmptyCart(customerId);
     }
+  }
+
+  /**
+   * Get or create cart for both authenticated and guest users
+   * Handles cart merging when anonymous cart ID is provided for authenticated users
+   *
+   * @param customerId - User ID for authenticated users, or null for guests
+   * @param anonymousCartId - Optional anonymous cart ID (format: cart_anonymous_{uuid})
+   * @returns Cart for the user
+   */
+  async getOrCreateCart(
+    customerId: string | null,
+    anonymousCartId?: string
+  ): Promise<Cart> {
+    // Case 1: Authenticated user without anonymous cart
+    if (customerId && !anonymousCartId) {
+      return this.getCart(customerId);
+    }
+
+    // Case 2: Guest user with anonymous cart ID
+    if (!customerId && anonymousCartId) {
+      // Validate anonymous cart ID format
+      if (!isAnonymousCartId(anonymousCartId)) {
+        throw new Error('Invalid anonymous cart ID format');
+      }
+      return this.getCart(anonymousCartId);
+    }
+
+    // Case 3: Guest user without cart ID - create new anonymous cart
+    if (!customerId && !anonymousCartId) {
+      const newAnonymousCartId = generateAnonymousCartId();
+      const cart = this.createEmptyCart(newAnonymousCartId);
+      await this.saveCart(cart);
+      return cart;
+    }
+
+    // Case 4: Authenticated user with anonymous cart - merge carts
+    if (customerId && anonymousCartId) {
+      // Validate anonymous cart ID format
+      if (!isAnonymousCartId(anonymousCartId)) {
+        throw new Error('Invalid anonymous cart ID format');
+      }
+
+      // Check if anonymous cart exists and has items
+      const anonymousCart = await redisService.getCart(anonymousCartId);
+      if (
+        anonymousCart &&
+        (anonymousCart as Cart).items &&
+        (anonymousCart as Cart).items.length > 0
+      ) {
+        // Merge anonymous cart with user cart
+        return this.mergeAnonymousCarts(anonymousCartId, customerId);
+      }
+
+      // No anonymous cart or empty cart - just return user cart
+      return this.getCart(customerId);
+    }
+
+    // Fallback - should not reach here
+    throw new Error('Invalid cart identification parameters');
   }
 
   /**
@@ -585,12 +649,24 @@ export class CartService {
 
   /**
    * Merge anonymous cart with user cart (for login scenarios)
+   * This is the main method for merging carts with proper error handling
+   *
+   * @param anonymousCartId - Anonymous cart ID (format: cart_anonymous_{uuid})
+   * @param authenticatedCustomerId - Authenticated user's customer ID
+   * @returns Merged cart
    */
-  async mergeCart(
-    anonymousCustomerId: string,
+  async mergeAnonymousCarts(
+    anonymousCartId: string,
     authenticatedCustomerId: string
   ): Promise<Cart> {
-    const anonymousCart = await redisService.getCart(anonymousCustomerId);
+    // Validate anonymous cart ID format
+    if (!isAnonymousCartId(anonymousCartId)) {
+      throw new Error(
+        'Invalid anonymous cart ID format. Expected: cart_anonymous_{uuid}'
+      );
+    }
+
+    const anonymousCart = await redisService.getCart(anonymousCartId);
     const userCart = await this.getCart(authenticatedCustomerId);
 
     if (!anonymousCart || (anonymousCart as Cart).items.length === 0) {
@@ -627,6 +703,7 @@ export class CartService {
             try {
               await this.validateInventoryAvailability(product, newQuantity);
               userCart.items[existingItemIndex].quantity = newQuantity;
+              userCart.items[existingItemIndex].product = product; // Update product data
               mergeResults.itemsUpdated++;
             } catch (inventoryError) {
               // Use maximum available quantity if requested exceeds stock
@@ -641,6 +718,7 @@ export class CartService {
                   Math.min(newQuantity, availableQuantity)
                 );
                 userCart.items[existingItemIndex].quantity = maxQuantity;
+                userCart.items[existingItemIndex].product = product;
                 mergeResults.itemsUpdated++;
                 console.warn(
                   `Limited quantity for ${anonymousItem.productId} to ${maxQuantity} due to stock`
@@ -705,8 +783,8 @@ export class CartService {
     userCart.updatedAt = new Date().toISOString();
     await this.saveCart(userCart);
 
-    // Clear anonymous cart
-    await redisService.deleteCart(anonymousCustomerId);
+    // Delete anonymous cart after successful merge
+    await redisService.deleteCart(anonymousCartId);
 
     // Log merge results
     console.log('Cart merge completed:', mergeResults);
@@ -715,19 +793,33 @@ export class CartService {
   }
 
   /**
-   * Create anonymous cart with session ID
+   * Legacy method for backward compatibility
+   * @deprecated Use mergeAnonymousCarts instead
    */
-  async createAnonymousCart(sessionId: string): Promise<Cart> {
-    const anonymousCustomerId = `anonymous_${sessionId}`;
-    const cart = this.createEmptyCart(anonymousCustomerId);
+  async mergeCart(
+    anonymousCustomerId: string,
+    authenticatedCustomerId: string
+  ): Promise<Cart> {
+    return this.mergeAnonymousCarts(
+      anonymousCustomerId,
+      authenticatedCustomerId
+    );
+  }
+
+  /**
+   * Create anonymous cart with new cart_anonymous_{uuid} format
+   */
+  async createAnonymousCart(): Promise<Cart> {
+    const anonymousCartId = generateAnonymousCartId();
+    const cart = this.createEmptyCart(anonymousCartId);
     await this.saveCart(cart);
     return cart;
   }
 
   /**
    * Get cart by session ID (for anonymous users)
+   * @deprecated Use getOrCreateCart with anonymousCartId instead
    */
-  // eslint-disable-next-line require-await
   async getCartBySession(sessionId: string): Promise<Cart> {
     const anonymousCustomerId = `anonymous_${sessionId}`;
     return this.getCart(anonymousCustomerId);
@@ -735,8 +827,8 @@ export class CartService {
 
   /**
    * Transfer anonymous cart to authenticated user
+   * @deprecated Use mergeAnonymousCarts with proper cart ID format instead
    */
-  // eslint-disable-next-line require-await
   async transferAnonymousCart(
     sessionId: string,
     authenticatedCustomerId: string
@@ -1165,5 +1257,28 @@ export class CartService {
     await this.saveCart(cart);
 
     return cart;
+  }
+
+  /**
+   * Validate TTL for cart expiration
+   * Min: 1 hour, Max: 7 days
+   */
+  validateTtl(ttlSeconds: number): number {
+    const MIN_TTL = 3600; // 1 hour
+    const MAX_TTL = 7 * 24 * 60 * 60; // 7 days
+    return Math.min(Math.max(ttlSeconds, MIN_TTL), MAX_TTL);
+  }
+
+  /**
+   * Validate reservation expiration minutes
+   * Min: 5 minutes, Max: 2 hours
+   */
+  validateReservationExpiration(expirationMinutes: number): number {
+    const MIN_EXPIRATION = 5; // 5 minutes
+    const MAX_EXPIRATION = 120; // 2 hours
+    return Math.min(
+      Math.max(expirationMinutes, MIN_EXPIRATION),
+      MAX_EXPIRATION
+    );
   }
 }

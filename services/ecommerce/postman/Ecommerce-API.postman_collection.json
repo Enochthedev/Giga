@@ -1,0 +1,915 @@
+{
+  "info": {
+    "name": "Giga Ecommerce API",
+    "description": "Complete API collection for the Giga Ecommerce Service including cart, products, orders, and vendor management.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "1.0.0"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3002",
+      "type": "string"
+    },
+    {
+      "key": "authToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "anonymousCartId",
+      "value": "cart_anonymous_550e8400-e29b-41d4-a716-446655440000",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Shopping Cart",
+      "item": [
+        {
+          "name": "Get Cart (Guest)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Cart-Id",
+                "value": "{{anonymousCartId}}",
+                "description": "Required for guest users. Format: cart_anonymous_{uuid}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/cart",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "cart"]
+            },
+            "description": "Get or create a shopping cart for guest users. Requires X-Cart-Id header with format cart_anonymous_{uuid}."
+          },
+          "response": [
+            {
+              "name": "Success - Empty Cart",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "X-Cart-Id",
+                    "value": "cart_anonymous_550e8400-e29b-41d4-a716-446655440000"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/cart",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "cart"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"cart\": {\n      \"id\": \"cart_cart_anonymous_550e8400-e29b-41d4-a716-446655440000\",\n      \"customerId\": \"cart_anonymous_550e8400-e29b-41d4-a716-446655440000\",\n      \"items\": [],\n      \"subtotal\": 0,\n      \"tax\": 0,\n      \"total\": 0,\n      \"updatedAt\": \"2024-01-15T10:30:00.000Z\"\n    }\n  },\n  \"timestamp\": \"2024-01-15T10:30:00.000Z\"\n}"
+            },
+            {
+              "name": "Error - Missing X-Cart-Id",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/cart",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "cart"]
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"error\": \"X-Cart-Id header is required for guest users. Generate a cart ID using format: cart_anonymous_{uuid}\",\n  \"timestamp\": \"2024-01-15T10:30:00.000Z\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Cart (Authenticated)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "description": "JWT token from authentication"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/cart",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "cart"]
+            },
+            "description": "Get shopping cart for authenticated users. Uses user ID from JWT token."
+          },
+          "response": []
+        },
+        {
+          "name": "Add Item to Cart (Guest)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Cart-Id",
+                "value": "{{anonymousCartId}}",
+                "description": "Required for guest users"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": \"cmgrnxxab0017seeuiqtbj7we\",\n  \"quantity\": 2\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/cart/add",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "cart", "add"]
+            },
+            "description": "Add a single item to the cart. Validates inventory availability before adding."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "X-Cart-Id",
+                    "value": "cart_anonymous_550e8400-e29b-41d4-a716-446655440000"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"productId\": \"prod123\",\n  \"quantity\": 2\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/cart/add",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "cart", "add"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"cart\": {\n      \"id\": \"cart_cart_anonymous_550e8400-e29b-41d4-a716-446655440000\",\n      \"customerId\": \"cart_anonymous_550e8400-e29b-41d4-a716-446655440000\",\n      \"items\": [\n        {\n          \"id\": \"item_123\",\n          \"productId\": \"prod123\",\n          \"quantity\": 2,\n          \"price\": 29.99,\n          \"product\": {\n            \"id\": \"prod123\",\n            \"name\": \"Sample Product\",\n            \"price\": 29.99,\n            \"images\": [\"https://example.com/image.jpg\"]\n          }\n        }\n      ],\n      \"subtotal\": 59.98,\n      \"tax\": 4.80,\n      \"total\": 64.78,\n      \"updatedAt\": \"2024-01-15T10:35:00.000Z\"\n    }\n  },\n  \"message\": \"Item added to cart successfully\",\n  \"timestamp\": \"2024-01-15T10:35:00.000Z\"\n}"
+            },
+            {
+              "name": "Error - Product Not Found",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "X-Cart-Id",
+                    "value": "cart_anonymous_550e8400-e29b-41d4-a716-446655440000"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"productId\": \"invalid_id\",\n  \"quantity\": 2\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/cart/add",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "cart", "add"]
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": false,\n  \"error\": \"Product not found\",\n  \"timestamp\": \"2024-01-15T10:35:00.000Z\"\n}"
+            },
+            {
+              "name": "Error - Insufficient Stock",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "X-Cart-Id",
+                    "value": "cart_anonymous_550e8400-e29b-41d4-a716-446655440000"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"productId\": \"prod123\",\n  \"quantity\": 100\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/cart/add",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "cart", "add"]
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": false,\n  \"error\": \"Only 10 items available in stock\",\n  \"timestamp\": \"2024-01-15T10:35:00.000Z\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Add Multiple Items (Bulk)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Cart-Id",
+                "value": "{{anonymousCartId}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\n      \"productId\": \"cmgrnxxab0017seeuiqtbj7we\",\n      \"quantity\": 3\n    },\n    {\n      \"productId\": \"cmgrnxxa80014seeuww1kxorh\",\n      \"quantity\": 2\n    },\n    {\n      \"productId\": \"cmgrnxxa50011seeuap1ht0om\",\n      \"quantity\": 1\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/cart/add",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "cart", "add"]
+            },
+            "description": "Add multiple items to cart in a single request. Maximum 50 items per request."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Item Quantity",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "X-Cart-Id",
+                "value": "{{anonymousCartId}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quantity\": 5\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/cart/items/:itemId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "cart", "items", ":itemId"],
+              "variable": [
+                {
+                  "key": "itemId",
+                  "value": "item_123",
+                  "description": "Cart item ID"
+                }
+              ]
+            },
+            "description": "Update the quantity of an item in the cart. Validates inventory availability."
+          },
+          "response": []
+        },
+        {
+          "name": "Remove Item from Cart",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "X-Cart-Id",
+                "value": "{{anonymousCartId}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/cart/items/:itemId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "cart", "items", ":itemId"],
+              "variable": [
+                {
+                  "key": "itemId",
+                  "value": "item_123"
+                }
+              ]
+            },
+            "description": "Remove a specific item from the cart."
+          },
+          "response": []
+        },
+        {
+          "name": "Clear Cart",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "X-Cart-Id",
+                "value": "{{anonymousCartId}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/cart",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "cart"]
+            },
+            "description": "Remove all items from the cart."
+          },
+          "response": []
+        },
+        {
+          "name": "Validate Cart",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Cart-Id",
+                "value": "{{anonymousCartId}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/cart/validate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "cart", "validate"]
+            },
+            "description": "Validate cart items for availability, stock, and price changes."
+          },
+          "response": []
+        },
+        {
+          "name": "Merge Anonymous Cart (After Login)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"anonymousCartId\": \"cart_anonymous_550e8400-e29b-41d4-a716-446655440000\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/cart/merge",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "cart", "merge"]
+            },
+            "description": "Merge an anonymous cart with authenticated user's cart after login. Duplicate items will have quantities combined."
+          },
+          "response": []
+        }
+      ],
+      "description": "Shopping cart management endpoints supporting both guest and authenticated users."
+    },
+    {
+      "name": "Products",
+      "item": [
+        {
+          "name": "Get All Products",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/products?page=1&limit=20&category=Electronics&sortBy=price&sortOrder=asc",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "products"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number (default: 1)"
+                },
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "description": "Items per page (default: 20, max: 100)"
+                },
+                {
+                  "key": "category",
+                  "value": "Electronics",
+                  "description": "Filter by category"
+                },
+                {
+                  "key": "sortBy",
+                  "value": "price",
+                  "description": "Sort field (price, name, createdAt, rating)"
+                },
+                {
+                  "key": "sortOrder",
+                  "value": "asc",
+                  "description": "Sort order (asc, desc)"
+                }
+              ]
+            },
+            "description": "Get paginated list of products with filtering and sorting options."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Product by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/products/:productId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "products", ":productId"],
+              "variable": [
+                {
+                  "key": "productId",
+                  "value": "cmgrnxxab0017seeuiqtbj7we"
+                }
+              ]
+            },
+            "description": "Get detailed information about a specific product."
+          },
+          "response": []
+        },
+        {
+          "name": "Search Products",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/products/search?q=laptop&category=Electronics&minPrice=500&maxPrice=2000",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "products", "search"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "laptop",
+                  "description": "Search query"
+                },
+                {
+                  "key": "category",
+                  "value": "Electronics"
+                },
+                {
+                  "key": "minPrice",
+                  "value": "500"
+                },
+                {
+                  "key": "maxPrice",
+                  "value": "2000"
+                }
+              ]
+            },
+            "description": "Search products by name, description, or other attributes."
+          },
+          "response": []
+        }
+      ],
+      "description": "Product catalog endpoints for browsing and searching products."
+    },
+    {
+      "name": "Orders",
+      "item": [
+        {
+          "name": "Create Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"shippingAddress\": {\n    \"name\": \"John Doe\",\n    \"street\": \"123 Main St\",\n    \"city\": \"New York\",\n    \"state\": \"NY\",\n    \"zipCode\": \"10001\",\n    \"country\": \"USA\",\n    \"phone\": \"+1234567890\"\n  },\n  \"shippingMethodId\": \"ship_123\",\n  \"paymentMethod\": \"credit_card\",\n  \"promotionCode\": \"SAVE10\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orders",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "orders"]
+            },
+            "description": "Create order from cart items. Validates inventory and applies promotions."
+          },
+          "response": []
+        },
+        {
+          "name": "Get My Orders",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orders?page=1&limit=10&status=PENDING",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "orders"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "status",
+                  "value": "PENDING",
+                  "description": "PENDING, CONFIRMED, PROCESSING, SHIPPED, DELIVERED, CANCELLED"
+                }
+              ]
+            },
+            "description": "Get list of user's orders with pagination and filtering."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Order by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orders/:orderId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "orders", ":orderId"],
+              "variable": [
+                {
+                  "key": "orderId",
+                  "value": "order_123"
+                }
+              ]
+            },
+            "description": "Get detailed order information including items and tracking."
+          },
+          "response": []
+        },
+        {
+          "name": "Cancel Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orders/:orderId/cancel",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "orders", ":orderId", "cancel"],
+              "variable": [
+                {
+                  "key": "orderId",
+                  "value": "order_123"
+                }
+              ]
+            },
+            "description": "Cancel an order. Only works for orders not yet shipped."
+          },
+          "response": []
+        }
+      ],
+      "description": "Order management - create, view, and cancel orders."
+    },
+    {
+      "name": "Checkout",
+      "item": [
+        {
+          "name": "Validate Cart for Checkout",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/cart/checkout/validate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "cart", "checkout", "validate"]
+            },
+            "description": "Validate cart before checkout - checks inventory, prices, and availability."
+          },
+          "response": []
+        },
+        {
+          "name": "Reserve Inventory",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"expirationMinutes\": 30\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/cart/reserve",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "cart", "reserve"]
+            },
+            "description": "Reserve inventory during checkout. Holds items for 30 minutes."
+          },
+          "response": []
+        }
+      ],
+      "description": "Checkout process - validation and inventory reservation."
+    },
+    {
+      "name": "Vendors",
+      "item": [
+        {
+          "name": "Get All Vendors",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/vendors?page=1&limit=20&isVerified=true",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "vendors"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "isVerified",
+                  "value": "true"
+                }
+              ]
+            },
+            "description": "Browse all vendors with pagination and filters."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Vendor by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/vendors/:vendorId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "vendors", ":vendorId"],
+              "variable": [
+                {
+                  "key": "vendorId",
+                  "value": "vendor_123"
+                }
+              ]
+            },
+            "description": "Get vendor details including products and ratings."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Vendor Products",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/vendors/:vendorId/products",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "vendors", ":vendorId", "products"],
+              "variable": [
+                {
+                  "key": "vendorId",
+                  "value": "vendor_123"
+                }
+              ]
+            },
+            "description": "Get all products from a specific vendor."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Vendor (Vendor Role)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"My Store\",\n  \"email\": \"store@example.com\",\n  \"phone\": \"+1234567890\",\n  \"description\": \"Quality products\",\n  \"address\": {\n    \"street\": \"123 Business Ave\",\n    \"city\": \"New York\",\n    \"state\": \"NY\",\n    \"zipCode\": \"10001\",\n    \"country\": \"USA\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/vendors",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "vendors"]
+            },
+            "description": "Create vendor profile. Requires VENDOR role."
+          },
+          "response": []
+        }
+      ],
+      "description": "Vendor management - browse vendors and manage vendor profiles."
+    },
+    {
+      "name": "Promotions",
+      "item": [
+        {
+          "name": "Get Active Promotions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/promotions?isActive=true",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "promotions"],
+              "query": [
+                {
+                  "key": "isActive",
+                  "value": "true"
+                }
+              ]
+            },
+            "description": "Get list of active promotions and discount codes."
+          },
+          "response": []
+        },
+        {
+          "name": "Validate Promotion Code",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"SAVE10\",\n  \"cartTotal\": 100.00\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/promotions/validate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "promotions", "validate"]
+            },
+            "description": "Validate a promotion code and calculate discount."
+          },
+          "response": []
+        }
+      ],
+      "description": "Promotions and discount codes."
+    },
+    {
+      "name": "Shipping",
+      "item": [
+        {
+          "name": "Get Shipping Methods",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/shipping/methods?country=USA&state=NY",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "shipping", "methods"],
+              "query": [
+                {
+                  "key": "country",
+                  "value": "USA"
+                },
+                {
+                  "key": "state",
+                  "value": "NY"
+                }
+              ]
+            },
+            "description": "Get available shipping methods for a location."
+          },
+          "response": []
+        },
+        {
+          "name": "Calculate Shipping Cost",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"shippingMethodId\": \"ship_123\",\n  \"items\": [\n    {\n      \"productId\": \"prod_123\",\n      \"quantity\": 2,\n      \"weight\": 1.5\n    }\n  ],\n  \"destination\": {\n    \"country\": \"USA\",\n    \"state\": \"NY\",\n    \"zipCode\": \"10001\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/shipping/calculate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "shipping", "calculate"]
+            },
+            "description": "Calculate shipping cost for cart items."
+          },
+          "response": []
+        }
+      ],
+      "description": "Shipping methods and cost calculation."
+    },
+    {
+      "name": "Delivery Tracking",
+      "item": [
+        {
+          "name": "Track Order",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/tracking/:orderId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "tracking", ":orderId"],
+              "variable": [
+                {
+                  "key": "orderId",
+                  "value": "order_123"
+                }
+              ]
+            },
+            "description": "Get delivery tracking information for an order."
+          },
+          "response": []
+        },
+        {
+          "name": "Track by Tracking Number",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/tracking/number/:trackingNumber",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "tracking", "number", ":trackingNumber"],
+              "variable": [
+                {
+                  "key": "trackingNumber",
+                  "value": "1Z999AA10123456784"
+                }
+              ]
+            },
+            "description": "Track delivery using tracking number (public endpoint)."
+          },
+          "response": []
+        }
+      ],
+      "description": "Track order delivery status and location."
+    },
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/health",
+          "host": ["{{baseUrl}}"],
+          "path": ["health"]
+        },
+        "description": "Check service health status including database and Redis connections."
+      },
+      "response": []
+    }
+  ]
+}

@@ -19,6 +19,7 @@ export interface OrderFilters {
   status?: OrderStatus;
   dateFrom?: string;
   dateTo?: string;
+  orderNumber?: string;
   page?: number;
   limit?: number;
 }
@@ -60,6 +61,21 @@ export class OrderService {
   ) {}
 
   /**
+   * Generate order number in format ORD-YYYYMMDD-XXXX
+   */
+  private generateOrderNumber(): string {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const random = Math.floor(Math.random() * 10000)
+      .toString()
+      .padStart(4, '0');
+
+    return `ORD-${year}${month}${day}-${random}`;
+  }
+
+  /**
    * Create order from cart with multi-vendor support
    */
   async createOrder(
@@ -88,7 +104,7 @@ export class OrderService {
     // Get customer information
     const customer = await this.authServiceClient.getUserInfo(customerId);
 
-    // Calculate comprehensive order totals
+    // Calculate comprehensive order totals with 10% tax
     const orderTotals = await this.calculateOrderTotals(
       cart.items,
       orderData.shippingAddress,
@@ -115,13 +131,16 @@ export class OrderService {
     }
 
     try {
+      // Generate unique order number
+      const orderNumber = this.generateOrderNumber();
+
       // Create payment intent
       const paymentIntent = await this.paymentServiceClient.createPaymentIntent(
         Math.round(orderTotals.total * 100), // Convert to cents
         'usd',
         customerId,
         {
-          orderId: 'pending',
+          orderNumber,
           reservationId: reservation.reservationId,
           breakdown: JSON.stringify(orderTotals.breakdown),
         }
@@ -129,10 +148,11 @@ export class OrderService {
 
       // Create order in database transaction
       const order = await this._prisma.$transaction(async tx => {
-        // Create main order
+        // Create main order with generated order number
         const newOrder = await tx.order.create({
           data: {
             id: uuidv4(),
+            orderNumber,
             customerId,
             status: OrderStatus.PENDING,
             subtotal: orderTotals.subtotal,
@@ -252,6 +272,7 @@ export class OrderService {
 
         return {
           id: newOrder.id,
+          orderNumber: newOrder.orderNumber,
           customerId: newOrder.customerId,
           status: newOrder.status as any,
           items: allOrderItems,
@@ -339,7 +360,14 @@ export class OrderService {
     customerId: string,
     filters: OrderFilters = {}
   ): Promise<PaginatedOrders> {
-    const { status, dateFrom, dateTo, page = 1, limit = 10 } = filters;
+    const {
+      status,
+      dateFrom,
+      dateTo,
+      orderNumber,
+      page = 1,
+      limit = 10,
+    } = filters;
 
     const skip = (page - 1) * limit;
 
@@ -349,6 +377,13 @@ export class OrderService {
 
     if (status) {
       where.status = status;
+    }
+
+    if (orderNumber) {
+      where.orderNumber = {
+        contains: orderNumber,
+        mode: 'insensitive',
+      };
     }
 
     if (dateFrom || dateTo) {
@@ -555,7 +590,14 @@ export class OrderService {
     vendorId: string,
     filters: OrderFilters = {}
   ): Promise<PaginatedOrders> {
-    const { status, dateFrom, dateTo, page = 1, limit = 10 } = filters;
+    const {
+      status,
+      dateFrom,
+      dateTo,
+      orderNumber,
+      page = 1,
+      limit = 10,
+    } = filters;
 
     const skip = (page - 1) * limit;
 
@@ -565,6 +607,15 @@ export class OrderService {
 
     if (status) {
       where.status = status;
+    }
+
+    if (orderNumber) {
+      where.order = {
+        orderNumber: {
+          contains: orderNumber,
+          mode: 'insensitive',
+        },
+      };
     }
 
     if (dateFrom || dateTo) {
@@ -831,7 +882,7 @@ export class OrderService {
     }
 
     // Validate tax calculation (basic check)
-    const expectedTax = expectedSubtotal * 0.08; // 8% tax rate
+    const expectedTax = expectedSubtotal * 0.1; // 10% tax rate as per requirements
     if (Math.abs(cart.tax - expectedTax) > 0.01) {
       warnings.push('Tax calculation may be incorrect');
     }
@@ -988,19 +1039,11 @@ export class OrderService {
 
   /**
    * Calculate tax rate based on shipping address
+   * Using 10% tax rate as per requirements
    */
   private calculateTaxRate(shippingAddress: any): number {
-    // Simplified tax calculation - in reality, this would be much more complex
-    const taxRates: Record<string, number> = {
-      USA: 0.08,
-      CA: 0.12, // Canada
-      UK: 0.2, // United Kingdom
-      DE: 0.19, // Germany
-      FR: 0.2, // France
-    };
-
-    const country = shippingAddress.country?.toUpperCase();
-    return taxRates[country] || 0.08; // Default 8% tax rate
+    // Using 10% tax rate as specified in requirements (7.3)
+    return 0.1;
   }
 
   /**
@@ -1210,6 +1253,7 @@ export class OrderService {
   private mapOrderToType(order: any): Order {
     return {
       id: order.id,
+      orderNumber: order.orderNumber,
       customerId: order.customerId,
       status: order.status,
       items: order.items.map((item: any) => this.mapOrderItemToType(item)),
@@ -1448,5 +1492,22 @@ export class OrderService {
     } catch (error) {
       console.error('Failed to send cancellation notifications:', error);
     }
+  }
+
+  /**
+   * Parse and validate date range for queries
+   * Defaults to last 24 hours if not provided
+   */
+  parseDateRange(options?: { from?: string; to?: string }): {
+    fromDate: Date;
+    toDate: Date;
+  } {
+    const fromDate = options?.from
+      ? new Date(options.from)
+      : new Date(Date.now() - 24 * 60 * 60 * 1000); // Default: 24 hours ago
+
+    const toDate = options?.to ? new Date(options.to) : new Date(); // Default: now
+
+    return { fromDate, toDate };
   }
 }

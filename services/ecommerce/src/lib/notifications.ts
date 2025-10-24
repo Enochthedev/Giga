@@ -1,6 +1,12 @@
-import { NotificationClient } from '@giga/notifications-sdk'
+/**
+ * Notification Client
+ *
+ * Re-exports the NotificationClient from centralized config
+ * Use this for order notifications and customer communications
+ *
+ * @deprecated Import from config/clients.ts instead
+ */
 
-export const notificationClient = new NotificationClient({
-  supabaseUrl: process.env.SUPABASE_URL!,
-  supabaseKey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
-})
+import { getNotificationClient } from '../config/clients';
+
+export const notificationClient = getNotificationClient();

@@ -211,6 +211,7 @@ exports.Prisma.CartItemScalarFieldEnum = {
 
 exports.Prisma.OrderScalarFieldEnum = {
   id: 'id',
+  orderNumber: 'orderNumber',
   customerId: 'customerId',
   status: 'status',
   subtotal: 'subtotal',

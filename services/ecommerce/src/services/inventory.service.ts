@@ -436,6 +436,160 @@ export class InventoryService {
       return availableQuantity <= product.inventory.lowStockThreshold;
     });
   }
+
+  /**
+   * Update product inventory for a vendor
+   */
+  async updateProductInventory(
+    productId: string,
+    vendorId: string,
+    updateData: {
+      quantity: number;
+      lowStockThreshold?: number;
+      trackQuantity?: boolean;
+    }
+  ): Promise<{
+    productId: string;
+    inventory: {
+      quantity: number;
+      lowStockThreshold: number;
+      trackQuantity: boolean;
+    };
+  }> {
+    // Verify product belongs to vendor
+    const product = await prisma.product.findFirst({
+      where: {
+        id: productId,
+        vendorId,
+      },
+      include: {
+        inventory: true,
+      },
+    });
+
+    if (!product) {
+      throw new Error('Product not found or access denied');
+    }
+
+    // Update inventory
+    const updatedInventory = await prisma.productInventory.upsert({
+      where: {
+        productId,
+      },
+      update: {
+        quantity: updateData.quantity,
+        lowStockThreshold: updateData.lowStockThreshold ?? undefined,
+        trackQuantity: updateData.trackQuantity ?? undefined,
+        updatedAt: new Date(),
+      },
+      create: {
+        productId,
+        quantity: updateData.quantity,
+        lowStockThreshold: updateData.lowStockThreshold || 10,
+        trackQuantity:
+          updateData.trackQuantity !== undefined
+            ? updateData.trackQuantity
+            : true,
+      },
+    });
+
+    return {
+      productId,
+      inventory: {
+        quantity: updatedInventory.quantity,
+        lowStockThreshold: updatedInventory.lowStockThreshold,
+        trackQuantity: updatedInventory.trackQuantity,
+      },
+    };
+  }
+
+  /**
+   * Bulk update inventory for multiple products
+   */
+  async bulkUpdateInventory(
+    vendorId: string,
+    updates: Array<{
+      productId: string;
+      quantity: number;
+      lowStockThreshold?: number;
+    }>
+  ): Promise<{
+    updatedCount: number;
+    lowStockAlerts: number;
+    results: Array<{
+      productId: string;
+      quantity: number;
+      lowStockThreshold: number;
+    }>;
+  }> {
+    // Verify all products belong to vendor
+    const productIds = updates.map(update => update.productId);
+    const products = await prisma.product.findMany({
+      where: {
+        id: { in: productIds },
+        vendorId,
+      },
+      include: {
+        inventory: true,
+      },
+    });
+
+    if (products.length !== productIds.length) {
+      throw new Error('Some products not found or access denied');
+    }
+
+    // Perform bulk updates in transaction
+    const results = await prisma.$transaction(
+      updates.map(update =>
+        prisma.productInventory.upsert({
+          where: {
+            productId: update.productId,
+          },
+          update: {
+            quantity: update.quantity,
+            lowStockThreshold: update.lowStockThreshold ?? undefined,
+            updatedAt: new Date(),
+          },
+          create: {
+            productId: update.productId,
+            quantity: update.quantity,
+            lowStockThreshold: update.lowStockThreshold || 10,
+            trackQuantity: true,
+          },
+        })
+      )
+    );
+
+    // Count low stock alerts
+    const lowStockAlerts = results.filter(
+      result =>
+        result.trackQuantity && result.quantity <= result.lowStockThreshold
+    ).length;
+
+    return {
+      updatedCount: results.length,
+      lowStockAlerts,
+      results: results.map(result => ({
+        productId: result.productId,
+        quantity: result.quantity,
+        lowStockThreshold: result.lowStockThreshold,
+      })),
+    };
+  }
+
+  /**
+   * Check if product inventory is low and needs alert
+   */
+  isLowStock(inventory: {
+    quantity: number;
+    lowStockThreshold: number;
+    trackQuantity: boolean;
+  }): boolean {
+    return (
+      inventory.trackQuantity &&
+      inventory.quantity <= inventory.lowStockThreshold
+    );
+  }
 }
 
 export const inventoryService = new InventoryService();

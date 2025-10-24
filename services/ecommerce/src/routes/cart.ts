@@ -1,10 +1,6 @@
 import { Router } from 'express';
 import { CartController } from '../controllers/cart.controller';
 import { prisma } from '../lib/prisma';
-import {
-  handleAuthentication,
-  handleSession,
-} from '../middleware/session.middleware';
 import { cartRateLimit, validate } from '../middleware/validation.middleware';
 import {
   CartItemParamsSchema,
@@ -18,12 +14,12 @@ const router = Router();
 const cartService = new CartService(prisma);
 const cartController = new CartController(cartService);
 
-// Apply session middleware to all cart routes
-router.use(handleSession);
-router.use(handleAuthentication);
-
 // Apply cart-specific rate limiting
 router.use(cartRateLimit);
+
+// Note: Authentication is optional for cart routes
+// Guest users can use X-Cart-Id header to identify their cart
+// Authenticated users will have their user ID from auth middleware
 
 // Route handlers using the CartController
 
@@ -32,9 +28,22 @@ router.use(cartRateLimit);
  * /api/v1/cart:
  *   get:
  *     summary: Get current user shopping cart with product enrichment
+ *     description: |
+ *       Supports both authenticated and guest users.
+ *       - Authenticated users: Include Bearer token in Authorization header
+ *       - Guest users: Include X-Cart-Id header with format cart_anonymous_{uuid}
  *     tags: [Shopping Cart]
+ *     parameters:
+ *       - in: header
+ *         name: X-Cart-Id
+ *         schema:
+ *           type: string
+ *           example: cart_anonymous_550e8400-e29b-41d4-a716-446655440000
+ *         required: false
+ *         description: Required for guest users. Format cart_anonymous_{uuid}
  *     security:
  *       - bearerAuth: []
+ *       - {}
  *     responses:
  *       200:
  *         description: Cart retrieved successfully
@@ -51,6 +60,8 @@ router.use(cartRateLimit);
  *                 timestamp:
  *                   type: string
  *                   format: date-time
+ *       400:
+ *         description: X-Cart-Id header required for guest users or invalid cart ID format
  */
 router.get('/', (req, res) => cartController.getCart(req, res));
 
@@ -59,10 +70,23 @@ router.get('/', (req, res) => cartController.getCart(req, res));
  * /api/v1/cart/add:
  *   post:
  *     summary: Add item(s) to shopping cart with inventory validation
- *     description: Unified endpoint that supports both single item and bulk operations
+ *     description: |
+ *       Unified endpoint that supports both single item and bulk operations.
+ *       Supports both authenticated and guest users.
+ *       - Authenticated users: Include Bearer token in Authorization header
+ *       - Guest users: Include X-Cart-Id header with format cart_anonymous_{uuid}
  *     tags: [Shopping Cart]
+ *     parameters:
+ *       - in: header
+ *         name: X-Cart-Id
+ *         schema:
+ *           type: string
+ *           example: cart_anonymous_550e8400-e29b-41d4-a716-446655440000
+ *         required: false
+ *         description: Required for guest users. Format cart_anonymous_{uuid}
  *     security:
  *       - bearerAuth: []
+ *       - {}
  *     requestBody:
  *       required: true
  *       content:
@@ -135,9 +159,14 @@ router.post('/add', (req, res) => cartController.addItems(req, res));
  * /api/v1/cart/items/{itemId}:
  *   put:
  *     summary: Update cart item quantity
+ *     description: |
+ *       Supports both authenticated and guest users.
+ *       - Authenticated users: Include Bearer token in Authorization header
+ *       - Guest users: Include X-Cart-Id header with format cart_anonymous_{uuid}
  *     tags: [Shopping Cart]
  *     security:
  *       - bearerAuth: []
+ *       - {}
  *     parameters:
  *       - in: path
  *         name: itemId
@@ -145,6 +174,13 @@ router.post('/add', (req, res) => cartController.addItems(req, res));
  *         schema:
  *           type: string
  *         example: item_123
+ *       - in: header
+ *         name: X-Cart-Id
+ *         schema:
+ *           type: string
+ *           example: cart_anonymous_550e8400-e29b-41d4-a716-446655440000
+ *         required: false
+ *         description: Required for guest users. Format cart_anonymous_{uuid}
  *     requestBody:
  *       required: true
  *       content:
@@ -180,9 +216,14 @@ router.put(
  * /api/v1/cart/items/{itemId}:
  *   delete:
  *     summary: Remove item from cart
+ *     description: |
+ *       Supports both authenticated and guest users.
+ *       - Authenticated users: Include Bearer token in Authorization header
+ *       - Guest users: Include X-Cart-Id header with format cart_anonymous_{uuid}
  *     tags: [Shopping Cart]
  *     security:
  *       - bearerAuth: []
+ *       - {}
  *     parameters:
  *       - in: path
  *         name: itemId
@@ -190,6 +231,13 @@ router.put(
  *         schema:
  *           type: string
  *         example: item_123
+ *       - in: header
+ *         name: X-Cart-Id
+ *         schema:
+ *           type: string
+ *           example: cart_anonymous_550e8400-e29b-41d4-a716-446655440000
+ *         required: false
+ *         description: Required for guest users. Format cart_anonymous_{uuid}
  *     responses:
  *       200:
  *         description: Item removed from cart successfully
@@ -207,12 +255,27 @@ router.delete(
  * /api/v1/cart:
  *   delete:
  *     summary: Clear entire cart
+ *     description: |
+ *       Supports both authenticated and guest users.
+ *       - Authenticated users: Include Bearer token in Authorization header
+ *       - Guest users: Include X-Cart-Id header with format cart_anonymous_{uuid}
  *     tags: [Shopping Cart]
+ *     parameters:
+ *       - in: header
+ *         name: X-Cart-Id
+ *         schema:
+ *           type: string
+ *           example: cart_anonymous_550e8400-e29b-41d4-a716-446655440000
+ *         required: false
+ *         description: Required for guest users. Format cart_anonymous_{uuid}
  *     security:
  *       - bearerAuth: []
+ *       - {}
  *     responses:
  *       200:
  *         description: Cart cleared successfully
+ *       400:
+ *         description: X-Cart-Id header required for guest users
  */
 router.delete('/', (req, res) => cartController.clearCart(req, res));
 
@@ -221,9 +284,22 @@ router.delete('/', (req, res) => cartController.clearCart(req, res));
  * /api/v1/cart/validate:
  *   get:
  *     summary: Validate cart items and return issues
+ *     description: |
+ *       Supports both authenticated and guest users.
+ *       - Authenticated users: Include Bearer token in Authorization header
+ *       - Guest users: Include X-Cart-Id header with format cart_anonymous_{uuid}
  *     tags: [Shopping Cart]
+ *     parameters:
+ *       - in: header
+ *         name: X-Cart-Id
+ *         schema:
+ *           type: string
+ *           example: cart_anonymous_550e8400-e29b-41d4-a716-446655440000
+ *         required: false
+ *         description: Required for guest users. Format cart_anonymous_{uuid}
  *     security:
  *       - bearerAuth: []
+ *       - {}
  *     responses:
  *       200:
  *         description: Cart validation completed
@@ -256,6 +332,9 @@ router.get('/validate', (req, res) => cartController.validateCart(req, res));
  * /api/v1/cart/merge:
  *   post:
  *     summary: Merge anonymous cart with authenticated user cart
+ *     description: |
+ *       Merges items from an anonymous cart into the authenticated user's cart.
+ *       Requires authentication. Duplicate items will have their quantities combined.
  *     tags: [Shopping Cart]
  *     security:
  *       - bearerAuth: []
@@ -266,16 +345,17 @@ router.get('/validate', (req, res) => cartController.validateCart(req, res));
  *           schema:
  *             type: object
  *             required:
- *               - anonymousSessionId
+ *               - anonymousCartId
  *             properties:
- *               anonymousSessionId:
+ *               anonymousCartId:
  *                 type: string
- *                 example: anonymous_session_123
+ *                 example: cart_anonymous_550e8400-e29b-41d4-a716-446655440000
+ *                 description: Anonymous cart ID with format cart_anonymous_{uuid}
  *     responses:
  *       200:
  *         description: Cart merged successfully
  *       400:
- *         description: Invalid request
+ *         description: Invalid request or invalid cart ID format
  *       401:
  *         description: User must be authenticated
  */

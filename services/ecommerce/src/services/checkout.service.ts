@@ -7,6 +7,13 @@ import { InventoryService } from './inventory.service';
 import { OrderService } from './order.service';
 
 export interface CheckoutData {
+  shippingAddressId: string;
+  paymentMethodId: string;
+  notes?: string;
+}
+
+// Legacy interface for backward compatibility
+export interface CheckoutDataLegacy {
   shippingAddress: {
     name: string;
     address: string;
@@ -16,6 +23,17 @@ export interface CheckoutData {
   };
   paymentMethodId: string;
   notes?: string;
+}
+
+export interface CheckoutDataResponse {
+  user: {
+    id: string;
+    email: string;
+    name: string;
+    phone?: string;
+  };
+  addresses: UserAddress[];
+  cart: Cart;
 }
 
 export interface CheckoutContext {
@@ -39,7 +57,7 @@ export interface CheckoutResult {
     currency: string;
     status: string;
   };
-  shippingAddress: CheckoutData['shippingAddress'];
+  shippingAddress: UserAddress;
   totals: {
     subtotal: number;
     tax: number;
@@ -92,8 +110,38 @@ export class CheckoutService {
     private cartService: CartService,
     private orderService: OrderService,
     private inventoryService: InventoryService,
-    private paymentServiceClient: HttpPaymentServiceClient
+    private paymentServiceClient: HttpPaymentServiceClient,
+    private authClient: AuthClient
   ) {}
+
+  /**
+   * Get checkout data including user info, addresses, and cart
+   * Requires authentication
+   */
+  async getCheckoutData(token: string): Promise<CheckoutDataResponse> {
+    // Set token for auth client
+    this.authClient.setTokens(token);
+
+    // Get current user
+    const user = await this.authClient.getCurrentUser();
+
+    // Get user addresses from Supabase
+    const addresses = await this.authClient.getAddresses();
+
+    // Get user's cart
+    const cart = await this.cartService.getCart(user.id);
+
+    return {
+      user: {
+        id: user.id,
+        email: user.email,
+        name: `${user.profile.first_name} ${user.profile.last_name}`,
+        phone: user.profile.phone,
+      },
+      addresses,
+      cart,
+    };
+  }
 
   /**
    * Initiate checkout process with payment intent creation
@@ -101,7 +149,8 @@ export class CheckoutService {
   async initiateCheckout(
     customerId: string,
     checkoutData: CheckoutData,
-    context: CheckoutContext
+    context: CheckoutContext,
+    token?: string
   ): Promise<CheckoutResult> {
     // Validate cart and get checkout summary
     const summary = await this.getCheckoutSummary(customerId);
@@ -109,6 +158,23 @@ export class CheckoutService {
     if (!summary.validation.canProceedToCheckout) {
       throw new Error(
         `Checkout validation failed: ${summary.validation.issues.join(', ')}`
+      );
+    }
+
+    // Fetch shipping address from Supabase
+    if (!token) {
+      throw new Error('Authentication token required for checkout');
+    }
+
+    this.authClient.setTokens(token);
+    const addresses = await this.authClient.getAddresses();
+    const shippingAddress = addresses.find(
+      addr => addr.id === checkoutData.shippingAddressId
+    );
+
+    if (!shippingAddress) {
+      throw new Error(
+        `Shipping address with ID ${checkoutData.shippingAddressId} not found`
       );
     }
 
@@ -175,7 +241,7 @@ export class CheckoutService {
           currency: paymentIntent.currency,
           status: paymentIntent.status,
         },
-        shippingAddress: checkoutData.shippingAddress,
+        shippingAddress, // Full address snapshot from Supabase
         totals: {
           subtotal: summary.totals.subtotal,
           tax: summary.totals.tax,
@@ -205,6 +271,21 @@ export class CheckoutService {
     paymentIntentId: string,
     context: CheckoutContext
   ): Promise<PaymentConfirmationResult> {
+    // Validate cart before proceeding
+    const cart = await this.cartService.getCart(customerId);
+    if (!cart || cart.items.length === 0) {
+      throw new Error('Cart is empty. Cannot complete order.');
+    }
+
+    // Validate all cart items are active and available
+    const validation =
+      await this.cartService.validateCartForCheckout(customerId);
+    if (!validation.isValid) {
+      throw new Error(
+        `Cart validation failed: ${validation.issues.map(i => i.message).join(', ')}`
+      );
+    }
+
     // Get payment status to ensure it's ready for confirmation
     const paymentStatus =
       await this.paymentServiceClient.getPaymentStatus(paymentIntentId);
@@ -242,6 +323,9 @@ export class CheckoutService {
       paymentMethodId: 'confirmed_payment',
       notes: undefined,
     });
+
+    // Clear cart after successful order creation
+    await this.cartService.clearCart(customerId);
 
     return {
       order,
@@ -406,5 +490,29 @@ export class CheckoutService {
         previousOrders: 0,
       };
     }
+  }
+
+  /**
+   * Resolve customer ID from user, session, or sessionId
+   * Priority: authenticated user > session customer > anonymous session
+   */
+  resolveCustomerId(
+    user?: { id: string },
+    session?: { customerId?: string },
+    sessionId?: string
+  ): string | null {
+    if (user?.id) {
+      return user.id;
+    }
+
+    if (session?.customerId) {
+      return session.customerId;
+    }
+
+    if (sessionId) {
+      return `anonymous_${sessionId}`;
+    }
+
+    return null;
   }
 }

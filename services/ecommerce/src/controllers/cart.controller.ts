@@ -1,12 +1,11 @@
-import { UserProfile } from '@platform/supabase-client';
 import { Request, Response } from 'express';
 import { z } from 'zod';
 import { CartService } from '../services/cart.service';
 import { SessionData } from '../services/session.service';
 
-// Extend Request interface for user and session properties
+// Extend Request interface for session properties
+// Note: user is already defined in Express.Request via auth.middleware.ts
 interface SessionRequest extends Request {
-  user?: UserProfile;
   session?: SessionData;
   sessionId?: string;
 }
@@ -21,25 +20,32 @@ export class CartController {
 
   /**
    * GET /api/v1/cart - Get current user shopping cart with product enrichment
+   * Supports both authenticated and guest users via X-Cart-Id header
    */
   async getCart(req: SessionRequest, res: Response): Promise<void> {
     try {
-      // Get customerId from session (supports both authenticated and anonymous users)
-      const customerId =
-        req.session?.customerId || req.user?.id || 'clr123customer';
+      // Get customerId from authenticated user
+      const customerId = req.user?.id || null;
 
-      const cart = await this.cartService.getCart(customerId);
+      // Get anonymous cart ID from X-Cart-Id header
+      const anonymousCartId = req.headers['x-cart-id'] as string | undefined;
 
-      // Log user action for analytics
-      if (req.user?.id) {
-        await supabaseService.logUserAction(
-          req.user.id,
-          'view_cart',
-          'cart',
-          customerId,
-          { items_count: cart.items.length }
-        );
+      // Validate that guest users provide X-Cart-Id header
+      if (!customerId && !anonymousCartId) {
+        res.status(400).json({
+          success: false,
+          error:
+            'X-Cart-Id header is required for guest users. Generate a cart ID using format: cart_anonymous_{uuid}',
+          timestamp: new Date().toISOString(),
+        });
+        return;
       }
+
+      // Get or create cart using the new method
+      const cart = await this.cartService.getOrCreateCart(
+        customerId,
+        anonymousCartId
+      );
 
       res.json({
         success: true,
@@ -48,6 +54,20 @@ export class CartController {
       });
     } catch (error) {
       console.error('Get cart error:', error);
+
+      // Handle specific error cases
+      if (
+        error instanceof Error &&
+        error.message.includes('Invalid anonymous cart ID')
+      ) {
+        res.status(400).json({
+          success: false,
+          error: error.message,
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
       res.status(500).json({
         success: false,
         error: 'Failed to retrieve cart',
@@ -59,6 +79,7 @@ export class CartController {
   /**
    * POST /api/v1/cart/add - Add item(s) to shopping cart with inventory validation
    * Supports both single item and bulk operations in one endpoint
+   * Supports both authenticated and guest users via X-Cart-Id header
    */
   async addItems(req: SessionRequest, res: Response): Promise<void> {
     try {
@@ -95,8 +116,32 @@ export class CartController {
       }
 
       const data = validationResult.data;
-      const customerId =
-        req.session?.customerId || req.user?.id || 'clr123customer';
+
+      // Get customerId from authenticated user
+      const customerId = req.user?.id || null;
+
+      // Get anonymous cart ID from X-Cart-Id header
+      const anonymousCartId = req.headers['x-cart-id'] as string | undefined;
+
+      // Validate that guest users provide X-Cart-Id header
+      if (!customerId && !anonymousCartId) {
+        res.status(400).json({
+          success: false,
+          error:
+            'X-Cart-Id header is required for guest users. Generate a cart ID using format: cart_anonymous_{uuid}',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      // Get or create cart
+      const existingCart = await this.cartService.getOrCreateCart(
+        customerId,
+        anonymousCartId
+      );
+
+      // Determine the cart ID to use for operations
+      const cartId = existingCart.customerId;
 
       let cart;
       let message;
@@ -104,12 +149,12 @@ export class CartController {
       // Check if it's single item or bulk operation
       if ('items' in data) {
         // Bulk operation
-        cart = await this.cartService.addBulkItems(customerId, data.items);
+        cart = await this.cartService.addBulkItems(cartId, data.items);
         message = `${data.items.length} items added to cart successfully`;
       } else {
         // Single item operation
         cart = await this.cartService.addItem(
-          customerId,
+          cartId,
           data.productId,
           data.quantity
         );
@@ -127,6 +172,15 @@ export class CartController {
 
       // Handle specific business logic errors
       if (error instanceof Error) {
+        if (error.message.includes('Invalid anonymous cart ID')) {
+          res.status(400).json({
+            success: false,
+            error: error.message,
+            timestamp: new Date().toISOString(),
+          });
+          return;
+        }
+
         if (error.message.includes('not found')) {
           res.status(404).json({
             success: false,
@@ -160,6 +214,7 @@ export class CartController {
 
   /**
    * PUT /api/v1/cart/items/:itemId - Update cart item quantity
+   * Supports both authenticated and guest users via X-Cart-Id header
    */
   async updateItemQuantity(req: SessionRequest, res: Response): Promise<void> {
     try {
@@ -178,12 +233,32 @@ export class CartController {
       }
 
       const { quantity } = validationResult.data;
-      // Get customerId from session (supports both authenticated and anonymous users)
-      const customerId =
-        req.session?.customerId || req.user?.id || 'clr123customer';
+
+      // Get customerId from authenticated user
+      const customerId = req.user?.id || null;
+
+      // Get anonymous cart ID from X-Cart-Id header
+      const anonymousCartId = req.headers['x-cart-id'] as string | undefined;
+
+      // Validate that guest users provide X-Cart-Id header
+      if (!customerId && !anonymousCartId) {
+        res.status(400).json({
+          success: false,
+          error: 'X-Cart-Id header is required for guest users',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      // Get cart to determine cart ID
+      const existingCart = await this.cartService.getOrCreateCart(
+        customerId,
+        anonymousCartId
+      );
+      const cartId = existingCart.customerId;
 
       const cart = await this.cartService.updateItemQuantity(
-        customerId,
+        cartId,
         itemId,
         quantity
       );
@@ -199,6 +274,15 @@ export class CartController {
 
       // Handle specific business logic errors
       if (error instanceof Error) {
+        if (error.message.includes('Invalid anonymous cart ID')) {
+          res.status(400).json({
+            success: false,
+            error: error.message,
+            timestamp: new Date().toISOString(),
+          });
+          return;
+        }
+
         if (error.message.includes('not found')) {
           res.status(404).json({
             success: false,
@@ -231,15 +315,36 @@ export class CartController {
 
   /**
    * DELETE /api/v1/cart/items/:itemId - Remove item from cart
+   * Supports both authenticated and guest users via X-Cart-Id header
    */
   async removeItem(req: SessionRequest, res: Response): Promise<void> {
     try {
       const { itemId } = req.params;
-      // Get customerId from session (supports both authenticated and anonymous users)
-      const customerId =
-        req.session?.customerId || req.user?.id || 'clr123customer';
 
-      const cart = await this.cartService.removeItem(customerId, itemId);
+      // Get customerId from authenticated user
+      const customerId = req.user?.id || null;
+
+      // Get anonymous cart ID from X-Cart-Id header
+      const anonymousCartId = req.headers['x-cart-id'] as string | undefined;
+
+      // Validate that guest users provide X-Cart-Id header
+      if (!customerId && !anonymousCartId) {
+        res.status(400).json({
+          success: false,
+          error: 'X-Cart-Id header is required for guest users',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      // Get cart to determine cart ID
+      const existingCart = await this.cartService.getOrCreateCart(
+        customerId,
+        anonymousCartId
+      );
+      const cartId = existingCart.customerId;
+
+      const cart = await this.cartService.removeItem(cartId, itemId);
 
       res.json({
         success: true,
@@ -251,13 +356,24 @@ export class CartController {
       console.error('Remove cart item error:', error);
 
       // Handle specific business logic errors
-      if (error instanceof Error && error.message.includes('not found')) {
-        res.status(404).json({
-          success: false,
-          error: error.message,
-          timestamp: new Date().toISOString(),
-        });
-        return;
+      if (error instanceof Error) {
+        if (error.message.includes('Invalid anonymous cart ID')) {
+          res.status(400).json({
+            success: false,
+            error: error.message,
+            timestamp: new Date().toISOString(),
+          });
+          return;
+        }
+
+        if (error.message.includes('not found')) {
+          res.status(404).json({
+            success: false,
+            error: error.message,
+            timestamp: new Date().toISOString(),
+          });
+          return;
+        }
       }
 
       res.status(500).json({
@@ -270,17 +386,37 @@ export class CartController {
 
   /**
    * DELETE /api/v1/cart - Clear entire cart
+   * Supports both authenticated and guest users via X-Cart-Id header
    */
   async clearCart(req: SessionRequest, res: Response): Promise<void> {
     try {
-      // Get customerId from session (supports both authenticated and anonymous users)
-      const customerId =
-        req.session?.customerId || req.user?.id || 'clr123customer';
+      // Get customerId from authenticated user
+      const customerId = req.user?.id || null;
 
-      await this.cartService.clearCart(customerId);
+      // Get anonymous cart ID from X-Cart-Id header
+      const anonymousCartId = req.headers['x-cart-id'] as string | undefined;
+
+      // Validate that guest users provide X-Cart-Id header
+      if (!customerId && !anonymousCartId) {
+        res.status(400).json({
+          success: false,
+          error: 'X-Cart-Id header is required for guest users',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      // Get cart to determine cart ID
+      const existingCart = await this.cartService.getOrCreateCart(
+        customerId,
+        anonymousCartId
+      );
+      const cartId = existingCart.customerId;
+
+      await this.cartService.clearCart(cartId);
 
       // Get the empty cart to return
-      const cart = await this.cartService.getCart(customerId);
+      const cart = await this.cartService.getCart(cartId);
 
       res.json({
         success: true,
@@ -290,6 +426,19 @@ export class CartController {
       });
     } catch (error) {
       console.error('Clear cart error:', error);
+
+      if (
+        error instanceof Error &&
+        error.message.includes('Invalid anonymous cart ID')
+      ) {
+        res.status(400).json({
+          success: false,
+          error: error.message,
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
       res.status(500).json({
         success: false,
         error: 'Failed to clear cart',
@@ -300,14 +449,31 @@ export class CartController {
 
   /**
    * GET /api/v1/cart/validate - Validate cart items and return issues
+   * Supports both authenticated and guest users via X-Cart-Id header
    */
   async validateCart(req: SessionRequest, res: Response): Promise<void> {
     try {
-      // Get customerId from session (supports both authenticated and anonymous users)
-      const customerId =
-        req.session?.customerId || req.user?.id || 'clr123customer';
+      // Get customerId from authenticated user
+      const customerId = req.user?.id || null;
 
-      const cart = await this.cartService.getCart(customerId);
+      // Get anonymous cart ID from X-Cart-Id header
+      const anonymousCartId = req.headers['x-cart-id'] as string | undefined;
+
+      // Validate that guest users provide X-Cart-Id header
+      if (!customerId && !anonymousCartId) {
+        res.status(400).json({
+          success: false,
+          error: 'X-Cart-Id header is required for guest users',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      // Get cart
+      const cart = await this.cartService.getOrCreateCart(
+        customerId,
+        anonymousCartId
+      );
       const validationResult = await this.cartService.validateCartItems(cart);
 
       res.json({
@@ -323,6 +489,19 @@ export class CartController {
       });
     } catch (error) {
       console.error('Validate cart error:', error);
+
+      if (
+        error instanceof Error &&
+        error.message.includes('Invalid anonymous cart ID')
+      ) {
+        res.status(400).json({
+          success: false,
+          error: error.message,
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
       res.status(500).json({
         success: false,
         error: 'Failed to validate cart',
@@ -333,10 +512,11 @@ export class CartController {
 
   /**
    * POST /api/v1/cart/merge - Merge anonymous cart with authenticated user cart
+   * Expects anonymousCartId in request body with format: cart_anonymous_{uuid}
    */
   async mergeCart(req: SessionRequest, res: Response): Promise<void> {
     try {
-      const { anonymousSessionId } = req.body;
+      const { anonymousCartId } = req.body;
       const authenticatedCustomerId = req.user?.id;
 
       if (!authenticatedCustomerId) {
@@ -348,17 +528,18 @@ export class CartController {
         return;
       }
 
-      if (!anonymousSessionId) {
+      if (!anonymousCartId) {
         res.status(400).json({
           success: false,
-          error: 'Anonymous session ID is required',
+          error:
+            'anonymousCartId is required in request body (format: cart_anonymous_{uuid})',
           timestamp: new Date().toISOString(),
         });
         return;
       }
 
-      const mergedCart = await this.cartService.transferAnonymousCart(
-        anonymousSessionId,
+      const mergedCart = await this.cartService.mergeAnonymousCarts(
+        anonymousCartId,
         authenticatedCustomerId
       );
 
@@ -370,6 +551,19 @@ export class CartController {
       });
     } catch (error) {
       console.error('Merge cart error:', error);
+
+      if (
+        error instanceof Error &&
+        error.message.includes('Invalid anonymous cart ID')
+      ) {
+        res.status(400).json({
+          success: false,
+          error: error.message,
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
       res.status(500).json({
         success: false,
         error: 'Failed to merge cart',
@@ -514,9 +708,8 @@ export class CartController {
         return;
       }
 
-      // Validate TTL (max 7 days for security)
-      const maxTtl = 7 * 24 * 60 * 60; // 7 days
-      const validTtl = Math.min(Math.max(ttlSeconds, 3600), maxTtl); // Min 1 hour, max 7 days
+      // Validate TTL using service method
+      const validTtl = this.cartService.validateTtl(ttlSeconds);
 
       await this.cartService.extendCartExpiration(customerId, validTtl);
 
@@ -563,12 +756,9 @@ export class CartController {
         return;
       }
 
-      // Validate expiration minutes (max 2 hours for security)
-      const maxExpiration = 120; // 2 hours
-      const validExpiration = Math.min(
-        Math.max(expirationMinutes, 5),
-        maxExpiration
-      );
+      // Validate expiration minutes using service method
+      const validExpiration =
+        this.cartService.validateReservationExpiration(expirationMinutes);
 
       const result = await this.cartService.reserveCartInventory(
         customerId,

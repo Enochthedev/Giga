@@ -1,5 +1,4 @@
 import { Router } from 'express';
-import { HttpAuthServiceClient } from '../clients/auth.client';
 import { HttpNotificationServiceClient } from '../clients/notification.client';
 import { HttpPaymentServiceClient } from '../clients/payment.client';
 import { OrderController } from '../controllers/order.controller';
@@ -17,9 +16,7 @@ const cartService = new CartService(prisma);
 const inventoryService = new InventoryService();
 
 // Initialize service clients
-const authServiceClient = new HttpAuthServiceClient(
-  process.env.AUTH_SERVICE_URL || 'http://localhost:3001'
-);
+// Note: Auth is handled by middleware, not a service client
 const paymentServiceClient = new HttpPaymentServiceClient(
   process.env.PAYMENT_SERVICE_URL || 'http://localhost:3003'
 );
@@ -34,7 +31,6 @@ const orderService = OrderServiceFactory.create(
   prisma,
   cartService,
   inventoryService,
-  authServiceClient,
   paymentServiceClient,
   notificationServiceClient
 );
@@ -44,7 +40,6 @@ const orderController = new OrderController(
   orderService,
   cartService,
   inventoryService,
-  authServiceClient,
   paymentServiceClient,
   notificationServiceClient
 );

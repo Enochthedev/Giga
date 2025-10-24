@@ -36,18 +36,54 @@ class RedisService {
   async connect(): Promise<RedisClientType> {
     if (this.client) return this.client;
 
-    this.client = createClient({
-      url: process.env.REDIS_URL || 'redis://localhost:6380',
-    });
+    const redisUrl = process.env.REDIS_URL || 'redis://localhost:6380';
+
+    // Log connection attempt (mask password)
+    const maskedUrl = redisUrl.replace(/:([^:@]+)@/, ':****@');
+    console.log(`🔌 Connecting to Redis: ${maskedUrl}`);
+
+    // Configure Redis client with proper TLS settings for Upstash
+    const clientConfig: any = {
+      url: redisUrl,
+    };
+
+    // If using rediss:// (TLS), configure TLS options for Upstash
+    if (redisUrl.startsWith('rediss://')) {
+      clientConfig.socket = {
+        tls: true,
+        rejectUnauthorized: false, // Upstash uses self-signed certs
+      };
+    }
+
+    this.client = createClient(clientConfig);
 
     this.client.on('error', err => {
-      console.error('Redis Client Error:', err);
+      // Only log error once, not repeatedly
+      if (!err.message.includes('WRONGPASS')) {
+        console.error('Redis Client Error:', err);
+      }
       this.metrics.errors++;
     });
 
-    await this.client.connect();
-    console.log('✅ Connected to Redis');
-    return this.client;
+    try {
+      await this.client.connect();
+      console.log('✅ Connected to Redis');
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('WRONGPASS')) {
+        console.error(
+          '❌ Redis authentication failed. Please check REDIS_URL in .env file.'
+        );
+        console.error(
+          '   Make sure the password/token is correct and properly URL-encoded.'
+        );
+      } else {
+        console.error('❌ Failed to connect to Redis:', error);
+      }
+      // Don't throw - allow service to start without Redis
+      this.client = null;
+    }
+
+    return this.client!;
   }
 
   async disconnect() {

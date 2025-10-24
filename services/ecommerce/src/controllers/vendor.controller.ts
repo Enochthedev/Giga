@@ -1,54 +1,16 @@
-import { Product } from '@platform/types';
 import { Request, Response } from 'express';
 import { z } from 'zod';
 import { HttpNotificationServiceClient } from '../clients/notification.client';
-import { OrderStatus, PrismaClient } from '../generated/prisma-client';
+import { OrderStatus } from '../generated/prisma-client';
 import { InventoryService } from '../services/inventory.service';
 import {
   VendorOrderService,
   VendorOrderStatusUpdate,
 } from '../services/vendor-order.service';
+import { VendorProductService } from '../services/vendor-product.service';
 
-// Define types for better type safety
-type PrismaProduct = {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  comparePrice: number | null;
-  sku: string | null;
-  category: string;
-  subcategory: string | null;
-  brand: string | null;
-  images: string[];
-  specifications: any;
-  vendorId: string;
-  isActive: boolean;
-  rating: number | null;
-  reviewCount: number;
-  createdAt: Date;
-  updatedAt: Date;
-};
-
-type ProductWithInventory = PrismaProduct & {
-  inventory: {
-    quantity: number;
-    lowStockThreshold: number;
-    trackQuantity: boolean;
-  } | null;
-};
-
-// Extend Request interface for user properties
-interface AuthenticatedRequest extends Request {
-  user?: {
-    id: string;
-    sub: string;
-    email: string;
-    roles: string[];
-    activeRole: string;
-    vendorId?: string;
-  };
-}
+// Use the global Request type with user from auth middleware
+type AuthenticatedRequest = Request;
 
 // Request validation schemas
 const VendorOrderFiltersSchema = z.object({
@@ -90,10 +52,14 @@ const ProductFiltersSchema = z.object({
   search: z.string().optional(),
 });
 
+/**
+ * VendorController handles HTTP requests for vendor operations
+ * All business logic is delegated to services
+ */
 export class VendorController {
   constructor(
-    private _prisma: PrismaClient,
     private vendorOrderService: VendorOrderService,
+    private vendorProductService: VendorProductService,
     private inventoryService: InventoryService,
     private notificationServiceClient: HttpNotificationServiceClient
   ) {}
@@ -309,82 +275,14 @@ export class VendorController {
       const filters = validationResult.data;
       const vendorId = req.user.vendorId;
 
-      const { page, limit, status, category, search } = filters;
-      const skip = (page - 1) * limit;
-
-      // Build where clause
-      const where: Record<string, unknown> = {
+      const result = await this.vendorProductService.getVendorProducts(
         vendorId,
-      };
-
-      if (status !== 'all') {
-        where.isActive = status === 'active';
-      }
-
-      if (category) {
-        where.category = category;
-      }
-
-      if (search) {
-        where.OR = [
-          { name: { contains: search, mode: 'insensitive' } },
-          { description: { contains: search, mode: 'insensitive' } },
-          { sku: { contains: search, mode: 'insensitive' } },
-        ];
-      }
-
-      // Get products with inventory
-      const [products, total] = await Promise.all([
-        this._prisma.product.findMany({
-          where,
-          include: {
-            inventory: true,
-          },
-          orderBy: {
-            createdAt: 'desc',
-          },
-          skip,
-          take: limit,
-        }),
-        this._prisma.product.count({ where }),
-      ]);
-
-      // Map products to type format
-      const mappedProducts: Product[] = products.map(product => ({
-        id: product.id,
-        name: product.name,
-        description: product.description,
-        price: product.price,
-        comparePrice: product.comparePrice || undefined,
-        sku: product.sku || undefined,
-        category: product.category,
-        subcategory: product.subcategory || undefined,
-        brand: product.brand || undefined,
-        images: product.images,
-        specifications:
-          (product.specifications as Record<string, string>) || undefined,
-        vendorId: product.vendorId,
-        inventory: {
-          quantity: product.inventory?.quantity || 0,
-          lowStockThreshold: product.inventory?.lowStockThreshold || 10,
-          trackQuantity: product.inventory?.trackQuantity || true,
-        },
-        isActive: product.isActive,
-        rating: product.rating || undefined,
-        reviewCount: product.reviewCount,
-        createdAt: product.createdAt.toISOString(),
-        updatedAt: product.updatedAt.toISOString(),
-      }));
+        filters
+      );
 
       res.json({
         success: true,
-        data: {
-          products: mappedProducts,
-          total,
-          page,
-          limit,
-          totalPages: Math.ceil(total / limit),
-        },
+        data: result,
         message: 'Vendor products retrieved successfully',
         timestamp: new Date().toISOString(),
       });
@@ -443,11 +341,23 @@ export class VendorController {
         validationResult.data;
       const vendorId = req.user!.vendorId!;
 
-      const result = await this.updateSingleProductInventory(
+      const result = await this.inventoryService.updateProductInventory(
         productId,
         vendorId,
         { quantity, lowStockThreshold, trackQuantity }
       );
+
+      // Check if low stock alert needed
+      if (this.inventoryService.isLowStock(result.inventory)) {
+        // Send low stock notification (non-blocking)
+        this.sendLowStockNotification(
+          vendorId,
+          productId,
+          result.inventory
+        ).catch(error => {
+          console.error('Failed to send low stock alert:', error);
+        });
+      }
 
       res.json({
         success: true,
@@ -489,7 +399,19 @@ export class VendorController {
       const { updates } = validationResult.data;
       const vendorId = req.user!.vendorId!;
 
-      const result = await this.performBulkInventoryUpdate(vendorId, updates);
+      const result = await this.inventoryService.bulkUpdateInventory(
+        vendorId,
+        updates
+      );
+
+      // Send low stock alerts if needed (non-blocking)
+      if (result.lowStockAlerts > 0) {
+        this.sendBulkLowStockNotifications(vendorId, result.results).catch(
+          error => {
+            console.error('Failed to send low stock alerts:', error);
+          }
+        );
+      }
 
       res.json({
         success: true,
@@ -520,38 +442,11 @@ export class VendorController {
       const lowStockProducts =
         await this.inventoryService.getLowStockProducts(vendorId);
 
-      // Map to Product type format
-      const mappedProducts: Product[] = lowStockProducts.map(product => ({
-        id: product.id,
-        name: product.name,
-        description: product.description,
-        price: product.price,
-        comparePrice: product.comparePrice || undefined,
-        sku: product.sku || undefined,
-        category: product.category,
-        subcategory: product.subcategory || undefined,
-        brand: product.brand || undefined,
-        images: product.images,
-        specifications:
-          (product.specifications as Record<string, string>) || undefined,
-        vendorId: product.vendorId,
-        inventory: {
-          quantity: product.inventory?.quantity || 0,
-          lowStockThreshold: product.inventory?.lowStockThreshold || 10,
-          trackQuantity: product.inventory?.trackQuantity || true,
-        },
-        isActive: product.isActive,
-        rating: product.rating || undefined,
-        reviewCount: product.reviewCount,
-        createdAt: product.createdAt.toISOString(),
-        updatedAt: product.updatedAt.toISOString(),
-      }));
-
       res.json({
         success: true,
         data: {
-          products: mappedProducts,
-          count: mappedProducts.length,
+          products: lowStockProducts,
+          count: lowStockProducts.length,
         },
         message: 'Low stock products retrieved successfully',
         timestamp: new Date().toISOString(),
@@ -607,246 +502,55 @@ export class VendorController {
   }
 
   /**
-   * Update inventory for a single product
+   * Send low stock notification for a single product
    */
-  private async updateSingleProductInventory(
-    productId: string,
+  private async sendLowStockNotification(
     vendorId: string,
-    updateData: {
-      quantity: number;
-      lowStockThreshold?: number;
-      trackQuantity?: boolean;
-    }
-  ): Promise<{
-    productId: string;
+    productId: string,
     inventory: {
       quantity: number;
       lowStockThreshold: number;
       trackQuantity: boolean;
-    };
-  }> {
-    // Verify product belongs to vendor
-    const product = await this._prisma.product.findFirst({
-      where: {
-        id: productId,
-        vendorId,
-      },
-      include: {
-        inventory: true,
-      },
-    });
-
-    if (!product) {
-      throw new Error('Product not found or access denied');
     }
-
-    // Update inventory
-    const updatedInventory = await this._prisma.productInventory.upsert({
-      where: {
-        productId,
-      },
-      update: {
-        quantity: updateData.quantity,
-        lowStockThreshold: updateData.lowStockThreshold ?? undefined,
-        trackQuantity: updateData.trackQuantity ?? undefined,
-        updatedAt: new Date(),
-      },
-      create: {
-        productId,
-        quantity: updateData.quantity,
-        lowStockThreshold: updateData.lowStockThreshold || 10,
-        trackQuantity:
-          updateData.trackQuantity !== undefined
-            ? updateData.trackQuantity
-            : true,
-      },
-    });
-
-    // Check for low stock alert
-    if (
-      updatedInventory.trackQuantity &&
-      updatedInventory.quantity <= updatedInventory.lowStockThreshold
-    ) {
-      // Send low stock notification (non-blocking)
-      this.sendLowStockAlert(
-        vendorId,
-        product,
-        updatedInventory.quantity,
-        updatedInventory.lowStockThreshold
-      ).catch(error => {
-        console.error('Failed to send low stock alert:', error);
-      });
-    }
-
-    return {
-      productId,
-      inventory: {
-        quantity: updatedInventory.quantity,
-        lowStockThreshold: updatedInventory.lowStockThreshold,
-        trackQuantity: updatedInventory.trackQuantity,
-      },
-    };
-  }
-
-  /**
-   * Perform bulk inventory updates
-   */
-  private async performBulkInventoryUpdate(
-    vendorId: string,
-    updates: Array<{
-      productId: string;
-      quantity: number;
-      lowStockThreshold?: number;
-    }>
-  ): Promise<{
-    updatedCount: number;
-    lowStockAlerts: number;
-    results: Array<{
-      productId: string;
-      quantity: number;
-      lowStockThreshold: number;
-    }>;
-  }> {
-    // Verify all products belong to vendor
-    const productIds = updates.map(update => update.productId);
-    const products = await this._prisma.product.findMany({
-      where: {
-        id: { in: productIds },
-        vendorId,
-      },
-      include: {
-        inventory: true,
-      },
-    });
-
-    if (products.length !== productIds.length) {
-      throw new Error('Some products not found or access denied');
-    }
-
-    // Perform bulk updates in transaction
-    const results = await this._prisma.$transaction(
-      updates.map(update =>
-        this._prisma.productInventory.upsert({
-          where: {
-            productId: update.productId,
-          },
-          update: {
-            quantity: update.quantity,
-            lowStockThreshold: update.lowStockThreshold ?? undefined,
-            updatedAt: new Date(),
-          },
-          create: {
-            productId: update.productId,
-            quantity: update.quantity,
-            lowStockThreshold: update.lowStockThreshold || 10,
-            trackQuantity: true,
-          },
-        })
-      )
-    );
-
-    // Check for low stock alerts
-    const lowStockAlerts = this.identifyLowStockAlerts(results, products);
-
-    // Send low stock alerts (non-blocking)
-    if (lowStockAlerts.length > 0) {
-      this.sendBulkLowStockAlerts(vendorId, lowStockAlerts).catch(error => {
-        console.error('Failed to send low stock alerts:', error);
-      });
-    }
-
-    return {
-      updatedCount: results.length,
-      lowStockAlerts: lowStockAlerts.length,
-      results: results.map(result => ({
-        productId: result.productId,
-        quantity: result.quantity,
-        lowStockThreshold: result.lowStockThreshold,
-      })),
-    };
-  }
-
-  /**
-   * Identify products with low stock after bulk update
-   */
-  private identifyLowStockAlerts(
-    results: Array<{
-      productId: string;
-      quantity: number;
-      lowStockThreshold: number;
-      trackQuantity: boolean;
-    }>,
-    products: ProductWithInventory[]
-  ): Array<{
-    product: PrismaProduct;
-    currentStock: number;
-    threshold: number;
-  }> {
-    const lowStockAlerts = [];
-
-    for (const result of results) {
-      const product = products.find(p => p.id === result.productId);
-
-      if (
-        result.trackQuantity &&
-        result.quantity <= result.lowStockThreshold &&
-        product
-      ) {
-        lowStockAlerts.push({
-          product,
-          currentStock: result.quantity,
-          threshold: result.lowStockThreshold,
-        });
-      }
-    }
-
-    return lowStockAlerts;
-  }
-
-  /**
-   * Send bulk low stock alerts
-   */
-  private async sendBulkLowStockAlerts(
-    vendorId: string,
-    alerts: Array<{
-      product: PrismaProduct;
-      currentStock: number;
-      threshold: number;
-    }>
-  ): Promise<void> {
-    await Promise.all(
-      alerts.map(alert =>
-        this.sendLowStockAlert(
-          vendorId,
-          alert.product,
-          alert.currentStock,
-          alert.threshold
-        )
-      )
-    );
-  }
-
-  /**
-   * Send low stock alert notification
-   */
-  private async sendLowStockAlert(
-    vendorId: string,
-    product: PrismaProduct,
-    currentStock: number,
-    threshold: number
   ): Promise<void> {
     try {
       await this.notificationServiceClient.sendInventoryAlert({
         vendorId,
         vendorEmail: 'vendor@example.com', // In real implementation, get from vendor service
-        productId: product.id,
-        productName: product.name,
-        currentStock,
-        threshold,
+        productId,
+        productName: 'Product', // Would fetch from product service
+        currentStock: inventory.quantity,
+        threshold: inventory.lowStockThreshold,
       });
     } catch (error) {
-      console.error('Failed to send low stock alert:', error);
+      console.error('Failed to send low stock notification:', error);
       // Don't throw error to avoid breaking the main flow
     }
+  }
+
+  /**
+   * Send bulk low stock notifications
+   */
+  private async sendBulkLowStockNotifications(
+    vendorId: string,
+    results: Array<{
+      productId: string;
+      quantity: number;
+      lowStockThreshold: number;
+    }>
+  ): Promise<void> {
+    const lowStockResults = results.filter(
+      result => result.quantity <= result.lowStockThreshold
+    );
+
+    await Promise.all(
+      lowStockResults.map(result =>
+        this.sendLowStockNotification(vendorId, result.productId, {
+          quantity: result.quantity,
+          lowStockThreshold: result.lowStockThreshold,
+          trackQuantity: true,
+        })
+      )
+    );
   }
 }

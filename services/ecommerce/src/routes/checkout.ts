@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { HttpPaymentServiceClient } from '../clients/payment.client';
+import { getAuthClient } from '../config/clients';
 import { CheckoutController } from '../controllers/checkout.controller';
 import { prisma } from '../lib/prisma';
 import {
@@ -20,6 +21,7 @@ const inventoryService = new InventoryService();
 const paymentServiceClient = new HttpPaymentServiceClient(
   process.env.PAYMENT_SERVICE_URL || 'http://localhost:3003'
 );
+const authClient = getAuthClient();
 
 // Initialize order service (simplified for checkout)
 const orderService = new OrderService(
@@ -38,7 +40,8 @@ const checkoutService = new CheckoutService(
   cartService,
   orderService,
   inventoryService,
-  paymentServiceClient
+  paymentServiceClient,
+  authClient
 );
 
 const checkoutController = new CheckoutController(
@@ -53,6 +56,63 @@ router.use(handleAuthentication);
 
 // Apply rate limiting
 router.use(cartRateLimit);
+
+/**
+ * @swagger
+ * /api/v1/checkout:
+ *   get:
+ *     summary: Get checkout data with user info, addresses, and cart
+ *     tags: [Checkout]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Checkout data retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     user:
+ *                       type: object
+ *                       properties:
+ *                         id:
+ *                           type: string
+ *                         email:
+ *                           type: string
+ *                         name:
+ *                           type: string
+ *                         phone:
+ *                           type: string
+ *                     addresses:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: string
+ *                           label:
+ *                             type: string
+ *                           street:
+ *                             type: string
+ *                           city:
+ *                             type: string
+ *                           country:
+ *                             type: string
+ *                           is_default:
+ *                             type: boolean
+ *                     cart:
+ *                       $ref: '#/components/schemas/Cart'
+ *       401:
+ *         description: Authentication required
+ */
+router.get('/', (req, res) => checkoutController.getCheckoutData(req, res));
 
 /**
  * @swagger
@@ -123,32 +183,14 @@ router.get('/summary', (req, res) =>
  *           schema:
  *             type: object
  *             required:
- *               - shippingAddress
+ *               - shippingAddressId
  *               - paymentMethodId
  *             properties:
- *               shippingAddress:
- *                 type: object
- *                 required:
- *                   - name
- *                   - address
- *                   - city
- *                   - country
- *                 properties:
- *                   name:
- *                     type: string
- *                     example: "John Doe"
- *                   address:
- *                     type: string
- *                     example: "123 Main St"
- *                   city:
- *                     type: string
- *                     example: "New York"
- *                   country:
- *                     type: string
- *                     example: "USA"
- *                   phone:
- *                     type: string
- *                     example: "+1234567890"
+ *               shippingAddressId:
+ *                 type: string
+ *                 format: uuid
+ *                 example: "550e8400-e29b-41d4-a716-446655440000"
+ *                 description: "ID of the user's saved address from Supabase"
  *               paymentMethodId:
  *                 type: string
  *                 example: "pm_1234567890"

@@ -22,7 +22,6 @@ export function loadServiceConfig(): EcommerceServiceConfig {
   const requiredEnvVars = [
     'DATABASE_URL',
     'REDIS_URL',
-    'AUTH_SERVICE_URL',
     'PAYMENT_SERVICE_URL',
     'NOTIFICATION_SERVICE_URL',
     'JWT_SECRET',
@@ -45,7 +44,6 @@ export function loadServiceConfig(): EcommerceServiceConfig {
       url: process.env.REDIS_URL!,
     },
     services: {
-      authServiceUrl: process.env.AUTH_SERVICE_URL!,
       paymentServiceUrl: process.env.PAYMENT_SERVICE_URL!,
       notificationServiceUrl: process.env.NOTIFICATION_SERVICE_URL!,
       timeout: parseInt(process.env.SERVICE_TIMEOUT || '5000', 10),
@@ -64,7 +62,6 @@ export function loadServiceConfig(): EcommerceServiceConfig {
 export interface HealthCheckConfig {
   database: boolean;
   redis: boolean;
-  authService: boolean;
   paymentService: boolean;
   notificationService: boolean;
 }
@@ -72,7 +69,6 @@ export interface HealthCheckConfig {
 export const defaultHealthCheckConfig: HealthCheckConfig = {
   database: true,
   redis: true,
-  authService: true,
   paymentService: true,
   notificationService: true,
 };

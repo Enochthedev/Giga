@@ -179,6 +179,7 @@ model CartItem {
 // Order Management
 model Order {
   id               String          @id @default(cuid())
+  orderNumber      String          @unique // Format: ORD-YYYYMMDD-XXXX
   customerId       String
   status           OrderStatus     @default(PENDING)
   items            OrderItem[]
@@ -204,6 +205,7 @@ model Order {
   tracking DeliveryTracking?
 
   // Optimized indexes for order queries
+  @@index([orderNumber])
   @@index([customerId])
   @@index([status])
   @@index([createdAt])

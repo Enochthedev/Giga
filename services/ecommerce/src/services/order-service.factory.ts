@@ -1,4 +1,3 @@
-import { HttpAuthServiceClient } from '../clients/auth.client';
 import { HttpNotificationServiceClient } from '../clients/notification.client';
 import { HttpPaymentServiceClient } from '../clients/payment.client';
 import { PrismaClient } from '../generated/prisma-client';
@@ -23,13 +22,13 @@ export interface OrderServiceConfig {
 export class OrderServiceFactory {
   /**
    * Create order service instance based on configuration
+   * Note: Auth is handled by middleware, not passed to services
    */
   static create(
     config: OrderServiceConfig,
     _prisma: PrismaClient,
     cartService: CartService,
     inventoryService: InventoryService,
-    authServiceClient: HttpAuthServiceClient,
     paymentServiceClient: HttpPaymentServiceClient,
     notificationServiceClient: HttpNotificationServiceClient
   ): OrderService {
@@ -43,7 +42,6 @@ export class OrderServiceFactory {
         _prisma,
         cartService,
         inventoryService,
-        authServiceClient,
         paymentServiceClient,
         notificationServiceClient
       );
@@ -56,7 +54,6 @@ export class OrderServiceFactory {
       _prisma,
       cartService,
       inventoryService,
-      authServiceClient,
       paymentServiceClient,
       notificationServiceClient
     );
