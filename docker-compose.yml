@@ -67,25 +67,9 @@ services:
       - ./shared:/app/shared
 
   # Ecommerce Service
-  ecommerce:
-    build:
-      context: .
-      dockerfile: services/ecommerce/Dockerfile
-    ports:
-      - "3002:3002"
-    environment:
-      - NODE_ENV=development
-      - DATABASE_URL=postgresql://platform_user:platform_pass@postgres:5432/ecommerce_db
-      - REDIS_URL=redis://redis:6379
-      - AUTH_SERVICE_URL=http://auth:3001
-      - NOTIFICATION_SERVICE_URL=http://notification:3004
-    depends_on:
-      - postgres
-      - redis
-      - auth
-    volumes:
-      - ./services/ecommerce:/app/services/ecommerce
-      - ./shared:/app/shared
+  # ecommerce service migrated to Supabase
+  # See services/ecommerce/README.md for new Supabase implementation
+  # Use Postman collection: services/ecommerce/postman/Ecommerce-API-Supabase.postman_collection.json
 
   # Hotel Service
   hotel:

@@ -77,9 +77,9 @@ case $choice in
         
         (cd services/gateway && pnpm dev) &
         (cd services/auth && pnpm dev) &
-        (cd services/ecommerce && pnpm dev) &
+        # Ecommerce migrated to Supabase - see services/ecommerce/README.md
         
-        echo "✅ Ecommerce stack starting... Press Ctrl+C to stop all"
+        echo "✅ Ecommerce stack starting (Supabase-based)... Press Ctrl+C to stop all"
         wait
         ;;
     4)
@@ -114,9 +114,9 @@ case $choice in
         cd services/auth && pnpm dev
         ;;
     8)
-        echo "🛒 Starting Ecommerce service only..."
-        echo "📚 Documentation: http://localhost:3002/docs"
-        cd services/ecommerce && pnpm dev
+        echo "🛒 Ecommerce service migrated to Supabase"
+        echo "📚 Use Postman collection: services/ecommerce/postman/Ecommerce-API-Supabase.postman_collection.json"
+        echo "📖 Documentation: services/ecommerce/README.md"
         ;;
     9)
         echo "💳 Starting Payment service only..."

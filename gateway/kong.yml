@@ -5,7 +5,7 @@ _transform: true
 services:
   # Supabase Edge Functions
   - name: supabase-functions
-    url: https://nkrqcigvcakqicutkpfd.supabase.co/functions/v1
+    url: https://YOUR_PROJECT.supabase.co/functions/v1
     plugins:
       - name: cors
         config:

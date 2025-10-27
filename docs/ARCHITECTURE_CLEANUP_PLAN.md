@@ -1,16 +1,20 @@
 # Architecture Cleanup Plan
 
 ## Overview
-This document outlines the cleanup needed to align the codebase with the hybrid Supabase + Microservices architecture.
+
+This document outlines the cleanup needed to align the codebase with the hybrid Supabase +
+Microservices architecture.
 
 ## Current State vs Target State
 
 ### ✅ Completed (Supabase-based)
+
 - **Auth Service** → Supabase Auth + Edge Functions + SDK
 - **File Storage** → Supabase Storage + Edge Functions + SDK
 - **Notifications** → Supabase DB + Edge Functions + SDK
 
 ### 🔨 To Build (Microservices)
+
 - **Ecommerce Service** - Products, Orders, Cart, Vendors
 - **Hotels Service** - Properties, Bookings, Inventory
 - **Taxi Service** - Rides, Drivers, Vehicles
@@ -18,6 +22,7 @@ This document outlines the cleanup needed to align the codebase with the hybrid 
 - **Ads Service** - Campaigns, Advertisements
 
 ### ⏳ To Setup
+
 - **Kong Gateway** - API Gateway for routing
 
 ---
@@ -25,6 +30,7 @@ This document outlines the cleanup needed to align the codebase with the hybrid 
 ## Phase 1: Remove Obsolete Services
 
 ### Services to Delete
+
 These services are now handled by Supabase and should be removed:
 
 ```bash
@@ -35,11 +41,13 @@ rm -rf services/upload/
 ```
 
 **Rationale:**
+
 - `services/auth/` → Replaced by Supabase Auth + Edge Functions
 - `services/notification/` → Replaced by Supabase Edge Functions
 - `services/upload/` → Replaced by Supabase Storage + Edge Functions
 
 ### Services to Keep
+
 - `services/ecommerce/` - Business logic microservice
 - `services/hotel/` - Business logic microservice
 - `services/taxi/` - Business logic microservice
@@ -52,6 +60,7 @@ rm -rf services/upload/
 ## Phase 2: Archive Obsolete Specs
 
 ### Specs to Archive
+
 Move these to `.kiro/specs/_archived/`:
 
 ```bash
@@ -62,6 +71,7 @@ mv .kiro/specs/upload-service/ .kiro/specs/_archived/
 ```
 
 ### Specs to Update
+
 These specs need to be updated to use Supabase SDKs:
 
 1. **ecommerce-cart-orders/**
@@ -93,6 +103,7 @@ These specs need to be updated to use Supabase SDKs:
    - Add routing configuration
 
 ### Specs to Keep As-Is
+
 - **admin-dashboard-service/** - Review if still needed
 - **analytics-service/** - Review if still needed
 
@@ -148,6 +159,7 @@ These specs need to be updated to use Supabase SDKs:
 ## Phase 4: Update Existing Services
 
 ### Ecommerce Service
+
 - [ ] Remove any auth implementation
 - [ ] Add auth middleware using SDK
 - [ ] Add file upload integration using SDK
@@ -155,6 +167,7 @@ These specs need to be updated to use Supabase SDKs:
 - [ ] Update tests
 
 ### Hotel Service
+
 - [ ] Remove any auth implementation
 - [ ] Add auth middleware using SDK
 - [ ] Add file upload integration using SDK
@@ -162,6 +175,7 @@ These specs need to be updated to use Supabase SDKs:
 - [ ] Update tests
 
 ### Taxi Service
+
 - [ ] Remove any auth implementation
 - [ ] Add auth middleware using SDK
 - [ ] Add file upload integration using SDK
@@ -169,6 +183,7 @@ These specs need to be updated to use Supabase SDKs:
 - [ ] Update tests
 
 ### Payment Service
+
 - [ ] Remove any auth implementation
 - [ ] Add auth middleware using SDK
 - [ ] Add notification integration using SDK
@@ -179,7 +194,9 @@ These specs need to be updated to use Supabase SDKs:
 ## Phase 5: Update Steering Rules
 
 ### Update coding-standards.md
+
 Add sections for:
+
 - Supabase SDK usage patterns
 - Auth middleware requirements
 - File upload patterns
@@ -191,11 +208,13 @@ Add sections for:
 ## Phase 6: Clean Up Dependencies
 
 ### Root package.json
+
 - [ ] Remove dependencies for deleted services
 - [ ] Update workspace references
 - [ ] Run `pnpm install` to clean up
 
 ### Service package.json files
+
 - [ ] Add SDK dependencies where needed
 - [ ] Remove auth-related dependencies
 - [ ] Remove file upload dependencies
@@ -206,11 +225,13 @@ Add sections for:
 ## Phase 7: Update Scripts
 
 ### Scripts to Update
+
 - `run-services.sh` - Remove old services
 - `start-services.sh` - Remove old services
 - `test-services.sh` - Remove old services
 
 ### Scripts to Create
+
 - `setup-supabase.sh` - Initialize Supabase locally
 - `deploy-edge-functions.sh` - Deploy Edge Functions
 
@@ -219,6 +240,7 @@ Add sections for:
 ## Phase 8: Update Environment Variables
 
 ### Remove from .env.example
+
 ```env
 # Old service URLs (no longer needed)
 AUTH_SERVICE_URL=
@@ -227,9 +249,10 @@ UPLOAD_SERVICE_URL=
 ```
 
 ### Add to .env.example
+
 ```env
 # Supabase Configuration
-SUPABASE_URL=https://nkrqcigvcakqicutkpfd.supabase.co
+SUPABASE_URL=https://YOUR_PROJECT.supabase.co
 SUPABASE_ANON_KEY=your-anon-key
 SUPABASE_SERVICE_ROLE_KEY=your-service-key
 
@@ -246,11 +269,13 @@ ADS_SERVICE_URL=http://localhost:3005
 ## Phase 9: Update Tests
 
 ### Integration Tests
+
 - [ ] Update to use Supabase test environment
 - [ ] Add SDK mocking utilities
 - [ ] Update service tests to use auth middleware
 
 ### E2E Tests
+
 - [ ] Update to use Supabase endpoints
 - [ ] Add tests for SDK integration
 - [ ] Test service-to-service communication
@@ -260,6 +285,7 @@ ADS_SERVICE_URL=http://localhost:3005
 ## Phase 10: Update CI/CD
 
 ### GitHub Actions / CI Pipeline
+
 - [ ] Remove build steps for deleted services
 - [ ] Add Supabase Edge Function deployment
 - [ ] Update test workflows
@@ -286,6 +312,7 @@ ADS_SERVICE_URL=http://localhost:3005
 ## Validation Checklist
 
 After cleanup, verify:
+
 - [ ] All services build successfully
 - [ ] All tests pass
 - [ ] Documentation is up to date
@@ -302,6 +329,7 @@ After cleanup, verify:
 ## Rollback Plan
 
 If issues arise:
+
 1. Checkout backup branch
 2. Review what went wrong
 3. Fix issues incrementally

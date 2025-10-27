@@ -1,15 +1,60 @@
-import { afterAll, afterEach, beforeAll, beforeEach } from 'vitest';
-import { prisma } from '@/lib/prisma';
+import { afterAll, afterEach, beforeAll, beforeEach, vi } from 'vitest';
+
+// Mock prisma client
+vi.mock('@/lib/prisma', () => ({
+  prisma: {
+    $connect: vi.fn(),
+    $disconnect: vi.fn(),
+    ride: {
+      findUnique: vi.fn(),
+      findMany: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+      count: vi.fn(),
+    },
+    driver: {
+      findUnique: vi.fn(),
+      findMany: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+    },
+    vehicle: {
+      findUnique: vi.fn(),
+      findMany: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+    },
+    ridePayment: {
+      findUnique: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+    },
+    driverEarnings: {
+      create: vi.fn(),
+      findMany: vi.fn(),
+      aggregate: vi.fn(),
+      updateMany: vi.fn(),
+    },
+    driverPayout: {
+      create: vi.fn(),
+      findMany: vi.fn(),
+      update: vi.fn(),
+    },
+  },
+}));
 
 // Global test setup
 beforeAll(async () => {
-  // Setup test database connection
-  await prisma.$connect();
+  // Setup test environment
+  process.env.NODE_ENV = 'test';
 });
 
 afterAll(async () => {
-  // Cleanup and disconnect
-  await prisma.$disconnect();
+  // Cleanup
+  vi.clearAllMocks();
 });
 
 beforeEach(async () => {

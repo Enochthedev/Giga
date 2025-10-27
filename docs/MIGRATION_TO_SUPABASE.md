@@ -1,13 +1,16 @@
 # Migration Guide: From Microservices to Hybrid Supabase Architecture
 
 ## Overview
-This guide helps you migrate from the old microservices architecture to the new hybrid Supabase + Microservices architecture.
+
+This guide helps you migrate from the old microservices architecture to the new hybrid Supabase +
+Microservices architecture.
 
 ---
 
 ## What Changed?
 
 ### Before (Old Architecture)
+
 ```
 Client → Kong Gateway → Auth Service (Custom)
                      → Notification Service (Custom)
@@ -19,6 +22,7 @@ Client → Kong Gateway → Auth Service (Custom)
 ```
 
 ### After (New Architecture)
+
 ```
 Client → Kong Gateway → Supabase (Auth, Storage, Notifications)
                      → Ecommerce Service (uses Supabase SDKs)
@@ -35,14 +39,16 @@ Client → Kong Gateway → Supabase (Auth, Storage, Notifications)
 ### 1. Authentication
 
 **Old Way:**
+
 ```typescript
 // Custom auth service
-POST /api/v1/auth/login
-POST /api/v1/auth/register
-GET  /api/v1/auth/me
+POST / api / v1 / auth / login;
+POST / api / v1 / auth / register;
+GET / api / v1 / auth / me;
 ```
 
 **New Way:**
+
 ```typescript
 // Supabase Auth
 POST /auth/v1/token?grant_type=password
@@ -51,6 +57,7 @@ GET  /functions/v1/get-user-profile
 ```
 
 **Migration:**
+
 - Update client applications to use Supabase Auth endpoints
 - Use `@giga/auth-sdk` for authentication
 - Update JWT token validation to use Supabase tokens
@@ -58,6 +65,7 @@ GET  /functions/v1/get-user-profile
 ### 2. File Uploads
 
 **Old Way:**
+
 ```typescript
 // Custom upload service
 POST /api/v1/upload
@@ -65,13 +73,15 @@ GET  /api/v1/files/:id
 ```
 
 **New Way:**
+
 ```typescript
 // Supabase Storage
-POST /functions/v1/upload-file
-POST /functions/v1/process-image
+POST / functions / v1 / upload - file;
+POST / functions / v1 / process - image;
 ```
 
 **Migration:**
+
 - Update file upload endpoints
 - Use `@giga/file-storage-sdk` for uploads
 - Migrate existing files to Supabase Storage
@@ -79,20 +89,23 @@ POST /functions/v1/process-image
 ### 3. Notifications
 
 **Old Way:**
+
 ```typescript
 // Custom notification service
-POST /api/v1/notifications/send
-GET  /api/v1/notifications/history
+POST / api / v1 / notifications / send;
+GET / api / v1 / notifications / history;
 ```
 
 **New Way:**
+
 ```typescript
 // Supabase Notifications
-POST /functions/v1/queue-notification
-GET  /functions/v1/get-notification-history
+POST / functions / v1 / queue - notification;
+GET / functions / v1 / get - notification - history;
 ```
 
 **Migration:**
+
 - Update notification sending logic
 - Use `@giga/notifications-sdk` for notifications
 - Migrate notification templates to Supabase
@@ -113,6 +126,7 @@ pnpm add @giga/auth-sdk @giga/file-storage-sdk @giga/notifications-sdk
 ### Step 2: Update Environment Variables
 
 **Remove:**
+
 ```env
 AUTH_SERVICE_URL=http://auth-service:3000
 NOTIFICATION_SERVICE_URL=http://notification-service:3001
@@ -121,8 +135,9 @@ JWT_SECRET=your-secret
 ```
 
 **Add:**
+
 ```env
-SUPABASE_URL=https://nkrqcigvcakqicutkpfd.supabase.co
+SUPABASE_URL=https://YOUR_PROJECT.supabase.co
 SUPABASE_ANON_KEY=your-anon-key
 SUPABASE_SERVICE_ROLE_KEY=your-service-key
 ```
@@ -130,91 +145,96 @@ SUPABASE_SERVICE_ROLE_KEY=your-service-key
 ### Step 3: Replace Auth Middleware
 
 **Old Way:**
+
 ```typescript
 // services/ecommerce/src/middleware/auth.ts
-import jwt from 'jsonwebtoken'
+import jwt from 'jsonwebtoken';
 
 export async function authenticate(req, res, next) {
-  const token = req.headers.authorization?.replace('Bearer ', '')
-  const decoded = jwt.verify(token, process.env.JWT_SECRET)
-  req.user = await fetchUserFromAuthService(decoded.userId)
-  next()
+  const token = req.headers.authorization?.replace('Bearer ', '');
+  const decoded = jwt.verify(token, process.env.JWT_SECRET);
+  req.user = await fetchUserFromAuthService(decoded.userId);
+  next();
 }
 ```
 
 **New Way:**
+
 ```typescript
 // services/ecommerce/src/middleware/auth.ts
-import { AuthClient } from '@giga/auth-sdk'
+import { AuthClient } from '@giga/auth-sdk';
 
 const authClient = new AuthClient({
   supabaseUrl: process.env.SUPABASE_URL!,
   supabaseKey: process.env.SUPABASE_ANON_KEY!,
-})
+});
 
 export async function authenticate(req, res, next) {
   try {
-    const token = req.headers.authorization?.replace('Bearer ', '')
+    const token = req.headers.authorization?.replace('Bearer ', '');
     if (!token) {
-      return res.status(401).json({ error: 'No token provided' })
+      return res.status(401).json({ error: 'No token provided' });
     }
-    
-    authClient.setTokens(token)
-    const user = await authClient.getCurrentUser()
-    req.user = user
-    next()
+
+    authClient.setTokens(token);
+    const user = await authClient.getCurrentUser();
+    req.user = user;
+    next();
   } catch (error) {
-    res.status(401).json({ error: 'Invalid token' })
+    res.status(401).json({ error: 'Invalid token' });
   }
 }
 
 export function requireRole(...roles: string[]) {
   return (req, res, next) => {
     if (!req.user.roles.some(r => roles.includes(r))) {
-      return res.status(403).json({ error: 'Insufficient permissions' })
+      return res.status(403).json({ error: 'Insufficient permissions' });
     }
-    next()
-  }
+    next();
+  };
 }
 
 export function requireActiveRole(role: string) {
   return (req, res, next) => {
     if (req.user.active_role !== role) {
-      return res.status(403).json({ 
+      return res.status(403).json({
         error: `Must be in ${role} mode`,
-        current_role: req.user.active_role
-      })
+        current_role: req.user.active_role,
+      });
     }
-    next()
-  }
+    next();
+  };
 }
 ```
 
 ### Step 4: Replace File Upload Logic
 
 **Old Way:**
+
 ```typescript
 // Upload to custom service
-const formData = new FormData()
-formData.append('file', file)
+const formData = new FormData();
+formData.append('file', file);
 const response = await fetch(`${UPLOAD_SERVICE_URL}/upload`, {
   method: 'POST',
   body: formData,
-})
+});
 ```
 
 **New Way:**
-```typescript
-import { FileStorageClient } from '@giga/file-storage-sdk'
-import multer from 'multer'
 
-const upload = multer({ storage: multer.memoryStorage() })
+```typescript
+import { FileStorageClient } from '@giga/file-storage-sdk';
+import multer from 'multer';
+
+const upload = multer({ storage: multer.memoryStorage() });
 const fileStorage = new FileStorageClient({
   supabaseUrl: process.env.SUPABASE_URL!,
   supabaseKey: process.env.SUPABASE_ANON_KEY!,
-})
+});
 
-app.post('/products/:id/images',
+app.post(
+  '/products/:id/images',
   authenticate,
   requireRole('VENDOR'),
   upload.single('image'),
@@ -226,20 +246,18 @@ app.post('/products/:id/images',
         entityId: req.params.id,
         accessLevel: 'public',
       },
-      [
-        { type: 'thumbnail' },
-        { type: 'resize', width: 800, height: 800 },
-      ]
-    )
-    
-    res.json({ success: true, image: result })
+      [{ type: 'thumbnail' }, { type: 'resize', width: 800, height: 800 }]
+    );
+
+    res.json({ success: true, image: result });
   }
-)
+);
 ```
 
 ### Step 5: Replace Notification Logic
 
 **Old Way:**
+
 ```typescript
 // Send via custom service
 await fetch(`${NOTIFICATION_SERVICE_URL}/send`, {
@@ -247,19 +265,20 @@ await fetch(`${NOTIFICATION_SERVICE_URL}/send`, {
   body: JSON.stringify({
     userId,
     type: 'order_confirmation',
-    data: { orderNumber, total }
-  })
-})
+    data: { orderNumber, total },
+  }),
+});
 ```
 
 **New Way:**
+
 ```typescript
-import { NotificationClient } from '@giga/notifications-sdk'
+import { NotificationClient } from '@giga/notifications-sdk';
 
 const notificationClient = new NotificationClient({
   supabaseUrl: process.env.SUPABASE_URL!,
   supabaseKey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
-})
+});
 
 // Queue notification (recommended - fast)
 await notificationClient.sendOrderConfirmation(
@@ -271,23 +290,26 @@ await notificationClient.sendOrderConfirmation(
   trackingLink,
   email,
   phone
-)
+);
 ```
 
 ### Step 6: Update Routes
 
 **Old Way:**
+
 ```typescript
 // No auth required
 app.post('/orders', async (req, res) => {
   // Anyone can create orders
-})
+});
 ```
 
 **New Way:**
+
 ```typescript
 // Proper auth and role checks
-app.post('/orders',
+app.post(
+  '/orders',
   authenticate,
   requireRole('CUSTOMER'),
   requireActiveRole('CUSTOMER'),
@@ -295,12 +317,12 @@ app.post('/orders',
     const order = await createOrder({
       customer_id: req.user.id,
       customer_email: req.user.email,
-      ...req.body
-    })
-    
-    res.json({ success: true, order })
+      ...req.body,
+    });
+
+    res.json({ success: true, order });
   }
-)
+);
 ```
 
 ### Step 7: Remove Old Dependencies
@@ -315,12 +337,14 @@ pnpm remove jsonwebtoken bcryptjs multer-s3 aws-sdk nodemailer twilio
 ### Step 8: Update Tests
 
 **Old Way:**
+
 ```typescript
 // Mock auth service
-jest.mock('../services/authService')
+jest.mock('../services/authService');
 ```
 
 **New Way:**
+
 ```typescript
 // Mock Supabase SDK
 jest.mock('@giga/auth-sdk', () => ({
@@ -334,10 +358,10 @@ jest.mock('@giga/auth-sdk', () => ({
       profile: {
         first_name: 'Test',
         last_name: 'User',
-      }
-    })
-  }))
-}))
+      },
+    }),
+  })),
+}));
 ```
 
 ---
@@ -345,41 +369,45 @@ jest.mock('@giga/auth-sdk', () => ({
 ## Data Migration
 
 ### User Data
-User data is now in Supabase. No migration needed if you were using the old auth service - just update references.
+
+User data is now in Supabase. No migration needed if you were using the old auth service - just
+update references.
 
 ### Files
+
 If you have files in the old upload service:
 
 ```typescript
 // Migration script
-import { FileStorageClient } from '@giga/file-storage-sdk'
-import fs from 'fs'
-import path from 'path'
+import { FileStorageClient } from '@giga/file-storage-sdk';
+import fs from 'fs';
+import path from 'path';
 
 const fileStorage = new FileStorageClient({
   supabaseUrl: process.env.SUPABASE_URL!,
   supabaseKey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
-})
+});
 
 async function migrateFiles() {
-  const oldFiles = await getOldFiles() // Your old file list
-  
+  const oldFiles = await getOldFiles(); // Your old file list
+
   for (const file of oldFiles) {
-    const buffer = fs.readFileSync(file.path)
-    
+    const buffer = fs.readFileSync(file.path);
+
     await fileStorage.uploadFile(buffer, {
       entityType: file.entityType,
       entityId: file.entityId,
       accessLevel: file.accessLevel,
       filename: file.filename,
-    })
-    
-    console.log(`Migrated: ${file.filename}`)
+    });
+
+    console.log(`Migrated: ${file.filename}`);
   }
 }
 ```
 
 ### Notifications
+
 Notification history is in Supabase. Old notifications can be archived or migrated if needed.
 
 ---
@@ -387,9 +415,10 @@ Notification history is in Supabase. Old notifications can be archived or migrat
 ## Testing the Migration
 
 ### 1. Test Authentication
+
 ```bash
 # Login
-curl -X POST https://nkrqcigvcakqicutkpfd.supabase.co/auth/v1/token?grant_type=password \
+curl -X POST https://YOUR_PROJECT.supabase.co/auth/v1/token?grant_type=password \
   -H "Content-Type: application/json" \
   -H "apikey: YOUR_ANON_KEY" \
   -d '{"email":"test@example.com","password":"password"}'
@@ -400,6 +429,7 @@ curl -X GET http://localhost:3001/api/v1/orders \
 ```
 
 ### 2. Test File Upload
+
 ```bash
 curl -X POST http://localhost:3001/api/v1/products/123/images \
   -H "Authorization: Bearer YOUR_TOKEN" \
@@ -407,6 +437,7 @@ curl -X POST http://localhost:3001/api/v1/products/123/images \
 ```
 
 ### 3. Test Notifications
+
 ```bash
 # Create an order (should trigger notification)
 curl -X POST http://localhost:3001/api/v1/orders \
@@ -415,7 +446,7 @@ curl -X POST http://localhost:3001/api/v1/orders \
   -d '{"items":[...]}'
 
 # Check notification history
-curl -X GET https://nkrqcigvcakqicutkpfd.supabase.co/functions/v1/get-notification-history \
+curl -X GET https://YOUR_PROJECT.supabase.co/functions/v1/get-notification-history \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
@@ -435,15 +466,19 @@ If you need to rollback:
 ## Common Issues
 
 ### Issue: "Invalid token"
+
 **Solution:** Make sure you're using Supabase JWT tokens, not old custom tokens.
 
 ### Issue: "User not found"
+
 **Solution:** Ensure user exists in Supabase Auth. May need to migrate users.
 
 ### Issue: "File upload fails"
+
 **Solution:** Check Supabase Storage bucket permissions and policies.
 
 ### Issue: "Notifications not sending"
+
 **Solution:** Verify Supabase service role key is set correctly.
 
 ---
@@ -451,6 +486,7 @@ If you need to rollback:
 ## Support
 
 For issues during migration:
+
 - Check SDK documentation in `shared/sdk/*/README.md`
 - Review Supabase Edge Functions in `supabase/functions/`
 - See architecture guide in `docs/ARCHITECTURE_GUIDE.md`
@@ -460,6 +496,7 @@ For issues during migration:
 ## Timeline
 
 Recommended migration timeline:
+
 - **Week 1:** Install SDKs, update environment variables
 - **Week 2:** Migrate auth middleware, test authentication
 - **Week 3:** Migrate file uploads, test uploads

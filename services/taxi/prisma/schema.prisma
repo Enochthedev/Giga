@@ -11,355 +11,514 @@ datasource db {
 
 // Core models
 model Ride {
-  id                    String    @id @default(cuid())
-  passengerId          String
-  driverId             String?
-  
+  id          String  @id @default(cuid())
+  passengerId String
+  driverId    String?
+
   // Location data (stored as JSON)
-  pickupLocation       Json
-  dropoffLocation      Json
-  actualPickupLocation Json?
+  pickupLocation        Json
+  dropoffLocation       Json
+  actualPickupLocation  Json?
   actualDropoffLocation Json?
-  
+
   // Timing
-  requestedAt          DateTime  @default(now())
-  scheduledFor         DateTime?
-  acceptedAt           DateTime?
-  arrivedAt            DateTime?
-  startedAt            DateTime?
-  completedAt          DateTime?
-  cancelledAt          DateTime?
-  
+  requestedAt  DateTime  @default(now())
+  scheduledFor DateTime?
+  acceptedAt   DateTime?
+  arrivedAt    DateTime?
+  startedAt    DateTime?
+  completedAt  DateTime?
+  cancelledAt  DateTime?
+
   // Ride details
-  vehicleType          String
-  passengerCount       Int       @default(1)
-  specialRequests      String[]
-  notes                String?
-  
+  vehicleType     String
+  passengerCount  Int      @default(1)
+  specialRequests String[]
+  notes           String?
+
   // Pricing (stored as JSON)
-  estimatedFare        Json
-  finalFare            Json?
-  
+  estimatedFare Json
+  finalFare     Json?
+
   // Status and metadata
-  status               String    @default("requested")
-  route                Json?
-  safetyFeatures       String[]
-  metadata             Json?
-  
+  status         String   @default("requested")
+  route          Json?
+  safetyFeatures String[]
+  metadata       Json?
+
   // Relationships
-  driver               Driver?   @relation(fields: [driverId], references: [id])
-  ratings              RideRating[]
-  
-  createdAt            DateTime  @default(now())
-  updatedAt            DateTime  @updatedAt
-  
+  driver  Driver?      @relation(fields: [driverId], references: [id])
+  ratings RideRating[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@map("rides")
 }
 
 model Driver {
-  id                   String    @id @default(cuid())
-  userId               String    @unique
-  
+  id     String @id @default(cuid())
+  userId String @unique
+
   // Personal information (stored as JSON)
-  personalInfo         Json
-  
+  personalInfo Json
+
   // Verification data (stored as JSON)
-  verification         Json
-  
+  verification Json
+
   // Status and availability
-  status               String    @default("pending_approval")
-  availability         Json
-  currentLocation      Json?
-  
+  status          String @default("pending_approval")
+  availability    Json
+  currentLocation Json?
+
   // Performance metrics (stored as JSON)
-  metrics              Json
-  
+  metrics Json
+
   // Financial information (stored as JSON)
-  earnings             Json
-  payoutInfo           Json
-  
+  earnings   Json
+  payoutInfo Json
+
   // Safety and compliance
-  safetyScore          Float     @default(100.0)
-  backgroundCheck      String    @default("pending")
-  
+  safetyScore     Float  @default(100.0)
+  backgroundCheck String @default("pending")
+
   // Preferences (stored as JSON)
-  preferences          Json
-  
+  preferences Json
+
   // Timestamps
-  registeredAt         DateTime  @default(now())
-  lastActiveAt         DateTime  @default(now())
-  approvedAt           DateTime?
-  suspendedAt          DateTime?
-  deactivatedAt        DateTime?
-  
+  registeredAt  DateTime  @default(now())
+  lastActiveAt  DateTime  @default(now())
+  approvedAt    DateTime?
+  suspendedAt   DateTime?
+  deactivatedAt DateTime?
+
   // Relationships
-  vehicles             Vehicle[]
-  rides                Ride[]
-  documents            DriverDocument[]
-  ratings              RideRating[]
-  
+  vehicles  Vehicle[]
+  rides     Ride[]
+  documents DriverDocument[]
+  ratings   RideRating[]
+
   @@map("drivers")
 }
 
 model Vehicle {
-  id                   String    @id @default(cuid())
-  driverId             String
-  
+  id       String @id @default(cuid())
+  driverId String
+
   // Vehicle details
-  make                 String
-  model                String
-  year                 Int
-  color                String
-  licensePlate         String    @unique
-  vin                  String?
-  
+  make         String
+  model        String
+  year         Int
+  color        String
+  licensePlate String  @unique
+  vin          String?
+
   // Classification
-  type                 String
-  category             String
-  capacity             Int
-  
+  type     String
+  category String
+  capacity Int
+
   // Documentation (stored as JSON)
-  registration         Json
-  insurance            Json
-  inspection           Json
-  
+  registration Json
+  insurance    Json
+  inspection   Json
+
   // Features and condition (stored as JSON)
-  features             Json
-  accessibility        Json
-  condition            Json
-  
+  features      Json
+  accessibility Json
+  condition     Json
+
   // Status
-  status               String    @default("pending_approval")
-  isActive             Boolean   @default(false)
-  
+  status   String  @default("pending_approval")
+  isActive Boolean @default(false)
+
   // Photos (stored as JSON array)
-  photos               Json
-  
+  photos Json
+
   // Timestamps
-  addedAt              DateTime  @default(now())
-  approvedAt           DateTime?
-  lastInspectionAt     DateTime?
-  retiredAt            DateTime?
-  
+  addedAt          DateTime  @default(now())
+  approvedAt       DateTime?
+  lastInspectionAt DateTime?
+  retiredAt        DateTime?
+
   // Relationships
-  driver               Driver    @relation(fields: [driverId], references: [id], onDelete: Cascade)
-  
+  driver Driver @relation(fields: [driverId], references: [id], onDelete: Cascade)
+
   @@map("vehicles")
 }
 
 model DriverDocument {
-  id                   String    @id @default(cuid())
-  driverId             String
-  type                 String
-  url                  String
-  uploadedAt           DateTime  @default(now())
-  verifiedAt           DateTime?
-  expiryDate           DateTime?
-  status               String    @default("pending")
-  notes                String?
-  
+  id         String    @id @default(cuid())
+  driverId   String
+  type       String
+  url        String
+  uploadedAt DateTime  @default(now())
+  verifiedAt DateTime?
+  expiryDate DateTime?
+  status     String    @default("pending")
+  notes      String?
+
   // Relationships
-  driver               Driver    @relation(fields: [driverId], references: [id], onDelete: Cascade)
-  
+  driver Driver @relation(fields: [driverId], references: [id], onDelete: Cascade)
+
   @@map("driver_documents")
 }
 
 model RideRating {
-  id                   String    @id @default(cuid())
-  rideId               String
-  passengerId          String
-  driverId             String
-  
+  id          String @id @default(cuid())
+  rideId      String
+  passengerId String
+  driverId    String
+
   // Ratings
-  passengerRating      Float?
-  driverRating         Float?
-  passengerComment     String?
-  driverComment        String?
-  safetyRating         Float?
-  vehicleRating        Float?
-  
-  ratedAt              DateTime  @default(now())
-  
+  passengerRating  Float?
+  driverRating     Float?
+  passengerComment String?
+  driverComment    String?
+  safetyRating     Float?
+  vehicleRating    Float?
+
+  ratedAt DateTime @default(now())
+
   // Relationships
-  ride                 Ride      @relation(fields: [rideId], references: [id], onDelete: Cascade)
-  driver               Driver    @relation(fields: [driverId], references: [id])
-  
+  ride   Ride   @relation(fields: [rideId], references: [id], onDelete: Cascade)
+  driver Driver @relation(fields: [driverId], references: [id])
+
   @@unique([rideId, passengerId])
   @@map("ride_ratings")
 }
 
 // Location and tracking
 model LocationUpdate {
-  id                   String    @id @default(cuid())
-  userId               String
-  userType             String    // 'driver' or 'passenger'
-  location             Json      // GeoLocation data
-  accuracy             Float?
-  source               String    @default("gps")
-  timestamp            DateTime  @default(now())
-  
+  id        String   @id @default(cuid())
+  userId    String
+  userType  String // 'driver' or 'passenger'
+  location  Json // GeoLocation data
+  accuracy  Float?
+  source    String   @default("gps")
+  timestamp DateTime @default(now())
+
   @@index([userId, timestamp])
   @@map("location_updates")
 }
 
 // Safety and incidents
 model EmergencyIncident {
-  id                   String    @id @default(cuid())
-  rideId               String
-  reportedBy           String
-  type                 String
-  severity             String
-  location             Json
-  description          String
-  status               String    @default("reported")
-  
+  id          String @id @default(cuid())
+  rideId      String
+  reportedBy  String
+  type        String
+  severity    String
+  location    Json
+  description String
+  status      String @default("reported")
+
   // Response information (stored as JSON)
-  responseTeam         String[]
-  emergencyServices    Json?
-  resolution           String?
-  
+  responseTeam      String[]
+  emergencyServices Json?
+  resolution        String?
+
   // Evidence (stored as JSON)
-  evidence             Json
-  witnesses            Json?
-  
+  evidence  Json
+  witnesses Json?
+
   // Timestamps
-  reportedAt           DateTime  @default(now())
-  acknowledgedAt       DateTime?
-  respondedAt          DateTime?
-  resolvedAt           DateTime?
-  closedAt             DateTime?
-  
+  reportedAt     DateTime  @default(now())
+  acknowledgedAt DateTime?
+  respondedAt    DateTime?
+  resolvedAt     DateTime?
+  closedAt       DateTime?
+
   @@map("emergency_incidents")
 }
 
 // Pricing and promotions
 model Promotion {
-  id                   String    @id @default(cuid())
-  code                 String    @unique
-  name                 String
-  description          String
-  type                 String
-  discountValue        Float
-  discountType         String
-  
+  id            String @id @default(cuid())
+  code          String @unique
+  name          String
+  description   String
+  type          String
+  discountValue Float
+  discountType  String
+
   // Conditions and limits (stored as JSON)
-  conditions           Json
-  usageLimit           Int?
-  usageCount           Int       @default(0)
-  userLimit            Int?
-  
+  conditions Json
+  usageLimit Int?
+  usageCount Int  @default(0)
+  userLimit  Int?
+
   // Validity
-  validFrom            DateTime
-  validUntil           DateTime
-  isActive             Boolean   @default(true)
-  
+  validFrom  DateTime
+  validUntil DateTime
+  isActive   Boolean  @default(true)
+
   // Applicable vehicle types
   applicableVehicleTypes String[]
-  minimumFare          Float?
-  maximumDiscount      Float?
-  
-  createdAt            DateTime  @default(now())
-  updatedAt            DateTime  @updatedAt
-  
+  minimumFare            Float?
+  maximumDiscount        Float?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@map("promotions")
 }
 
 model PromotionUsage {
-  id                   String    @id @default(cuid())
-  promotionId          String
-  userId               String
-  rideId               String
-  discountAmount       Float
-  usedAt               DateTime  @default(now())
-  
+  id             String   @id @default(cuid())
+  promotionId    String
+  userId         String
+  rideId         String
+  discountAmount Float
+  usedAt         DateTime @default(now())
+
   @@unique([promotionId, userId, rideId])
   @@map("promotion_usage")
 }
 
 // Service areas and configuration
 model ServiceArea {
-  id                   String    @id @default(cuid())
-  name                 String
-  type                 String
-  geometry             Json      // GeoFence data
-  isActive             Boolean   @default(true)
-  
+  id       String  @id @default(cuid())
+  name     String
+  type     String
+  geometry Json // GeoFence data
+  isActive Boolean @default(true)
+
   // Restrictions and pricing (stored as JSON)
-  restrictions         Json?
-  pricing              Json?
-  
-  createdAt            DateTime  @default(now())
-  updatedAt            DateTime  @updatedAt
-  
+  restrictions Json?
+  pricing      Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@map("service_areas")
 }
 
 // Analytics and metrics
 model RideMetrics {
-  id                   String    @id @default(cuid())
-  date                 DateTime  @db.Date
-  hour                 Int?
-  
+  id   String   @id @default(cuid())
+  date DateTime @db.Date
+  hour Int?
+
   // Aggregated metrics
-  totalRides           Int       @default(0)
-  completedRides       Int       @default(0)
-  cancelledRides       Int       @default(0)
-  totalRevenue         Float     @default(0)
-  averageFare          Float     @default(0)
-  averageDistance      Float     @default(0)
-  averageDuration      Float     @default(0)
-  
+  totalRides      Int   @default(0)
+  completedRides  Int   @default(0)
+  cancelledRides  Int   @default(0)
+  totalRevenue    Float @default(0)
+  averageFare     Float @default(0)
+  averageDistance Float @default(0)
+  averageDuration Float @default(0)
+
   // Vehicle type breakdown (stored as JSON)
-  vehicleTypeStats     Json
-  
+  vehicleTypeStats Json
+
   // Geographic data
-  region               String?
-  
-  createdAt            DateTime  @default(now())
-  
+  region String?
+
+  createdAt DateTime @default(now())
+
   @@unique([date, hour, region])
   @@map("ride_metrics")
 }
 
 // Notifications
 model NotificationLog {
-  id                   String    @id @default(cuid())
-  userId               String
-  type                 String
-  title                String
-  message              String
-  data                 Json?
-  channels             String[]
-  priority             String    @default("medium")
-  
+  id       String   @id @default(cuid())
+  userId   String
+  type     String
+  title    String
+  message  String
+  data     Json?
+  channels String[]
+  priority String   @default("medium")
+
   // Delivery status
-  sent                 Boolean   @default(false)
-  sentAt               DateTime?
-  delivered            Boolean   @default(false)
-  deliveredAt          DateTime?
-  read                 Boolean   @default(false)
-  readAt               DateTime?
-  
+  sent        Boolean   @default(false)
+  sentAt      DateTime?
+  delivered   Boolean   @default(false)
+  deliveredAt DateTime?
+  read        Boolean   @default(false)
+  readAt      DateTime?
+
   // Scheduling
-  scheduled            Boolean   @default(false)
-  scheduledFor         DateTime?
-  
-  createdAt            DateTime  @default(now())
-  
+  scheduled    Boolean   @default(false)
+  scheduledFor DateTime?
+
+  createdAt DateTime @default(now())
+
   @@index([userId, createdAt])
   @@map("notification_logs")
 }
 
+// Payment and earnings models
+model RidePayment {
+  id            String @id @default(cuid())
+  rideId        String @unique
+  transactionId String @unique
+  passengerId   String
+  driverId      String
+
+  // Payment details
+  amount   Float
+  currency String @default("USD")
+  status   String @default("pending")
+
+  // Driver earnings (stored as JSON)
+  driverEarnings Json
+
+  // Refund information
+  refundedAmount Float?  @default(0)
+  refundReason   String?
+
+  // Metadata
+  metadata Json?
+
+  // Timestamps
+  processedAt DateTime?
+  refundedAt  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("ride_payments")
+}
+
+model DriverEarnings {
+  id       String  @id @default(cuid())
+  driverId String
+  rideId   String?
+
+  // Earnings breakdown
+  grossFare          Float
+  platformCommission Float
+  netEarnings        Float
+  tips               Float @default(0)
+  bonuses            Float @default(0)
+  totalEarnings      Float
+
+  // Detailed breakdown (stored as JSON)
+  breakdown Json
+
+  // Payout information
+  payoutStatus String  @default("pending")
+  payoutId     String?
+
+  // Timestamps
+  earnedAt  DateTime @default(now())
+  createdAt DateTime @default(now())
+
+  @@index([driverId, earnedAt])
+  @@map("driver_earnings")
+}
+
+model DriverPayout {
+  id       String @id @default(cuid())
+  driverId String
+
+  // Payout details
+  amount   Float
+  currency String @default("USD")
+  status   String @default("pending")
+
+  // Payout method
+  payoutMethod   String // 'bank_transfer', 'digital_wallet', 'check'
+  payoutMethodId String?
+
+  // Processing information
+  scheduledAt   DateTime
+  processedAt   DateTime?
+  completedAt   DateTime?
+  failureReason String?
+
+  // Metadata
+  metadata Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([driverId, status])
+  @@map("driver_payouts")
+}
+
+model PaymentMethod {
+  id       String @id @default(cuid())
+  userId   String
+  type     String // 'card', 'bank_account', 'digital_wallet'
+  provider String // 'stripe', 'paypal', etc.
+  token    String // Tokenized payment method
+
+  // Metadata (stored as JSON)
+  metadata Json // last4, brand, etc.
+
+  // Billing address (stored as JSON)
+  billingAddress Json?
+
+  // Status
+  isDefault Boolean @default(false)
+  isActive  Boolean @default(true)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, isActive])
+  @@map("payment_methods")
+}
+
+model CommissionRule {
+  id          String @id @default(cuid())
+  vehicleType String
+
+  // Commission structure
+  baseCommissionRate Float
+  minimumCommission  Float?
+  maximumCommission  Float?
+
+  // Tiered rates (stored as JSON)
+  tieredRates Json?
+
+  // Validity
+  validFrom  DateTime  @default(now())
+  validUntil DateTime?
+  isActive   Boolean   @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([vehicleType, validFrom])
+  @@map("commission_rules")
+}
+
+model PaymentWebhookLog {
+  id        String @id @default(cuid())
+  eventId   String @unique
+  eventType String
+  provider  String // 'stripe', 'paypal', etc.
+
+  // Event data (stored as JSON)
+  eventData Json
+
+  // Processing status
+  processed   Boolean   @default(false)
+  processedAt DateTime?
+  error       String?
+  retryCount  Int       @default(0)
+
+  createdAt DateTime @default(now())
+
+  @@index([eventType, processed])
+  @@map("payment_webhook_logs")
+}
+
 // System configuration
 model SystemConfig {
-  id                   String    @id @default(cuid())
-  key                  String    @unique
-  value                Json
-  description          String?
-  category             String    @default("general")
-  
-  createdAt            DateTime  @default(now())
-  updatedAt            DateTime  @updatedAt
-  
+  id          String  @id @default(cuid())
+  key         String  @unique
+  value       Json
+  description String?
+  category    String  @default("general")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@map("system_config")
 }

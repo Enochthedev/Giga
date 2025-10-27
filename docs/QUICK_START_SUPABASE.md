@@ -18,7 +18,7 @@ pnpm add @giga/auth-sdk @giga/file-storage-sdk @giga/notifications-sdk
 Add to your `.env`:
 
 ```env
-SUPABASE_URL=https://nkrqcigvcakqicutkpfd.supabase.co
+SUPABASE_URL=https://YOUR_PROJECT.supabase.co
 SUPABASE_ANON_KEY=your-anon-key
 SUPABASE_SERVICE_ROLE_KEY=your-service-key
 ```
@@ -30,48 +30,48 @@ SUPABASE_SERVICE_ROLE_KEY=your-service-key
 Create `src/middleware/auth.ts`:
 
 ```typescript
-import { AuthClient } from '@giga/auth-sdk'
+import { AuthClient } from '@giga/auth-sdk';
 
 const authClient = new AuthClient({
   supabaseUrl: process.env.SUPABASE_URL!,
   supabaseKey: process.env.SUPABASE_ANON_KEY!,
-})
+});
 
 export async function authenticate(req, res, next) {
   try {
-    const token = req.headers.authorization?.replace('Bearer ', '')
+    const token = req.headers.authorization?.replace('Bearer ', '');
     if (!token) {
-      return res.status(401).json({ error: 'No token provided' })
+      return res.status(401).json({ error: 'No token provided' });
     }
-    
-    authClient.setTokens(token)
-    const user = await authClient.getCurrentUser()
-    req.user = user
-    next()
+
+    authClient.setTokens(token);
+    const user = await authClient.getCurrentUser();
+    req.user = user;
+    next();
   } catch (error) {
-    res.status(401).json({ error: 'Invalid token' })
+    res.status(401).json({ error: 'Invalid token' });
   }
 }
 
 export function requireRole(...roles: string[]) {
   return (req, res, next) => {
     if (!req.user.roles.some(r => roles.includes(r))) {
-      return res.status(403).json({ error: 'Insufficient permissions' })
+      return res.status(403).json({ error: 'Insufficient permissions' });
     }
-    next()
-  }
+    next();
+  };
 }
 
 export function requireActiveRole(role: string) {
   return (req, res, next) => {
     if (req.user.active_role !== role) {
-      return res.status(403).json({ 
+      return res.status(403).json({
         error: `Must be in ${role} mode`,
-        current_role: req.user.active_role
-      })
+        current_role: req.user.active_role,
+      });
     }
-    next()
-  }
+    next();
+  };
 }
 ```
 
@@ -80,29 +80,31 @@ export function requireActiveRole(role: string) {
 ## 4. Use in Routes
 
 ```typescript
-import { authenticate, requireRole, requireActiveRole } from './middleware/auth'
+import { authenticate, requireRole, requireActiveRole } from './middleware/auth';
 
 // Public endpoint
-router.get('/products', productController.list)
+router.get('/products', productController.list);
 
 // Authenticated endpoint
-router.get('/orders', authenticate, orderController.list)
+router.get('/orders', authenticate, orderController.list);
 
 // Role-based endpoint
-router.post('/products', 
+router.post(
+  '/products',
   authenticate,
   requireRole('VENDOR', 'ADMIN'),
   requireActiveRole('VENDOR'),
   productController.create
-)
+);
 
 // Customer-only endpoint
-router.post('/orders',
+router.post(
+  '/orders',
   authenticate,
   requireRole('CUSTOMER'),
   requireActiveRole('CUSTOMER'),
   orderController.create
-)
+);
 ```
 
 ---
@@ -110,16 +112,17 @@ router.post('/orders',
 ## 5. File Uploads
 
 ```typescript
-import { FileStorageClient } from '@giga/file-storage-sdk'
-import multer from 'multer'
+import { FileStorageClient } from '@giga/file-storage-sdk';
+import multer from 'multer';
 
-const upload = multer({ storage: multer.memoryStorage() })
+const upload = multer({ storage: multer.memoryStorage() });
 const fileStorage = new FileStorageClient({
   supabaseUrl: process.env.SUPABASE_URL!,
   supabaseKey: process.env.SUPABASE_ANON_KEY!,
-})
+});
 
-router.post('/products/:id/images',
+router.post(
+  '/products/:id/images',
   authenticate,
   requireRole('VENDOR'),
   upload.single('image'),
@@ -134,21 +137,18 @@ router.post('/products/:id/images',
           accessLevel: 'public',
           filename: req.file.originalname,
         },
-        [
-          { type: 'thumbnail' },
-          { type: 'resize', width: 800, height: 800 },
-        ]
-      )
-      
+        [{ type: 'thumbnail' }, { type: 'resize', width: 800, height: 800 }]
+      );
+
       // Save URL to your database
-      await saveProductImage(req.params.id, result.upload.data.url)
-      
-      res.json({ success: true, image: result })
+      await saveProductImage(req.params.id, result.upload.data.url);
+
+      res.json({ success: true, image: result });
     } catch (error) {
-      res.status(500).json({ error: error.message })
+      res.status(500).json({ error: error.message });
     }
   }
-)
+);
 ```
 
 ---
@@ -156,12 +156,12 @@ router.post('/products/:id/images',
 ## 6. Send Notifications
 
 ```typescript
-import { NotificationClient } from '@giga/notifications-sdk'
+import { NotificationClient } from '@giga/notifications-sdk';
 
 const notificationClient = new NotificationClient({
   supabaseUrl: process.env.SUPABASE_URL!,
   supabaseKey: process.env.SUPABASE_SERVICE_ROLE_KEY!, // Note: SERVICE_ROLE_KEY
-})
+});
 
 router.post('/orders', authenticate, async (req, res) => {
   try {
@@ -170,9 +170,9 @@ router.post('/orders', authenticate, async (req, res) => {
       customer_id: req.user.id,
       customer_email: req.user.email,
       customer_name: `${req.user.profile.first_name} ${req.user.profile.last_name}`,
-      ...req.body
-    })
-    
+      ...req.body,
+    });
+
     // Send notification (queued - returns immediately)
     await notificationClient.sendOrderConfirmation(
       order.customer_id,
@@ -183,13 +183,13 @@ router.post('/orders', authenticate, async (req, res) => {
       order.tracking_link,
       req.user.email,
       req.user.profile.phone
-    )
-    
-    res.json({ success: true, order })
+    );
+
+    res.json({ success: true, order });
   } catch (error) {
-    res.status(500).json({ error: error.message })
+    res.status(500).json({ error: error.message });
   }
-})
+});
 ```
 
 ---
@@ -198,27 +198,27 @@ router.post('/orders', authenticate, async (req, res) => {
 
 ```typescript
 // Available roles
-type RoleName = 
-  | 'CUSTOMER'    // Can buy products, book hotels, request rides
-  | 'VENDOR'      // Can sell products
-  | 'DRIVER'      // Can accept rides
-  | 'HOST'        // Can list properties
-  | 'ADVERTISER'  // Can create ad campaigns
-  | 'ADMIN'       // Platform admin
+type RoleName =
+  | 'CUSTOMER' // Can buy products, book hotels, request rides
+  | 'VENDOR' // Can sell products
+  | 'DRIVER' // Can accept rides
+  | 'HOST' // Can list properties
+  | 'ADVERTISER' // Can create ad campaigns
+  | 'ADMIN'; // Platform admin
 
 // User object structure
 interface AuthUser {
-  id: string              // UUID
-  email: string
+  id: string; // UUID
+  email: string;
   profile: {
-    first_name: string
-    last_name: string
-    phone?: string
-    avatar?: string
+    first_name: string;
+    last_name: string;
+    phone?: string;
+    avatar?: string;
     // ... more fields
-  }
-  roles: RoleName[]       // All roles user has
-  active_role: RoleName   // Currently active role
+  };
+  roles: RoleName[]; // All roles user has
+  active_role: RoleName; // Currently active role
 }
 ```
 
@@ -227,45 +227,46 @@ interface AuthUser {
 ## 8. Common Patterns
 
 ### Get User Data
+
 ```typescript
 // ✅ GOOD - From authenticated request
 app.post('/orders', authenticate, async (req, res) => {
-  const user = req.user // From middleware
+  const user = req.user; // From middleware
   // Use user.id, user.email, user.profile, etc.
-})
+});
 
 // ❌ BAD - Don't query Supabase directly
-const { data } = await supabase
-  .from('user_profiles')
-  .select('*')
-  .eq('id', userId)
+const { data } = await supabase.from('user_profiles').select('*').eq('id', userId);
 ```
 
 ### Get User Addresses
+
 ```typescript
-import { AuthClient } from '@giga/auth-sdk'
+import { AuthClient } from '@giga/auth-sdk';
 
 const authClient = new AuthClient({
   supabaseUrl: process.env.SUPABASE_URL!,
   supabaseKey: process.env.SUPABASE_ANON_KEY!,
-})
+});
 
 app.get('/checkout', authenticate, async (req, res) => {
-  authClient.setTokens(req.headers.authorization.replace('Bearer ', ''))
-  const addresses = await authClient.getAddresses()
-  res.json({ addresses })
-})
+  authClient.setTokens(req.headers.authorization.replace('Bearer ', ''));
+  const addresses = await authClient.getAddresses();
+  res.json({ addresses });
+});
 ```
 
 ### Multiple File Upload
+
 ```typescript
-router.post('/properties/:id/images',
+router.post(
+  '/properties/:id/images',
   authenticate,
   requireRole('HOST'),
   upload.array('images', 10), // Max 10 images
   async (req, res) => {
-    const results = []
-    
+    const results = [];
+
     for (const file of req.files) {
       const result = await fileStorage.uploadAndProcess(
         file.buffer,
@@ -275,16 +276,17 @@ router.post('/properties/:id/images',
           accessLevel: 'public',
         },
         [{ type: 'thumbnail' }, { type: 'resize', width: 1200 }]
-      )
-      results.push(result)
+      );
+      results.push(result);
     }
-    
-    res.json({ success: true, images: results })
+
+    res.json({ success: true, images: results });
   }
-)
+);
 ```
 
 ### Batch Notifications
+
 ```typescript
 // Send to multiple users
 await notificationClient.batchQueueNotifications([
@@ -300,7 +302,7 @@ await notificationClient.batchQueueNotifications([
     template_data: { driver_name: 'John', eta: '5' },
     recipient_email: user2.email,
   },
-])
+]);
 ```
 
 ---
@@ -308,6 +310,7 @@ await notificationClient.batchQueueNotifications([
 ## 9. Testing
 
 ### Mock Auth Middleware
+
 ```typescript
 // In tests
 jest.mock('@giga/auth-sdk', () => ({
@@ -321,31 +324,32 @@ jest.mock('@giga/auth-sdk', () => ({
       profile: {
         first_name: 'Test',
         last_name: 'User',
-      }
-    })
-  }))
-}))
+      },
+    }),
+  })),
+}));
 ```
 
 ### Test with Different Roles
+
 ```typescript
 it('should allow vendors to create products', async () => {
   const mockUser = {
     id: 'vendor-id',
     roles: ['VENDOR'],
     active_role: 'VENDOR',
-  }
-  
+  };
+
   // Mock getCurrentUser to return vendor
-  authClient.getCurrentUser.mockResolvedValue(mockUser)
-  
+  authClient.getCurrentUser.mockResolvedValue(mockUser);
+
   const response = await request(app)
     .post('/api/v1/products')
     .set('Authorization', 'Bearer fake-token')
-    .send({ name: 'Test Product' })
-  
-  expect(response.status).toBe(201)
-})
+    .send({ name: 'Test Product' });
+
+  expect(response.status).toBe(201);
+});
 ```
 
 ---
@@ -358,24 +362,24 @@ try {
   // Your logic
 } catch (error) {
   if (error.message.includes('Invalid token')) {
-    return res.status(401).json({ 
+    return res.status(401).json({
       success: false,
-      error: 'Authentication failed' 
-    })
+      error: 'Authentication failed',
+    });
   }
-  
+
   if (error.message.includes('Insufficient permissions')) {
-    return res.status(403).json({ 
+    return res.status(403).json({
       success: false,
-      error: 'Access denied' 
-    })
+      error: 'Access denied',
+    });
   }
-  
+
   // Generic error
-  res.status(500).json({ 
+  res.status(500).json({
     success: false,
-    error: 'Internal server error' 
-  })
+    error: 'Internal server error',
+  });
 }
 ```
 
@@ -415,13 +419,13 @@ await notificationClient.queueNotification({
 ## 12. File Entity Types
 
 ```typescript
-type EntityType = 
-  | 'USER_PROFILE'    // Profile pictures
-  | 'PRODUCT'         // Product images
-  | 'PROPERTY'        // Hotel photos
-  | 'VEHICLE'         // Car/taxi photos
-  | 'DOCUMENT'        // Documents (licenses, etc.)
-  | 'ADVERTISEMENT'   // Ad images
+type EntityType =
+  | 'USER_PROFILE' // Profile pictures
+  | 'PRODUCT' // Product images
+  | 'PROPERTY' // Hotel photos
+  | 'VEHICLE' // Car/taxi photos
+  | 'DOCUMENT' // Documents (licenses, etc.)
+  | 'ADVERTISEMENT'; // Ad images
 ```
 
 ---
@@ -454,21 +458,25 @@ See `services/ecommerce/` for a complete example of a service using all Supabase
 ## 15. Troubleshooting
 
 ### "Invalid token" error
+
 - Ensure token is passed in `Authorization: Bearer {token}` header
 - Verify token is from Supabase Auth (not custom JWT)
 - Check token hasn't expired
 
 ### "Insufficient permissions" error
+
 - Verify user has required role
 - Check user's active_role matches requirement
 - User may need to switch roles
 
 ### File upload fails
+
 - Check file size limits
 - Verify Supabase Storage bucket exists
 - Check bucket permissions/policies
 
 ### Notifications not sending
+
 - Verify SERVICE_ROLE_KEY is used (not ANON_KEY)
 - Check template name is correct
 - Verify user_id exists

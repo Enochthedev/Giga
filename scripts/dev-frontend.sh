@@ -29,7 +29,7 @@ fi
 echo "🚀 Starting services..."
 (cd services/gateway && pnpm dev) &
 (cd services/auth && pnpm dev) &
-(cd services/ecommerce && pnpm dev) &
+# Ecommerce migrated to Supabase - see services/ecommerce/README.md
 
 echo "✅ Frontend stack is starting..."
 echo "💡 Press Ctrl+C to stop all services"

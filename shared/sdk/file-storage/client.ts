@@ -83,7 +83,7 @@ export class FileStorageClient {
       body: formData,
     });
 
-    const data = await response.json();
+    const data = (await response.json()) as UploadResponse & { error?: string };
 
     if (!response.ok) {
       throw new FileStorageError(
@@ -134,7 +134,9 @@ export class FileStorageClient {
       }),
     });
 
-    const data = await response.json();
+    const data = (await response.json()) as ProcessImageResponse & {
+      error?: string;
+    };
 
     if (!response.ok) {
       throw new FileStorageError(
@@ -169,7 +171,7 @@ export class FileStorageClient {
       }
     );
 
-    const data = await response.json();
+    const data = (await response.json()) as FileMetadata[];
 
     if (!response.ok) {
       throw new FileStorageError('Failed to fetch file', response.status, data);
@@ -228,7 +230,7 @@ export class FileStorageClient {
       }
     );
 
-    const data = await response.json();
+    const data = (await response.json()) as FileMetadata[];
 
     if (!response.ok) {
       throw new FileStorageError('Failed to list files', response.status, data);
@@ -257,7 +259,9 @@ export class FileStorageClient {
       body: JSON.stringify({ fileId }),
     });
 
-    const data = await response.json();
+    const data = (await response.json()) as DeleteFileResponse & {
+      error?: string;
+    };
 
     if (!response.ok) {
       throw new FileStorageError(
@@ -306,7 +310,7 @@ export class FileStorageClient {
       }
     );
 
-    const data = await response.json();
+    const data = (await response.json()) as { signedURL: string };
 
     if (!response.ok) {
       throw new FileStorageError(

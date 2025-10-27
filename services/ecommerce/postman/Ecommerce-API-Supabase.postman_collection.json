@@ -1,0 +1,485 @@
+{
+  "info": {
+    "name": "Giga E-commerce API - Supabase",
+    "description": "Complete API documentation for Giga Super App - E-commerce Module using Supabase",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "2.0.0"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{access_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://YOUR_PROJECT.supabase.co/rest/v1",
+      "type": "string"
+    },
+    {
+      "key": "auth_url",
+      "value": "https://YOUR_PROJECT.supabase.co/auth/v1",
+      "type": "string"
+    },
+    {
+      "key": "functions_url",
+      "value": "https://YOUR_PROJECT.supabase.co/functions/v1",
+      "type": "string"
+    },
+    {
+      "key": "anon_key",
+      "value": "YOUR_SUPABASE_ANON_KEY",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "user_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "cart_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "product_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "order_id",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "🔐 1. Authentication",
+      "item": [
+        {
+          "name": "Sign Up",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "if (response.access_token) {",
+                  "    pm.environment.set('access_token', response.access_token);",
+                  "    pm.environment.set('user_id', response.user.id);",
+                  "    console.log('✅ User created and token saved');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"SecurePassword123!\",\n  \"options\": {\n    \"data\": {\n      \"first_name\": \"John\",\n      \"last_name\": \"Doe\",\n      \"phone\": \"+2348012345678\"\n    }\n  }\n}"
+            },
+            "url": {
+              "raw": "{{auth_url}}/signup",
+              "host": ["{{auth_url}}"],
+              "path": ["signup"]
+            },
+            "description": "Register a new user. Automatically creates user_profiles entry and assigns CUSTOMER role."
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "if (response.access_token) {",
+                  "    pm.environment.set('access_token', response.access_token);",
+                  "    pm.environment.set('user_id', response.user.id);",
+                  "    console.log('✅ Logged in successfully');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"SecurePassword123!\"\n}"
+            },
+            "url": {
+              "raw": "{{auth_url}}/token?grant_type=password",
+              "host": ["{{auth_url}}"],
+              "path": ["token"],
+              "query": [{ "key": "grant_type", "value": "password" }]
+            },
+            "description": "Login with email and password. Returns access_token for authenticated requests."
+          }
+        }
+      ],
+      "description": "User authentication endpoints - signup, login, logout, password reset."
+    },
+    {
+      "name": "🛍️ 2. Products & Categories",
+      "item": [
+        {
+          "name": "Get All Categories",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "apikey", "value": "{{anon_key}}" }],
+            "url": {
+              "raw": "{{base_url}}/ecommerce_categories?select=*,subcategories:ecommerce_categories!parent_id(*)&is_active=eq.true&order=display_order",
+              "host": ["{{base_url}}"],
+              "path": ["ecommerce_categories"],
+              "query": [
+                { "key": "select", "value": "*,subcategories:ecommerce_categories!parent_id(*)" },
+                { "key": "is_active", "value": "eq.true" },
+                { "key": "order", "value": "display_order" }
+              ]
+            },
+            "description": "Get all active categories with nested subcategories."
+          }
+        },
+        {
+          "name": "Get All Products",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "if (response[0] && response[0].id) {",
+                  "    pm.environment.set('product_id', response[0].id);",
+                  "    console.log('✅ Product ID saved:', response[0].id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "apikey", "value": "{{anon_key}}" }],
+            "url": {
+              "raw": "{{base_url}}/ecommerce_products?select=*,category:ecommerce_categories(name,slug),vendor:ecommerce_vendors(business_name)&is_active=eq.true&limit=20&offset=0",
+              "host": ["{{base_url}}"],
+              "path": ["ecommerce_products"],
+              "query": [
+                {
+                  "key": "select",
+                  "value": "*,category:ecommerce_categories(name,slug),vendor:ecommerce_vendors(business_name)"
+                },
+                { "key": "is_active", "value": "eq.true" },
+                { "key": "limit", "value": "20" },
+                { "key": "offset", "value": "0" }
+              ]
+            },
+            "description": "Get paginated list of active products with category and vendor info."
+          }
+        },
+        {
+          "name": "Get Product by Slug",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "apikey", "value": "{{anon_key}}" }],
+            "url": {
+              "raw": "{{base_url}}/ecommerce_products?slug=eq.brown-leather-bag&select=*,category:ecommerce_categories(*),vendor:ecommerce_vendors(*),variants:ecommerce_product_variants(*)",
+              "host": ["{{base_url}}"],
+              "path": ["ecommerce_products"],
+              "query": [
+                { "key": "slug", "value": "eq.brown-leather-bag" },
+                {
+                  "key": "select",
+                  "value": "*,category:ecommerce_categories(*),vendor:ecommerce_vendors(*),variants:ecommerce_product_variants(*)"
+                }
+              ]
+            },
+            "description": "Get complete product details including variants, category, and vendor info."
+          }
+        }
+      ],
+      "description": "Product browsing and category management."
+    },
+    {
+      "name": "🛒 3. Shopping Cart",
+      "item": [
+        {
+          "name": "Get Cart",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "if (response[0] && response[0].id) {",
+                  "    pm.environment.set('cart_id', response[0].id);",
+                  "    console.log('✅ Cart ID saved:', response[0].id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/ecommerce_carts?select=*,items:ecommerce_cart_items(*,product:ecommerce_products(name,slug,thumbnail,stock_quantity,final_price),variant:ecommerce_product_variants(*))&user_id=eq.{{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["ecommerce_carts"],
+              "query": [
+                {
+                  "key": "select",
+                  "value": "*,items:ecommerce_cart_items(*,product:ecommerce_products(name,slug,thumbnail,stock_quantity,final_price),variant:ecommerce_product_variants(*))"
+                },
+                { "key": "user_id", "value": "eq.{{user_id}}" }
+              ]
+            },
+            "description": "Get user's cart with all items, products, and variants. Totals are auto-calculated."
+          }
+        },
+        {
+          "name": "Add Item to Cart",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Prefer", "value": "return=representation" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cart_id\": \"{{cart_id}}\",\n  \"product_id\": \"{{product_id}}\",\n  \"variant_id\": null,\n  \"quantity\": 2,\n  \"price_per_unit\": 4500.00\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/ecommerce_cart_items",
+              "host": ["{{base_url}}"],
+              "path": ["ecommerce_cart_items"]
+            },
+            "description": "Add product to cart. Triggers auto-calculate cart totals."
+          }
+        },
+        {
+          "name": "Update Cart Item Quantity",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Prefer", "value": "return=representation" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quantity\": 3\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/ecommerce_cart_items?id=eq.CART_ITEM_ID",
+              "host": ["{{base_url}}"],
+              "path": ["ecommerce_cart_items"],
+              "query": [{ "key": "id", "value": "eq.CART_ITEM_ID" }]
+            },
+            "description": "Update quantity of cart item. Triggers recalculation of cart totals."
+          }
+        },
+        {
+          "name": "Remove Item from Cart",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/ecommerce_cart_items?id=eq.CART_ITEM_ID",
+              "host": ["{{base_url}}"],
+              "path": ["ecommerce_cart_items"],
+              "query": [{ "key": "id", "value": "eq.CART_ITEM_ID" }]
+            },
+            "description": "Remove single item from cart."
+          }
+        }
+      ],
+      "description": "Shopping cart management - add, update, remove items."
+    },
+    {
+      "name": "💳 4. Checkout & Payment",
+      "item": [
+        {
+          "name": "Create Payment Intent (Stripe)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "if (response.success && response.data.client_secret) {",
+                  "    pm.environment.set('stripe_client_secret', response.data.client_secret);",
+                  "    console.log('✅ Payment intent created');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cart_id\": \"{{cart_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{functions_url}}/create-payment-intent",
+              "host": ["{{functions_url}}"],
+              "path": ["create-payment-intent"]
+            },
+            "description": "Create Stripe payment intent. Returns client_secret for frontend payment confirmation."
+          }
+        }
+      ],
+      "description": "Payment processing with Stripe integration."
+    },
+    {
+      "name": "📦 5. Orders",
+      "item": [
+        {
+          "name": "Get All Orders",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "if (response[0] && response[0].id) {",
+                  "    pm.environment.set('order_id', response[0].id);",
+                  "    console.log('✅ Order ID saved:', response[0].id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/ecommerce_orders?select=*,items:ecommerce_order_items(*,product:ecommerce_products(name,thumbnail)),shipping_address:user_addresses(*)&user_id=eq.{{user_id}}&order=created_at.desc",
+              "host": ["{{base_url}}"],
+              "path": ["ecommerce_orders"],
+              "query": [
+                {
+                  "key": "select",
+                  "value": "*,items:ecommerce_order_items(*,product:ecommerce_products(name,thumbnail)),shipping_address:user_addresses(*)"
+                },
+                { "key": "user_id", "value": "eq.{{user_id}}" },
+                { "key": "order", "value": "created_at.desc" }
+              ]
+            },
+            "description": "Get all orders for logged-in user with items and shipping address."
+          }
+        },
+        {
+          "name": "Get Order by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/ecommerce_orders?id=eq.{{order_id}}&select=*,items:ecommerce_order_items(*,product:ecommerce_products(name,thumbnail)),shipping_address:user_addresses(*),status_history:ecommerce_order_status_history(*)&user_id=eq.{{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["ecommerce_orders"],
+              "query": [
+                { "key": "id", "value": "eq.{{order_id}}" },
+                {
+                  "key": "select",
+                  "value": "*,items:ecommerce_order_items(*,product:ecommerce_products(name,thumbnail)),shipping_address:user_addresses(*),status_history:ecommerce_order_status_history(*)"
+                },
+                { "key": "user_id", "value": "eq.{{user_id}}" }
+              ]
+            },
+            "description": "Get complete order details including items, address, and status history."
+          }
+        }
+      ],
+      "description": "Order management - view orders, track status."
+    },
+    {
+      "name": "🏪 6. Vendor Management",
+      "item": [
+        {
+          "name": "Apply to Become Vendor",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"business_name\": \"My Store\",\n  \"business_registration\": \"RC123456\",\n  \"tax_id\": \"TIN-987654\",\n  \"bank_details\": {\n    \"bank_name\": \"GTBank\",\n    \"account_number\": \"0123456789\",\n    \"account_name\": \"My Store Ltd\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{functions_url}}/apply-vendor",
+              "host": ["{{functions_url}}"],
+              "path": ["apply-vendor"]
+            },
+            "description": "Apply to become a vendor. Creates vendor profile pending admin verification."
+          }
+        },
+        {
+          "name": "Create Product (Vendor)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "apikey", "value": "{{anon_key}}" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Prefer", "value": "return=representation" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vendor_id\": \"{{user_id}}\",\n  \"category_id\": \"CATEGORY_ID\",\n  \"name\": \"New Product\",\n  \"slug\": \"new-product-123\",\n  \"description\": \"Product description\",\n  \"base_price\": 5000.00,\n  \"stock_quantity\": 100,\n  \"images\": [\"https://example.com/image.jpg\"],\n  \"is_active\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/ecommerce_products",
+              "host": ["{{base_url}}"],
+              "path": ["ecommerce_products"]
+            },
+            "description": "Create new product as vendor."
+          }
+        }
+      ],
+      "description": "Vendor management - apply, manage products."
+    }
+  ]
+}

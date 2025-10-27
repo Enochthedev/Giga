@@ -29,9 +29,8 @@ echo "🔐 Starting Auth Service (Port 3001)..."
 (cd services/auth && pnpm dev) &
 AUTH_PID=$!
 
-echo "🛒 Starting Ecommerce Service (Port 3002)..."
-(cd services/ecommerce && pnpm dev) &
-ECOMMERCE_PID=$!
+# echo "🛒 Ecommerce Service migrated to Supabase"
+# See services/ecommerce/README.md for new implementation
 
 echo "🏨 Starting Hotel Service (Port 3003)..."
 (cd services/hotel && pnpm dev) &

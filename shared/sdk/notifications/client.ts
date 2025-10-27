@@ -1,49 +1,52 @@
 // shared/sdk/notifications/client.ts
 
-import type {
-  SendNotificationRequest,
-  QueueNotificationResponse,
-  SendNotificationResponse,
+import {
   BatchNotificationRequest,
   BatchNotificationResponse,
+  NotificationChannel,
+  NotificationError,
   NotificationHistoryQuery,
   NotificationHistoryResponse,
   NotificationPreferences,
-  UpdatePreferencesRequest,
+  NotificationPriority,
   NotificationTemplate,
-  NotificationError,
-} from './types'
+  QueueNotificationResponse,
+  SendNotificationRequest,
+  SendNotificationResponse,
+  UpdatePreferencesRequest,
+} from './types';
 
 export interface NotificationClientConfig {
-  supabaseUrl: string
-  supabaseKey: string
-  functionsUrl?: string
+  supabaseUrl: string;
+  supabaseKey: string;
+  functionsUrl?: string;
 }
 
 export class NotificationClient {
-  private supabaseUrl: string
-  private supabaseKey: string
-  private functionsUrl: string
-  private userToken?: string
+  private supabaseUrl: string;
+  private supabaseKey: string;
+  private functionsUrl: string;
+  private userToken?: string;
 
   constructor(config: NotificationClientConfig) {
-    this.supabaseUrl = config.supabaseUrl
-    this.supabaseKey = config.supabaseKey
-    this.functionsUrl = config.functionsUrl || `${config.supabaseUrl}/functions/v1`
+    this.supabaseUrl = config.supabaseUrl;
+    this.supabaseKey = config.supabaseKey;
+    this.functionsUrl =
+      config.functionsUrl || `${config.supabaseUrl}/functions/v1`;
   }
 
   /**
    * Set user authentication token
    */
   setUserToken(token: string): void {
-    this.userToken = token
+    this.userToken = token;
   }
 
   /**
    * Get current user token
    */
   getUserToken(): string | undefined {
-    return this.userToken
+    return this.userToken;
   }
 
   /**
@@ -55,23 +58,26 @@ export class NotificationClient {
     const response = await fetch(`${this.functionsUrl}/queue-notification`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${this.supabaseKey}`,
+        Authorization: `Bearer ${this.supabaseKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(request),
-    })
+    });
 
-    const data = await response.json()
+    const data = (await response.json()) as (
+      | QueueNotificationResponse
+      | SendNotificationResponse
+    ) & { error?: string };
 
     if (!response.ok) {
       throw new NotificationError(
         data.error || 'Failed to send notification',
         response.status,
         data
-      )
+      );
     }
 
-    return data
+    return data;
   }
 
   /**
@@ -81,11 +87,11 @@ export class NotificationClient {
     template_name: string,
     variables: Record<string, any>,
     options?: {
-      user_id?: string
-      recipient_email?: string
-      recipient_phone?: string
-      recipient_device_token?: string
-      channels?: string[]
+      user_id?: string;
+      recipient_email?: string;
+      recipient_phone?: string;
+      recipient_device_token?: string;
+      channels?: NotificationChannel[];
     }
   ): Promise<SendNotificationResponse> {
     return this.sendNotification({
@@ -93,7 +99,7 @@ export class NotificationClient {
       variables,
       ...options,
       send_immediately: true,
-    }) as Promise<SendNotificationResponse>
+    }) as Promise<SendNotificationResponse>;
   }
 
   /**
@@ -103,12 +109,12 @@ export class NotificationClient {
     template_name: string,
     variables: Record<string, any>,
     options?: {
-      user_id?: string
-      recipient_email?: string
-      recipient_phone?: string
-      recipient_device_token?: string
-      priority?: number
-      delay_seconds?: number
+      user_id?: string;
+      recipient_email?: string;
+      recipient_phone?: string;
+      recipient_device_token?: string;
+      priority?: NotificationPriority;
+      delay_seconds?: number;
     }
   ): Promise<QueueNotificationResponse> {
     return this.sendNotification({
@@ -116,7 +122,7 @@ export class NotificationClient {
       variables,
       ...options,
       send_immediately: false,
-    }) as Promise<QueueNotificationResponse>
+    }) as Promise<QueueNotificationResponse>;
   }
 
   /**
@@ -125,26 +131,31 @@ export class NotificationClient {
   async sendBatch(
     request: BatchNotificationRequest
   ): Promise<BatchNotificationResponse> {
-    const response = await fetch(`${this.functionsUrl}/batch-queue-notifications`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${this.supabaseKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(request),
-    })
+    const response = await fetch(
+      `${this.functionsUrl}/batch-queue-notifications`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${this.supabaseKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(request),
+      }
+    );
 
-    const data = await response.json()
+    const data = (await response.json()) as BatchNotificationResponse & {
+      error?: string;
+    };
 
     if (!response.ok) {
       throw new NotificationError(
         data.error || 'Failed to send batch notifications',
         response.status,
         data
-      )
+      );
     }
 
-    return data
+    return data;
   }
 
   /**
@@ -154,35 +165,37 @@ export class NotificationClient {
     query?: NotificationHistoryQuery
   ): Promise<NotificationHistoryResponse> {
     if (!this.userToken) {
-      throw new NotificationError('User token required', 401)
+      throw new NotificationError('User token required', 401);
     }
 
-    const params = new URLSearchParams()
-    if (query?.limit) params.append('limit', query.limit.toString())
-    if (query?.offset) params.append('offset', query.offset.toString())
-    if (query?.status) params.append('status', query.status)
+    const params = new URLSearchParams();
+    if (query?.limit) params.append('limit', query.limit.toString());
+    if (query?.offset) params.append('offset', query.offset.toString());
+    if (query?.status) params.append('status', query.status);
 
     const response = await fetch(
       `${this.functionsUrl}/get-notification-history?${params.toString()}`,
       {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${this.userToken}`,
+          Authorization: `Bearer ${this.userToken}`,
         },
       }
-    )
+    );
 
-    const data = await response.json()
+    const data = (await response.json()) as NotificationHistoryResponse & {
+      error?: string;
+    };
 
     if (!response.ok) {
       throw new NotificationError(
         data.error || 'Failed to get notification history',
         response.status,
         data
-      )
+      );
     }
 
-    return data
+    return data;
   }
 
   /**
@@ -190,30 +203,30 @@ export class NotificationClient {
    */
   async getPreferences(): Promise<NotificationPreferences> {
     if (!this.userToken) {
-      throw new NotificationError('User token required', 401)
+      throw new NotificationError('User token required', 401);
     }
 
     const response = await fetch(
       `${this.supabaseUrl}/rest/v1/notification_preferences?select=*`,
       {
         headers: {
-          'Authorization': `Bearer ${this.userToken}`,
-          'apikey': this.supabaseKey,
+          Authorization: `Bearer ${this.userToken}`,
+          apikey: this.supabaseKey,
         },
       }
-    )
+    );
 
-    const data = await response.json()
+    const data = (await response.json()) as NotificationPreferences[];
 
     if (!response.ok) {
       throw new NotificationError(
         'Failed to get preferences',
         response.status,
         data
-      )
+      );
     }
 
-    return data[0]
+    return data[0];
   }
 
   /**
@@ -223,7 +236,7 @@ export class NotificationClient {
     updates: UpdatePreferencesRequest
   ): Promise<NotificationPreferences> {
     if (!this.userToken) {
-      throw new NotificationError('User token required', 401)
+      throw new NotificationError('User token required', 401);
     }
 
     const response = await fetch(
@@ -231,24 +244,27 @@ export class NotificationClient {
       {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${this.userToken}`,
+          Authorization: `Bearer ${this.userToken}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(updates),
       }
-    )
+    );
 
-    const data = await response.json()
+    const data = (await response.json()) as {
+      error?: string;
+      data?: NotificationPreferences;
+    };
 
     if (!response.ok) {
       throw new NotificationError(
         data.error || 'Failed to update preferences',
         response.status,
         data
-      )
+      );
     }
 
-    return data.data
+    return data.data!;
   }
 
   /**
@@ -259,22 +275,22 @@ export class NotificationClient {
       `${this.supabaseUrl}/rest/v1/notification_templates?is_active=eq.true&select=*`,
       {
         headers: {
-          'apikey': this.supabaseKey,
+          apikey: this.supabaseKey,
         },
       }
-    )
+    );
 
-    const data = await response.json()
+    const data = (await response.json()) as NotificationTemplate[];
 
     if (!response.ok) {
       throw new NotificationError(
         'Failed to get templates',
         response.status,
         data
-      )
+      );
     }
 
-    return data
+    return data;
   }
 
   /**
@@ -285,22 +301,18 @@ export class NotificationClient {
       `${this.supabaseUrl}/rest/v1/notification_templates?name=eq.${name}&is_active=eq.true&select=*`,
       {
         headers: {
-          'apikey': this.supabaseKey,
+          apikey: this.supabaseKey,
         },
       }
-    )
+    );
 
-    const data = await response.json()
+    const data = (await response.json()) as NotificationTemplate[];
 
     if (!response.ok || !data[0]) {
-      throw new NotificationError(
-        'Template not found',
-        404,
-        data
-      )
+      throw new NotificationError('Template not found', 404, data);
     }
 
-    return data[0]
+    return data[0];
   }
 
   // ===== CONVENIENCE METHODS =====
@@ -313,14 +325,18 @@ export class NotificationClient {
     firstName: string,
     userId?: string
   ): Promise<QueueNotificationResponse> {
-    return this.queueNotification('welcome_email', {
-      first_name: firstName,
-      email,
-    }, {
-      user_id: userId,
-      recipient_email: email,
-      priority: 7,
-    })
+    return this.queueNotification(
+      'welcome_email',
+      {
+        first_name: firstName,
+        email,
+      },
+      {
+        user_id: userId,
+        recipient_email: email,
+        priority: 7,
+      }
+    );
   }
 
   /**
@@ -332,13 +348,17 @@ export class NotificationClient {
     resetLink: string,
     userId?: string
   ): Promise<SendNotificationResponse> {
-    return this.sendImmediately('password_reset', {
-      first_name: firstName,
-      reset_link: resetLink,
-    }, {
-      user_id: userId,
-      recipient_email: email,
-    })
+    return this.sendImmediately(
+      'password_reset',
+      {
+        first_name: firstName,
+        reset_link: resetLink,
+      },
+      {
+        user_id: userId,
+        recipient_email: email,
+      }
+    );
   }
 
   /**
@@ -354,18 +374,22 @@ export class NotificationClient {
     email?: string,
     phone?: string
   ): Promise<QueueNotificationResponse> {
-    return this.queueNotification('order_confirmation', {
-      customer_name: customerName,
-      order_number: orderNumber,
-      total,
-      delivery_date: deliveryDate,
-      tracking_link: trackingLink,
-    }, {
-      user_id: userId,
-      recipient_email: email,
-      recipient_phone: phone,
-      priority: 6,
-    })
+    return this.queueNotification(
+      'order_confirmation',
+      {
+        customer_name: customerName,
+        order_number: orderNumber,
+        total,
+        delivery_date: deliveryDate,
+        tracking_link: trackingLink,
+      },
+      {
+        user_id: userId,
+        recipient_email: email,
+        recipient_phone: phone,
+        priority: 6,
+      }
+    );
   }
 
   /**
@@ -381,18 +405,22 @@ export class NotificationClient {
     email?: string,
     phone?: string
   ): Promise<QueueNotificationResponse> {
-    return this.queueNotification('booking_confirmation', {
-      guest_name: guestName,
-      property_name: propertyName,
-      checkin_date: checkinDate,
-      checkout_date: checkoutDate,
-      confirmation_code: confirmationCode,
-    }, {
-      user_id: userId,
-      recipient_email: email,
-      recipient_phone: phone,
-      priority: 6,
-    })
+    return this.queueNotification(
+      'booking_confirmation',
+      {
+        guest_name: guestName,
+        property_name: propertyName,
+        checkin_date: checkinDate,
+        checkout_date: checkoutDate,
+        confirmation_code: confirmationCode,
+      },
+      {
+        user_id: userId,
+        recipient_email: email,
+        recipient_phone: phone,
+        priority: 6,
+      }
+    );
   }
 
   /**
@@ -406,15 +434,19 @@ export class NotificationClient {
     phone?: string,
     deviceToken?: string
   ): Promise<SendNotificationResponse> {
-    return this.sendImmediately('ride_accepted', {
-      driver_name: driverName,
-      eta,
-      tracking_link: trackingLink,
-    }, {
-      user_id: userId,
-      recipient_phone: phone,
-      recipient_device_token: deviceToken,
-      channels: ['sms', 'push'],
-    })
+    return this.sendImmediately(
+      'ride_accepted',
+      {
+        driver_name: driverName,
+        eta,
+        tracking_link: trackingLink,
+      },
+      {
+        user_id: userId,
+        recipient_phone: phone,
+        recipient_device_token: deviceToken,
+        channels: ['sms', 'push'] as NotificationChannel[],
+      }
+    );
   }
 }
