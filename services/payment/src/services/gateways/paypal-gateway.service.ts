@@ -181,23 +181,10 @@ export class PayPalGateway extends PaymentGateway {
 
       const paymentMethod: PaymentMethod = {
         id: `paypal_pm_${Date.now()}`,
-<<<<<<< HEAD
-        userId: data.userId || '',
-        type: 'digital_wallet',
-        provider: 'paypal',
-        token: `paypal_token_${Date.now()}`,
-        isDefault: data.isDefault || false,
-        isActive: true,
-        metadata: {
-          walletType: 'paypal',
-          ...data.metadata,
-        },
-=======
         type: 'digital_wallet',
         customerId: data.customerId,
         isDefault: data.isDefault || false,
         metadata: { ...data.metadata, provider: 'paypal' },
->>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -228,23 +215,10 @@ export class PayPalGateway extends PaymentGateway {
 
       const paymentMethod: PaymentMethod = {
         id,
-<<<<<<< HEAD
-        userId: data.userId || '',
-        type: 'digital_wallet',
-        provider: 'paypal',
-        token: `paypal_token_${id}`,
-        isDefault: data.isDefault || false,
-        isActive: true,
-        metadata: {
-          walletType: 'paypal',
-          ...data.metadata,
-        },
-=======
         type: 'digital_wallet',
         customerId: data.customerId,
         isDefault: data.isDefault || false,
         metadata: { ...data.metadata, provider: 'paypal' },
->>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
         createdAt: new Date(Date.now() - 86400000),
         updatedAt: new Date(),
       };
@@ -299,20 +273,10 @@ export class PayPalGateway extends PaymentGateway {
 
       const paymentMethod: PaymentMethod = {
         id,
-<<<<<<< HEAD
-        userId: 'paypal_user_example',
-        type: 'digital_wallet',
-        provider: 'paypal',
-        token: `paypal_token_${id}`,
-        isDefault: false,
-        isActive: true,
-        metadata: { walletType: 'paypal' },
-=======
         type: 'digital_wallet',
         customerId: 'paypal_customer_example',
         isDefault: false,
         metadata: { provider: 'paypal' },
->>>>>>> 80848195b954cd48b7cf34d46db2de99581cbe03
         createdAt: new Date(Date.now() - 86400000),
         updatedAt: new Date(),
       };
