@@ -35,46 +35,11 @@ export class RequestRouter {
         transformations: [],
         metadata: { description: 'Authentication service routes' },
       },
-      {
-        id: 'ecommerce-products',
-        pattern: '/api/v1/products/*',
-        method: ['GET', 'POST', 'PUT', 'DELETE'],
-        serviceId: 'ecommerce',
-        priority: 100,
-        conditions: [],
-        transformations: [],
-        metadata: { description: 'Ecommerce product routes' },
-      },
-      {
-        id: 'ecommerce-vendor',
-        pattern: '/api/v1/vendor/*',
-        method: ['GET', 'POST', 'PUT', 'DELETE'],
-        serviceId: 'ecommerce',
-        priority: 100,
-        conditions: [],
-        transformations: [],
-        metadata: { description: 'Ecommerce vendor routes' },
-      },
-      {
-        id: 'ecommerce-cart',
-        pattern: '/api/v1/cart/*',
-        method: ['GET', 'POST', 'PUT', 'DELETE'],
-        serviceId: 'ecommerce',
-        priority: 100,
-        conditions: [],
-        transformations: [],
-        metadata: { description: 'Ecommerce cart routes' },
-      },
-      {
-        id: 'ecommerce-orders',
-        pattern: '/api/v1/orders/*',
-        method: ['GET', 'POST', 'PUT', 'DELETE'],
-        serviceId: 'ecommerce',
-        priority: 100,
-        conditions: [],
-        transformations: [],
-        metadata: { description: 'Ecommerce order routes' },
-      },
+      // Ecommerce routes removed - now handled by Supabase
+      // Products: https://[project].supabase.co/rest/v1/ecommerce_products
+      // Cart: Use Supabase PostgREST API
+      // Orders: Use Edge Function: supabase/functions/send-order-confirmation
+      // See: services/ecommerce/postman/ for updated API docs
       {
         id: 'payment-routes',
         pattern: '/api/v1/payments/*',

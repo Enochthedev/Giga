@@ -1,0 +1,242 @@
+name: CI - Lint, Test, and Build
+
+on:
+  push:
+    branches: [main, develop, 'feature/**']
+  pull_request:
+    branches: [main, develop]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '20'
+  PNPM_VERSION: '8'
+
+jobs:
+  # Job 1: Detect which services changed
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      gateway: ${{ steps.filter.outputs.gateway }}
+      auth: ${{ steps.filter.outputs.auth }}
+      hotel: ${{ steps.filter.outputs.hotel }}
+      taxi: ${{ steps.filter.outputs.taxi }}
+      payment: ${{ steps.filter.outputs.payment }}
+      notification: ${{ steps.filter.outputs.notification }}
+      upload: ${{ steps.filter.outputs.upload }}
+      ads: ${{ steps.filter.outputs.ads }}
+      shared: ${{ steps.filter.outputs.shared }}
+      supabase: ${{ steps.filter.outputs.supabase }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            gateway:
+              - 'services/gateway/**'
+            auth:
+              - 'services/auth/**'
+            hotel:
+              - 'services/hotel/**'
+            taxi:
+              - 'services/taxi/**'
+            payment:
+              - 'services/payment/**'
+            notification:
+              - 'services/notification/**'
+            upload:
+              - 'services/upload/**'
+            ads:
+              - 'services/ads/**'
+            shared:
+              - 'shared/**'
+            supabase:
+              - 'supabase/**'
+
+  # Job 2: Lint and Type Check
+  lint:
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: |
+      needs.detect-changes.outputs.gateway == 'true' ||
+      needs.detect-changes.outputs.auth == 'true' ||
+      needs.detect-changes.outputs.hotel == 'true' ||
+      needs.detect-changes.outputs.taxi == 'true' ||
+      needs.detect-changes.outputs.payment == 'true' ||
+      needs.detect-changes.outputs.notification == 'true' ||
+      needs.detect-changes.outputs.upload == 'true' ||
+      needs.detect-changes.outputs.ads == 'true' ||
+      needs.detect-changes.outputs.shared == 'true'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm run lint
+
+      - name: Type check
+        run: pnpm run type-check
+
+      - name: Format check
+        run: pnpm run format:check
+
+  # Job 3: Test Services
+  test:
+    runs-on: ubuntu-latest
+    needs: [detect-changes, lint]
+    if: |
+      needs.detect-changes.outputs.gateway == 'true' ||
+      needs.detect-changes.outputs.auth == 'true' ||
+      needs.detect-changes.outputs.hotel == 'true' ||
+      needs.detect-changes.outputs.taxi == 'true' ||
+      needs.detect-changes.outputs.payment == 'true' ||
+      needs.detect-changes.outputs.notification == 'true' ||
+      needs.detect-changes.outputs.upload == 'true' ||
+      needs.detect-changes.outputs.ads == 'true'
+
+    strategy:
+      matrix:
+        service: [gateway, auth, hotel, taxi, payment, notification, upload]
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: platform_user
+          POSTGRES_PASSWORD: platform_pass
+          POSTGRES_DB: platform_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Setup test databases
+        run: |
+          PGPASSWORD=platform_pass psql -h localhost -U platform_user -d platform_db -c "
+            CREATE DATABASE auth_db;
+            CREATE DATABASE hotel_db;
+            CREATE DATABASE taxi_db;
+            CREATE DATABASE payment_db;
+            CREATE DATABASE notification_db;
+            CREATE DATABASE upload_db;
+          " || echo "Databases might already exist"
+
+      - name: Generate Prisma Client
+        run: pnpm --filter @platform/${{ matrix.service }}-service run db:generate || echo "No Prisma schema for this service"
+
+      - name: Run tests for ${{ matrix.service }}
+        run: pnpm --filter @platform/${{ matrix.service }}-service run test
+        env:
+          DATABASE_URL: postgresql://platform_user:platform_pass@localhost:5432/${{ matrix.service }}_db
+          REDIS_URL: redis://localhost:6379
+          JWT_SECRET: test-jwt-secret-key
+          NODE_ENV: test
+
+  # Job 4: Build Services
+  build:
+    runs-on: ubuntu-latest
+    needs: [detect-changes, test]
+    if: |
+      needs.detect-changes.outputs.gateway == 'true' ||
+      needs.detect-changes.outputs.auth == 'true' ||
+      needs.detect-changes.outputs.hotel == 'true' ||
+      needs.detect-changes.outputs.taxi == 'true' ||
+      needs.detect-changes.outputs.payment == 'true' ||
+      needs.detect-changes.outputs.notification == 'true' ||
+      needs.detect-changes.outputs.upload == 'true' ||
+      needs.detect-changes.outputs.ads == 'true'
+
+    strategy:
+      matrix:
+        service: [gateway, auth, hotel, taxi, payment, notification, upload]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build ${{ matrix.service }}
+        run: pnpm --filter @platform/${{ matrix.service }}-service run build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.service }}-build
+          path: services/${{ matrix.service }}/dist
+          retention-days: 7
+
+  # Job 5: Summary
+  ci-success:
+    runs-on: ubuntu-latest
+    needs: [lint, test, build]
+    if: always()
+    steps:
+      - name: Check CI Results
+        run: |
+          if [ "${{ needs.lint.result }}" != "success" ] || \
+             [ "${{ needs.test.result }}" != "success" ] || \
+             [ "${{ needs.build.result }}" != "success" ]; then
+            echo "❌ CI failed"
+            exit 1
+          fi
+          echo "✅ CI passed successfully"

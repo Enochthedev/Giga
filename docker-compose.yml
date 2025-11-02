@@ -104,7 +104,8 @@ services:
       - DATABASE_URL=postgresql://platform_user:platform_pass@postgres:5432/notification_db
       - REDIS_URL=redis://redis:6379
       - AUTH_SERVICE_URL=http://auth:3001
-      - ECOMMERCE_SERVICE_URL=http://ecommerce:3002
+      # ECOMMERCE_SERVICE_URL removed - now using Supabase Edge Functions
+      # See: supabase/functions/send-order-confirmation
       - HOTEL_SERVICE_URL=http://hotel:3003
       # Email providers
       - SENDGRID_API_KEY=${SENDGRID_API_KEY}

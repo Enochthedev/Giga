@@ -1,0 +1,231 @@
+name: Deploy Supabase Edge Functions
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'supabase/functions/**'
+      - 'supabase/config.toml'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+
+env:
+  SUPABASE_CLI_VERSION: '1.142.2'
+
+jobs:
+  # Job 1: Detect which functions changed
+  detect-functions:
+    runs-on: ubuntu-latest
+    outputs:
+      functions: ${{ steps.detect.outputs.functions }}
+      has_changes: ${{ steps.detect.outputs.has_changes }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect changed functions
+        id: detect
+        run: |
+          # Get list of changed function directories
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            # Deploy all functions on manual trigger
+            FUNCTIONS=$(ls -d supabase/functions/*/ 2>/dev/null | xargs -n1 basename | jq -R -s -c 'split("\n") | map(select(length > 0))')
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          else
+            # Only deploy changed functions on push
+            CHANGED_PATHS=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep '^supabase/functions/' || echo "")
+            if [ -z "$CHANGED_PATHS" ]; then
+              echo "has_changes=false" >> $GITHUB_OUTPUT
+              echo "functions=[]" >> $GITHUB_OUTPUT
+              exit 0
+            fi
+            FUNCTIONS=$(echo "$CHANGED_PATHS" | cut -d'/' -f3 | sort -u | jq -R -s -c 'split("\n") | map(select(length > 0))')
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          fi
+          echo "functions=${FUNCTIONS}" >> $GITHUB_OUTPUT
+          echo "Detected functions: ${FUNCTIONS}"
+
+  # Job 2: Validate Edge Functions
+  validate:
+    runs-on: ubuntu-latest
+    needs: detect-functions
+    if: needs.detect-functions.outputs.has_changes == 'true'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v1
+        with:
+          deno-version: v1.x
+
+      - name: Validate Edge Functions syntax
+        run: |
+          for func in $(echo '${{ needs.detect-functions.outputs.functions }}' | jq -r '.[]'); do
+            echo "Validating function: $func"
+            deno check supabase/functions/$func/index.ts || exit 1
+          done
+
+      - name: Run function tests
+        run: |
+          for func in $(echo '${{ needs.detect-functions.outputs.functions }}' | jq -r '.[]'); do
+            if [ -f "supabase/functions/$func/index.test.ts" ]; then
+              echo "Testing function: $func"
+              deno test --allow-all supabase/functions/$func/index.test.ts || exit 1
+            fi
+          done
+
+  # Job 3: Deploy to Staging
+  deploy-staging:
+    runs-on: ubuntu-latest
+    needs: [detect-functions, validate]
+    if: |
+      needs.detect-functions.outputs.has_changes == 'true' &&
+      (github.ref == 'refs/heads/develop' || github.event.inputs.environment == 'staging')
+    environment:
+      name: staging
+      url: https://${{ secrets.SUPABASE_STAGING_PROJECT_ID }}.supabase.co
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: ${{ env.SUPABASE_CLI_VERSION }}
+
+      - name: Link to Supabase Staging Project
+        run: supabase link --project-ref ${{ secrets.SUPABASE_STAGING_PROJECT_ID }}
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+
+      - name: Deploy Edge Functions to Staging
+        run: |
+          for func in $(echo '${{ needs.detect-functions.outputs.functions }}' | jq -r '.[]'); do
+            echo "Deploying function to staging: $func"
+            supabase functions deploy $func --no-verify-jwt
+          done
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+
+      - name: Set function secrets (Staging)
+        run: |
+          # Set required secrets for Edge Functions
+          supabase secrets set \
+            STRIPE_SECRET_KEY="${{ secrets.STRIPE_SECRET_KEY_STAGING }}" \
+            SENDGRID_API_KEY="${{ secrets.SENDGRID_API_KEY }}" \
+            TWILIO_ACCOUNT_SID="${{ secrets.TWILIO_ACCOUNT_SID_STAGING }}" \
+            TWILIO_AUTH_TOKEN="${{ secrets.TWILIO_AUTH_TOKEN_STAGING }}" \
+            ALGOLIA_APP_ID="${{ secrets.ALGOLIA_APP_ID }}" \
+            ALGOLIA_API_KEY="${{ secrets.ALGOLIA_API_KEY_STAGING }}" \
+            --project-ref ${{ secrets.SUPABASE_STAGING_PROJECT_ID }}
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+
+      - name: Smoke test deployed functions
+        run: |
+          for func in $(echo '${{ needs.detect-functions.outputs.functions }}' | jq -r '.[]'); do
+            echo "Smoke testing function: $func"
+            RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" \
+              -X POST \
+              "https://${{ secrets.SUPABASE_STAGING_PROJECT_ID }}.supabase.co/functions/v1/$func" \
+              -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY_STAGING }}" \
+              -H "Content-Type: application/json" \
+              -d '{}')
+            if [ "$RESPONSE" != "200" ] && [ "$RESPONSE" != "400" ]; then
+              echo "❌ Function $func failed smoke test with status: $RESPONSE"
+              exit 1
+            fi
+            echo "✅ Function $func smoke test passed"
+          done
+
+  # Job 4: Deploy to Production
+  deploy-production:
+    runs-on: ubuntu-latest
+    needs: [detect-functions, validate, deploy-staging]
+    if: |
+      needs.detect-functions.outputs.has_changes == 'true' &&
+      (github.ref == 'refs/heads/main' || github.event.inputs.environment == 'production')
+    environment:
+      name: production
+      url: https://${{ secrets.SUPABASE_PROD_PROJECT_ID }}.supabase.co
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: ${{ env.SUPABASE_CLI_VERSION }}
+
+      - name: Link to Supabase Production Project
+        run: supabase link --project-ref ${{ secrets.SUPABASE_PROD_PROJECT_ID }}
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+
+      - name: Deploy Edge Functions to Production
+        run: |
+          for func in $(echo '${{ needs.detect-functions.outputs.functions }}' | jq -r '.[]'); do
+            echo "Deploying function to production: $func"
+            supabase functions deploy $func --no-verify-jwt
+          done
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+
+      - name: Set function secrets (Production)
+        run: |
+          # Set required secrets for Edge Functions
+          supabase secrets set \
+            STRIPE_SECRET_KEY="${{ secrets.STRIPE_SECRET_KEY_PROD }}" \
+            SENDGRID_API_KEY="${{ secrets.SENDGRID_API_KEY }}" \
+            TWILIO_ACCOUNT_SID="${{ secrets.TWILIO_ACCOUNT_SID_PROD }}" \
+            TWILIO_AUTH_TOKEN="${{ secrets.TWILIO_AUTH_TOKEN_PROD }}" \
+            ALGOLIA_APP_ID="${{ secrets.ALGOLIA_APP_ID }}" \
+            ALGOLIA_API_KEY="${{ secrets.ALGOLIA_API_KEY_PROD }}" \
+            --project-ref ${{ secrets.SUPABASE_PROD_PROJECT_ID }}
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+
+      - name: Smoke test deployed functions
+        run: |
+          for func in $(echo '${{ needs.detect-functions.outputs.functions }}' | jq -r '.[]'); do
+            echo "Smoke testing function: $func"
+            RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" \
+              -X POST \
+              "https://${{ secrets.SUPABASE_PROD_PROJECT_ID }}.supabase.co/functions/v1/$func" \
+              -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY_PROD }}" \
+              -H "Content-Type: application/json" \
+              -d '{}')
+            if [ "$RESPONSE" != "200" ] && [ "$RESPONSE" != "400" ]; then
+              echo "❌ Function $func failed smoke test with status: $RESPONSE"
+              exit 1
+            fi
+            echo "✅ Function $func smoke test passed"
+          done
+
+      - name: Notify deployment success
+        run: |
+          echo "🚀 Successfully deployed Edge Functions to Production"
+          echo "Functions: ${{ needs.detect-functions.outputs.functions }}"
+
+  # Job 5: Deployment summary
+  deployment-summary:
+    runs-on: ubuntu-latest
+    needs: [detect-functions, deploy-staging, deploy-production]
+    if: always() && needs.detect-functions.outputs.has_changes == 'true'
+    steps:
+      - name: Create deployment summary
+        run: |
+          echo "## 🚀 Supabase Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Functions deployed:**" >> $GITHUB_STEP_SUMMARY
+          echo '${{ needs.detect-functions.outputs.functions }}' | jq -r '.[] | "- " + .' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Staging:** ${{ needs.deploy-staging.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Production:** ${{ needs.deploy-production.result }}" >> $GITHUB_STEP_SUMMARY
