@@ -1,0 +1,270 @@
+name: Deploy Services
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+      services:
+        description: 'Services to deploy (comma-separated, or "all")'
+        required: true
+        default: 'all'
+  workflow_run:
+    workflows: ["CI - Lint, Test, and Build", "Build and Push Docker Images"]
+    types:
+      - completed
+    branches:
+      - main
+      - develop
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ${{ github.repository_owner }}/giga
+
+jobs:
+  # Job 1: Determine deployment environment and services
+  prepare-deployment:
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
+    outputs:
+      environment: ${{ steps.determine.outputs.environment }}
+      services: ${{ steps.determine.outputs.services }}
+    steps:
+      - name: Determine deployment parameters
+        id: determine
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            ENV="${{ github.event.inputs.environment }}"
+            if [ "${{ github.event.inputs.services }}" == "all" ]; then
+              SERVICES='["gateway","auth","hotel","taxi","payment","notification","upload"]'
+            else
+              SERVICES=$(echo '${{ github.event.inputs.services }}' | jq -R -c 'split(",") | map(gsub("^\\s+|\\s+$";""))')
+            fi
+          else
+            # Auto-deploy based on branch
+            if [ "${{ github.ref }}" == "refs/heads/main" ]; then
+              ENV="production"
+            else
+              ENV="staging"
+            fi
+            SERVICES='["gateway","auth","hotel","taxi","payment","notification","upload"]'
+          fi
+          echo "environment=${ENV}" >> $GITHUB_OUTPUT
+          echo "services=${SERVICES}" >> $GITHUB_OUTPUT
+          echo "Deploying to: ${ENV}"
+          echo "Services: ${SERVICES}"
+
+  # Job 2: Deploy to Kubernetes/Cloud
+  deploy:
+    runs-on: ubuntu-latest
+    needs: prepare-deployment
+    environment:
+      name: ${{ needs.prepare-deployment.outputs.environment }}
+    strategy:
+      matrix:
+        service: ${{ fromJson(needs.prepare-deployment.outputs.services) }}
+      max-parallel: 3  # Deploy services in batches
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set environment variables
+        run: |
+          if [ "${{ needs.prepare-deployment.outputs.environment }}" == "production" ]; then
+            echo "CLUSTER_NAME=${{ secrets.K8S_CLUSTER_PROD }}" >> $GITHUB_ENV
+            echo "NAMESPACE=giga-production" >> $GITHUB_ENV
+          else
+            echo "CLUSTER_NAME=${{ secrets.K8S_CLUSTER_STAGING }}" >> $GITHUB_ENV
+            echo "NAMESPACE=giga-staging" >> $GITHUB_ENV
+          fi
+
+      # Option A: Deploy to Kubernetes
+      - name: Configure kubectl
+        if: vars.DEPLOY_TARGET == 'kubernetes'
+        uses: azure/k8s-set-context@v3
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBE_CONFIG }}
+          context: ${{ env.CLUSTER_NAME }}
+
+      - name: Deploy to Kubernetes
+        if: vars.DEPLOY_TARGET == 'kubernetes'
+        run: |
+          # Update image in deployment
+          kubectl set image deployment/${{ matrix.service }} \
+            ${{ matrix.service }}=${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-${{ matrix.service }}:${{ github.sha }} \
+            -n ${{ env.NAMESPACE }}
+
+          # Wait for rollout
+          kubectl rollout status deployment/${{ matrix.service }} -n ${{ env.NAMESPACE }} --timeout=5m
+
+          echo "✅ ${{ matrix.service }} deployed to Kubernetes"
+
+      # Option B: Deploy to AWS ECS
+      - name: Configure AWS credentials
+        if: vars.DEPLOY_TARGET == 'aws-ecs'
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Deploy to AWS ECS
+        if: vars.DEPLOY_TARGET == 'aws-ecs'
+        run: |
+          # Get current task definition
+          TASK_DEF=$(aws ecs describe-task-definition --task-definition giga-${{ matrix.service }})
+
+          # Update image in task definition
+          NEW_TASK_DEF=$(echo $TASK_DEF | jq --arg IMAGE "${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-${{ matrix.service }}:${{ github.sha }}" \
+            '.taskDefinition | .containerDefinitions[0].image = $IMAGE | del(.taskDefinitionArn, .revision, .status, .requiresAttributes, .compatibilities, .registeredAt, .registeredBy)')
+
+          # Register new task definition
+          aws ecs register-task-definition --cli-input-json "$NEW_TASK_DEF"
+
+          # Update service
+          aws ecs update-service \
+            --cluster ${{ env.CLUSTER_NAME }} \
+            --service giga-${{ matrix.service }} \
+            --task-definition giga-${{ matrix.service }} \
+            --force-new-deployment
+
+          echo "✅ ${{ matrix.service }} deployed to AWS ECS"
+
+      # Option C: Deploy to Google Cloud Run
+      - name: Authenticate to Google Cloud
+        if: vars.DEPLOY_TARGET == 'gcp-run'
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+
+      - name: Deploy to Cloud Run
+        if: vars.DEPLOY_TARGET == 'gcp-run'
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: giga-${{ matrix.service }}
+          image: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-${{ matrix.service }}:${{ github.sha }}
+          region: ${{ secrets.GCP_REGION }}
+          env_vars: |
+            NODE_ENV=${{ needs.prepare-deployment.outputs.environment }}
+            DATABASE_URL=${{ secrets[format('{0}_DATABASE_URL_{1}', matrix.service, needs.prepare-deployment.outputs.environment)] }}
+
+      # Option D: Deploy using Docker Compose (Simple VPS deployment)
+      - name: Deploy to VPS via SSH
+        if: vars.DEPLOY_TARGET == 'vps-docker'
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            cd /opt/giga
+
+            # Pull latest images
+            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-${{ matrix.service }}:${{ github.sha }}
+
+            # Update docker-compose.override.yml with new image tag
+            sed -i 's|image: .*/${{ matrix.service }}:.*|image: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-${{ matrix.service }}:${{ github.sha }}|' docker-compose.override.yml
+
+            # Restart service
+            docker-compose up -d ${{ matrix.service }}
+
+            # Health check
+            sleep 10
+            docker-compose ps ${{ matrix.service }}
+
+            echo "✅ ${{ matrix.service }} deployed to VPS"
+
+      - name: Run post-deployment tests
+        run: |
+          echo "🧪 Running post-deployment tests for ${{ matrix.service }}"
+          # Add smoke tests here
+          # Example: curl health endpoint
+
+  # Job 3: Verify deployment health
+  verify-deployment:
+    runs-on: ubuntu-latest
+    needs: [prepare-deployment, deploy]
+    steps:
+      - name: Health check all services
+        run: |
+          ENV="${{ needs.prepare-deployment.outputs.environment }}"
+
+          if [ "$ENV" == "production" ]; then
+            BASE_URL="${{ secrets.PROD_BASE_URL }}"
+          else
+            BASE_URL="${{ secrets.STAGING_BASE_URL }}"
+          fi
+
+          echo "🏥 Checking health of deployed services..."
+
+          for service in $(echo '${{ needs.prepare-deployment.outputs.services }}' | jq -r '.[]'); do
+            echo "Checking $service..."
+            RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" ${BASE_URL}/${service}/health || echo "000")
+
+            if [ "$RESPONSE" == "200" ]; then
+              echo "✅ $service is healthy"
+            else
+              echo "❌ $service health check failed with status: $RESPONSE"
+              exit 1
+            fi
+          done
+
+          echo "✅ All services are healthy!"
+
+      - name: Run integration tests
+        run: |
+          echo "🧪 Running integration tests..."
+          # Add integration test suite here
+          # Example: newman run postman-collection.json
+
+  # Job 4: Rollback on failure
+  rollback:
+    runs-on: ubuntu-latest
+    needs: [prepare-deployment, deploy, verify-deployment]
+    if: failure() && needs.prepare-deployment.outputs.environment == 'production'
+    environment:
+      name: production
+    steps:
+      - name: Rollback deployment
+        run: |
+          echo "⚠️ Deployment failed, initiating rollback..."
+
+          # Add rollback logic based on your deployment target
+          # Kubernetes: kubectl rollout undo
+          # ECS: revert to previous task definition
+          # Cloud Run: deploy previous revision
+
+          echo "🔄 Rollback initiated"
+
+      - name: Notify team
+        run: |
+          echo "📢 Sending rollback notification to team..."
+          # Add notification logic (Slack, email, etc.)
+
+  # Job 5: Deployment summary
+  deployment-summary:
+    runs-on: ubuntu-latest
+    needs: [prepare-deployment, deploy, verify-deployment]
+    if: always()
+    steps:
+      - name: Create deployment summary
+        run: |
+          echo "## 🚀 Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment:** ${{ needs.prepare-deployment.outputs.environment }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Services deployed:**" >> $GITHUB_STEP_SUMMARY
+          echo '${{ needs.prepare-deployment.outputs.services }}' | jq -r '.[] | "- " + .' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Deploy status:** ${{ needs.deploy.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Verification:** ${{ needs.verify-deployment.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Image tag:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Deployed at:** $(date -u)" >> $GITHUB_STEP_SUMMARY

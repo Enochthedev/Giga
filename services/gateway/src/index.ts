@@ -473,29 +473,9 @@ function initializeServices(): void {
         description: 'Authentication and user management service',
       },
     },
-    {
-      id: 'ecommerce',
-      name: 'ecommerce',
-      version: '1.0.0',
-      endpoints: [
-        {
-          url: process.env.ECOMMERCE_SERVICE_URL || 'http://localhost:3002',
-          weight: 1,
-          metadata: {},
-        },
-      ],
-      healthCheck: {
-        enabled: true,
-        path: '/health',
-        interval: 30000,
-        timeout: 5000,
-        retries: 3,
-        expectedStatus: [200],
-      },
-      metadata: {
-        description: 'Ecommerce products, cart, and orders service',
-      },
-    },
+    // Ecommerce service removed - migrated to Supabase
+    // See: supabase/functions/* for Edge Functions
+    // API: https://[your-project].supabase.co/rest/v1
     {
       id: 'payment',
       name: 'payment',

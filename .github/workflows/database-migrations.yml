@@ -1,0 +1,327 @@
+name: Database Migrations
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'services/*/prisma/**'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to migrate'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+      service:
+        description: 'Service to migrate (or "all")'
+        required: true
+        default: 'all'
+
+env:
+  NODE_VERSION: '20'
+  PNPM_VERSION: '8'
+
+jobs:
+  # Job 1: Detect which schemas changed
+  detect-schema-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      auth: ${{ steps.filter.outputs.auth }}
+      hotel: ${{ steps.filter.outputs.hotel }}
+      taxi: ${{ steps.filter.outputs.taxi }}
+      payment: ${{ steps.filter.outputs.payment }}
+      notification: ${{ steps.filter.outputs.notification }}
+      upload: ${{ steps.filter.outputs.upload }}
+      services_to_migrate: ${{ steps.determine.outputs.services }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dorny/paths-filter@v3
+        id: filter
+        if: github.event_name != 'workflow_dispatch'
+        with:
+          filters: |
+            auth:
+              - 'services/auth/prisma/**'
+            hotel:
+              - 'services/hotel/prisma/**'
+            taxi:
+              - 'services/taxi/prisma/**'
+            payment:
+              - 'services/payment/prisma/**'
+            notification:
+              - 'services/notification/prisma/**'
+            upload:
+              - 'services/upload/prisma/**'
+
+      - name: Determine services to migrate
+        id: determine
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            if [ "${{ github.event.inputs.service }}" == "all" ]; then
+              SERVICES='["auth","hotel","taxi","payment","notification","upload"]'
+            else
+              SERVICES='["${{ github.event.inputs.service }}"]'
+            fi
+          else
+            SERVICES='['
+            [ "${{ steps.filter.outputs.auth }}" == "true" ] && SERVICES="${SERVICES}\"auth\","
+            [ "${{ steps.filter.outputs.hotel }}" == "true" ] && SERVICES="${SERVICES}\"hotel\","
+            [ "${{ steps.filter.outputs.taxi }}" == "true" ] && SERVICES="${SERVICES}\"taxi\","
+            [ "${{ steps.filter.outputs.payment }}" == "true" ] && SERVICES="${SERVICES}\"payment\","
+            [ "${{ steps.filter.outputs.notification }}" == "true" ] && SERVICES="${SERVICES}\"notification\","
+            [ "${{ steps.filter.outputs.upload }}" == "true" ] && SERVICES="${SERVICES}\"upload\","
+            SERVICES="${SERVICES%,}]"
+            [ "$SERVICES" == "]" ] && SERVICES='[]'
+          fi
+          echo "services=${SERVICES}" >> $GITHUB_OUTPUT
+          echo "Services to migrate: ${SERVICES}"
+
+  # Job 2: Generate migration preview
+  preview-migrations:
+    runs-on: ubuntu-latest
+    needs: detect-schema-changes
+    if: |
+      needs.detect-schema-changes.outputs.services_to_migrate != '[]' &&
+      github.event_name == 'pull_request'
+    strategy:
+      matrix:
+        service: ${{ fromJson(needs.detect-schema-changes.outputs.services_to_migrate) }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate migration preview
+        run: |
+          cd services/${{ matrix.service }}
+          echo "## Migration Preview for ${{ matrix.service }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo '```sql' >> $GITHUB_STEP_SUMMARY
+          pnpm prisma migrate diff \
+            --from-schema-datamodel prisma/schema.prisma \
+            --to-schema-datasource prisma/schema.prisma \
+            --script || echo "No schema changes detected"
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+  # Job 3: Validate migrations
+  validate-migrations:
+    runs-on: ubuntu-latest
+    needs: detect-schema-changes
+    if: needs.detect-schema-changes.outputs.services_to_migrate != '[]'
+    strategy:
+      matrix:
+        service: ${{ fromJson(needs.detect-schema-changes.outputs.services_to_migrate) }}
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: platform_user
+          POSTGRES_PASSWORD: platform_pass
+          POSTGRES_DB: ${{ matrix.service }}_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Validate Prisma schema
+        run: |
+          cd services/${{ matrix.service }}
+          pnpm prisma validate
+
+      - name: Generate Prisma Client
+        run: |
+          cd services/${{ matrix.service }}
+          pnpm prisma generate
+
+      - name: Test migration on clean database
+        run: |
+          cd services/${{ matrix.service }}
+          pnpm prisma migrate deploy
+        env:
+          DATABASE_URL: postgresql://platform_user:platform_pass@localhost:5432/${{ matrix.service }}_db
+
+      - name: Verify database schema
+        run: |
+          cd services/${{ matrix.service }}
+          pnpm prisma db pull --force
+          echo "✅ Database schema verified"
+
+  # Job 4: Deploy migrations to Staging
+  deploy-staging:
+    runs-on: ubuntu-latest
+    needs: [detect-schema-changes, validate-migrations]
+    if: |
+      needs.detect-schema-changes.outputs.services_to_migrate != '[]' &&
+      (github.ref == 'refs/heads/develop' || github.event.inputs.environment == 'staging')
+    environment:
+      name: staging
+    strategy:
+      matrix:
+        service: ${{ fromJson(needs.detect-schema-changes.outputs.services_to_migrate) }}
+      max-parallel: 1  # Run migrations sequentially to avoid conflicts
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma Client
+        run: |
+          cd services/${{ matrix.service }}
+          pnpm prisma generate
+
+      - name: Create database backup (Staging)
+        run: |
+          echo "📦 Creating backup for ${{ matrix.service }}_db (staging)"
+          # Add your backup command here
+          # Example for managed PostgreSQL:
+          # pg_dump $DATABASE_URL > backup-${{ matrix.service }}-$(date +%Y%m%d-%H%M%S).sql
+
+      - name: Deploy migrations to Staging
+        run: |
+          cd services/${{ matrix.service }}
+          echo "🚀 Deploying migrations for ${{ matrix.service }} to staging"
+          pnpm prisma migrate deploy
+        env:
+          DATABASE_URL: ${{ secrets[format('{0}_DATABASE_URL_STAGING', matrix.service)] }}
+
+      - name: Verify migration
+        run: |
+          cd services/${{ matrix.service }}
+          pnpm prisma migrate status
+          echo "✅ Migrations deployed successfully to staging"
+        env:
+          DATABASE_URL: ${{ secrets[format('{0}_DATABASE_URL_STAGING', matrix.service)] }}
+
+  # Job 5: Deploy migrations to Production
+  deploy-production:
+    runs-on: ubuntu-latest
+    needs: [detect-schema-changes, validate-migrations, deploy-staging]
+    if: |
+      needs.detect-schema-changes.outputs.services_to_migrate != '[]' &&
+      (github.ref == 'refs/heads/main' || github.event.inputs.environment == 'production')
+    environment:
+      name: production
+    strategy:
+      matrix:
+        service: ${{ fromJson(needs.detect-schema-changes.outputs.services_to_migrate) }}
+      max-parallel: 1  # Run migrations sequentially
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma Client
+        run: |
+          cd services/${{ matrix.service }}
+          pnpm prisma generate
+
+      - name: Create database backup (Production)
+        run: |
+          echo "📦 Creating backup for ${{ matrix.service }}_db (production)"
+          # CRITICAL: Add your production backup command here
+          # This is a safety measure before running migrations
+          # Example: automated backup to S3, snapshot, etc.
+
+      - name: Deploy migrations to Production
+        run: |
+          cd services/${{ matrix.service }}
+          echo "🚀 Deploying migrations for ${{ matrix.service }} to production"
+          pnpm prisma migrate deploy
+        env:
+          DATABASE_URL: ${{ secrets[format('{0}_DATABASE_URL_PROD', matrix.service)] }}
+
+      - name: Verify migration
+        run: |
+          cd services/${{ matrix.service }}
+          pnpm prisma migrate status
+          echo "✅ Migrations deployed successfully to production"
+        env:
+          DATABASE_URL: ${{ secrets[format('{0}_DATABASE_URL_PROD', matrix.service)] }}
+
+      - name: Post-migration health check
+        run: |
+          # Add health check for the service
+          echo "🏥 Running post-migration health check"
+          # Example: curl service health endpoint
+
+  # Job 6: Migration summary
+  migration-summary:
+    runs-on: ubuntu-latest
+    needs: [detect-schema-changes, deploy-staging, deploy-production]
+    if: always() && needs.detect-schema-changes.outputs.services_to_migrate != '[]'
+    steps:
+      - name: Create migration summary
+        run: |
+          echo "## 🗄️ Database Migration Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Services migrated:**" >> $GITHUB_STEP_SUMMARY
+          echo '${{ needs.detect-schema-changes.outputs.services_to_migrate }}' | jq -r '.[] | "- " + .' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Staging:** ${{ needs.deploy-staging.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Production:** ${{ needs.deploy-production.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "⚠️ **Remember to monitor your services after migration!**" >> $GITHUB_STEP_SUMMARY
